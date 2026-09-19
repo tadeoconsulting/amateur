@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register") => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -14,9 +15,9 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
     <nav className="fixed top-0 left-0 right-0 z-50 bg-surface-primary/80 backdrop-blur-md border-b border-brand-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <a href="/" className="font-heading text-2xl font-bold tracking-tight text-text-primary">
+          <Link href="/" className="font-heading text-2xl font-bold tracking-tight text-text-primary">
             Amateur
-          </a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">

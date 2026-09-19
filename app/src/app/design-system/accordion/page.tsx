@@ -133,9 +133,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function CodeRef({ component, path, props }: { component: string; path: string; props: string[] }) {
   return (
     <div className="mt-3 rounded-lg bg-brand-900 p-4 text-xs text-brand-200 font-mono overflow-x-auto">
-      <p className="text-brand-500">// Import</p>
+      <p className="text-brand-500">{"// Import"}</p>
       <p>{`import { ${component} } from "${path}";`}</p>
-      <p className="mt-2 text-brand-500">// Props</p>
+      <p className="mt-2 text-brand-500">{"// Props"}</p>
       {props.map((p) => (
         <p key={p}>{p}</p>
       ))}
