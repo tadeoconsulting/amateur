@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Crono DS — Primitives */
+  --color-brand-100: #FDFDFD;
+  --color-brand-200: #E5E5E5;
+  --color-brand-300: #EBEBEB;
+  --color-brand-500: #6D6D6D;
+  --color-brand-700: #4D4D4D;
+  --color-brand-900: #1B1B1B;
+
+  /* Crono DS — Complementary */
+  --color-green: #00CA81;
+  --color-yellow: #F8E294;
+  --color-red: #FF6363;
+
+  /* Crono DS — Semantic: Text */
+  --color-text-primary: #1B1B1B;
+  --color-text-secondary: #6D6D6D;
+  --color-text-invert: #FAFAFA;
+
+  /* Crono DS — Semantic: Surface */
+  --color-surface-primary: #FAFAFA;
+  --color-surface-secondary: #1B1B1B;
+  --color-surface-alt: #FDFDFD;
+
+  /* Crono DS — Semantic: Border */
+  --color-border-primary: #1B1B1B;
+  --color-border-secondary: #4D4D4D;
+
+  /* Crono DS — Semantic: Buttons */
+  --color-btn-primary: #1B1B1B;
+  --color-btn-secondary: #4D4D4D;
+  --color-btn-regular: #EBEBEB;
+  --color-btn-disabled: #E5E5E5;
+
+  /* Crono DS — Semantic: Accent */
+  --color-error: #FF6363;
+  --color-verification: #00CA81;
+
+  /* Landing — Football accents */
+  --color-field-green: #00CA81;
+  --color-field-dark: #00A868;
+  --color-field-light: #E6FFF5;
+
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-lexend);
+  --font-body: var(--font-lato);
+}
+
+body {
+  background: var(--color-surface-primary);
+  color: var(--color-text-primary);
+  scroll-behavior: smooth;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}
+
+@keyframes slide-down {
+  from { transform: translate(-50%, -100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease-out;
+}
