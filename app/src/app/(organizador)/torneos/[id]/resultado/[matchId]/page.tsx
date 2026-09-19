@@ -2,6 +2,8 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
+import type { MatchDetail, MatchEventItem } from "@/_lib/api";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, isEventType } from "@/_lib/match-live";
 
 const clubColors = ["#E53935", "#43A047"];
 
@@ -15,7 +17,6 @@ type TimelineEvent = {
   detail?: string;
 };
 
-const timeline: TimelineEvent[] = [];
 
 function formatMatchDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -108,8 +109,11 @@ export default function ResultadoPage() {
   const params = useParams<{ id: string; matchId: string }>();
   const router = useRouter();
 
-  const { data: match, loading } = useApi(() =>
+  const { data: match, loading } = useApi<MatchDetail>(() =>
     fetch(`/api/matches/${params.matchId}`).then((r) => r.json())
+  );
+  const { data: events } = useApi<MatchEventItem[]>(() =>
+    fetch(`/api/matches/${params.matchId}/events`).then((r) => r.json())
   );
 
   if (loading || !match) {
@@ -119,6 +123,33 @@ export default function ResultadoPage() {
       </div>
     );
   }
+
+  // Crónica del partido a partir de las jugadas guardadas: inicio, jugadas y final.
+  const started = match.status !== "programado";
+  const showScore = started;
+  const timeline: TimelineEvent[] = [
+    ...(started
+      ? [{ minute: "0'", type: "inicio" as const, title: "Inicio del partido", description: `${match.homeTeam.name} vs ${match.awayTeam.name}` }]
+      : []),
+    ...(events ?? []).map((e): TimelineEvent => {
+      const team = e.teamId === match.awayTeam.id ? match.awayTeam.name : match.homeTeam.name;
+      return {
+        minute: `${e.minute}'`,
+        type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
+        title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
+        description: e.playerName ? `${e.playerName} - ${team}` : team,
+        detail: e.detail ?? undefined,
+      };
+    }),
+    ...(match.status === "finalizado"
+      ? [{
+          minute: "FT",
+          type: "final" as const,
+          title: "Final del partido",
+          description: `${match.homeTeam.name} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${match.awayTeam.name}`,
+        }]
+      : []),
+  ];
 
   return (
     <div className="flex min-h-dvh flex-col pb-20">
@@ -154,6 +185,7 @@ export default function ResultadoPage() {
                 </svg>
               </div>
               <span className="font-body text-sm text-text-primary">{match.homeTeam.name}</span>
+              {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.homeScore ?? 0}</span>}
             </div>
             <div className="flex items-center gap-2.5">
               <div
@@ -165,6 +197,7 @@ export default function ResultadoPage() {
                 </svg>
               </div>
               <span className="font-body text-sm text-text-primary">{match.awayTeam.name}</span>
+              {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.awayScore ?? 0}</span>}
             </div>
           </div>
           <div className="mx-3 h-12 w-px bg-border-primary" />

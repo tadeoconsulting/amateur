@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { changesScore, EVENT_TYPES, isEventType, statFor } from "@/_lib/match-live";
 
 export async function GET(
   _request: NextRequest,
@@ -15,7 +16,7 @@ export async function GET(
         include: { user: { select: { firstName: true, lastName: true } } },
       },
     },
-    orderBy: { minute: "asc" },
+    orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
   });
 
   return Response.json(
@@ -23,6 +24,7 @@ export async function GET(
       id: e.id,
       type: e.type,
       minute: e.minute,
+      playerId: e.playerId,
       playerName: e.player ? `${e.player.user.firstName} ${e.player.user.lastName}` : null,
       teamId: e.teamId,
       detail: e.detail,
@@ -30,6 +32,11 @@ export async function GET(
   );
 }
 
+/**
+ * Registra una jugada del partido. Solo se puede mientras el partido está en juego.
+ * Un gol suma al marcador y a las estadísticas del jugador; las tarjetas, a las suyas.
+ * Todo se guarda junto o no se guarda nada.
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -44,18 +51,41 @@ export async function POST(
   if (!body) return badRequest();
   const { type, minute, playerId, teamId, detail } = body;
 
-  if (typeof type !== "string" || !type || !Number.isInteger(minute) || (minute as number) < 0) {
-    return badRequest("type y minute requeridos");
+  if (!isEventType(type)) return badRequest(`type debe ser uno de: ${EVENT_TYPES.join(", ")}`);
+  if (!Number.isInteger(minute) || (minute as number) < 0 || (minute as number) > 200) {
+    return badRequest("minute debe ser un entero entre 0 y 200");
+  }
+  if (detail !== undefined && detail !== null && (typeof detail !== "string" || detail.length > 200)) {
+    return badRequest("detail debe ser un texto de hasta 200 caracteres");
+  }
+
+  const match = await prisma.match.findUnique({
+    where: { id },
+    select: { status: true, homeTeamId: true, awayTeamId: true, tournamentId: true },
+  });
+  if (!match) return Response.json({ error: "Partido no encontrado" }, { status: 404 });
+  if (match.status !== "en_curso") {
+    return Response.json({ error: "El partido no está en juego: inícialo antes de registrar jugadas" }, { status: 409 });
+  }
+
+  // El equipo tiene que ser uno de los dos que juegan; un gol siempre es de alguno.
+  if (teamId !== undefined && teamId !== null && teamId !== match.homeTeamId && teamId !== match.awayTeamId) {
+    return badRequest("teamId no juega este partido");
+  }
+  if (changesScore(type) && teamId !== match.homeTeamId && teamId !== match.awayTeamId) {
+    return badRequest("Un gol necesita el equipo (teamId)");
+  }
+  // El jugador tiene que ser del equipo de la jugada, si no se le acreditaría a otro.
+  if (playerId !== undefined && playerId !== null) {
+    if (typeof playerId !== "string" || typeof teamId !== "string") return badRequest("playerId necesita teamId");
+    const player = await prisma.playerProfile.findUnique({ where: { id: playerId }, select: { clubId: true } });
+    if (!player || player.clubId !== teamId) return badRequest("El jugador no pertenece a ese equipo");
   }
 
   try {
-    // Todo en una transacción: el evento, el marcador y las estadísticas se guardan
-    // juntos o no se guarda nada. Los incrementos son atómicos, así que dos goles
-    // simultáneos no se pisan.
+    // Un solo bloque: la jugada, el marcador y las estadísticas. Los incrementos son atómicos,
+    // así que dos jugadas simultáneas no se pisan.
     const event = await prisma.$transaction(async (tx) => {
-      const match = await tx.match.findUnique({ where: { id } });
-      if (!match) return null;
-
       const created = await tx.matchEvent.create({
         data: {
           matchId: id,
@@ -67,8 +97,10 @@ export async function POST(
         },
       });
 
-      if (type === "gol" && (teamId === match.homeTeamId || teamId === match.awayTeamId)) {
-        if (teamId === match.homeTeamId) {
+      if (changesScore(type)) {
+        const home = teamId === match.homeTeamId;
+        // Si el marcador estaba vacío se pone en 0 antes de sumar (NULL + 1 seguiría siendo NULL).
+        if (home) {
           await tx.match.updateMany({ where: { id, homeScore: null }, data: { homeScore: 0 } });
           await tx.match.update({ where: { id }, data: { homeScore: { increment: 1 } } });
         } else {
@@ -77,31 +109,17 @@ export async function POST(
         }
       }
 
-      if (typeof playerId === "string") {
-        const inc: { goals?: number; yellowCards?: number; redCards?: number } = {};
-        if (type === "gol") inc.goals = 1;
-        if (type === "tarjeta_amarilla") inc.yellowCards = 1;
-        if (type === "tarjeta_roja") inc.redCards = 1;
-
-        if (Object.keys(inc).length > 0) {
-          await tx.playerStats.upsert({
-            where: { playerId_tournamentId: { playerId, tournamentId: match.tournamentId } },
-            update: {
-              ...(inc.goals && { goals: { increment: 1 } }),
-              ...(inc.yellowCards && { yellowCards: { increment: 1 } }),
-              ...(inc.redCards && { redCards: { increment: 1 } }),
-            },
-            create: { playerId, tournamentId: match.tournamentId, ...inc },
-          });
-        }
+      const stat = statFor(type);
+      if (stat && typeof playerId === "string") {
+        await tx.playerStats.upsert({
+          where: { playerId_tournamentId: { playerId, tournamentId: match.tournamentId } },
+          update: { [stat]: { increment: 1 } },
+          create: { playerId, tournamentId: match.tournamentId, [stat]: 1 },
+        });
       }
-
       return created;
     });
 
-    if (!event) {
-      return Response.json({ error: "Partido no encontrado" }, { status: 404 });
-    }
     return Response.json(event, { status: 201 });
   } catch (error) {
     console.error("Create event error:", error);

@@ -1,13 +1,15 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
-import type { MatchListItem, PlayerListItem } from "@/_lib/api";
+import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TYPE_FROM_ACTION, liveSeconds, matchDurationMinutes } from "@/_lib/match-live";
 
 const clubColors = ["#E53935", "#43A047"];
 
 type MatchEvent = {
+  id: string;
   type: "gol" | "amarilla" | "roja" | "cambio" | "penal";
   team: "local" | "visitante";
   minute: number;
@@ -18,8 +20,13 @@ type MatchEvent = {
 export default function EnVivoPage() {
   const params = useParams<{ id: string; matchId: string }>();
   const router = useRouter();
-  const { data: match, loading: loadingMatch } = useApi<MatchListItem>(() =>
+  // Todo sale de la API: el marcador, las jugadas y el momento de inicio (así el cronómetro
+  // y la crónica sobreviven a recargar la página).
+  const { data: match, refetch: refetchMatch } = useApi<MatchDetail>(() =>
     fetch(`/api/matches/${params.matchId}`).then((r) => r.json())
+  );
+  const { data: apiEvents, refetch: refetchEvents } = useApi<MatchEventItem[]>(() =>
+    fetch(`/api/matches/${params.matchId}/events`).then((r) => r.json())
   );
   const [playersByClub, setPlayersByClub] = useState<Record<string, PlayerListItem[]>>({});
 
@@ -33,21 +40,21 @@ export default function EnVivoPage() {
     });
   }, [match]);
 
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const [activeTeam, setActiveTeam] = useState<"local" | "visitante">("local");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-  const [events, setEvents] = useState<MatchEvent[]>([]);
-  const startTimeRef = useRef(Date.now());
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [confirmEnd, setConfirmEnd] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  if (loadingMatch || !match) {
+  // Solo la primera carga muestra el spinner: al refrescar tras cada jugada la pantalla no parpadea.
+  if (!match) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
@@ -55,13 +62,26 @@ export default function EnVivoPage() {
     );
   }
 
+  const live = match.status === "en_curso";
+  const finished = match.status === "finalizado";
+  // El cronómetro cuenta desde el inicio real; fuera de juego se detiene en 0.
+  const elapsedSeconds = live ? liveSeconds(match.startedAt, now) : 0;
   const minutes = Math.floor(elapsedSeconds / 60);
   const seconds = elapsedSeconds % 60;
-  const matchDuration = 70;
+  const matchDuration = matchDurationMinutes(match.tournament.minutesPerHalf);
   const progress = Math.min((elapsedSeconds / 60 / matchDuration) * 100, 100);
 
-  const homeScore = events.filter((e) => e.team === "local" && e.type === "gol").length;
-  const awayScore = events.filter((e) => e.team === "visitante" && e.type === "gol").length;
+  const events: MatchEvent[] = (apiEvents ?? []).map((e) => ({
+    id: e.id,
+    type: ACTION_FROM_EVENT_TYPE[e.type] ?? "cambio",
+    team: e.teamId === match.awayTeam.id ? "visitante" : "local",
+    minute: e.minute,
+    playerId: e.playerId,
+    playerName: e.playerName,
+  }));
+
+  const homeScore = match.homeScore ?? 0;
+  const awayScore = match.awayScore ?? 0;
 
   const activeClubId = activeTeam === "local" ? match.homeTeam.id : match.awayTeam.id;
   const teamPlayers = playersByClub[activeClubId] ?? [];
@@ -127,31 +147,67 @@ export default function EnVivoPage() {
     },
   ];
 
-  const handleSave = () => {
-    if (!selectedAction) return;
-    setEvents((prev) => [
-      ...prev,
-      {
-        type: selectedAction as MatchEvent["type"],
-        team: activeTeam,
-        minute: minutes,
-        playerId: selectedPlayer,
-        playerName: selectedPlayer
-          ? (() => {
-              const p = teamPlayers.find((pl) => pl.id === selectedPlayer);
-              return p ? `${p.user.firstName} ${p.user.lastName}` : null;
-            })()
-          : null,
-      },
-    ]);
-    setSelectedAction(null);
-    setSelectedPlayer(null);
+  const refresh = () => {
+    refetchMatch();
+    refetchEvents();
+  };
+
+  /** Llama a la API; si falla muestra el mensaje y devuelve false. */
+  async function call(url: string, method: string, body?: unknown) {
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo completar la acción");
+        return false;
+      }
+      refresh();
+      return true;
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const matchUrl = `/api/matches/${params.matchId}`;
+
+  const handleSave = async () => {
+    if (!selectedAction || saving) return;
+    const ok = await call(`${matchUrl}/events`, "POST", {
+      type: EVENT_TYPE_FROM_ACTION[selectedAction],
+      minute: minutes,
+      teamId: activeClubId,
+      playerId: selectedPlayer,
+    });
+    if (ok) {
+      setSelectedAction(null);
+      setSelectedPlayer(null);
+    }
+  };
+
+  const undoLast = async () => {
+    const last = events[events.length - 1];
+    if (last && !saving) await call(`${matchUrl}/events/${last.id}`, "DELETE");
+  };
+
+  const setStatus = async (status: "en_curso" | "finalizado") => {
+    if (saving) return;
+    setConfirmEnd(false);
+    await call(matchUrl, "PATCH", { status });
   };
 
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Header */}
-      <header className="px-4 py-3">
+      <header className="flex items-center justify-between px-4 py-3">
         <button
           onClick={() => router.back()}
           className="flex cursor-pointer items-center gap-1 font-heading text-sm font-semibold text-text-primary"
@@ -161,6 +217,34 @@ export default function EnVivoPage() {
           </svg>
           Volver
         </button>
+
+        {/* Terminar el partido: se pide confirmación en el mismo lugar, sin ventanas emergentes. */}
+        {live &&
+          (confirmEnd ? (
+            <div className="flex items-center gap-3">
+              <span className="font-body text-xs text-text-secondary">¿Finalizar?</span>
+              <button
+                onClick={() => setStatus("finalizado")}
+                disabled={saving}
+                className="cursor-pointer font-heading text-sm font-bold text-text-primary underline disabled:opacity-40"
+              >
+                Sí
+              </button>
+              <button
+                onClick={() => setConfirmEnd(false)}
+                className="cursor-pointer font-heading text-sm font-semibold text-text-secondary underline"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmEnd(true)}
+              className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-bold text-text-primary transition-colors hover:bg-btn-regular"
+            >
+              Finalizar partido
+            </button>
+          ))}
       </header>
 
       {/* Match card with scores */}
@@ -223,8 +307,43 @@ export default function EnVivoPage() {
         <span className="font-heading text-sm font-bold text-brand-500">{matchDuration}&apos;</span>
       </div>
 
+      {/* Estado del partido: sin empezar o terminado, en lugar de los controles de jugadas */}
+      {match.status === "programado" && (
+        <div className="mx-4 mb-5 rounded-xl bg-btn-regular px-4 py-4 text-center">
+          <p className="mb-3 font-body text-sm text-text-secondary">El partido todavía no empezó.</p>
+          <button
+            onClick={() => setStatus("en_curso")}
+            disabled={saving}
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+          >
+            Iniciar partido
+          </button>
+        </div>
+      )}
+      {finished && (
+        <div className="mx-4 mb-5 rounded-xl bg-btn-regular px-4 py-4 text-center">
+          <p className="mb-3 font-heading text-sm font-bold text-text-primary">Partido finalizado</p>
+          <button
+            onClick={() => setStatus("en_curso")}
+            disabled={saving}
+            className="cursor-pointer font-heading text-sm font-semibold text-text-primary underline disabled:opacity-40"
+          >
+            Reabrir para corregir
+          </button>
+        </div>
+      )}
+      {live && events.length > 0 && !selectedAction && (
+        <button
+          onClick={undoLast}
+          disabled={saving}
+          className="mx-4 mb-3 cursor-pointer self-end font-heading text-xs font-semibold text-text-secondary underline disabled:opacity-40"
+        >
+          Deshacer última jugada
+        </button>
+      )}
+
       {/* Team toggle */}
-      <div className="mx-4 mb-5 flex gap-3">
+      <div className={`mx-4 mb-5 flex gap-3${live ? "" : " hidden"}`}>
         <button
           onClick={() => { setActiveTeam("local"); setSelectedPlayer(null); }}
           className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
@@ -248,7 +367,7 @@ export default function EnVivoPage() {
       </div>
 
       {/* Action icons */}
-      <div className="mx-4 mb-4 flex justify-between">
+      <div className={`mx-4 mb-4 flex justify-between${live ? "" : " hidden"}`}>
         {actions.map((action) => (
           <button
             key={action.id}
@@ -401,8 +520,10 @@ export default function EnVivoPage() {
         </div>
       )}
 
+      {error && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
+
       {/* Bottom button */}
-      <div className="sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3">
+      <div className={`sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3${live ? "" : " hidden"}`}>
         <button
           onClick={handleSave}
           className={`w-full cursor-pointer rounded-lg py-3.5 font-heading text-sm font-bold transition-colors ${

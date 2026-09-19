@@ -224,6 +224,9 @@ model Match {
   location     String
   matchday     Int
   groupName    String?
+  // Cuándo se dio inicio al partido (pasó a "en_curso"). El cronómetro en vivo se calcula
+  // desde acá, así sobrevive a recargar la página.
+  startedAt    DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -66,9 +66,27 @@ export interface MatchListItem {
   location: string;
   matchday: number;
   groupName: string | null;
+  /** Cuándo empezó el partido; null si todavía no. El cronómetro en vivo se calcula desde acá. */
+  startedAt?: string | null;
   homeTeam: { id: string; name: string; shortName: string; logoUrl: string | null };
   awayTeam: { id: string; name: string; shortName: string; logoUrl: string | null };
   _count: { events: number };
+}
+
+/** Jugada tal como la devuelve GET /api/matches/:id/events. */
+export interface MatchEventItem {
+  id: string;
+  type: string;
+  minute: number;
+  playerId: string | null;
+  playerName: string | null;
+  teamId: string | null;
+  detail: string | null;
+}
+
+/** Partido con su torneo, como lo devuelve GET /api/matches/:id. */
+export interface MatchDetail extends MatchListItem {
+  tournament: { id: string; name: string; format: string; minutesPerHalf: number | null };
 }
 
 export interface StandingsRow {
@@ -127,7 +145,7 @@ export interface PlayerListItem {
   number: number | null;
   position: string | null;
   status: string;
-  user: { firstName: string; lastName: string; avatarUrl: string | null };
+  user: { firstName: string; lastName: string; avatarUrl: string | null; birthDate?: string | null };
   category: { id: string; name: string } | null;
 }
 

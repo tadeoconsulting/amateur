@@ -6,6 +6,8 @@ import { MatchTimeline } from "@/_components/match-timeline";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { liveMinute } from "@/_lib/match-live";
+import { useState } from "react";
 
 function TeamLogo({ shortName }: { shortName: string }) {
   return (
@@ -38,6 +40,7 @@ export default function MatchDetailPage() {
   const { data: events, loading: loadingEvents } = useApi<MatchEventRow[]>(() =>
     fetch(`/api/matches/${params.matchId}/events`).then((r) => r.json())
   );
+  const [now] = useState(() => Date.now());
 
   if (loadingMatch || !match) {
     return (
@@ -53,7 +56,7 @@ export default function MatchDetailPage() {
     playerId: "",
     playerName: e.playerName ?? "",
   }));
-  const showScore = match.status === "en_vivo" || match.status === "finalizado";
+  const showScore = match.status === "en_curso" || match.status === "finalizado";
 
   return (
     <div className="w-full">
@@ -84,8 +87,8 @@ export default function MatchDetailPage() {
             </div>
           </div>
           <div className="flex w-20 flex-col items-center justify-center border-l border-brand-200 px-2 text-center">
-            {match.status === "en_vivo" && (
-              <span className="text-base font-bold text-verification">75&quot;</span>
+            {match.status === "en_curso" && (
+              <span className="text-base font-bold text-verification">{liveMinute(match.startedAt, now)}&quot;</span>
             )}
             {match.status === "finalizado" && (
               <span className="text-base font-bold text-text-primary">FT</span>
@@ -113,15 +116,15 @@ export default function MatchDetailPage() {
         </div>
       )}
 
-      {(match.status === "en_vivo" || match.status === "finalizado") && eventList.length > 0 && (
+      {(match.status === "en_curso" || match.status === "finalizado") && eventList.length > 0 && (
         <MatchTimeline
           events={eventList}
           homeTeamId={match.homeTeam.id}
-          status={match.status as "en_vivo" | "finalizado"}
+          status={match.status === "en_curso" ? "en_vivo" : "finalizado"}
         />
       )}
 
-      {(match.status === "en_vivo" || match.status === "finalizado") && eventList.length === 0 && (
+      {(match.status === "en_curso" || match.status === "finalizado") && eventList.length === 0 && (
         <div className="px-4 py-12 text-center">
           <p className="text-sm text-text-secondary">No hay eventos registrados</p>
         </div>

@@ -16,7 +16,7 @@ export async function GET(
     where: { clubId: id, ...(categoryId ? { categoryId } : {}) },
     include: {
       user: { select: { firstName: true, lastName: true, avatarUrl: true, birthDate: true } },
-      category: { select: { name: true } },
+      category: { select: { id: true, name: true } },
     },
     orderBy: { user: { lastName: "asc" } },
   });
@@ -25,16 +25,20 @@ export async function GET(
   const canSeeBirthDate = await canManageClub(auth.user, id);
 
   return Response.json(
+    // Misma forma que PlayerListItem (nombre dentro de `user`): así la esperan las pantallas.
+    // Antes devolvía el nombre plano y la lista de jugadores de la pantalla en vivo se rompía.
     players.map((p) => ({
       id: p.id,
-      firstName: p.user.firstName,
-      lastName: p.user.lastName,
-      avatarUrl: p.user.avatarUrl,
-      position: p.position,
       number: p.number,
+      position: p.position,
       status: p.status,
-      categoryName: p.category?.name,
-      birthDate: canSeeBirthDate ? p.user.birthDate : null,
+      user: {
+        firstName: p.user.firstName,
+        lastName: p.user.lastName,
+        avatarUrl: p.user.avatarUrl,
+        birthDate: canSeeBirthDate ? p.user.birthDate : null,
+      },
+      category: p.category,
     }))
   );
 }
