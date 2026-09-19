@@ -82,7 +82,8 @@ export default function BuscarDelegadoPage() {
                         {person.firstName} {person.lastName}
                       </p>
                       <p className="text-sm text-text-secondary">
-                        {person.roles[0] ?? "Usuario"} | {person.email}
+                        {person.roles[0] ?? "Usuario"}
+                        {person.email ? ` | ${person.email}` : ""}
                       </p>
                     </div>
                     {selectedId === person.id ? (

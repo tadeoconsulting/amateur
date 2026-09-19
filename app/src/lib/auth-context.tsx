@@ -1,59 +1,115 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-type User = {
+export type AuthUser = {
   id: string;
-  name: string;
   email: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  roles: string[];
 };
+
+type Result = { ok: boolean; error?: string };
+
+type RegisterInput = { name: string; email: string; password: string };
 
 type AuthContextValue = {
-  user: User | null;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  register: (name: string, email: string) => Promise<{ ok: boolean; error?: string }>;
-  logout: () => void;
-};
-
-const TEST_USER = {
-  id: "test-001",
-  name: "Demo Amateur",
-  email: "demo@amateur.app",
-  password: "amateur123",
+  user: AuthUser | null;
+  /** true mientras se consulta si ya hay una sesión abierta (al cargar la página). */
+  loading: boolean;
+  login: (email: string, password: string, next?: string | null) => Promise<Result>;
+  register: (input: RegisterInput, next?: string | null) => Promise<Result>;
+  logout: () => Promise<void>;
+  /** Activa un perfil (ORGANIZADOR, CLUB_OWNER o JUGADOR) en la cuenta actual. */
+  addRole: (role: "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR") => Promise<Result>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const DEFAULT_LANDING = "/seleccion-perfil";
+
+/** Solo se acepta un destino interno ("/algo"), nunca una URL externa ("//sitio.com"). */
+function safeNext(next: string | null | undefined) {
+  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : DEFAULT_LANDING;
+}
+
+async function postJson(url: string, body?: unknown) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { res, data };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const login = useCallback(async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 600));
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled) setUser(data.user ?? null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-    if (email === TEST_USER.email && password === TEST_USER.password) {
-      setUser({ id: TEST_USER.id, name: TEST_USER.name, email: TEST_USER.email });
-      router.push("/seleccion-perfil");
+  const login = useCallback(
+    async (email: string, password: string, next?: string | null): Promise<Result> => {
+      const { res, data } = await postJson("/api/auth/login", { email, password });
+      if (!res.ok) return { ok: false, error: data.error ?? "Error al iniciar sesión" };
+      setUser(data);
+      router.push(safeNext(next));
       return { ok: true };
-    }
-    return { ok: false, error: "Correo o contraseña incorrectos" };
-  }, [router]);
+    },
+    [router]
+  );
 
-  const register = useCallback(async (name: string, email: string) => {
-    await new Promise((r) => setTimeout(r, 600));
-    setUser({ id: "new-" + Date.now(), name, email });
-    router.push("/seleccion-perfil");
-    return { ok: true };
-  }, [router]);
+  const register = useCallback(
+    async ({ name, email, password }: RegisterInput, next?: string | null): Promise<Result> => {
+      const [firstName, ...rest] = name.trim().split(/\s+/);
+      const { res, data } = await postJson("/api/auth/register", {
+        email,
+        password,
+        firstName,
+        lastName: rest.join(" "),
+      });
+      if (!res.ok) return { ok: false, error: data.error ?? "Error al crear cuenta" };
+      setUser(data);
+      router.push(safeNext(next));
+      return { ok: true };
+    },
+    [router]
+  );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await postJson("/api/auth/logout").catch(() => {});
     setUser(null);
     router.push("/");
   }, [router]);
 
+  const addRole = useCallback(async (role: "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR"): Promise<Result> => {
+    const { res, data } = await postJson("/api/auth/roles", { role });
+    if (!res.ok) return { ok: false, error: data.error ?? "No se pudo activar el perfil" };
+    setUser((prev) => (prev ? { ...prev, roles: data.roles } : prev));
+    return { ok: true };
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, addRole }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,10 +1,14 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { badRequest, canManageClub, forbidden, readJson, requireUser } from "@/_lib/auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+
   const { id } = await params;
   const categoryId = request.nextUrl.searchParams.get("categoryId");
 
@@ -17,6 +21,9 @@ export async function GET(
     orderBy: { user: { lastName: "asc" } },
   });
 
+  // La fecha de nacimiento es dato personal (puede ser de menores): solo la ve quien gestiona el club.
+  const canSeeBirthDate = await canManageClub(auth.user, id);
+
   return Response.json(
     players.map((p) => ({
       id: p.id,
@@ -27,7 +34,7 @@ export async function GET(
       number: p.number,
       status: p.status,
       categoryName: p.category?.name,
-      birthDate: p.user.birthDate,
+      birthDate: canSeeBirthDate ? p.user.birthDate : null,
     }))
   );
 }
@@ -36,18 +43,43 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const { userId, position, number, categoryId } = await request.json();
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
 
-  if (!userId) {
-    return Response.json({ error: "userId requerido" }, { status: 400 });
+  const { id } = await params;
+  if (!(await canManageClub(auth.user, id))) return forbidden();
+
+  const body = await readJson(request);
+  if (!body) return badRequest();
+  const { userId, position, number, categoryId } = body;
+
+  if (typeof userId !== "string" || !userId) {
+    return badRequest("userId requerido");
   }
+
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (!target) {
+    return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+
+  // La categoría tiene que ser de este mismo club.
+  if (typeof categoryId === "string" && categoryId) {
+    const category = await prisma.teamCategory.findFirst({ where: { id: categoryId, clubId: id }, select: { id: true } });
+    if (!category) return badRequest("La categoría no pertenece a este club");
+  }
+
+  const data = {
+    clubId: id,
+    position: typeof position === "string" ? position : null,
+    number: Number.isInteger(number) ? (number as number) : null,
+    categoryId: typeof categoryId === "string" && categoryId ? categoryId : null,
+  };
 
   try {
     const profile = await prisma.playerProfile.upsert({
       where: { userId },
-      update: { clubId: id, position, number, categoryId },
-      create: { userId, clubId: id, position, number, categoryId },
+      update: data,
+      create: { userId, ...data },
     });
     return Response.json(profile, { status: 201 });
   } catch (error) {

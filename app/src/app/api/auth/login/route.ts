@@ -1,27 +1,29 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { badRequest, createSession, normalizeEmail, readJson, verifyPassword } from "@/_lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await readJson(request);
+    const email = normalizeEmail(body?.email);
+    const password = typeof body?.password === "string" ? body.password : "";
 
     if (!email || !password) {
-      return Response.json({ error: "Email y contraseña requeridos" }, { status: 400 });
+      return badRequest("Email y contraseña requeridos");
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { roles: true, playerProfile: true },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
+      include: { roles: true, playerProfile: { select: { id: true } } },
     });
 
-    if (!user) {
-      return Response.json({ error: "Credenciales inválidas" }, { status: 401 });
+    // Siempre se hace la comparación, exista o no el usuario, y el error es el mismo.
+    const valid = await verifyPassword(password, user?.passwordHash);
+    if (!user || !valid) {
+      return Response.json({ error: "Correo o contraseña incorrectos" }, { status: 401 });
     }
 
-    // In production, compare with bcrypt
-    if (user.passwordHash !== `hashed_${password}`) {
-      return Response.json({ error: "Credenciales inválidas" }, { status: 401 });
-    }
+    await createSession(user.id);
 
     return Response.json({
       id: user.id,

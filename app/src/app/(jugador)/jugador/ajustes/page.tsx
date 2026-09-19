@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 
 const menuItems = [
   { label: "Mi Perfil", href: "/jugador/ajustes/perfil" },
@@ -24,6 +25,8 @@ function MenuRow({ label, href }: { label: string; href: string }) {
 }
 
 export default function JugadorAjustesPage() {
+  const { logout } = useAuth();
+
   return (
     <div className="w-full pb-4">
       {/* Header */}
@@ -48,7 +51,7 @@ export default function JugadorAjustesPage() {
 
       {/* Cerrar sesión */}
       <div className="mt-12 text-center">
-        <button className="cursor-pointer text-sm font-medium text-text-primary underline">
+        <button onClick={logout} className="cursor-pointer text-sm font-medium text-text-primary underline">
           Cerrar sesión
         </button>
       </div>

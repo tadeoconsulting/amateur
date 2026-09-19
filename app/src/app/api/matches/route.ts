@@ -1,5 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { badRequest, canManageTournament, forbidden, readJson, requireUser } from "@/_lib/auth";
 
 export async function GET(request: NextRequest) {
   const tournamentId = request.nextUrl.searchParams.get("tournamentId");
@@ -27,24 +28,37 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+
   try {
-    const body = await request.json();
+    const body = await readJson(request);
+    if (!body) return badRequest();
+
     const { tournamentId, homeTeamId, awayTeamId, date, time, location, matchday, groupName } = body;
 
-    if (!tournamentId || !homeTeamId || !awayTeamId || !date || !time) {
-      return Response.json({ error: "Campos requeridos faltantes" }, { status: 400 });
+    if (
+      typeof tournamentId !== "string" || typeof homeTeamId !== "string" || typeof awayTeamId !== "string" ||
+      !date || Number.isNaN(new Date(date as string).getTime()) || typeof time !== "string" || !time
+    ) {
+      return badRequest("Campos requeridos faltantes o inválidos");
     }
+    if (homeTeamId === awayTeamId) {
+      return badRequest("El equipo local y el visitante deben ser distintos");
+    }
+
+    if (!(await canManageTournament(auth.user, tournamentId))) return forbidden();
 
     const match = await prisma.match.create({
       data: {
         tournamentId,
         homeTeamId,
         awayTeamId,
-        date: new Date(date),
+        date: new Date(date as string),
         time,
-        location: location || "",
-        matchday: matchday || 1,
-        groupName,
+        location: typeof location === "string" ? location : "",
+        matchday: Number.isInteger(matchday) ? (matchday as number) : 1,
+        groupName: typeof groupName === "string" ? groupName : null,
       },
       include: { homeTeam: true, awayTeam: true },
     });

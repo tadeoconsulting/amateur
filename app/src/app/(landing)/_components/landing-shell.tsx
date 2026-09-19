@@ -11,9 +11,15 @@ import { CtaFinal } from "./cta-final";
 import { Footer } from "./footer";
 import { AuthModal } from "./auth-modal";
 
-export function LandingShell() {
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authView, setAuthView] = useState<"login" | "register">("login");
+export function LandingShell({
+  initialAuth,
+  next = null,
+}: {
+  initialAuth?: "login" | "register";
+  next?: string | null;
+}) {
+  const [authOpen, setAuthOpen] = useState(initialAuth !== undefined);
+  const [authView, setAuthView] = useState<"login" | "register">(initialAuth ?? "login");
 
   function openAuth(view: "login" | "register") {
     setAuthView(view);
@@ -30,7 +36,7 @@ export function LandingShell() {
       <Stats />
       <CtaFinal onOpenAuth={openAuth} />
       <Footer />
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} initialView={authView} />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} initialView={authView} next={next} />
     </div>
   );
 }
