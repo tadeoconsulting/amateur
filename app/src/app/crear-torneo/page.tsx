@@ -5,26 +5,28 @@ import { useRouter } from "next/navigation";
 import { MobileShell } from "@/_components/mobile-shell";
 import { StepIndicator } from "./_components/step-indicator";
 import { CrearSedeModal, type Sede } from "./_components/crear-sede-modal";
-
-const INITIAL_SEDES: Sede[] = [];
+import { useWizard } from "./_components/wizard-context";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
-  const [nombre, setNombre] = useState("");
-  const [fecha, setFecha] = useState("");
-  const [sede, setSede] = useState<Sede | null>(null);
+  const { state, update } = useWizard();
+  const { nombre, fecha, sede, sedes } = state;
   const [showSedeList, setShowSedeList] = useState(false);
   const [showCrearSede, setShowCrearSede] = useState(false);
-  const [sedes, setSedes] = useState<Sede[]>(INITIAL_SEDES);
+
+  const setNombre = (value: string) => update({ nombre: value });
+  const setFecha = (value: string) => update({ fecha: value });
+
+  // Nombre, fecha y sede son lo mínimo para que el torneo exista (la base los exige).
+  const canContinue = nombre.trim() !== "" && fecha !== "" && sede !== null;
 
   function handleSelectSede(s: Sede) {
-    setSede(s);
+    update({ sede: s });
     setShowSedeList(false);
   }
 
   function handleCreatedSede(s: Sede) {
-    setSedes((prev) => [...prev, s]);
-    setSede(s);
+    update({ sedes: [...sedes, s], sede: s });
   }
 
   function handleContinuar() {
@@ -141,7 +143,7 @@ export default function CrearTorneoPage() {
         <div className="mt-auto pt-8 flex flex-col gap-3">
           <button
             onClick={handleContinuar}
-            disabled={!nombre.trim()}
+            disabled={!canContinue}
             className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
           >
             Continuar

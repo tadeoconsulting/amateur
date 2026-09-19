@@ -102,9 +102,16 @@ export function DireccionModal({
                 ))}
               </ul>
             ) : query.trim().length > 0 ? (
-              <p className="font-body text-sm text-text-secondary py-4 text-center">
-                No se encontraron resultados
-              </p>
+              <div className="py-4 text-center">
+                <p className="font-body text-sm text-text-secondary">No se encontraron resultados</p>
+                {/* Todavía no hay un buscador de direcciones conectado: se puede usar lo escrito tal cual. */}
+                <button
+                  onClick={() => handleSelectResult(query.trim())}
+                  className="mt-3 cursor-pointer font-heading text-sm font-semibold text-text-primary underline"
+                >
+                  Usar &ldquo;{query.trim()}&rdquo; como dirección
+                </button>
+              </div>
             ) : null}
           </div>
 

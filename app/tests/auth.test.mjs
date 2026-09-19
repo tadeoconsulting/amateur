@@ -13,65 +13,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-
-const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3000";
-const RUN = Date.now().toString(36);
-const PASSWORD = "Passw0rd-de-prueba";
-const COOKIE_NAME = "amateur_session";
-
-class Client {
-  cookie = "";
-
-  async request(method, path, body) {
-    const res = await fetch(BASE + path, {
-      method,
-      redirect: "manual",
-      headers: {
-        "Content-Type": "application/json",
-        ...(this.cookie ? { cookie: this.cookie } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-
-    const setCookies = res.headers.getSetCookie?.() ?? [];
-    for (const raw of setCookies) {
-      const [pair] = raw.split(";");
-      const [name, ...rest] = pair.split("=");
-      if (name === COOKIE_NAME) this.cookie = rest.join("=") ? `${name}=${rest.join("=")}` : "";
-    }
-
-    let data = null;
-    try {
-      data = await res.json();
-    } catch {}
-    return { status: res.status, data, res, setCookies };
-  }
-
-  get = (path) => this.request("GET", path);
-  post = (path, body) => this.request("POST", path, body ?? {});
-  patch = (path, body) => this.request("PATCH", path, body);
-  del = (path) => this.request("DELETE", path);
-}
-
-let counter = 0;
-async function newUser(label, roles = []) {
-  const client = new Client();
-  const email = `${label}-${RUN}-${counter++}@test.amateur`;
-  const reg = await client.post("/api/auth/register", {
-    email,
-    password: PASSWORD,
-    firstName: label,
-    lastName: "Prueba",
-  });
-  assert.equal(reg.status, 201, `registro de ${label}: ${JSON.stringify(reg.data)}`);
-  for (const role of roles) {
-    const r = await client.post("/api/auth/roles", { role });
-    assert.equal(r.status, 200, `rol ${role} para ${label}`);
-  }
-  return { client, email, id: reg.data.id };
-}
-
-const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString();
+import { BASE, COOKIE_NAME, Client, PASSWORD, RUN, newUser, tomorrow } from "./helpers.mjs";
 
 describe("sin sesión", () => {
   const anon = new Client();

@@ -65,6 +65,9 @@ model Club {
   delegadoTel    String?
   delegadoEmail  String?
   ownerId       String
+  // Equipo temporal creado por un organizador para su torneo (sin delegado ni
+  // métricas). No aparece en la búsqueda de equipos de la comunidad.
+  isTemporary   Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -175,6 +178,17 @@ model Tournament {
   organizerId   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // Datos que pide el asistente "Crear torneo". Todos opcionales: los torneos
+  // que ya existían no los tienen.
+  modality        String?   // "5 vs 5" ... "11 vs 11"
+  gender          String?   // "Femenino" | "Masculino" | "Mixto"
+  minutesPerHalf  Int?
+  playersPerTeam  Int?
+  assignDelegates Boolean   @default(false)
+  registrationFee String?   // texto libre, ej. "S/100"
+  refereeFee      String?
+  rules           String[]  @default([])   // condiciones / bases del torneo
 
   organizer     User             @relation("TournamentOrganizer", fields: [organizerId], references: [id])
   teams         TournamentTeam[]

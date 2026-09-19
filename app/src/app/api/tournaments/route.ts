@@ -1,6 +1,8 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { badRequest, isAdmin, readJson, requireRole } from "@/_lib/auth";
+import { parseTournamentFields } from "@/_lib/tournament-input";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -39,6 +41,8 @@ export async function GET(request: NextRequest) {
       category: t.category,
       maxTeams: t.maxTeams,
       minTeams: t.minTeams,
+      modality: t.modality,
+      gender: t.gender,
       teamsCount: t._count.teams,
       matchesCount: t._count.matches,
       startDate: t.startDate,
@@ -58,32 +62,16 @@ export async function POST(request: NextRequest) {
     const body = await readJson(request);
     if (!body) return badRequest();
 
-    const { name, format, maxTeams, minTeams, startDate, endDate, location, category, status } = body;
-
-    if (
-      typeof name !== "string" || !name.trim() ||
-      typeof format !== "string" || !format ||
-      !Number.isInteger(maxTeams) || (maxTeams as number) < 2 ||
-      !startDate || Number.isNaN(new Date(startDate as string).getTime()) ||
-      typeof location !== "string" || !location.trim()
-    ) {
-      return badRequest("Campos requeridos faltantes o inválidos");
-    }
+    const parsed = parseTournamentFields(body, "create");
+    if ("error" in parsed) return badRequest(parsed.error);
 
     // El organizador es quien crea el torneo. Solo un admin puede crearlo a nombre de otro.
     const organizerId = isAdmin(user) && typeof body.organizerId === "string" ? body.organizerId : user.id;
 
     const tournament = await prisma.tournament.create({
       data: {
-        name: name.trim(),
-        format,
-        status: typeof status === "string" && status ? status : "draft",
-        maxTeams: maxTeams as number,
-        minTeams: Number.isInteger(minTeams) ? (minTeams as number) : null,
-        startDate: new Date(startDate as string),
-        endDate: endDate ? new Date(endDate as string) : null,
-        location: location.trim(),
-        category: typeof category === "string" ? category : null,
+        ...(parsed.data as Prisma.TournamentUncheckedCreateInput),
+        status: (parsed.data.status as string | undefined) ?? "draft",
         organizerId,
       },
     });

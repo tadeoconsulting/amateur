@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
   const where: Record<string, unknown> = {};
   if (ownerId) where.ownerId = ownerId;
   if (search) where.name = { contains: search, mode: "insensitive" };
+  // Los equipos temporales son de quien los creó: solo él los ve, y no salen en la
+  // búsqueda de equipos de la comunidad.
+  if (!(ownerId && ownerId === auth.user.id)) where.isTemporary = false;
 
   const clubs = await prisma.club.findMany({
     where,

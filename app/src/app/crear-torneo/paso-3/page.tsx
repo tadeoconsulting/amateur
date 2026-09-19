@@ -6,31 +6,91 @@ import { MobileShell } from "@/_components/mobile-shell";
 import { StepIndicator } from "../_components/step-indicator";
 import { CondicionModal } from "../_components/condicion-modal";
 import { BasesListModal } from "../_components/bases-list-modal";
+import { useWizard } from "../_components/wizard-context";
+import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
 
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
-  const [minutos, setMinutos] = useState(0);
-  const [jugadores, setJugadores] = useState(0);
-  const [delegado, setDelegado] = useState(false);
-  const [costoInscripcion, setCostoInscripcion] = useState("");
-  const [costoArbitraje, setCostoArbitraje] = useState("");
-  const [condiciones, setCondiciones] = useState<string[]>([]);
+  const { state, update } = useWizard();
+  const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones } = state;
   const [showCondicionModal, setShowCondicionModal] = useState(false);
   const [showBasesList, setShowBasesList] = useState(false);
   const [torneoCreado, setTorneoCreado] = useState(false);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleCrearTorneo() {
-    setTorneoCreado(true);
-    setShowBasesList(true);
+  const setMinutos = (value: number) => update({ minutos: value });
+  const setJugadores = (value: number) => update({ jugadores: value });
+  const setDelegado = (value: boolean) => update({ delegado: value });
+  const setCostoInscripcion = (value: string) => update({ costoInscripcion: value });
+  const setCostoArbitraje = (value: string) => update({ costoArbitraje: value });
+
+  async function handleCrearTorneo() {
+    if (saving || torneoCreado) return;
+
+    // Lo que faltó completar en los pasos anteriores (por ejemplo si se abrió este paso directo).
+    const missing = [
+      !state.nombre.trim() && "nombre",
+      !state.fecha && "fecha de inicio",
+      !state.sede && "sede",
+      !state.modalidad && "modalidad",
+      !state.tipoCompetencia && "tipo de competencia",
+      state.cantidadEquipos < 2 && "cantidad de equipos (mínimo 2)",
+    ].filter(Boolean);
+    if (missing.length > 0) {
+      setError(`Falta completar: ${missing.join(", ")}. Vuelve a los pasos anteriores.`);
+      return;
+    }
+
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: state.nombre.trim(),
+          startDate: state.fecha,
+          location: `${state.sede!.nombre}, ${state.sede!.direccion}`,
+          format: formatFromCompetitionLabel(state.tipoCompetencia),
+          maxTeams: state.cantidadEquipos,
+          modality: state.modalidad,
+          gender: state.genero || null,
+          category: state.categoria || null,
+          // 0 en el formulario significa "sin definir".
+          minutesPerHalf: state.minutos > 0 ? state.minutos : null,
+          playersPerTeam: state.jugadores > 0 ? state.jugadores : null,
+          assignDelegates: state.delegado,
+          registrationFee: state.costoInscripcion.trim() || null,
+          refereeFee: state.costoArbitraje.trim() || null,
+          rules: state.condiciones,
+          // Un torneo recién creado queda abierto para inscribir equipos.
+          status: "inscripcion",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo crear el torneo");
+        return;
+      }
+      setCreatedId(data.id);
+      setTorneoCreado(true);
+      setShowBasesList(true);
+    } catch {
+      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleAddCondicion(texto: string) {
-    setCondiciones((prev) => [...prev, texto]);
+    update({ condiciones: [...condiciones, texto] });
     setShowCondicionModal(false);
   }
 
   function handleEditCondicion(index: number, newText: string) {
-    setCondiciones((prev) => prev.map((c, i) => (i === index ? newText : c)));
+    update({ condiciones: condiciones.map((c, i) => (i === index ? newText : c)) });
   }
 
   return (
@@ -182,11 +242,13 @@ export default function CrearTorneoPaso3Page() {
 
         {/* Bottom actions */}
         <div className="mt-auto pt-6 flex flex-col gap-3">
+          {error && <p className="font-body text-sm text-red-600">{error}</p>}
           <button
             onClick={handleCrearTorneo}
-            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer"
+            disabled={saving || torneoCreado}
+            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
           >
-            Crear torneo
+            {saving ? "Creando..." : "Crear torneo"}
           </button>
           <button
             onClick={() => router.push("/torneos")}
@@ -209,7 +271,8 @@ export default function CrearTorneoPaso3Page() {
         showToast={torneoCreado}
         onClose={() => {
           setShowBasesList(false);
-          if (torneoCreado) router.push("/torneos");
+          // Al terminar se va al torneo nuevo, que es donde se agregan los equipos.
+          if (torneoCreado) router.push(createdId ? `/torneos/${createdId}` : "/torneos");
         }}
         onEdit={handleEditCondicion}
       />

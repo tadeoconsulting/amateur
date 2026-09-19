@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { getTournaments } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { formatLabel } from "@/_lib/tournament-labels";
 
 type MainTab = "mis_torneos" | "solicitudes";
 type CategoryTab = "libre" | "sub18";
@@ -151,7 +152,7 @@ export default function ClubTorneosPage() {
                         <path d="M7 1.75l1 2h-2l1-2zM3.5 5l2 1-1 2-2-1 1-2zM10.5 5l-2 1 1 2 2-1-1-2zM5 10.5l2-1 2 1-1 2H6l-1-2z" fill="currentColor" opacity="0.3" />
                       </svg>
                       <span className="font-body text-xs text-text-secondary">
-                        {t.format === "liga" ? "Liga" : t.format === "grupos" ? "Grupos" : "Eliminación"} | {t.teamsCount} equipos
+                        {formatLabel(t.format)} | {t.teamsCount} equipos
                       </span>
                     </div>
                   </div>

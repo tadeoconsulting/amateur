@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { getTournament, getMatches, getStandings, getScorers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { formatLabel } from "@/_lib/tournament-labels";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -78,7 +79,7 @@ export default function ClubTorneoDetallePage() {
                   <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1" />
                 </svg>
                 <span className="font-body text-xs text-text-secondary">
-                  {tournament.format === "liga" ? "Liga" : tournament.format === "grupos" ? "Grupos" : "Eliminación"} | {tournament._count.teams} equipos
+                  {formatLabel(tournament.format)} | {tournament._count.teams} equipos
                 </span>
               </div>
             </div>

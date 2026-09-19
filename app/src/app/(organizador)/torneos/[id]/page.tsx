@@ -15,6 +15,7 @@ import {
   type ScorerRow,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { formatLabel } from "@/_lib/tournament-labels";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
@@ -66,8 +67,10 @@ export default function TournamentDetailPage() {
   const [activeConvTab, setActiveConvTab] = useState<ConvocatoriaTab>("inscritos");
   const [showSelector, setShowSelector] = useState(false);
   const [selectedTournamentId, setSelectedTournamentId] = useState(params.id);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [teamError, setTeamError] = useState("");
 
-  const { data: tournament, loading: loadingTournament } = useApi(() => getTournament(params.id));
+  const { data: tournament, loading: loadingTournament, refetch } = useApi(() => getTournament(params.id));
   const { data: allTournaments } = useApi(() => getTournaments());
   const { data: tournamentMatches } = useApi(() => getMatches({ tournamentId: params.id }));
   const { data: standings } = useApi(() => getStandings(params.id));
@@ -79,6 +82,22 @@ export default function TournamentDetailPage() {
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     );
+  }
+
+  async function removeTeam(clubId: string) {
+    setTeamError("");
+    setRemovingId(clubId);
+    try {
+      const res = await fetch(`/api/tournaments/${params.id}/teams/${clubId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setTeamError(data.error ?? "No se pudo quitar el equipo");
+        return;
+      }
+      refetch();
+    } finally {
+      setRemovingId(null);
+    }
   }
 
   const isConvocatoria = tournament.status === "inscripcion";
@@ -134,7 +153,7 @@ export default function TournamentDetailPage() {
           <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-brand-500">
             {isConvocatoria
               ? `${tournament._count.teams}/${tournament.maxTeams || "?"} equipos`
-              : `${tournament._count.teams} equipos`} | {tournament.format === "liga" ? "Liga" : tournament.format === "grupos" ? "Grupos" : "Relámpago"} | {tournament.category || "Libre"}
+              : `${tournament._count.teams} equipos`} | {formatLabel(tournament.format)} | {tournament.category || "Libre"}
             {!isConvocatoria && (
               <>
                 {" | "}
@@ -181,8 +200,62 @@ export default function TournamentDetailPage() {
             ))}
       </div>
 
-      {/* === Convocatoria Content === */}
-      {isConvocatoria && (
+      {/* === Convocatoria: equipos inscritos === */}
+      {isConvocatoria && activeConvTab === "inscritos" && tournament.teams.length > 0 && (
+        <div className="mt-4 px-4">
+          <div className="flex flex-col">
+            {tournament.teams.map((team) => (
+              <div key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-heading text-xs font-bold text-white"
+                  style={{ backgroundColor: team.club.color ?? "var(--color-brand-500)" }}
+                >
+                  {team.club.shortName.slice(0, 3).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
+                  <p className="mt-0.5 truncate font-body text-xs text-text-secondary">
+                    {team.club.isTemporary
+                      ? "Equipo temporal"
+                      : team.club.delegadoNombre
+                        ? `Delegado ${team.club.delegadoNombre}`
+                        : "Sin delegado"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => removeTeam(team.club.id)}
+                  disabled={removingId === team.club.id}
+                  className="shrink-0 cursor-pointer font-heading text-sm font-bold text-text-secondary underline disabled:opacity-40"
+                >
+                  Quitar
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {teamError && <p className="mt-3 font-body text-sm text-red-600">{teamError}</p>}
+
+          {tournament._count.teams < (tournament.maxTeams ?? Infinity) ? (
+            <Link
+              href={`/torneos/${params.id}/agregar-equipo`}
+              className="mt-5 flex w-full items-center justify-center rounded-lg border border-border-primary py-3.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
+            >
+              Agregar equipo
+            </Link>
+          ) : (
+            <p className="mt-5 text-center font-body text-sm text-text-secondary">El torneo ya tiene todos sus equipos.</p>
+          )}
+        </div>
+      )}
+
+      {isConvocatoria && activeConvTab !== "inscritos" && (
+        <p className="px-4 py-10 text-center font-body text-sm text-text-secondary">
+          {activeConvTab === "solicitudes" ? "Todavía no hay solicitudes de equipos." : "Todavía no hay equipos invitados."}
+        </p>
+      )}
+
+      {/* === Convocatoria Content (sin equipos todavía) === */}
+      {isConvocatoria && activeConvTab === "inscritos" && tournament.teams.length === 0 && (
         <div className="mt-4 flex flex-1 flex-col px-4">
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mb-6 flex items-center justify-center">
@@ -446,7 +519,7 @@ export default function TournamentDetailPage() {
                           {t.name}
                         </p>
                         <p className={`mt-0.5 text-xs ${isSelected ? "text-brand-500" : "text-text-secondary"}`}>
-                          {t.teamsCount} equipos | {t.format === "liga" ? "Liga" : t.format === "grupos" ? "Grupos" : "Eliminación directa"} | {t.category || "Libre"}
+                          {t.teamsCount} equipos | {formatLabel(t.format)} | {t.category || "Libre"}
                         </p>
                       </div>
                       <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${

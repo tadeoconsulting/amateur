@@ -6,16 +6,23 @@ import { MobileShell } from "@/_components/mobile-shell";
 import { StepIndicator } from "../_components/step-indicator";
 import { ModalidadModal } from "../_components/modalidad-modal";
 import { CompetenciaModal } from "../_components/competencia-modal";
+import { useWizard } from "../_components/wizard-context";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
-  const [modalidad, setModalidad] = useState("");
-  const [tipoCompetencia, setTipoCompetencia] = useState("");
+  const { state, update } = useWizard();
+  const { modalidad, tipoCompetencia, genero, categoria, cantidadEquipos } = state;
   const [showCompetencia, setShowCompetencia] = useState(false);
-  const [genero, setGenero] = useState("");
-  const [categoria, setCategoria] = useState("");
-  const [cantidadEquipos, setCantidadEquipos] = useState(0);
   const [showModalidad, setShowModalidad] = useState(false);
+
+  const setModalidad = (value: string) => update({ modalidad: value });
+  const setTipoCompetencia = (value: string) => update({ tipoCompetencia: value });
+  const setGenero = (value: string) => update({ genero: value });
+  const setCategoria = (value: string) => update({ categoria: value });
+  const setCantidadEquipos = (value: number) => update({ cantidadEquipos: value });
+
+  // Modalidad, tipo de competencia y al menos 2 equipos: sin eso no se puede armar el torneo.
+  const canContinue = modalidad !== "" && tipoCompetencia !== "" && cantidadEquipos >= 2;
 
   function handleContinuar() {
     router.push("/crear-torneo/paso-3");
@@ -148,7 +155,8 @@ export default function CrearTorneoPaso2Page() {
         <div className="mt-auto pt-8 flex flex-col gap-3">
           <button
             onClick={handleContinuar}
-            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer"
+            disabled={!canContinue}
+            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
           >
             Continuar
           </button>
