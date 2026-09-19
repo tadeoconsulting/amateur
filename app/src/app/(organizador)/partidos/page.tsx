@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { getTournaments, getMatches, type TournamentListItem, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 function formatShortDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -137,7 +138,7 @@ export default function PartidosPage() {
                           </span>
                         )}
                         <p className="mt-0.5 font-body text-[11px] text-text-secondary">
-                          {formatShortDate(m.date)} · {m.time}
+                          {m.time === "" ? UNSCHEDULED_LABEL : `${formatShortDate(m.date)} · ${m.time}`}
                         </p>
                         {tournament && (
                           <p className="font-body text-[11px] text-text-secondary truncate">

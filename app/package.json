@@ -15,7 +15,9 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "db:make-admin": "npx tsx prisma/make-admin.ts",
-    "test:auth": "node --test tests/*.test.mjs"
+    "test:auth": "node --test tests/*.test.mjs",
+    "test:unit": "node --test tests/unit/*.test.mjs",
+    "test:api": "node --test tests/*.test.mjs"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

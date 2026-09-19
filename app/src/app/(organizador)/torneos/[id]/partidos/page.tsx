@@ -5,8 +5,9 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { getTournament, getMatches, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
-
-const matchdays = ["Fecha 1", "Fecha 2", "Fecha 3", "Cuartos", "Semi", "Final"];
+import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { formatLabel } from "@/_lib/tournament-labels";
+import { isUnscheduled } from "@/_lib/fixture";
 
 const clubColors = ["#E53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#F4511E", "#7B1FA2"];
 
@@ -31,7 +32,7 @@ function PartidosFixtureContent() {
   const searchParams = useSearchParams();
   const { data: tournament } = useApi(() => getTournament(params.id));
   const { data: allMatches, loading } = useApi(() => getMatches({ tournamentId: params.id }));
-  const [activeMatchday, setActiveMatchday] = useState("Fecha 1");
+  const [activeMatchday, setActiveMatchday] = useState<number | null>(null);
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
@@ -50,7 +51,9 @@ function PartidosFixtureContent() {
     );
   }
 
-  const activeMatchdayIndex = matchdays.indexOf(activeMatchday) + 1;
+  // Las fechas son las que tiene el fixture (una liga de 8 equipos tiene 7).
+  const matchdays = [...new Set(allMatches.map((m) => m.matchday))].sort((a, b) => a - b);
+  const activeMatchdayIndex = activeMatchday ?? matchdays[0];
   const tournamentMatches = allMatches
     .filter((m: MatchListItem) => m.matchday === activeMatchdayIndex);
 
@@ -126,7 +129,7 @@ function PartidosFixtureContent() {
               {tournament.name}
             </p>
             <p className="font-body text-xs text-text-secondary">
-              {tournament._count.teams} equipos | {tournament.format === "liga" ? "Liga" : tournament.format === "grupos" ? "Grupos" : "Relámpago"} | {tournament.category || "Libre"}
+              {tournament._count.teams} equipos | {formatLabel(tournament.format)} | {tournament.category || "Libre"}
               {" "}
               <span className="inline-flex items-center rounded-full bg-verification px-1.5 py-0.5 text-[10px] font-bold text-text-primary">
                 Activo
@@ -146,12 +149,12 @@ function PartidosFixtureContent() {
             key={day}
             onClick={() => setActiveMatchday(day)}
             className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
-              activeMatchday === day
+              activeMatchdayIndex === day
                 ? "bg-surface-secondary text-text-invert"
                 : "border border-border-primary text-text-primary"
             }`}
           >
-            {day}
+            Fecha {day}
           </button>
         ))}
       </div>
@@ -211,8 +214,14 @@ function PartidosFixtureContent() {
 
                     {/* Date & time */}
                     <div className="text-right">
-                      <p className="font-heading text-sm font-bold text-text-primary">{formatTime(match.time)}</p>
-                      <p className="font-body text-xs text-text-secondary">{formatMatchDate(match.date)}</p>
+                      {isUnscheduled(match) ? (
+                        <p className="font-heading text-sm font-bold text-text-secondary">{UNSCHEDULED_LABEL}</p>
+                      ) : (
+                        <>
+                          <p className="font-heading text-sm font-bold text-text-primary">{formatTime(match.time)}</p>
+                          <p className="font-body text-xs text-text-secondary">{formatMatchDate(match.date)}</p>
+                        </>
+                      )}
                     </div>
                   </div>
                 </Link>

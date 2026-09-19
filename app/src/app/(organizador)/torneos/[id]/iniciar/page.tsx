@@ -5,11 +5,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { planFixture } from "@/_lib/fixture";
+import { formatLabel, OPEN_STATUSES } from "@/_lib/tournament-labels";
 
 export default function IniciarTorneoPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmMode, setConfirmMode] = useState<"auto" | "manual" | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState("");
   const { data: tournament, loading } = useApi(() => getTournament(params.id));
 
   if (loading || !tournament) {
@@ -18,6 +22,47 @@ export default function IniciarTorneoPage() {
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     );
+  }
+
+  // Qué impide armar el fixture: ya empezó, el formato no está soportado, faltan equipos o grupos.
+  const started = !OPEN_STATUSES.includes(tournament.status);
+  const plan = planFixture(
+    tournament.teams.map((t) => ({ id: t.club.id, groupName: t.groupName })),
+    tournament.format
+  );
+  const blockReason = started ? "Este torneo ya empezó." : !plan.ok ? plan.error : null;
+  const missingTeams = Math.max(0, (tournament.maxTeams ?? 0) - tournament.teams.length);
+
+  async function start() {
+    if (!confirmMode || starting) return;
+    // La programación automática se define en la pantalla siguiente y ahí se crea el fixture.
+    if (confirmMode === "auto") {
+      setConfirmMode(null);
+      router.push(`/torneos/${params.id}/fixture`);
+      return;
+    }
+    // La manual crea los cruces sin día ni hora, para configurarlos partido por partido.
+    setError("");
+    setStarting(true);
+    try {
+      const res = await fetch(`/api/tournaments/${params.id}/fixture`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "manual" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo iniciar el torneo");
+        setConfirmMode(null);
+        return;
+      }
+      router.push(`/torneos/${params.id}/manual`);
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+      setConfirmMode(null);
+    } finally {
+      setStarting(false);
+    }
   }
 
   return (
@@ -55,7 +100,7 @@ export default function IniciarTorneoPage() {
               {tournament.name}
             </p>
             <p className="font-body text-xs text-text-secondary">
-              {tournament._count.teams} equipos | {tournament.format === "liga" ? "Liga" : tournament.format === "grupos" ? "Grupos" : "Relámpago"} | {tournament.category || "Libre"}
+              {tournament._count.teams} equipos | {formatLabel(tournament.format)} | {tournament.category || "Libre"}
               {" "}
               <span className="inline-flex items-center rounded-full bg-verification px-1.5 py-0.5 text-[10px] font-bold text-text-primary">
                 Activo
@@ -117,19 +162,30 @@ export default function IniciarTorneoPage() {
           El torneo ya puede empezar
         </h2>
         <p className="font-body text-sm text-text-secondary leading-relaxed max-w-[280px] mb-10">
-          Crea el fixture del torneo y que empiece esta fiesta deportiva.
+          {blockReason ?? "Crea el fixture del torneo y que empiece esta fiesta deportiva."}
         </p>
 
         <div className="flex w-full flex-col gap-3">
+          {error && <p className="font-body text-sm text-red-600">{error}</p>}
+          {tournament.status === "en_curso" && (
+            <Link
+              href={`/torneos/${params.id}/partidos`}
+              className="flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+            >
+              Ver fixture
+            </Link>
+          )}
           <button
-            onClick={() => setShowConfirm(true)}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+            onClick={() => setConfirmMode("auto")}
+            disabled={blockReason !== null}
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Programación automática
           </button>
           <button
-            onClick={() => router.push(`/torneos/${params.id}/manual`)}
-            className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
+            onClick={() => setConfirmMode("manual")}
+            disabled={blockReason !== null}
+            className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-40"
           >
             Programación manual
           </button>
@@ -143,31 +199,35 @@ export default function IniciarTorneoPage() {
       </div>
 
       {/* Confirmation bottom sheet */}
-      {showConfirm && (
+      {confirmMode && (
         <>
           <div
             className="fixed inset-0 z-[110] bg-black/40"
-            onClick={() => setShowConfirm(false)}
+            onClick={() => setConfirmMode(null)}
           />
           <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-[430px] animate-slide-up rounded-t-2xl bg-surface-primary px-6 pb-8 pt-6">
-            <h3 className="text-center font-heading text-lg font-bold text-text-primary mb-6">
+            <h3 className="text-center font-heading text-lg font-bold text-text-primary mb-3">
               ¿Seguro que deseas iniciar el torneo?
             </h3>
+            <p className="mb-6 text-center font-body text-sm text-text-secondary">
+              {missingTeams > 0
+                ? `Faltan ${missingTeams} ${missingTeams === 1 ? "equipo" : "equipos"} para completar el cupo. `
+                : ""}
+              Al iniciar ya no podrás agregar ni quitar equipos.
+            </p>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowConfirm(false)}
+                onClick={() => setConfirmMode(null)}
                 className="flex-1 cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
               >
                 Cancelar
               </button>
               <button
-                onClick={() => {
-                  setShowConfirm(false);
-                  router.push(`/torneos/${params.id}/fixture`);
-                }}
-                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+                onClick={start}
+                disabled={starting}
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
               >
-                Iniciar
+                {starting ? "Iniciando..." : "Iniciar"}
               </button>
             </div>
           </div>

@@ -86,6 +86,7 @@ describe("crear torneo (asistente)", () => {
     await bad({ maxTeams: 2.5 }, "equipos no entero");
     await bad({ minTeams: 9 }, "mínimo mayor al máximo");
     await bad({ startDate: "no-es-fecha" }, "fecha inválida");
+    await bad({ startDate: "2026-02-31" }, "31 de febrero (Date lo pasaría al 3 de marzo)");
     await bad({ endDate: "2020-01-01" }, "fin antes del inicio");
     await bad({ modality: "13 vs 13" }, "modalidad desconocida");
     await bad({ gender: "Otro" }, "género desconocido");

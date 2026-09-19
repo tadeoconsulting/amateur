@@ -1,53 +1,21 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getTournament, getMatches } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
-
-const matchdays = ["Fecha 1", "Fecha 2", "Fecha 3", "Cuartos", "Semi", "Final"];
+import { formatMatchDate, formatTime12 } from "@/_lib/match-format";
+import { formatLabel } from "@/_lib/tournament-labels";
+import { isUnscheduled } from "@/_lib/fixture";
 
 const clubColors = ["#E53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#F4511E", "#7B1FA2"];
-
-type MatchConfig = {
-  date: string;
-  hora: string;
-  minuto: string;
-  sede: string;
-};
-
-function formatConfigDate(dateStr: string) {
-  const d = new Date(dateStr);
-  const day = d.toLocaleDateString("es-PE", { weekday: "short" });
-  const num = d.getDate();
-  const month = d.toLocaleDateString("es-PE", { month: "short" });
-  return `${day.charAt(0).toUpperCase() + day.slice(1)} ${num} ${month.charAt(0).toUpperCase() + month.slice(1)}`;
-}
-
-function formatConfigTime(hora: string, minuto: string) {
-  const minNum = minuto.replace(" min", "");
-  return hora.replace(":00", ":" + minNum.padStart(2, "0"));
-}
 
 export default function ManualFixturePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { data: tournament, loading: loadingT } = useApi(() => getTournament(params.id));
   const { data: allMatches, loading: loadingM } = useApi(() => getMatches({ tournamentId: params.id }));
-  const [activeMatchday, setActiveMatchday] = useState("Fecha 1");
-  const [matchConfigs, setMatchConfigs] = useState<Record<string, MatchConfig>>({});
-
-  useEffect(() => {
-    function loadConfigs() {
-      try {
-        const stored = JSON.parse(localStorage.getItem("matchConfigs") || "{}");
-        setMatchConfigs(stored);
-      } catch {}
-    }
-    loadConfigs();
-    window.addEventListener("focus", loadConfigs);
-    return () => window.removeEventListener("focus", loadConfigs);
-  }, []);
+  const [activeMatchday, setActiveMatchday] = useState<number | null>(null);
 
   if (loadingT || loadingM || !tournament) {
     return (
@@ -57,7 +25,9 @@ export default function ManualFixturePage() {
     );
   }
 
-  const activeMatchdayIndex = matchdays.indexOf(activeMatchday) + 1;
+  // Las fechas son las que tiene el fixture (una liga de 8 equipos tiene 7).
+  const matchdays = [...new Set((allMatches ?? []).map((m) => m.matchday))].sort((a, b) => a - b);
+  const activeMatchdayIndex = activeMatchday ?? matchdays[0];
   const tournamentMatches = (allMatches ?? [])
     .filter((m) => m.matchday === activeMatchdayIndex);
 
@@ -112,7 +82,7 @@ export default function ManualFixturePage() {
               {tournament.name}
             </p>
             <p className="font-body text-xs text-text-secondary">
-              {tournament._count.teams} equipos | {tournament.format === "liga" ? "Liga" : tournament.format === "grupos" ? "Grupos" : "Relámpago"} | {tournament.category || "Libre"}
+              {tournament._count.teams} equipos | {formatLabel(tournament.format)} | {tournament.category || "Libre"}
               {" "}
               <span className="inline-flex items-center rounded-full bg-verification px-1.5 py-0.5 text-[10px] font-bold text-text-primary">
                 Activo
@@ -132,18 +102,20 @@ export default function ManualFixturePage() {
             key={day}
             onClick={() => setActiveMatchday(day)}
             className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
-              activeMatchday === day
+              activeMatchdayIndex === day
                 ? "bg-surface-secondary text-text-invert"
                 : "border border-border-primary text-text-primary"
             }`}
           >
-            {day}
+            Fecha {day}
           </button>
         ))}
       </div>
 
       {/* "Por definir" label */}
-      <p className="px-4 pb-3 font-body text-sm text-text-secondary">Por definir</p>
+      {tournamentMatches.some(isUnscheduled) && (
+        <p className="px-4 pb-3 font-body text-sm text-text-secondary">Por definir</p>
+      )}
 
       {/* Match cards by group */}
       <div className="flex flex-col gap-4 px-4">
@@ -151,22 +123,22 @@ export default function ManualFixturePage() {
           Object.entries(grouped).map(([group, groupMatches]) => (
             <div key={group} className="contents">
               {groupMatches.map((match, mi) => {
-                const config = matchConfigs[match.id];
+                const scheduled = !isUnscheduled(match);
                 return (
                   <div
                     key={match.id}
-                    onClick={config ? () => router.push(`/torneos/${params.id}/partido/${match.id}`) : undefined}
-                    className={`rounded-xl border border-border-primary overflow-hidden${config ? " cursor-pointer transition-colors hover:bg-btn-regular" : ""}`}
+                    onClick={scheduled ? () => router.push(`/torneos/${params.id}/partido/${match.id}`) : undefined}
+                    className={`rounded-xl border border-border-primary overflow-hidden${scheduled ? " cursor-pointer transition-colors hover:bg-btn-regular" : ""}`}
                   >
                     {/* Group header */}
                     <div className="flex items-center justify-between bg-btn-regular px-4 py-2">
                       <span className="font-heading text-xs font-bold text-text-primary">{group}</span>
-                      {config?.sede && (
+                      {scheduled && match.location && (
                         <div className="flex items-center gap-1 text-text-secondary">
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                             <path d="M6 1C3.79 1 2 2.79 2 5c0 2.5 4 6 4 6s4-3.5 4-6c0-2.21-1.79-4-4-4zm0 5.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" fill="currentColor" />
                           </svg>
-                          <span className="font-body text-[11px]">{config.sede}</span>
+                          <span className="font-body text-[11px]">{match.location}</span>
                         </div>
                       )}
                     </div>
@@ -203,13 +175,13 @@ export default function ManualFixturePage() {
                       <div className="mx-3 h-12 w-px bg-border-primary" />
 
                       {/* Configured: show date/time — Unconfigured: show Configurar */}
-                      {config ? (
+                      {scheduled ? (
                         <div className="text-right">
                           <p className="font-heading text-sm font-bold text-text-primary">
-                            {formatConfigTime(config.hora, config.minuto)}
+                            {formatTime12(match.time)}
                           </p>
                           <p className="font-body text-xs text-text-secondary">
-                            {formatConfigDate(config.date)}
+                            {formatMatchDate(match.date)}
                           </p>
                         </div>
                       ) : (
