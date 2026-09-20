@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
+import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
 
 interface MatchEventItem {
   id: string;
@@ -71,7 +72,7 @@ export default function ClubPartidoDetallePage() {
           )}
           {isScheduled && (
             <span className="rounded-full bg-brand-100 px-3 py-1 font-heading text-xs font-bold text-text-secondary">
-              {match.date} · {match.time}
+              {formatWhen(match)}
             </span>
           )}
         </div>
@@ -201,7 +202,7 @@ export default function ClubPartidoDetallePage() {
             El partido aún no ha comenzado
           </p>
           <p className="text-center font-body text-xs text-text-secondary">
-            {match.date} a las {match.time} en {match.location}
+            {formatWhenSentence(match)}{match.location ? ` en ${match.location}` : ""}
           </p>
         </div>
       )}

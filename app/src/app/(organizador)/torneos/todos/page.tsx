@@ -221,7 +221,8 @@ export default function MisTorneosPage() {
       <div className="flex flex-col gap-3 px-4 pb-6">
         {filtered.length > 0 ? (
           filtered.map((t, i) => {
-            const canStart = t.teamsCount >= (t.maxTeams || 0);
+            // Se puede iniciar con 2 equipos o más; si falta cupo, la pantalla de inicio lo avisa.
+            const canStart = t.teamsCount >= 2;
             return activeTab === "convocatoria" ? (
               <div
                 key={t.id}

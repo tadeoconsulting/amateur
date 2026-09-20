@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getMatches, getStandings, getScorers, getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
@@ -43,11 +44,14 @@ export default function JugadorTorneoDetailPage() {
 
   const groupedMatches: Record<string, typeof allMatches> = {};
   for (const m of allMatches) {
-    const dateLabel = new Date(m.date).toLocaleDateString("es-PE", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
+    const dateLabel =
+      m.time === ""
+        ? UNSCHEDULED_LABEL
+        : new Date(m.date).toLocaleDateString("es-PE", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          });
     const key = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
     if (!groupedMatches[key]) groupedMatches[key] = [];
     groupedMatches[key].push(m);
@@ -158,7 +162,9 @@ export default function JugadorTorneoDetailPage() {
                         <div className="ml-4 text-right">
                           <p className="text-xs text-text-secondary">Fecha {match.matchday}</p>
                           <p className="text-xs text-text-secondary">
-                            {new Date(match.date).toLocaleDateString("es-PE", { weekday: "short", day: "numeric", month: "short" })}
+                            {match.time === ""
+                              ? UNSCHEDULED_LABEL
+                              : new Date(match.date).toLocaleDateString("es-PE", { weekday: "short", day: "numeric", month: "short" })}
                           </p>
                         </div>
                       </div>

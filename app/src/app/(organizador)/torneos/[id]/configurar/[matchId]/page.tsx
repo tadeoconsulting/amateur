@@ -2,6 +2,10 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { getTournament, type MatchListItem } from "@/_lib/api";
+import { useApi } from "@/_lib/use-api";
+import { fromYmd, to24h, toYmd } from "@/_lib/match-format";
+import { isUnscheduled } from "@/_lib/fixture";
 
 const monthNames = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -43,28 +47,72 @@ const minutes = [
   "50 min", "55 min",
 ];
 
-const sedes = [
-  "Estadio La Ribera",
-  "Complejo Deportivo Municipal",
-  "Canchas El Bosque",
-  "Cancha 1",
-  "Cancha 2",
-];
+/** El selector de hora ofrece horas en punto: busca la que corresponde a una hora de 24 h ("18:30" → "6:00 pm"). */
+const hourLabelFor = (time24: string) => hours.find((h) => to24h(h)?.slice(0, 2) === time24.slice(0, 2)) ?? "";
 
 export default function ConfigurarPartidoPage() {
   const params = useParams<{ id: string; matchId: string }>();
   const router = useRouter();
 
-  const now = new Date();
-  const [viewYear, setViewYear] = useState(now.getFullYear());
-  const [viewMonth, setViewMonth] = useState(now.getMonth());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [hora, setHora] = useState("");
-  const [minuto, setMinuto] = useState("");
-  const [sede, setSede] = useState("");
+  const { data: match } = useApi<MatchListItem>(() => fetch(`/api/matches/${params.matchId}`).then((r) => r.json()));
+  const { data: tournament } = useApi(() => getTournament(params.id));
+
+  // Lo que la persona cambió. Mientras no toque algo, se muestra lo que el partido ya tiene.
+  const [pickedDate, setSelectedDate] = useState<Date | null>(null);
+  const [pickedHora, setHora] = useState("");
+  const [pickedMinuto, setMinuto] = useState("");
+  const [pickedSede, setSede] = useState("");
+  const [pickedYear, setViewYear] = useState<number | null>(null);
+  const [pickedMonth, setViewMonth] = useState<number | null>(null);
   const [openHora, setOpenHora] = useState(false);
   const [openMinuto, setOpenMinuto] = useState(false);
   const [openSede, setOpenSede] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const scheduled = !!match && !isUnscheduled(match);
+  const matchDay = match ? fromYmd(match.date.slice(0, 10)) : new Date(); // sin programar: el inicio del torneo
+  const selectedDate = pickedDate ?? (scheduled ? matchDay : null);
+  const hora = pickedHora || (scheduled && match ? hourLabelFor(match.time) : "");
+  const minuto = pickedMinuto || (scheduled && match ? `${match.time.slice(3, 5)} min` : "");
+  const sede = pickedSede || (match?.location ?? "");
+  const viewYear = pickedYear ?? (selectedDate ?? matchDay).getFullYear();
+  const viewMonth = pickedMonth ?? (selectedDate ?? matchDay).getMonth();
+
+  // Sedes reales: la del torneo, la cancha del local y la que ya tenga el partido.
+  const sedeOptions = [
+    ...new Set([tournament?.location, match ? `Cancha de ${match.homeTeam.name}` : null, match?.location].filter(Boolean)),
+  ] as string[];
+  const minuteOptions = minuto && !minutes.includes(minuto) ? [...minutes, minuto].sort() : minutes;
+
+  async function save() {
+    if (!selectedDate || !hora || saving) return;
+    const mm = (minuto || "00 min").replace(" min", "").padStart(2, "0");
+    const time = to24h(hora.replace(":00", ":" + mm));
+    if (!time) {
+      setError("La hora no es válida");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/matches/${params.matchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: toYmd(selectedDate), time, location: sede }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo guardar");
+        return;
+      }
+      router.back();
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const days = getCalendarDays(viewYear, viewMonth);
 
@@ -80,6 +128,14 @@ export default function ConfigurarPartidoPage() {
   function isSelected(day: number, current: boolean) {
     if (!selectedDate || !current) return false;
     return selectedDate.getFullYear() === viewYear && selectedDate.getMonth() === viewMonth && selectedDate.getDate() === day;
+  }
+
+  if (!match || !tournament) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
   }
 
   return (
@@ -158,7 +214,7 @@ export default function ConfigurarPartidoPage() {
         {/* Seleccionar horario */}
         <div className="mb-6">
           <h3 className="font-heading text-sm font-bold text-text-primary mb-3">
-            Seleccionar horario (Tiempo: 20min)
+            Seleccionar horario
           </h3>
           <div className="flex gap-3">
             {/* Hora dropdown */}
@@ -204,7 +260,7 @@ export default function ConfigurarPartidoPage() {
               </button>
               {openMinuto && (
                 <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-xl border border-border-primary bg-surface-primary shadow-lg">
-                  {minutes.map((m) => (
+                  {minuteOptions.map((m) => (
                     <button
                       key={m}
                       onClick={() => { setMinuto(m); setOpenMinuto(false); }}
@@ -243,7 +299,7 @@ export default function ConfigurarPartidoPage() {
             </button>
             {openSede && (
               <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-y-auto rounded-xl border border-border-primary bg-surface-primary shadow-lg">
-                {sedes.map((s) => (
+                {sedeOptions.map((s) => (
                   <button
                     key={s}
                     onClick={() => { setSede(s); setOpenSede(false); }}
@@ -260,26 +316,13 @@ export default function ConfigurarPartidoPage() {
 
       {/* Guardar cambios — sticky bottom */}
       <div className="sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3">
+        {error && <p className="mb-3 font-body text-sm text-red-600">{error}</p>}
         <button
-          onClick={() => {
-            if (selectedDate && hora) {
-              const config = {
-                date: selectedDate.toISOString(),
-                hora,
-                minuto: minuto || "00 min",
-                sede: sede || "",
-              };
-              try {
-                const stored = JSON.parse(localStorage.getItem("matchConfigs") || "{}");
-                stored[params.matchId] = config;
-                localStorage.setItem("matchConfigs", JSON.stringify(stored));
-              } catch {}
-            }
-            router.back();
-          }}
-          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          onClick={save}
+          disabled={!selectedDate || !hora || saving}
+          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Guardar cambios
+          {saving ? "Guardando..." : "Guardar cambios"}
         </button>
       </div>
     </div>

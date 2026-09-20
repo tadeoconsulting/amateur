@@ -6,6 +6,7 @@ import { useState } from "react";
 import { getTournament, getMatches, getStandings, getScorers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { formatLabel } from "@/_lib/tournament-labels";
+import { formatWhen, formatWhenDate } from "@/_lib/match-format";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -141,7 +142,7 @@ export default function ClubTorneoDetallePage() {
                         ? "bg-brand-200 text-text-secondary"
                         : "bg-verification/10 text-verification"
                     }`}>
-                      {m.status === "finalizado" ? "FT" : m.date}
+                      {m.status === "finalizado" ? "FT" : formatWhenDate(m)}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
@@ -203,7 +204,7 @@ export default function ClubTorneoDetallePage() {
                     href={`/club/torneos/${id}/partido/${m.id}`}
                     className="flex w-56 shrink-0 flex-col rounded-xl border border-border-primary p-3"
                   >
-                    <span className="font-body text-[10px] text-text-secondary">{m.date} · {m.time}</span>
+                    <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="font-body text-xs text-text-primary">{m.homeTeam.shortName}</span>
                       <span className="font-heading text-xs font-bold text-text-secondary">vs</span>
@@ -229,7 +230,7 @@ export default function ClubTorneoDetallePage() {
                   <span className="font-body text-[10px] text-text-secondary">
                     {m.groupName} · Fecha {m.matchday}
                   </span>
-                  <span className="font-body text-[10px] text-text-secondary">{m.date} · {m.time}</span>
+                  <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="font-body text-sm text-text-primary">{m.homeTeam.name}</span>

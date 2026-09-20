@@ -39,6 +39,7 @@ export interface TournamentDetail {
   organizerId: string;
   teams: {
     id: string;
+    groupName: string | null;
     club: {
       id: string;
       name: string;

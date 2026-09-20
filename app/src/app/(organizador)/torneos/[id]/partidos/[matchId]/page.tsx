@@ -5,6 +5,7 @@ import { BackHeader } from "@/_components/back-header";
 import { MatchTimeline } from "@/_components/match-timeline";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
+import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 function TeamLogo({ shortName }: { shortName: string }) {
   return (
@@ -62,7 +63,7 @@ export default function MatchDetailPage() {
       <div className="mx-4 mt-2 overflow-hidden rounded-xl border border-brand-200">
         <div className="border-l-4 border-l-brand-900 bg-surface-alt px-3 py-1.5">
           <span className="font-heading text-xs font-semibold text-text-primary">
-            {match.groupName ?? "Partido"} | {formatShortDate(match.date)}
+            {match.groupName ?? "Partido"} | {match.time === "" ? UNSCHEDULED_LABEL : formatShortDate(match.date)}
           </span>
         </div>
         <div className="flex">
@@ -90,7 +91,7 @@ export default function MatchDetailPage() {
               <span className="text-base font-bold text-text-primary">FT</span>
             )}
             {match.status === "programado" && (
-              <span className="text-xs text-text-secondary">{match.time}</span>
+              <span className="text-xs text-text-secondary">{match.time === "" ? UNSCHEDULED_LABEL : match.time}</span>
             )}
             <span className="mt-0.5 text-[10px] text-text-secondary">Fecha {match.matchday}</span>
           </div>

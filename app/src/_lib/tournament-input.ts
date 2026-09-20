@@ -1,4 +1,5 @@
 import { FORMATS, GENDERS, MODALITIES, TOURNAMENT_STATUSES } from "./tournament-labels";
+import { isRealDate } from "./fixture";
 
 type Fields = Record<string, unknown>;
 export type TournamentInput = { data: Fields } | { error: string };
@@ -11,6 +12,8 @@ const isText = (v: unknown, max: number): v is string =>
 
 function toDate(v: unknown): Date | null {
   if (typeof v !== "string" && typeof v !== "number") return null;
+  // "2026-02-31" no existe, pero Date lo convierte en silencio en el 3 de marzo.
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !isRealDate(v)) return null;
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;
 }

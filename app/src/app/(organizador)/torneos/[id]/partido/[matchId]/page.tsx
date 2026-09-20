@@ -4,6 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
+import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { isUnscheduled } from "@/_lib/fixture";
 
 const clubColors = ["#E53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#F4511E", "#7B1FA2"];
 
@@ -33,33 +35,12 @@ function getCountdown(targetDate: Date): string {
   return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-type MatchConfig = {
-  date: string;
-  hora: string;
-  minuto: string;
-  sede: string;
-};
-
-function formatConfigTime(hora: string, minuto: string) {
-  const minNum = minuto.replace(" min", "");
-  return hora.replace(":00", ":" + minNum.padStart(2, "0"));
-}
-
-function parseConfigDateTime(config: MatchConfig): Date | null {
-  try {
-    const d = new Date(config.date);
-    const horaMatch = config.hora.match(/^(\d+):(\d+)\s*(am|pm)$/i);
-    if (!horaMatch) return null;
-    let hours = parseInt(horaMatch[1]);
-    const ampm = horaMatch[3].toLowerCase();
-    if (ampm === "pm" && hours !== 12) hours += 12;
-    if (ampm === "am" && hours === 12) hours = 0;
-    const mins = parseInt(config.minuto.replace(" min", "") || "0");
-    d.setHours(hours, mins, 0, 0);
-    return d;
-  } catch {
-    return null;
-  }
+/** Momento de inicio del partido: su día más la hora de reloj de la cancha. null si no está programado. */
+function matchStart(match: { date: string; time: string }): number | null {
+  if (isUnscheduled(match)) return null;
+  const [y, m, d] = match.date.slice(0, 10).split("-").map(Number);
+  const [hh, mm] = match.time.split(":").map(Number);
+  return new Date(y, m - 1, d, hh, mm).getTime();
 }
 
 export default function PartidoDetailPage() {
@@ -69,29 +50,16 @@ export default function PartidoDetailPage() {
     fetch(`/api/matches/${params.matchId}`).then((r) => r.json())
   );
   const [countdown, setCountdown] = useState("--:--:--");
-  const [matchConfig, setMatchConfig] = useState<MatchConfig | null>(null);
-  const [configLoaded, setConfigLoaded] = useState(false);
+  const targetMs = match ? matchStart(match) : null;
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("matchConfigs") || "{}");
-      if (stored[params.matchId]) {
-        setMatchConfig(stored[params.matchId]);
-      }
-    } catch {}
-    setConfigLoaded(true);
-  }, [params.matchId]);
-
-  const targetDate = matchConfig ? parseConfigDateTime(matchConfig) : null;
-
-  useEffect(() => {
-    if (!targetDate) return;
-    setCountdown(getCountdown(targetDate));
-    const interval = setInterval(() => {
-      setCountdown(getCountdown(targetDate));
-    }, 1000);
+    if (targetMs === null) return;
+    const target = new Date(targetMs);
+    const tick = () => setCountdown(getCountdown(target));
+    const interval = setInterval(tick, 1000);
+    tick();
     return () => clearInterval(interval);
-  }, [matchConfig]);
+  }, [targetMs]);
 
   if (loading || !match) {
     return (
@@ -159,13 +127,13 @@ export default function PartidoDetailPage() {
               Fecha {match.matchday}
             </p>
             <p className="font-body text-xs text-text-secondary">
-              {formatMatchDate(match.date)}
+              {isUnscheduled(match) ? UNSCHEDULED_LABEL : formatMatchDate(match.date)}
             </p>
           </div>
         </div>
       </div>
 
-      {configLoaded && matchConfig ? (
+      {targetMs !== null ? (
         <>
           {/* Countdown timer card */}
           <div className="mx-4 rounded-xl bg-btn-regular py-6 text-center">
@@ -173,7 +141,7 @@ export default function PartidoDetailPage() {
               {countdown}
             </p>
             <p className="mt-1 font-body text-sm text-text-secondary">
-              Hora del partido: {formatConfigTime(matchConfig.hora, matchConfig.minuto)}
+              Hora del partido: {formatTime12h(match.time)}{match.location ? ` · ${match.location}` : ""}
             </p>
           </div>
           <div className="flex-1" />

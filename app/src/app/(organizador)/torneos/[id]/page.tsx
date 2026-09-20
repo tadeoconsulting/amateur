@@ -16,6 +16,7 @@ import {
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { formatLabel } from "@/_lib/tournament-labels";
+import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
@@ -245,6 +246,15 @@ export default function TournamentDetailPage() {
           ) : (
             <p className="mt-5 text-center font-body text-sm text-text-secondary">El torneo ya tiene todos sus equipos.</p>
           )}
+
+          {tournament.teams.length >= 2 && (
+            <Link
+              href={`/torneos/${params.id}/iniciar`}
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+            >
+              Iniciar torneo
+            </Link>
+          )}
         </div>
       )}
 
@@ -358,7 +368,7 @@ export default function TournamentDetailPage() {
                         <span className="font-heading text-sm font-bold text-field-green">En vivo</span>
                       ) : null}
                       <p className="font-body text-xs text-text-secondary">Fecha {m.matchday}</p>
-                      <p className="font-body text-xs text-text-secondary">{formatShortDate(m.date)}</p>
+                      <p className="font-body text-xs text-text-secondary">{m.time === "" ? UNSCHEDULED_LABEL : formatShortDate(m.date)}</p>
                     </div>
                   </Link>
                 ))}
