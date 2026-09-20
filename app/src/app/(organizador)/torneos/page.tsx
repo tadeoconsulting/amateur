@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { getTournaments, type TournamentListItem } from "@/_lib/api";
+import { getTournaments, modalityLabel, type TournamentListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useAuth } from "@/lib/auth-context";
+import { formatLabel } from "@/_lib/tournament-labels";
 
 function IndicadorCard({ value, label, sub }: { value: number; label: string; sub: string }) {
   return (
@@ -53,7 +55,7 @@ function TournamentCard({ tournament }: { tournament: TournamentListItem }) {
                 <path d="M7 1.5L8.5 4.5H11L9 6.5L10 9.5L7 7.5L4 9.5L5 6.5L3 4.5H5.5L7 1.5Z" fill="currentColor" />
               </svg>
               <span className="font-body text-xs text-text-secondary">
-                Fútbol {tournament.format === "liga" ? "7" : "11"} - {tournament.format === "liga" ? "Liga" : tournament.format === "grupos" ? "Grupos" : "Eliminación"}
+                {[modalityLabel(tournament.modality), formatLabel(tournament.format)].filter(Boolean).join(" - ")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -118,16 +120,25 @@ function LiveMatchBar() {
   return null;
 }
 
-export default function TorneosPage() {
-  const { data: tournaments, loading } = useApi(() => getTournaments());
+function Spinner() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+    </div>
+  );
+}
 
-  if (loading || !tournaments) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-      </div>
-    );
-  }
+// Se espera a saber quién es el usuario para pedir solo SUS torneos.
+export default function TorneosPage() {
+  const { user, loading } = useAuth();
+  if (loading || !user) return <Spinner />;
+  return <TorneosContent organizerId={user.id} />;
+}
+
+function TorneosContent({ organizerId }: { organizerId: string }) {
+  const { data: tournaments, loading } = useApi(() => getTournaments({ organizerId }));
+
+  if (loading || !tournaments) return <Spinner />;
 
   const hasTournaments = tournaments.length > 0;
   const activeTournaments = tournaments.filter((t) => t.status === "en_curso" || t.status === "inscripcion");

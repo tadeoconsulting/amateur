@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 const presetColors = [
@@ -10,17 +10,40 @@ const presetColors = [
 
 export default function CrearEquipoPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
   const [nombre, setNombre] = useState("");
   const [nombreCorto, setNombreCorto] = useState("");
   const [color, setColor] = useState("");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const canSubmit = nombre.trim() && nombreCorto.trim();
 
-  function handleSubmit() {
-    if (!canSubmit) return;
-    setSuccess(true);
+  async function handleSubmit() {
+    if (!canSubmit || saving) return;
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/tournaments/${params.id}/teams`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newClub: { name: nombre.trim(), shortName: nombreCorto.trim(), color: color || null },
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo crear el equipo");
+        return;
+      }
+      setSuccess(true);
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (success) {
@@ -69,12 +92,12 @@ export default function CrearEquipoPage() {
           ¡Es un gran equipo!
         </h1>
         <p className="font-body text-sm text-text-secondary leading-relaxed max-w-[280px] mb-10">
-          <span className="font-semibold">Juan</span> será notificado por correo a{" "}
-          <span className="font-semibold">JuanPeña@gmail.com</span> y deberá completar el perfil de su club.
+          <span className="font-semibold">{nombre.trim()}</span> se agregó al torneo como equipo temporal. No tiene
+          delegado: tú administras sus datos.
         </p>
 
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push(`/torneos/${params.id}`)}
           className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           Volver al torneo
@@ -197,12 +220,13 @@ export default function CrearEquipoPage() {
 
       {/* Submit */}
       <div className="mt-8 px-4">
+        {error && <p className="mb-3 font-body text-sm text-red-600">{error}</p>}
         <button
           onClick={handleSubmit}
-          disabled={!canSubmit}
+          disabled={!canSubmit || saving}
           className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Crear equipo
+          {saving ? "Creando..." : "Crear equipo"}
         </button>
       </div>
     </div>

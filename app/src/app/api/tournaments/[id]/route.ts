@@ -1,6 +1,8 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageTournament, forbidden, pick, readJson, requireUser } from "@/_lib/auth";
+import type { Prisma } from "@prisma/client";
+import { badRequest, canManageTournament, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { parseTournamentFields } from "@/_lib/tournament-input";
 
 export async function GET(
   _request: NextRequest,
@@ -13,7 +15,11 @@ export async function GET(
     include: {
       organizer: { select: { id: true, firstName: true, lastName: true } },
       teams: {
-        include: { club: { select: { id: true, name: true, shortName: true, logoUrl: true } } },
+        include: {
+          club: {
+            select: { id: true, name: true, shortName: true, logoUrl: true, color: true, isTemporary: true, delegadoNombre: true },
+          },
+        },
         orderBy: { groupName: "asc" },
       },
       _count: { select: { matches: true, teams: true } },
@@ -35,9 +41,8 @@ export async function GET(
   });
 }
 
-// Campos que el organizador puede editar. organizerId no está: un torneo no cambia de dueño por acá.
-const EDITABLE = ["name", "format", "status", "sportType", "maxTeams", "minTeams", "startDate", "endDate", "location", "category"] as const;
-
+// El organizador puede editar los campos que valida parseTournamentFields.
+// organizerId no está entre ellos: un torneo no cambia de dueño por acá.
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -51,15 +56,17 @@ export async function PATCH(
   const body = await readJson(request);
   if (!body) return badRequest();
 
-  const data: Record<string, unknown> = pick(body, EDITABLE);
-  for (const key of ["startDate", "endDate"] as const) {
-    if (data[key] !== undefined && data[key] !== null) {
-      const date = new Date(data[key] as string);
-      if (Number.isNaN(date.getTime())) return badRequest(`${key} no es una fecha válida`);
-      data[key] = date;
+  const parsed = parseTournamentFields(body, "update");
+  if ("error" in parsed) return badRequest(parsed.error);
+  const data = parsed.data as Prisma.TournamentUpdateInput;
+
+  // No se puede bajar el cupo por debajo de los equipos que ya están inscritos.
+  if (typeof parsed.data.maxTeams === "number") {
+    const enrolled = await prisma.tournamentTeam.count({ where: { tournamentId: id } });
+    if (parsed.data.maxTeams < enrolled) {
+      return badRequest(`Ya hay ${enrolled} equipos inscritos: maxTeams no puede ser menor`);
     }
   }
-  if (Object.keys(data).length === 0) return badRequest("No hay campos para actualizar");
 
   try {
     const tournament = await prisma.tournament.update({ where: { id }, data });

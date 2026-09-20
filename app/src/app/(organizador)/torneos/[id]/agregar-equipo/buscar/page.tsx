@@ -1,26 +1,22 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
-import { getClubs } from "@/_lib/api";
+import { getClubs, getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
-
-const delegados: Record<string, string> = {
-  c1: "@abetancourt",
-  c2: "@dsitima",
-  c3: "@hoha7",
-  c4: "@lafoca1029",
-  c5: "@lafoca1029",
-  c6: "@mendez_r",
-  c7: "@delago_fc",
-  c8: "@central_sp",
-};
+import { OPEN_STATUSES } from "@/_lib/tournament-labels";
 
 export default function BuscarEquipoPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: clubs, loading } = useApi(() => getClubs());
+  const { data: clubs } = useApi(() => getClubs());
+  const { data: tournament, refetch } = useApi(() => getTournament(params.id));
   const [query, setQuery] = useState("");
-  const [invited, setInvited] = useState<Set<string>>(new Set(["c2"]));
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  // Equipos que ya están inscritos en este torneo.
+  const enrolled = useMemo(() => new Set((tournament?.teams ?? []).map((t) => t.club.id)), [tournament]);
 
   const filtered = useMemo(() => {
     const list = clubs ?? [];
@@ -30,26 +26,44 @@ export default function BuscarEquipoPage() {
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.shortName.toLowerCase().includes(q) ||
-        (delegados[c.id] ?? "").toLowerCase().includes(q)
+        (c.delegadoNombre ?? "").toLowerCase().includes(q)
     );
   }, [query, clubs]);
 
-  function toggleInvite(clubId: string) {
-    setInvited((prev) => {
-      const next = new Set(prev);
-      if (next.has(clubId)) next.delete(clubId);
-      else next.add(clubId);
-      return next;
-    });
+  async function toggleTeam(clubId: string, isEnrolled: boolean) {
+    setError("");
+    setPending(clubId);
+    try {
+      const res = isEnrolled
+        ? await fetch(`/api/tournaments/${params.id}/teams/${clubId}`, { method: "DELETE" })
+        : await fetch(`/api/tournaments/${params.id}/teams`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clubId }),
+          });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo completar la acción");
+        return;
+      }
+      refetch();
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setPending(null);
+    }
   }
 
-  if (loading || !clubs) {
+  if (!clubs || !tournament) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     );
   }
+
+  const isOpen = OPEN_STATUSES.includes(tournament.status);
+  const isFull = tournament.teams.length >= (tournament.maxTeams ?? Infinity);
 
   return (
     <div className="w-full pb-8">
@@ -76,7 +90,7 @@ export default function BuscarEquipoPage() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ingresa el nombre o apellido"
+            placeholder="Ingresa el nombre del equipo o del delegado"
             className="w-full rounded-lg border border-transparent bg-btn-regular px-3 py-3 pr-10 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
           />
           <svg
@@ -90,12 +104,19 @@ export default function BuscarEquipoPage() {
             <path d="M12.5 12.5L16 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
+
+        <p className="mt-2 font-body text-xs text-text-secondary">
+          {tournament.teams.length} de {tournament.maxTeams ?? "?"} equipos inscritos
+          {!isOpen && " · El torneo ya empezó, no se pueden agregar equipos."}
+          {isOpen && isFull && " · El torneo ya tiene todos sus equipos."}
+        </p>
+        {error && <p className="mt-2 font-body text-sm text-red-600">{error}</p>}
       </div>
 
       {/* Results */}
       <div className="mt-6 px-4">
         <h2 className="font-heading text-lg font-bold text-text-primary mb-4">
-          {query.trim() ? "Resultados" : "Búsqueda reciente"}
+          {query.trim() ? "Resultados" : "Equipos de la comunidad"}
         </h2>
 
         {filtered.length === 0 ? (
@@ -105,7 +126,9 @@ export default function BuscarEquipoPage() {
         ) : (
           <div className="flex flex-col">
             {filtered.map((club) => {
-              const isInvited = invited.has(club.id);
+              const isEnrolled = enrolled.has(club.id);
+              // Quitar se permite siempre que el torneo esté abierto; agregar, solo si hay cupo.
+              const disabled = pending !== null || !isOpen || (!isEnrolled && isFull);
               return (
                 <div
                   key={club.id}
@@ -125,7 +148,7 @@ export default function BuscarEquipoPage() {
                         />
                       </svg>
                     </div>
-                    {isInvited && (
+                    {isEnrolled && (
                       <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-verification">
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <path d="M2.5 5L4.5 7L7.5 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -140,17 +163,24 @@ export default function BuscarEquipoPage() {
                       {club.name}
                     </p>
                     <p className="mt-0.5 truncate font-body text-xs text-text-secondary">
-                      Delegado <span className="font-semibold">{delegados[club.id] ?? "@usuario"}</span>
+                      {club.delegadoNombre ? (
+                        <>
+                          Delegado <span className="font-semibold">{club.delegadoNombre}</span>
+                        </>
+                      ) : (
+                        "Sin delegado"
+                      )}
                     </p>
                   </div>
 
                   {/* Action */}
                   <button
-                    onClick={() => toggleInvite(club.id)}
-                    className="shrink-0 cursor-pointer font-heading text-sm font-bold underline transition-colors"
-                    style={{ color: isInvited ? "var(--color-text-secondary)" : "var(--color-text-primary)" }}
+                    onClick={() => toggleTeam(club.id, isEnrolled)}
+                    disabled={disabled}
+                    className="shrink-0 cursor-pointer font-heading text-sm font-bold underline transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{ color: isEnrolled ? "var(--color-text-secondary)" : "var(--color-text-primary)" }}
                   >
-                    {isInvited ? "Remover" : "Invitar"}
+                    {pending === club.id ? "..." : isEnrolled ? "Quitar" : "Agregar"}
                   </button>
                 </div>
               );

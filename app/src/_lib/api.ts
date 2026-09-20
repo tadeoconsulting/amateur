@@ -12,6 +12,8 @@ export interface TournamentListItem {
   format: string;
   status: string;
   category: string | null;
+  modality: string | null;
+  gender: string | null;
   maxTeams: number | null;
   teamsCount: number;
   matchesCount: number;
@@ -27,13 +29,26 @@ export interface TournamentDetail {
   format: string;
   status: string;
   category: string | null;
+  modality: string | null;
+  gender: string | null;
   maxTeams: number | null;
   minTeams: number | null;
   startDate: string;
   endDate: string | null;
   location: string;
   organizerId: string;
-  teams: { id: string; club: { id: string; name: string; shortName: string; logoUrl: string | null } }[];
+  teams: {
+    id: string;
+    club: {
+      id: string;
+      name: string;
+      shortName: string;
+      logoUrl: string | null;
+      color: string | null;
+      isTemporary: boolean;
+      delegadoNombre: string | null;
+    };
+  }[];
   _count: { matches: number; teams: number };
 }
 
@@ -89,6 +104,7 @@ export interface ClubListItem {
   shortName: string;
   logoUrl: string | null;
   color: string | null;
+  delegadoNombre: string | null;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string };
@@ -146,6 +162,12 @@ export interface UserItem {
 export function getTournaments(params?: Record<string, string>) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
   return fetcher<TournamentListItem[]>(`/api/tournaments${qs}`);
+}
+
+/** "7 vs 7" → "Fútbol 7". Los torneos anteriores al asistente no tienen modalidad. */
+export function modalityLabel(modality: string | null | undefined) {
+  const players = modality?.split(" ")[0];
+  return players ? `Fútbol ${players}` : null;
 }
 
 export function getTournament(id: string) {
