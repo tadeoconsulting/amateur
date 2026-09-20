@@ -11,6 +11,7 @@ datasource db {
 // ─── Identity & Roles ───────────────────────────────────────────
 
 enum Role {
+  ADMIN
   ORGANIZADOR
   CLUB_OWNER
   JUGADOR

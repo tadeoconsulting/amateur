@@ -1,5 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 
 export async function GET(
   _request: NextRequest,
@@ -24,21 +25,36 @@ export async function GET(
   return Response.json(match);
 }
 
+const isScore = (value: unknown) => value === null || (Number.isInteger(value) && (value as number) >= 0);
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+
   const { id } = await params;
-  const body = await request.json();
+  if (!(await canManageMatch(auth.user, id))) return forbidden();
+
+  const body = await readJson(request);
+  if (!body) return badRequest();
   const { homeScore, awayScore, status } = body;
+
+  if ((homeScore !== undefined && !isScore(homeScore)) || (awayScore !== undefined && !isScore(awayScore))) {
+    return badRequest("El marcador debe ser un entero mayor o igual a 0");
+  }
+  if (status !== undefined && (typeof status !== "string" || !status)) {
+    return badRequest("status inválido");
+  }
 
   try {
     const match = await prisma.match.update({
       where: { id },
       data: {
-        ...(homeScore !== undefined && { homeScore }),
-        ...(awayScore !== undefined && { awayScore }),
-        ...(status && { status }),
+        ...(homeScore !== undefined && { homeScore: homeScore as number | null }),
+        ...(awayScore !== undefined && { awayScore: awayScore as number | null }),
+        ...(status !== undefined && { status: status as string }),
       },
       include: { homeTeam: true, awayTeam: true },
     });

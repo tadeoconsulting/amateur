@@ -11,10 +11,13 @@ export function AuthModal({
   open,
   onClose,
   initialView = "login",
+  next = null,
 }: {
   open: boolean;
   onClose: () => void;
   initialView?: AuthView;
+  /** Página a la que volver después de entrar (la que el proxy interceptó). */
+  next?: string | null;
 }) {
   const { login, register } = useAuth();
   const [view, setView] = useState<AuthView>(initialView);
@@ -57,13 +60,13 @@ export function AuthModal({
 
     try {
       if (view === "login") {
-        const result = await login(email, password);
+        const result = await login(email, password, next);
         if (!result.ok) {
           setError(result.error ?? "Error al iniciar sesión");
           return;
         }
       } else {
-        const result = await register(name, email);
+        const result = await register({ name, email, password }, next);
         if (!result.ok) {
           setError(result.error ?? "Error al crear cuenta");
           return;
@@ -160,6 +163,7 @@ export function AuthModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                autoComplete="name"
                 className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
               />
             )}
@@ -169,18 +173,20 @@ export function AuthModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
             />
-            {view === "login" && (
-              <input
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
-              />
-            )}
+            <input
+              type="password"
+              placeholder={view === "register" ? "Contraseña (mínimo 8 caracteres)" : "Contraseña"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={view === "register" ? 8 : undefined}
+              maxLength={72}
+              autoComplete={view === "register" ? "new-password" : "current-password"}
+              className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
+            />
 
             {error && (
               <p className="text-sm text-red-600 font-body">{error}</p>
@@ -194,16 +200,6 @@ export function AuthModal({
               {loading ? "Cargando..." : view === "login" ? "Iniciar sesión" : "Crear cuenta"}
             </button>
           </form>
-
-          {/* Test credentials hint */}
-          {view === "login" && (
-            <div className="mt-4 rounded-lg bg-field-light border border-field-green/20 px-4 py-3">
-              <p className="font-heading text-xs font-bold text-field-dark mb-1">Usuario de prueba</p>
-              <p className="font-body text-xs text-text-secondary">
-                demo@amateur.app / amateur123
-              </p>
-            </div>
-          )}
 
           {/* Footer links */}
           {view === "login" && (

@@ -1,8 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { MobileShell } from "@/_components/mobile-shell";
 import { BackHeader } from "@/_components/back-header";
+import { useAuth } from "@/lib/auth-context";
+
+// Cada perfil de la pantalla corresponde a un rol de la cuenta.
+const ROLE_BY_PROFILE = {
+  organizador: "ORGANIZADOR",
+  club: "CLUB_OWNER",
+  jugador: "JUGADOR",
+} as const;
 
 const profiles = [
   {
@@ -45,6 +54,23 @@ const profiles = [
 ];
 
 export default function SeleccionPerfilPage() {
+  const router = useRouter();
+  const { addRole } = useAuth();
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  async function choose(profile: (typeof profiles)[number]) {
+    setError("");
+    setPending(profile.id);
+    const result = await addRole(ROLE_BY_PROFILE[profile.id as keyof typeof ROLE_BY_PROFILE]);
+    if (!result.ok) {
+      setError(result.error ?? "No se pudo activar el perfil");
+      setPending(null);
+      return;
+    }
+    router.push(profile.href);
+  }
+
   return (
     <MobileShell>
       <BackHeader />
@@ -63,12 +89,16 @@ export default function SeleccionPerfilPage() {
             Elige un perfil para continuar
           </p>
 
+          {error && <p className="mb-3 font-body text-sm text-red-600">{error}</p>}
+
           <div className="flex flex-col gap-4">
             {profiles.map((profile) => (
-              <Link
+              <button
                 key={profile.id}
-                href={profile.href}
-                className="flex items-center gap-3 rounded-lg border border-border-primary px-3 py-2.5 transition-colors hover:bg-brand-300"
+                type="button"
+                onClick={() => choose(profile)}
+                disabled={pending !== null}
+                className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-border-primary px-3 py-2.5 text-left transition-colors hover:bg-brand-300 disabled:opacity-50"
               >
                 <span className="text-text-primary">{profile.icon}</span>
                 <span className="flex-1 font-heading text-sm font-semibold text-text-primary">
@@ -77,7 +107,7 @@ export default function SeleccionPerfilPage() {
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-text-secondary">
                   <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </Link>
+              </button>
             ))}
           </div>
         </div>

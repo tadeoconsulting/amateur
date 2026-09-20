@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 
 const menuItems = [
   { label: "Mi Perfil", href: "/ajustes/perfil" },
@@ -11,6 +12,8 @@ const menuItems = [
 ];
 
 export default function AjustesPage() {
+  const { logout } = useAuth();
+
   return (
     <div className="flex min-h-[calc(100dvh-5rem)] flex-col">
       {/* Header */}
@@ -48,7 +51,7 @@ export default function AjustesPage() {
 
       {/* Cerrar sesión */}
       <div className="px-4 pb-6 pt-8 text-center">
-        <button className="cursor-pointer font-heading text-base font-bold text-text-primary underline underline-offset-2">
+        <button onClick={logout} className="cursor-pointer font-heading text-base font-bold text-text-primary underline underline-offset-2">
           Cerrar sesión
         </button>
       </div>

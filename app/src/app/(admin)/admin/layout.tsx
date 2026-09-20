@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 const navItems = [
   {
@@ -64,6 +65,27 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, loading } = useAuth();
+
+  // La API ya rechaza a quien no es admin; esto evita mostrar un panel roto.
+  if (loading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-brand-50 font-body text-sm text-text-secondary">
+        Cargando…
+      </div>
+    );
+  }
+  if (!user?.roles.includes("ADMIN")) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-brand-50 px-6 text-center">
+        <p className="font-heading text-lg font-bold text-text-primary">Sin acceso</p>
+        <p className="font-body text-sm text-text-secondary">Esta sección es solo para administradores.</p>
+        <Link href="/seleccion-perfil" className="font-heading text-sm font-semibold text-text-primary underline">
+          Volver
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-dvh bg-brand-50">

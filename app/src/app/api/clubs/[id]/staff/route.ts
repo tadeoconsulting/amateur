@@ -1,10 +1,14 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { badRequest, canManageClub, forbidden, readJson, requireUser } from "@/_lib/auth";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+
   const { id } = await params;
 
   const staff = await prisma.staffMember.findMany({
@@ -31,11 +35,23 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const { userId, role } = await request.json();
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
 
-  if (!userId || !role) {
-    return Response.json({ error: "userId y role requeridos" }, { status: 400 });
+  const { id } = await params;
+  if (!(await canManageClub(auth.user, id))) return forbidden();
+
+  const body = await readJson(request);
+  const userId = body?.userId;
+  const role = body?.role;
+
+  if (typeof userId !== "string" || !userId || typeof role !== "string" || !role) {
+    return badRequest("userId y role requeridos");
+  }
+
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (!target) {
+    return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
   }
 
   try {

@@ -1,6 +1,11 @@
 import { prisma } from "@/_lib/prisma";
+import { requireRole } from "@/_lib/auth";
 
 export async function GET() {
+  // Sin roles en la lista: solo pasa un ADMIN.
+  const auth = await requireRole();
+  if ("response" in auth) return auth.response;
+
   const [users, clubs, players, tournaments, matches] = await Promise.all([
     prisma.user.count(),
     prisma.club.count(),

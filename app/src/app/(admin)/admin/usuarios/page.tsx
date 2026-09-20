@@ -64,6 +64,7 @@ interface ClubOption {
 }
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
   const [form, setForm] = useState({
     email: "",
     firstName: "",
@@ -141,8 +142,38 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
       return;
     }
 
+    const created = await res.json();
+    if (created.temporaryPassword) {
+      // La contraseña temporal se muestra una sola vez: hay que pasársela a la persona.
+      setTemporaryPassword(created.temporaryPassword);
+      setSaving(false);
+      return;
+    }
+
     onCreated();
   };
+
+  if (temporaryPassword) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="w-full max-w-md rounded-2xl bg-surface-primary p-6 shadow-xl">
+          <h2 className="font-heading text-lg font-bold text-text-primary">Usuario creado</h2>
+          <p className="mt-2 font-body text-sm text-text-secondary">
+            Esta contraseña temporal se muestra una sola vez. Compártela con {form.firstName} para que pueda iniciar sesión.
+          </p>
+          <code className="mt-4 block select-all rounded-lg bg-brand-100 px-4 py-3 font-mono text-sm text-text-primary">
+            {temporaryPassword}
+          </code>
+          <button
+            onClick={onCreated}
+            className="mt-5 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm font-bold text-text-invert"
+          >
+            Listo
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
