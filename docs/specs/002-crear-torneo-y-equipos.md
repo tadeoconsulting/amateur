@@ -86,4 +86,4 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 - **"Editar torneo"** no hace nada; el torneo solo se edita por API.
 - **La tarjeta "Invitar por WhatsApp" de agregar equipos** muestra un link inventado (`amateur.IA40Za.com`). Hacerla real necesita un modelo de solicitudes de equipos (ver [pendientes](pendientes-y-decisiones.md)).
 - **"Omitir este paso"** sale del asistente y descarta lo escrito; no guarda borradores.
-- Al inscribir un club, su dueño **no confirma**: el organizador lo agrega directo.
+- Al inscribir un club, su dueño **no confirma** (el organizador lo agrega directo) y un dueño **puede inscribirse solo** sin aprobación del organizador. La propuesta que lo cambia está en [006](006-solicitudes-de-equipos.md).

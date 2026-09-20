@@ -13,6 +13,7 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [003-fixture.md](003-fixture.md) | Iniciar un torneo: generación y calendario de partidos |
 | [004-partido-en-vivo.md](004-partido-en-vivo.md) | Ciclo de un partido, jugadas, marcador y resultados |
 | [005-invitaciones.md](005-invitaciones.md) | Link del club e invitaciones directas a jugadores |
+| [006-solicitudes-de-equipos.md](006-solicitudes-de-equipos.md) | **Propuesta (sin implementar):** solicitudes e invitaciones de equipos a un torneo |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
 ## Cómo se usa esto
@@ -24,6 +25,8 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 
 ## Estado de estas especificaciones
 
-Las cinco especificaciones numeradas son **as-built**: describen lo que ya está construido y verificado, extraído del código y de las pruebas, no un plan. Cada una termina con sus **limitaciones conocidas**, que es la parte más útil para decidir qué construir después. Todo lo pendiente se concentra en [pendientes-y-decisiones.md](pendientes-y-decisiones.md).
+Las especificaciones `001`–`005` son **as-built**: describen lo que ya está construido y verificado, extraído del código y de las pruebas, no un plan. Cada una termina con sus **limitaciones conocidas**, que es la parte más útil para decidir qué construir después. Todo lo pendiente se concentra en [pendientes-y-decisiones.md](pendientes-y-decisiones.md).
+
+La `006` es la primera **escrita antes de programar**: está en estado *propuesta* y termina con las decisiones que hay que confirmar. Cuando se implemente, se reescribe como as-built con sus pruebas.
 
 Cuando algo dice **"decisión pendiente"** es porque el código toma un camino por omisión que nadie ha confirmado como producto.
