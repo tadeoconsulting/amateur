@@ -8,6 +8,8 @@ import {
   readJson,
   validatePassword,
 } from "@/_lib/auth";
+import { invitationProblem, joinClub, resolveInvitation, type ResolvedInvitation } from "@/_lib/invite";
+import { isRealDate } from "@/_lib/fixture";
 
 const str = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
@@ -28,6 +30,24 @@ export async function POST(request: NextRequest) {
     }
     const passwordError = validatePassword(body.password);
     if (passwordError) return badRequest(passwordError);
+
+    // new Date("2026-02-31") no falla: da el 3 de marzo. Se valida que el día exista y sea razonable.
+    const birthDate = str(body.birthDate);
+    if (birthDate && (!isRealDate(birthDate) || birthDate < "1900-01-01" || birthDate > new Date().toISOString().slice(0, 10))) {
+      return badRequest("La fecha de nacimiento no es válida");
+    }
+
+    // Con un token de invitación (link del club o invitación por correo), se valida ANTES de crear
+    // la cuenta: así un link vencido avisa en vez de dejar a la persona registrada sin club.
+    let invitation: Extract<ResolvedInvitation, { ok: true }> | null = null;
+    if (clubToken) {
+      const resolved = await resolveInvitation(clubToken);
+      if (!resolved.ok) return invitationProblem(resolved.reason);
+      if (resolved.kind === "email" && normalizeEmail(resolved.invitation.email) !== email) {
+        return badRequest("Esta invitación es para otro correo");
+      }
+      invitation = resolved;
+    }
 
     const existing = await prisma.user.findFirst({
       where: { email: { equals: email, mode: "insensitive" } },
@@ -51,24 +71,17 @@ export async function POST(request: NextRequest) {
         phone: str(body.phone),
         gender: str(body.gender),
         department: str(body.department),
-        birthDate: str(body.birthDate) ? new Date(str(body.birthDate) as string) : null,
+        birthDate: birthDate ? new Date(`${birthDate}T00:00:00Z`) : null,
         roles: { create: [{ role: "JUGADOR" }] },
       },
       include: { roles: true },
     });
 
-    // Si se registra con un token de invitación de un club, se vincula al club.
-    if (clubToken) {
-      const invitation = await prisma.playerInvitation.findUnique({ where: { token: clubToken } });
-
-      if (invitation && invitation.status === "pending" && invitation.expiresAt > new Date()) {
-        await prisma.playerProfile.create({
-          data: { userId: user.id, clubId: invitation.clubId, position },
-        });
-        await prisma.playerInvitation.update({
-          where: { id: invitation.id },
-          data: { status: "accepted" },
-        });
+    // Con una invitación válida, la persona entra al club al registrarse.
+    if (invitation) {
+      await joinClub(user.id, invitation.club.id, { position });
+      if (invitation.kind === "email") {
+        await prisma.playerInvitation.update({ where: { id: invitation.invitation.id }, data: { status: "accepted" } });
       }
     } else if (position) {
       await prisma.playerProfile.create({ data: { userId: user.id, position } });
