@@ -61,9 +61,17 @@ export async function POST(
     return badRequest("userId requerido");
   }
 
-  const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, playerProfile: { select: { clubId: true } } },
+  });
   if (!target) {
     return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+  // Un jugador de otro club no se puede llevar sin su consentimiento: para eso está la invitación.
+  const currentClub = target.playerProfile?.clubId;
+  if (currentClub && currentClub !== id) {
+    return Response.json({ error: "El jugador ya está en otro equipo: invítalo para que decida" }, { status: 409 });
   }
 
   // La categoría tiene que ser de este mismo club.

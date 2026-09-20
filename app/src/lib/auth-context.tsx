@@ -25,6 +25,8 @@ type AuthContextValue = {
   logout: () => Promise<void>;
   /** Activa un perfil (ORGANIZADOR, CLUB_OWNER o JUGADOR) en la cuenta actual. */
   addRole: (role: "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR") => Promise<Result>;
+  /** Vuelve a consultar la sesión (por ejemplo después de registrarse por otro camino). */
+  refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -108,8 +110,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { ok: true };
   }, []);
 
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      setUser(data.user ?? null);
+    } catch {
+      /* si falla se conserva lo que ya había */
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, addRole }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, addRole, refresh }}>
       {children}
     </AuthContext.Provider>
   );

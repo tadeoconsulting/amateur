@@ -68,6 +68,9 @@ model Club {
   // Equipo temporal creado por un organizador para su torneo (sin delegado ni
   // métricas). No aparece en la búsqueda de equipos de la comunidad.
   isTemporary   Boolean  @default(false)
+  // Link para compartir por WhatsApp: quien lo abre puede unirse al club como jugador.
+  // Es un secreto: se puede revocar generando uno nuevo. null = todavía no se generó.
+  inviteToken   String?  @unique
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

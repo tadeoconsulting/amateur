@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { BackHeader } from "@/_components/back-header";
 import { PlayerRosterRow } from "@/_components/player-roster-row";
 import { Toast } from "@/_components/toast";
+import { useMyClub } from "@/_lib/use-my-club";
 import { searchUsers, type UserItem } from "@/_lib/api";
 import type { RosterPlayer } from "@/_lib/types";
 
@@ -46,9 +47,29 @@ export default function ClubBuscarJugadorPage() {
     clubId: u.playerProfile?.club?.id ?? "",
   }));
 
-  const handleInvite = (id: string, name: string) => {
-    setInvited((prev) => new Set(prev).add(id));
-    setToast(`Se envio la invitacion a ${name}.`);
+  // Invita de verdad: el jugador la ve en su área ("Mis equipos") y decide si acepta.
+  const { club } = useMyClub();
+  const handleInvite = async (id: string, name: string) => {
+    if (!club) {
+      setToast("Primero necesitas tener un equipo para invitar jugadores.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setToast(data.error ?? "No se pudo enviar la invitación.");
+        return;
+      }
+      setInvited((prev) => new Set(prev).add(id));
+      setToast(data.alreadyInvited ? `${name} ya tenía una invitación pendiente.` : `Se envió la invitación a ${name}.`);
+    } catch {
+      setToast("No se pudo conectar. Inténtalo de nuevo.");
+    }
   };
 
   return (
