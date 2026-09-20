@@ -228,6 +228,11 @@ describe("permisos sobre torneos, clubes y partidos", () => {
     assert.equal((await other.client.post(`/api/matches/${id}/events`, { type: "gol", minute: 5, teamId: home.data.id })).status, 403);
     assert.equal((await other.client.patch(`/api/matches/${id}`, { homeScore: 9 })).status, 403);
 
+    // Las jugadas solo se registran con el partido en juego.
+    const early = await org.client.post(`/api/matches/${id}/events`, { type: "gol", minute: 1, teamId: home.data.id });
+    assert.equal(early.status, 409, "el partido todavía no empezó");
+    assert.equal((await org.client.patch(`/api/matches/${id}`, { status: "en_curso" })).status, 200);
+
     // 5 goles del local y 3 del visitante, todos al mismo tiempo.
     const goals = [
       ...Array.from({ length: 5 }, (_, i) => org.client.post(`/api/matches/${id}/events`, { type: "gol", minute: i + 1, teamId: home.data.id })),
@@ -240,8 +245,9 @@ describe("permisos sobre torneos, clubes y partidos", () => {
     assert.equal(final.data.awayScore, 3);
     assert.equal(final.data.events.length, 8);
 
-    // Un gol de un equipo que no juega el partido no toca el marcador.
-    await org.client.post(`/api/matches/${id}/events`, { type: "gol", minute: 50, teamId: "club-que-no-juega" });
+    // Un gol de un equipo que no juega el partido se rechaza y no toca el marcador.
+    const foreign = await org.client.post(`/api/matches/${id}/events`, { type: "gol", minute: 50, teamId: "club-que-no-juega" });
+    assert.equal(foreign.status, 400);
     assert.equal((await org.client.get(`/api/matches/${id}`)).data.homeScore, 5);
   });
 

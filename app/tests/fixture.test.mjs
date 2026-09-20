@@ -345,6 +345,7 @@ describe("reemplazar y deshacer el fixture", () => {
     const path = `/api/tournaments/${id}/fixture`;
     await org.client.post(path, { mode: "manual" });
     const [m] = await matchesOf(org.client, id);
+    await org.client.patch(`/api/matches/${m.id}`, { status: "en_curso" });
     const ev = await org.client.post(`/api/matches/${m.id}/events`, { type: "tarjeta_amarilla", minute: 10, teamId: m.homeTeamId });
     assert.equal(ev.status, 201);
     assert.equal((await org.client.del(path)).status, 409);
