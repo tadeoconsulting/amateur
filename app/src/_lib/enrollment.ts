@@ -22,21 +22,27 @@ type Tx = Prisma.TransactionClient;
  * misma transacción, así que un error no deja nada a medias.
  */
 export async function withOpenTournament<T>(tournamentId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
-  return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT id FROM "Tournament" WHERE id = ${tournamentId} FOR UPDATE`;
-    const tournament = await tx.tournament.findUnique({
-      where: { id: tournamentId },
-      select: { status: true, maxTeams: true, _count: { select: { teams: true } } },
-    });
-    if (!tournament) throw new EnrollmentError(404, "Torneo no encontrado");
-    if (!OPEN_STATUSES.includes(tournament.status)) {
-      throw new EnrollmentError(409, "El torneo ya empezó: no se pueden agregar equipos");
-    }
-    if (tournament._count.teams >= tournament.maxTeams) {
-      throw new EnrollmentError(409, "El torneo ya tiene todos sus equipos");
-    }
-    return fn(tx);
-  });
+  return prisma.$transaction(
+    async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Tournament" WHERE id = ${tournamentId} FOR UPDATE`;
+      const tournament = await tx.tournament.findUnique({
+        where: { id: tournamentId },
+        select: { status: true, maxTeams: true, _count: { select: { teams: true } } },
+      });
+      if (!tournament) throw new EnrollmentError(404, "Torneo no encontrado");
+      if (!OPEN_STATUSES.includes(tournament.status)) {
+        throw new EnrollmentError(409, "El torneo ya empezó: no se pueden agregar equipos");
+      }
+      if (tournament._count.teams >= tournament.maxTeams) {
+        throw new EnrollmentError(409, "El torneo ya tiene todos sus equipos");
+      }
+      return fn(tx);
+    },
+    // El límite de Prisma (5 s) corre desde que empieza la transacción, esperas del bloqueo
+    // incluidas: con varias inscripciones seguidas a un mismo torneo, las últimas vencerían
+    // sin que nada esté mal.
+    { timeout: 20_000, maxWait: 10_000 }
+  );
 }
 
 /** ¿Fue una violación de unicidad de Prisma? (el equipo ya estaba inscrito) */
