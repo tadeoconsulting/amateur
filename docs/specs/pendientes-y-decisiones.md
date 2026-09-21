@@ -16,7 +16,7 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 | 6 | **¿Qué es "Copa" y qué es "Relámpago"?** | Se ofrecen en el asistente pero no tienen semántica ni fixture | [002](002-crear-torneo-y-equipos.md) |
 | 7 | **¿Qué hace "Asignar un delegado a cada equipo"?** ¿Y "jugadores por equipo"? | Se guardan y no tienen efecto | [002](002-crear-torneo-y-equipos.md) |
 | 8 | **¿Dónde se muestran y cómo se usan las bases y los costos?** | Se guardan; ninguna pantalla los muestra | [002](002-crear-torneo-y-equipos.md) |
-| 9 | **¿El dueño del club confirma que lo inscriban en un torneo?** ¿Y el organizador aprueba a quien se inscribe solo? | Hoy ambos entran directo, sin aprobación (un dueño puede inscribir su club en cualquier torneo abierto) | [006](006-solicitudes-de-equipos.md) (propuesta, decisiones A y B) |
+| 9 | **¿El dueño del club confirma que lo inscriban? ¿El organizador aprueba a quien se inscribe solo?** | **Ambos, sí** (implementado por recomendación, falta tu confirmación): el dueño solicita y el organizador aprueba; al club ajeno se le invita y su dueño acepta | [006](006-solicitudes-de-equipos.md), decisiones A y B |
 | 10 | **¿Qué es una sede?** | Es un texto; no se reutiliza entre torneos | [modelo](modelo-de-datos.md) |
 | 11 | **Sistema de puntos y desempates** | Fijos: 3/1/0; desempate por diferencia de gol y goles a favor (sin enfrentamiento directo) | [004](004-partido-en-vivo.md) |
 | 12 | **¿Cómo se entera un jugador de una invitación?** | Solo al abrir "Mis Equipos"; no hay notificaciones | [005](005-invitaciones.md) |
@@ -28,18 +28,17 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 
 En el orden que parece más útil (cada una debería empezar por su especificación):
 
-1. **Solicitudes de equipos a un torneo.** *Especificación escrita, pendiente de confirmar decisiones:* [006](006-solicitudes-de-equipos.md). Completa las invitaciones: la pestaña *Solicitudes* está vacía y la tarjeta "Invitar por WhatsApp" de agregar equipo tiene un link inventado. Resuelve la decisión 9.
-2. **Fixture de eliminación directa, copa y relámpago.** Requiere decidir 4 y 6. Probablemente: generar la primera ronda y las siguientes cuando termina la anterior.
-3. **Tiempo real para espectadores.** Hoy se ve el estado al abrir o recargar. La arquitectura prevista (SSE + Ably, hasta 100 000 espectadores y 5 000 organizadores simultáneos) está en los documentos de arquitectura del proyecto, fuera de este repo.
-4. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
-5. **Notificaciones** (decisión 12).
-6. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
-7. **Editar un torneo** ("Editar torneo" no hace nada) y **regenerar o deshacer el fixture** desde la pantalla.
-8. **Alineaciones y `matchesPlayed`**, y asistencias.
-9. **Asignar grupos** desde la interfaz para el formato `grupos`.
-10. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
-11. **Cancelar una invitación personal.**
-12. **Las pantallas del dueño de club** aún usan un club fijo (`club-1`) en algunos lugares.
+1. **Fixture de eliminación directa, copa y relámpago.** Requiere decidir 4 y 6. Probablemente: generar la primera ronda y las siguientes cuando termina la anterior.
+2. **Tiempo real para espectadores.** Hoy se ve el estado al abrir o recargar. La arquitectura prevista (SSE + Ably, hasta 100 000 espectadores y 5 000 organizadores simultáneos) está en los documentos de arquitectura del proyecto, fuera de este repo.
+3. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
+4. **Notificaciones** (decisión 12).
+5. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
+6. **Editar un torneo** ("Editar torneo" no hace nada) y **regenerar o deshacer el fixture** desde la pantalla.
+7. **Alineaciones y `matchesPlayed`**, y asistencias.
+8. **Asignar grupos** desde la interfaz para el formato `grupos`.
+9. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
+10. **Cancelar una invitación personal.**
+11. **Las pantallas del dueño de club** aún usan un club fijo (`club-1`) en algunos lugares.
 
 ## 3. Deuda técnica y de operación
 

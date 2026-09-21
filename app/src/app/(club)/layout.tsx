@@ -9,7 +9,7 @@ export default function ClubLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isDetailView = /^\/club\/torneos\/.+/.test(pathname) || /^\/club\/jugadores\/.+/.test(pathname) || /^\/club\/equipo\/.+/.test(pathname) || /^\/club\/ajustes\/.+/.test(pathname);
+  const isDetailView = pathname === "/club" || /^\/club\/torneos\/.+/.test(pathname) || /^\/club\/jugadores\/.+/.test(pathname) || /^\/club\/equipo\/.+/.test(pathname) || /^\/club\/ajustes\/.+/.test(pathname);
 
   if (isDetailView) {
     return (

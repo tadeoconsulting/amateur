@@ -5,9 +5,9 @@ import { SESSION_COOKIE, verifySessionToken } from "@/_lib/session";
 // Es solo comodidad de navegación. La seguridad real está en los route handlers
 // de /api, que validan la sesión y los permisos en cada request.
 
-// Páginas dentro de estas rutas que siguen siendo públicas (la invitación de un club
-// la abre alguien que todavía no tiene cuenta).
-const PUBLIC_PATHS = ["/jugador/invitacion"];
+// Páginas dentro de estas rutas que siguen siendo públicas: la invitación de un club y la
+// convocatoria de un torneo las abre alguien que todavía no tiene cuenta.
+const PUBLIC_PATHS = ["/jugador/invitacion", "/convocatoria"];
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

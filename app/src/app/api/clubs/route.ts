@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
       delegadoNombre: c.delegadoNombre,
       delegadoTel: c.delegadoTel,
       delegadoEmail: c.delegadoEmail,
+      ownerId: c.ownerId,
       playerCount: c._count.players,
       categoriesCount: c._count.categories,
       owner: c.owner,

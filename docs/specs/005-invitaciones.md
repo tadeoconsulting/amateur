@@ -64,5 +64,5 @@ Ambas son un **token secreto** en la URL. Se resuelven igual (`resolveInvitation
 - **Una invitación personal no se puede cancelar** desde el producto (existe `GET /api/clubs/:id/invite` para listarlas, pero no hay endpoint para retirarlas).
 - **El vencimiento a los 7 días está implementado pero no tiene prueba**: la API no permite fijar una fecha pasada.
 - Quien entra queda **sin categoría ni dorsal**; el dueño los asigna después.
-- **La tarjeta "Invitar por WhatsApp" para equipos de un torneo** (en agregar equipo) sigue con un link inventado: es otro flujo (solicitudes de equipos) que no existe todavía.
+- **La tarjeta "Invitar por WhatsApp" de agregar equipo** es otro flujo (equipos que piden entrar a un torneo) y ya es real: ver [006](006-solicitudes-de-equipos.md).
 - No se probó *Compartir* en un navegador real: abre el menú nativo del sistema, que bloquea la automatización.

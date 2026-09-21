@@ -1,45 +1,17 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { ConvocatoriaLinkCard } from "@/_components/convocatoria-link-card";
+import { getTournament } from "@/_lib/api";
+import { useApi } from "@/_lib/use-api";
 
 export default function AgregarEquipoPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [copied, setCopied] = useState(false);
-
-  const inviteLink = "amateur.IA40Za.com";
-
-  function handleShare() {
-    navigator.clipboard.writeText(inviteLink).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    });
-  }
+  const { data: tournament } = useApi(() => getTournament(params.id));
 
   return (
     <div className="relative w-full pb-8">
-      {/* Toast */}
-      {copied && (
-        <div className="fixed left-1/2 top-4 z-[120] w-[calc(100%-2rem)] max-w-[398px] -translate-x-1/2 animate-slide-down">
-          <div className="flex items-center justify-between rounded-xl bg-verification px-4 py-4">
-            <span className="font-body text-sm font-medium text-text-primary">
-              Se ha copiado el link con éxito.
-            </span>
-            <button
-              onClick={() => setCopied(false)}
-              className="shrink-0 cursor-pointer p-1 text-text-primary"
-              aria-label="Cerrar"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="3" y1="3" x2="13" y2="13" />
-                <line x1="3" y1="13" x2="13" y2="3" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <header className="px-4 py-3">
         <button
@@ -86,26 +58,8 @@ export default function AgregarEquipoPage() {
           </button>
         </div>
 
-        {/* Card 3 — Invitar por WhatsApp */}
-        <div className="rounded-2xl bg-[#BEE3F8] p-5">
-          <h2 className="font-heading text-lg font-bold text-text-primary mb-2">
-            Invitar por WhatsApp
-          </h2>
-          <p className="font-body text-sm text-text-primary leading-snug mb-5">
-            Comparte este link para que el equipo se una directamente a la comunidad.
-          </p>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 rounded-lg border border-transparent bg-white px-3 py-2.5 font-body text-sm text-text-secondary">
-              {inviteLink}
-            </div>
-            <button
-              onClick={handleShare}
-              className="shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
-            >
-              Compartir
-            </button>
-          </div>
-        </div>
+        {/* Card 3 — Invitar por WhatsApp: link real de la convocatoria */}
+        {tournament && <ConvocatoriaLinkCard tournamentId={params.id} tournamentName={tournament.name} />}
 
       </div>
     </div>

@@ -60,8 +60,11 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | Torneos | `GET /api/tournaments`, `/:id`, `/:id/teams`, `/standings`, `/scorers` | — |
 | | `POST /api/tournaments` | rol ORGANIZADOR |
 | | `PATCH/DELETE /api/tournaments/:id` | organizador del torneo |
-| | `POST /api/tournaments/:id/teams` | organizador del torneo, o dueño del club que se inscribe |
-| | `DELETE /api/tournaments/:id/teams/:clubId` | ídem |
+| | `POST /api/tournaments/:id/teams` | organizador del torneo, y solo equipos temporales o propios (un club ajeno entra por invitación, y un dueño por solicitud: ver [006](006-solicitudes-de-equipos.md)) |
+| | `POST /api/tournaments/:id/requests` | dueño del club (crea una solicitud) o organizador del torneo (crea una invitación); `GET`: organizador del torneo |
+| | `POST /api/tournament-requests/:id/:action` (`accept`, `decline` o `cancel`) | según el tipo: ver la tabla de [006](006-solicitudes-de-equipos.md) |
+| | `GET /api/tournament-requests/mine` | cualquier sesión (solo ve las de sus propios clubes) |
+| | `DELETE /api/tournaments/:id/teams/:clubId` | organizador del torneo o dueño del club que se retira |
 | | `POST/DELETE /api/tournaments/:id/fixture` | organizador del torneo |
 | Partidos | `GET /api/matches`, `/:id`, `/:id/events` | — |
 | | `POST /api/matches` | organizador del torneo |

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { safeInternalPath } from "@/_lib/safe-next";
 
 export type AuthUser = {
   id: string;
@@ -33,9 +34,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const DEFAULT_LANDING = "/seleccion-perfil";
 
-/** Solo se acepta un destino interno ("/algo"), nunca una URL externa ("//sitio.com"). */
 function safeNext(next: string | null | undefined) {
-  return next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next : DEFAULT_LANDING;
+  return safeInternalPath(next, DEFAULT_LANDING);
 }
 
 async function postJson(url: string, body?: unknown) {

@@ -1,6 +1,9 @@
 # 006 · Solicitudes e invitaciones de equipos a un torneo
 
-**Estado:** ⏳ **propuesta, sin implementar.** Se revisa antes de escribir código (ver "Decisiones que hay que confirmar").
+**Estado:** implementada (as-built). API y pruebas verificadas; pantallas verificadas en el navegador solo donde se indica en "Limitaciones".
+**Escrita como propuesta y luego implementada:** las decisiones A–E adoptaron las recomendaciones de la propuesta; **siguen pendientes de confirmación explícita** (ver más abajo).
+**Código:** `src/_lib/tournament-request.ts` (reglas puras), `src/_lib/enrollment.ts` (bloqueo del torneo), `src/app/api/tournaments/[id]/requests/route.ts`, `src/app/api/tournament-requests/mine/route.ts`, `src/app/api/tournament-requests/[id]/[action]/route.ts`, `src/app/api/tournaments/[id]/teams/route.ts`; pantallas en `src/app/(organizador)/torneos/[id]/{page.tsx,_components/requests-panel.tsx,agregar-equipo/*}`, `src/app/(club)/club/{page.tsx,torneos/page.tsx,torneos/buscar/page.tsx}` y `src/app/convocatoria/[id]/*`.
+**Pruebas:** `tests/solicitudes.test.mjs` (17, API), `tests/unit/tournament-request.test.mjs` (10). Se actualizaron `torneos`, `auth` y `live`, que inscribían clubes ajenos directo.
 **Sustituye a:** el pendiente nº 1 de [pendientes-y-decisiones.md](pendientes-y-decisiones.md) y resuelve la decisión 9.
 **Toca:** [002](002-crear-torneo-y-equipos.md) (inscribir equipos), [modelo-de-datos.md](modelo-de-datos.md).
 
@@ -12,8 +15,8 @@ Que un equipo y un organizador **se pongan de acuerdo** antes de que el equipo e
 
 Además, reemplazar el link falso de "Invitar por WhatsApp" (`amateur.IA40Za.com`) por uno real, para equipos que todavía no están en Amateur.
 
-## Por qué hace falta
-Hoy hay tres huecos que se ven en el código:
+## Por qué hacía falta
+Antes de implementarla había tres huecos que se veían en el código:
 
 1. La pestaña **Solicitudes** e **Invitados** del torneo están vacías y no hay nada que las llene.
 2. El club tiene una pestaña **Solicitudes** y una pantalla **Buscar torneo** que son maquetas con datos inventados (`const solicitudes = []`, `searchResults` fijo).
@@ -83,18 +86,18 @@ Tres acciones sobre una solicitud `pending`. Cada una es una ruta `POST` (mismo 
 | `cancel` | dueño del club | organizador del torneo o admin |
 
 7. Otra persona: `403`. Solicitud que no existe: `404`. Que no esté `pending`: `409`.
-8. **`accept` crea la inscripción y marca la solicitud en una sola transacción**: vuelve a comprobar que el torneo sigue abierto (`409`), que hay cupo (`409`) y que el club no está inscrito (`409`), crea el `TournamentTeam` (sin grupo) y pone `accepted` + `resolvedAt`. Debe ser **seguro con aceptaciones simultáneas**: con un cupo libre y dos aceptaciones a la vez, solo una gana (aislamiento `Serializable` o bloqueo de la fila del torneo). *Nota:* `POST /teams` hoy tiene la misma condición de carrera (cuenta y luego crea, sin transacción); conviene arreglarla junto con esto.
+8. **`accept` crea la inscripción y marca la solicitud en una sola transacción**: vuelve a comprobar que el torneo sigue abierto (`409`), que hay cupo (`409`) y que el club no está inscrito (`409`), crea el `TournamentTeam` (sin grupo) y pone `accepted` + `resolvedAt`. Es **seguro con aceptaciones simultáneas**: `withOpenTournament` bloquea la fila del torneo (`SELECT … FOR UPDATE`) y comprueba estado y cupo dentro de la misma transacción. Con 1 cupo y 5 aceptaciones a la vez entra exactamente 1 (hay una prueba; quitando el bloqueo, entraron 4). **`POST /teams` usa el mismo mecanismo**, con lo que también dejó de tener la condición de carrera que tenía (contaba y luego creaba, sin transacción).
 9. `decline` y `cancel` ponen `declined` / `cancelled` + `resolvedAt`. Se permiten aunque el torneo ya haya empezado.
-10. **Un torneo que empieza no toca sus solicitudes:** siguen `pending`, pero no se pueden aceptar (`409`) y las pantallas las muestran como "Torneo cerrado". Es lo más simple y no acopla esto al fixture.
+10. **Un torneo que empieza no toca sus solicitudes:** siguen `pending`, pero no se pueden aceptar (`409`) y las pantallas avisan que el torneo ya empezó y desactivan **Aceptar**. Es lo más simple y no acopla esto al fixture.
 11. Quitar un equipo del torneo (`DELETE /teams/:clubId`) **no modifica** la solicitud. Al haber una fila por par, el club puede volver a solicitar (regla 6).
 
 ### Leer
 12. `GET /api/tournaments/:id/requests?kind=&status=` — organizador o admin. Devuelve cada solicitud con el resumen del club (`id`, `name`, `shortName`, `color`, `logoUrl`, delegado) y quién la creó. Es lo que llena las pestañas del organizador.
-13. `GET /api/tournament-requests/mine` — con sesión: las solicitudes e invitaciones **de los clubes de quien llama**, pendientes, con el resumen del torneo (`name`, `category`, `startDate`, `location`, `format`, `modality`, cupos ocupados/máximos) y el nombre del organizador. Es lo que llena la pestaña del club.
+13. `GET /api/tournament-requests/mine?tournamentId=` (filtro opcional) — con sesión: las solicitudes e invitaciones **de los clubes de quien llama**, pendientes, con el resumen del torneo (`name`, `category`, `startDate`, `location`, `format`, `modality`, cupos ocupados/máximos) y el nombre del organizador. Es lo que llena la pestaña del club.
 
 ### Cambio en la inscripción directa (`POST /api/tournaments/:id/teams`)
-14. **Deja de aceptar a un dueño de club que inscribe el suyo:** `403` con el mensaje "Solicita unirte al torneo" (ver decisión A). El organizador y el admin siguen inscribiendo directo con `clubId` o `newClub`.
-15. Si el organizador inscribe directo a un club de otro dueño (decisión B), ese club recibe una **invitación** en vez de quedar inscrito, salvo que sea temporal o suyo.
+14. **Deja de aceptar a un dueño de club que inscribe el suyo:** `403` con `code: "request_required"` y el mensaje "Solicita unirte al torneo" (decisión A). El organizador y el admin siguen inscribiendo directo con `clubId` o `newClub`.
+15. **El organizador tampoco inscribe directo a un club de otro dueño** (decisión B): `403` con `code: "invite_required"` y el mensaje "Invita al equipo". Solo entran directo un equipo **temporal**, uno **propio** o cualquiera si quien llama es admin. La pantalla no hace esta llamada: usa `POST /requests`.
 
 ## El link de "Invitar por WhatsApp"
 Para el equipo que **todavía no está en Amateur**. El link es la **convocatoria pública** del torneo: `/convocatoria/:tournamentId`.
@@ -106,7 +109,7 @@ Para el equipo que **todavía no está en Amateur**. El link es la **convocatori
   - **Con sesión y club:** botón **Solicitar unirme**, con el estado si ya lo pidió, ya está inscrito o no hay cupo. Si gestiona varios clubes, elige con cuál.
 - La tarjeta de `agregar-equipo` muestra este link real y *Compartir* usa el mismo componente que el link del club (`InviteLinkCard`: menú del sistema en el celular, copiar en la computadora).
 
-> Dependencia por verificar: el alta de un club desde la interfaz. `POST /api/clubs` existe y exige `CLUB_OWNER`, pero **no se ha confirmado que haya una pantalla** que un recién llegado pueda usar. Si no la hay, es parte de este trabajo o un paso previo.
+> **Alta de club:** `POST /api/clubs` existía pero **ninguna pantalla lo usaba** (solo la de admin): quien elegía "Equipo de fútbol" caía en `/club`, que no tenía página. Se creó `/club`: sin equipo muestra el formulario **Crea tu equipo**; con equipo redirige al destino. Acepta `?next=` (solo rutas internas) para volver a la convocatoria.
 
 ## Pantallas
 
@@ -119,23 +122,26 @@ Para el equipo que **todavía no está en Amateur**. El link es la **convocatori
 - Pestaña *Solicitudes* con datos reales (`/mine`): invitaciones pendientes con **Rechazar / Aceptar**, y solicitudes propias con **Cancelar solicitud**. Solo pendientes. Ya existe la maqueta.
 - *Buscar torneo* (`/club/torneos/buscar`): torneos reales en `inscripcion` con cupo (`GET /api/tournaments?status=inscripcion`), filtro por nombre en el cliente, **Solicitar** por tarjeta, con el estado ("Solicitud enviada", "Ya inscrito", "Sin cupo").
 
-**Público — `/convocatoria/:id`:** ver arriba.
+**Alta de club — `/club`:** nombre (1–80), nombre corto (hasta 12, se sugiere de las 3 primeras letras), color entre 8 con contraste suficiente para las iniciales blancas, y vista previa del avatar. El error aparece junto al campo; el botón muestra progreso y se desactiva mientras envía. Activa el rol `CLUB_OWNER` al enviar (no al mirar la pantalla).
 
-## Pruebas por escribir
-Un archivo `tests/solicitudes.test.mjs` (integración, rama de pruebas). Como mínimo:
+**Público — `/convocatoria/:id`:** resumen del torneo, cupos con barra de progreso, bases y costos (que antes ninguna pantalla mostraba) y una barra de acción fija abajo que cambia según quién la abra: sin sesión (iniciar sesión o crear cuenta, ambas vuelven aquí), sin club (crear equipo), con club (solicitar, ver "solicitud enviada" y cancelar, "ya inscrito", "sin cupos" o "te invitaron"), organizador del torneo (administrar) o inscripciones cerradas. Con varios clubes, un selector. Tiene título y descripción propios para la vista previa de WhatsApp.
 
-- Crear: dueño → `request`; organizador → `invite`; ajeno `403`; sin sesión `401`; ambas cosas `409`; temporal `400`; ya inscrito `409`; sin cupo `409`; torneo empezado `409`; club/torneo inexistente `404`.
-- Idempotencia: repetir → `200` `alreadyPending`; kind contrario → `409` con `requestId`; reabrir tras rechazada/cancelada → `201`.
-- Resolver: cada celda de la tabla de permisos (quién sí, quién `403`); no pendiente `409`; `accept` crea el `TournamentTeam` y `accepted`; `accept` sin cupo o con torneo cerrado `409` **sin dejar nada a medias**.
-- **Concurrencia:** con 1 cupo y 5 solicitudes aceptadas a la vez, exactamente 1 gana y el torneo nunca supera `maxTeams`.
-- Cancelar y rechazar; quitar el equipo y volver a solicitar.
-- `GET` del organizador (solo el suyo, filtros) y `/mine` (solo mis clubes; no filtra datos de otros).
-- Regresión: **actualizar** la prueba `quien no es organizador ni dueño del club no puede inscribir` (hoy afirma que el dueño se inscribe solo, `201`; pasa a `403`).
-- Unitarias: si se extrae una función pura de las transiciones permitidas, sin servidor.
+## Pruebas
+`tests/solicitudes.test.mjs` (17) cubre, contra un servidor real:
 
-Después: `tsc`, `lint` sobre lo tocado, y una pasada real en el navegador de las tres pantallas (organizador, club, convocatoria).
+- **Crear:** dueño → `request`, organizador → `invite`; sin sesión `401`, ajeno `403`, datos inválidos `400`, inexistentes `404`; quien es ambas cosas `409`; temporal `400`; ya inscrito, sin cupo o torneo empezado `409`; repetir es idempotente; el tipo contrario pendiente devuelve `409` con `requestId`; tras un rechazo se reabre la misma fila (incluso cambiando de tipo).
+- **Resolver:** cada celda de la tabla de permisos (quién sí y quién `403`); aceptar crea la inscripción; rechazar y cancelar no; una ya resuelta `409`; acción inexistente `404`; aceptar con el torneo lleno o empezado `409` **sin dejar nada a medias** y la solicitud sigue pendiente; quitar el equipo permite volver a solicitar.
+- **Concurrencia:** 1 cupo y 5 solicitudes aceptadas a la vez, entra exactamente 1.
+- **Inscripción directa cerrada:** organizador a club ajeno y dueño a sí mismo, ambos `403` con su `code`.
+- **Leer:** el organizador lista con filtros y no ve el correo de nadie; un ajeno o el dueño del club `403`; `/mine` devuelve solo las pendientes de los clubes de quien llama, con el resumen del torneo.
 
-## Decisiones que hay que confirmar
+`tests/unit/tournament-request.test.mjs` (10) fija la tabla de permisos, las acciones y las etiquetas sin servidor. Se agregaron también `time-ago` (3) y `safe-next` (2).
+
+Se **verificó que la prueba de concurrencia detecta el problema**: al quitar el bloqueo, falla (aceptaron 4 solicitudes para 1 cupo).
+
+## Decisiones adoptadas (por confirmar)
+
+Se implementó la **recomendación** de cada una. Si alguna no es lo que quieres, cambiarla es acotado.
 
 | # | Decisión | Recomendación | Alternativa y su costo |
 |---|---|---|---|
@@ -145,7 +151,7 @@ Después: `tsc`, `lint` sobre lo tocado, y una pasada real en el navegador de la
 | **D** | ¿Se conserva el historial de intentos? | **No**: una fila por par y se reabre. | Una fila por intento: historial completo, pero hay que garantizar en código que solo haya una pendiente por par. |
 | **E** | ¿Hay lista de espera cuando no hay cupo? | **No**: no se puede solicitar sin cupo, y al aceptar se vuelve a comprobar. | Lista de espera: un estado más y reglas de orden. |
 
-A y B cambian comportamiento que hoy funciona y tiene pruebas; por eso se piden antes de tocar código.
+A y B cambiaron comportamiento que ya funcionaba y tenía pruebas (se actualizaron). Revertir B, por ejemplo, es quitar una condición en `POST /teams` y volver a mostrar **Agregar** en vez de **Invitar**.
 
 ## Fuera de alcance
 - **Notificaciones:** el organizador y el dueño se enteran al abrir su pestaña (mismo límite que las invitaciones a jugadores, decisión 12). Un contador en la pestaña es lo único que se propone.
@@ -154,8 +160,12 @@ A y B cambian comportamiento que hoy funciona y tiene pruebas; por eso se piden 
 - **Solicitar por categoría** o por más de un equipo de un mismo club.
 - **Historial** de solicitudes resueltas en las pantallas.
 
-## Orden de trabajo sugerido (cada paso, un PR)
-1. Modelo + API de crear, resolver y leer + `tests/solicitudes.test.mjs` + el arreglo de la condición de carrera en `POST /teams` + el cambio de la regla 14.
-2. Pantallas del organizador (*Solicitudes*, *Invitados*, botón **Invitar**).
-3. Pantallas del club (pestaña *Solicitudes*, *Buscar torneo*).
-4. Convocatoria pública, el link real y, si hace falta, el alta de club.
+## Limitaciones conocidas
+- **Las pantallas de organizador, club y el alta de club no se recorrieron en el navegador con sesión iniciada.** Verificados: la API completa (pruebas), los tipos (`tsc`), el lint de lo nuevo y la convocatoria pública sin sesión, incluido el modal de login con su `next`. Falta el recorrido visual de las pantallas con sesión.
+- **No hay notificaciones:** cada parte se entera al abrir su pestaña. El organizador ve un contador de solicitudes pendientes en la pestaña *Solicitudes*; el dueño del club, uno de invitaciones en la suya.
+- **Un club con varios equipos:** solo la convocatoria deja elegir con cuál solicitar. El resto del área de club usa el primero (como el resto de la app).
+- **Sin historial** en las pantallas: el club solo ve pendientes; el organizador ve todas las invitaciones (con su estado) pero solo las solicitudes pendientes.
+- **Un torneo que empieza deja sus solicitudes pendientes** (no se pueden aceptar; se pueden rechazar o cancelar).
+- La búsqueda de torneos del club filtra en el navegador por nombre o sede; no hay filtros por categoría ni fecha.
+- Se conserva la tarjeta "Buscar equipo" con su texto anterior.
+- La suite de integración depende de una base remota lenta: cada prueba tarda entre 5 y 40 segundos, y no conviene correr varias suites en paralelo (saturan el pool de conexiones).
