@@ -13,6 +13,12 @@ import {
   validateMatchdayConfig,
   supportsFixture,
   isUnscheduled,
+  planBracket,
+  roundLabel,
+  penaltyWinner,
+  isTbd,
+  scheduleBracketOneDay,
+  seedCopaBracket,
 } from "../../src/_lib/fixture.ts";
 
 const ids = (n) => Array.from({ length: n }, (_, i) => `t${i + 1}`);
@@ -307,5 +313,257 @@ describe("partidos sin programar", () => {
   test("un partido sin hora está sin programar", () => {
     assert.equal(isUnscheduled({ time: "" }), true);
     assert.equal(isUnscheduled({ time: "18:00" }), false);
+  });
+});
+
+describe("planBracket", () => {
+  test("menos de 2 equipos da error", () => {
+    const r = planBracket(ids(1));
+    assert.equal(r.ok, false);
+  });
+
+  test("2 equipos: una sola final, sin ronda anterior", () => {
+    const r = planBracket(ids(2));
+    assert.equal(r.ok, true);
+    assert.equal(r.totalRounds, 1);
+    assert.equal(r.matches.length, 1);
+    assert.deepEqual([r.matches[0].homeTeamId, r.matches[0].awayTeamId].sort(), ["t1", "t2"]);
+    assert.equal(r.matches[0].nextMatchIndex, null);
+  });
+
+  test("3 equipos: 1 bye, 1 partido en ronda 1, y una final", () => {
+    const r = planBracket(ids(3));
+    assert.equal(r.ok, true);
+    assert.equal(r.totalRounds, 2);
+    assert.equal(r.matches.length, 2);
+    const [round1, final] = r.matches;
+    assert.equal(round1.round, 1);
+    assert.deepEqual([round1.homeTeamId, round1.awayTeamId].sort(), ["t2", "t3"]);
+    assert.equal(round1.nextMatchIndex, 1);
+    assert.equal(final.round, 2);
+    // t1 (el bye, primero inscrito) ya está puesto en la final; el otro lado espera al ganador de round1.
+    assert.equal(final.homeTeamId, "t1");
+    assert.equal(final.awayTeamId, null);
+    assert.equal(round1.nextMatchSlot, "away");
+  });
+
+  test("7 equipos: 3 partidos en ronda 1, 1 libre, 2 en ronda 2, 1 final — 6 partidos en total", () => {
+    const r = planBracket(ids(7));
+    assert.equal(r.ok, true);
+    assert.equal(r.totalRounds, 3);
+    assert.equal(r.matches.length, 6);
+    const byRound = (n) => r.matches.filter((m) => m.round === n);
+    assert.equal(byRound(1).length, 3);
+    assert.equal(byRound(2).length, 2);
+    assert.equal(byRound(3).length, 1);
+    // El equipo libre (t1) ya figura de entrada en un partido de ronda 2.
+    const withBye = byRound(2).find((m) => m.homeTeamId === "t1" || m.awayTeamId === "t1");
+    assert.ok(withBye, "t1 debe estar ya puesto en la ronda 2");
+    // Nadie que no sea el bye entra a la ronda 2 sin que un partido de ronda 1 apunte ahí.
+    for (const m of byRound(1)) {
+      assert.equal(typeof m.nextMatchIndex, "number");
+      assert.ok(["home", "away"].includes(m.nextMatchSlot));
+    }
+    // La final no tiene a nadie puesto todavía (nadie tuvo bye hasta ahí).
+    assert.equal(byRound(3)[0].homeTeamId, null);
+    assert.equal(byRound(3)[0].awayTeamId, null);
+  });
+
+  test("8 equipos: sin bye, 4+2+1 partidos, nadie juega dos veces la misma ronda", () => {
+    const r = planBracket(ids(8));
+    assert.equal(r.totalRounds, 3);
+    const byRound = (n) => r.matches.filter((m) => m.round === n);
+    assert.equal(byRound(1).length, 4);
+    assert.equal(byRound(2).length, 2);
+    assert.equal(byRound(3).length, 1);
+    const round1Teams = byRound(1).flatMap((m) => [m.homeTeamId, m.awayTeamId]);
+    assert.deepEqual([...round1Teams].sort(), ids(8).sort());
+    assert.equal(new Set(round1Teams).size, 8, "nadie se repite en la ronda 1");
+  });
+
+  test("9 equipos: cuadro de 16, 7 byes, 1 solo partido en ronda 1", () => {
+    const r = planBracket(ids(9));
+    assert.equal(r.totalRounds, 4); // dieciseisavos hasta la final
+    const byRound = (n) => r.matches.filter((m) => m.round === n);
+    assert.equal(byRound(1).length, 1);
+    assert.equal(byRound(2).length, 4);
+    assert.equal(byRound(3).length, 2);
+    assert.equal(byRound(4).length, 1);
+    assert.equal(r.matches.length, 8);
+  });
+
+  test("cada partido con nextMatchIndex apunta a un partido de la ronda siguiente", () => {
+    for (const n of [5, 6, 7, 10, 13]) {
+      const r = planBracket(ids(n));
+      for (const m of r.matches) {
+        if (m.nextMatchIndex === null) continue;
+        assert.equal(r.matches[m.nextMatchIndex].round, m.round + 1, `n=${n}`);
+      }
+    }
+  });
+
+  test("es determinista: mismo orden de entrada, mismo cuadro", () => {
+    const a = planBracket(ids(11));
+    const b = planBracket(ids(11));
+    assert.deepEqual(a, b);
+  });
+});
+
+describe("roundLabel", () => {
+  test("nombres estándar contando desde la final", () => {
+    assert.equal(roundLabel(3, 3), "Final");
+    assert.equal(roundLabel(2, 3), "Semifinal");
+    assert.equal(roundLabel(1, 3), "Cuartos de final");
+    assert.equal(roundLabel(1, 4), "Octavos de final");
+    assert.equal(roundLabel(1, 5), "Dieciseisavos de final");
+  });
+
+  test("un cuadro más grande que lo nombrado cae al genérico", () => {
+    assert.equal(roundLabel(1, 7), "Ronda 1");
+  });
+});
+
+describe("penaltyWinner", () => {
+  test("nadie definido: sigue si todavía no llegaron a 5 y el resultado es alcanzable", () => {
+    assert.equal(penaltyWinner(2, 0, 0, 2), null);
+    assert.equal(penaltyWinner(4, 0, 4, 0), null);
+  });
+
+  test("se define antes de los 5 si al que pierde ya no le alcanza", () => {
+    // Local 4-0 tras 4 intentos; visitante ya erró 3 de 3: como máximo llega a 2.
+    assert.equal(penaltyWinner(4, 0, 0, 3), "home");
+    assert.equal(penaltyWinner(0, 3, 4, 0), "away");
+  });
+
+  test("tras 5 intentos cada uno, decide el marcador", () => {
+    assert.equal(penaltyWinner(4, 1, 3, 2), "home");
+    assert.equal(penaltyWinner(3, 2, 4, 1), "away");
+  });
+
+  test("empatados tras 5, sigue en muerte súbita hasta que a igual cantidad de intentos el marcador no empate", () => {
+    assert.equal(penaltyWinner(5, 0, 5, 0), null); // 5-5, hay que seguir
+    assert.equal(penaltyWinner(6, 0, 5, 0), null); // local ya pateó el 6°, falta el visitante
+    assert.equal(penaltyWinner(6, 0, 5, 1), "home"); // 6-5 con igual cantidad de intentos: cierra
+    assert.equal(penaltyWinner(6, 0, 6, 0), null); // 6-6: sigue
+  });
+});
+
+describe("isTbd", () => {
+  test("por definir si falta cualquiera de los dos equipos", () => {
+    assert.equal(isTbd({ homeTeamId: null, awayTeamId: null }), true);
+    assert.equal(isTbd({ homeTeamId: "t1", awayTeamId: null }), true);
+    assert.equal(isTbd({ homeTeamId: null, awayTeamId: "t2" }), true);
+    assert.equal(isTbd({ homeTeamId: "t1", awayTeamId: "t2" }), false);
+  });
+});
+
+describe("scheduleBracketOneDay (relámpago)", () => {
+  const config = (overrides = {}) => ({ date: "2026-11-14", startTime: "09:00", endTime: "18:00", ...overrides });
+
+  test("un partido por horario, uno detrás de otro, misma sede para todos", () => {
+    const bracket = planBracket(ids(4));
+    const r = scheduleBracketOneDay(bracket.matches, config(), { slotMinutes: 60, location: "Complejo X" });
+    assert.equal(r.ok, true);
+    assert.equal(r.matches.length, 3);
+    assert.deepEqual(r.matches.map((m) => m.time), ["09:00", "10:00", "11:00"]);
+    assert.ok(r.matches.every((m) => m.date === "2026-11-14" && m.location === "Complejo X"));
+  });
+
+  test("conserva ronda y la conexión al partido siguiente", () => {
+    const bracket = planBracket(ids(4));
+    const r = scheduleBracketOneDay(bracket.matches, config(), { slotMinutes: 60, location: "X" });
+    assert.deepEqual(
+      r.matches.map((m) => m.round),
+      bracket.matches.map((m) => m.round)
+    );
+    assert.deepEqual(
+      r.matches.map((m) => m.nextMatchIndex),
+      bracket.matches.map((m) => m.nextMatchIndex)
+    );
+  });
+
+  test("si no alcanza el horario, error claro y no se corta a la mitad", () => {
+    const bracket = planBracket(ids(8)); // 7 partidos (4+2+1)
+    const r = scheduleBracketOneDay(bracket.matches, config({ startTime: "09:00", endTime: "11:00" }), { slotMinutes: 60, location: "X" });
+    assert.equal(r.ok, false);
+    assert.match(r.error, /7 partidos/);
+  });
+
+  test("valida fecha y horarios", () => {
+    const base = { slotMinutes: 60, location: "X" };
+    assert.equal(scheduleBracketOneDay([], config({ date: "2026-02-31" }), base).ok, false);
+    assert.equal(scheduleBracketOneDay([], config({ startTime: "25:00" }), base).ok, false);
+    assert.equal(scheduleBracketOneDay([], config({ startTime: "18:00", endTime: "09:00" }), base).ok, false);
+  });
+});
+
+describe("seedCopaBracket", () => {
+  test("2 grupos, clasifican 2: intercala 1°/2° sin cruzar el mismo grupo", () => {
+    const order = seedCopaBracket([
+      ["A1", "A2"],
+      ["B1", "B2"],
+    ]);
+    assert.equal(order.length, 4);
+    // Cada pareja consecutiva (la que se enfrenta en ronda 1) es de grupos distintos.
+    for (let i = 0; i < order.length; i += 2) {
+      const groupOf = (team) => team[0];
+      assert.notEqual(groupOf(order[i]), groupOf(order[i + 1]), `${order[i]} vs ${order[i + 1]}`);
+    }
+  });
+
+  test("3 grupos, clasifican 2: ningún cruce de ronda 1 repite grupo", () => {
+    const order = seedCopaBracket([
+      ["A1", "A2"],
+      ["B1", "B2"],
+      ["C1", "C2"],
+    ]);
+    assert.equal(order.length, 6);
+    for (let i = 0; i < order.length; i += 2) {
+      assert.notEqual(order[i][0], order[i + 1][0]);
+    }
+    // Los 3 primeros de grupo están todos presentes (nadie se pierde).
+    assert.deepEqual(new Set(order), new Set(["A1", "A2", "B1", "B2", "C1", "C2"]));
+  });
+
+  test("4 grupos, clasifican 4 (1° a 4°): también evita el mismo grupo en cada cruce", () => {
+    const groups = ["A", "B", "C", "D"].map((g) => [1, 2, 3, 4].map((r) => `${g}${r}`));
+    const order = seedCopaBracket(groups);
+    assert.equal(order.length, 16);
+    for (let i = 0; i < order.length; i += 2) {
+      assert.notEqual(order[i][0], order[i + 1][0], `${order[i]} vs ${order[i + 1]}`);
+    }
+  });
+
+  test("clasifican 3 (rango impar): el sobrante se agrega en orden de grupo, sin perder a nadie", () => {
+    const order = seedCopaBracket([
+      ["A1", "A2", "A3"],
+      ["B1", "B2", "B3"],
+      ["C1", "C2", "C3"],
+    ]);
+    assert.equal(order.length, 9);
+    assert.deepEqual(new Set(order), new Set(["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"]));
+    // Los tres "3°" quedan al final, en orden de grupo.
+    assert.deepEqual(order.slice(6), ["A3", "B3", "C3"]);
+  });
+
+  test("un grupo más chico que el resto: no revienta, solo aporta lo que tiene", () => {
+    const order = seedCopaBracket([
+      ["A1", "A2"],
+      ["B1"], // este grupo solo clasificó 1
+    ]);
+    assert.deepEqual(new Set(order), new Set(["A1", "B1", "A2"]));
+  });
+
+  test("sin grupos, sin equipos", () => {
+    assert.deepEqual(seedCopaBracket([]), []);
+  });
+
+  test("es determinista", () => {
+    const groups = [
+      ["A1", "A2"],
+      ["B1", "B2"],
+      ["C1", "C2"],
+    ];
+    assert.deepEqual(seedCopaBracket(groups), seedCopaBracket(groups));
   });
 });

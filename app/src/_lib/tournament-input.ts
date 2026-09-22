@@ -124,6 +124,18 @@ export function parseTournamentFields(body: Fields, mode: "create" | "update"): 
       data[key] = body[key] === null ? null : (body[key] as string).trim();
     }
   }
+  if (has("extraTimeMinutes")) {
+    if (body.extraTimeMinutes !== null && !isInt(body.extraTimeMinutes, 1, 45)) {
+      return { error: "extraTimeMinutes debe ser un entero entre 1 y 45" };
+    }
+    data.extraTimeMinutes = body.extraTimeMinutes;
+  }
+  if (has("groupsAdvancePerGroup")) {
+    if (body.groupsAdvancePerGroup !== null && ![2, 3, 4].includes(body.groupsAdvancePerGroup as number)) {
+      return { error: "groupsAdvancePerGroup debe ser 2, 3 o 4" };
+    }
+    data.groupsAdvancePerGroup = body.groupsAdvancePerGroup;
+  }
   if (has("rules")) {
     const rules = body.rules;
     if (!Array.isArray(rules) || rules.length > 50 || !rules.every((r) => isText(r, 500))) {

@@ -13,6 +13,9 @@ import {
   matchDurationMinutes,
   EVENT_TYPE_FROM_ACTION,
   EVENT_TYPES,
+  MATCH_PHASES,
+  isMatchPhase,
+  canTransitionPhase,
 } from "../../src/_lib/match-live.ts";
 
 describe("estados del partido", () => {
@@ -51,6 +54,7 @@ describe("eventos", () => {
     assert.equal(statFor("tarjeta_roja"), "redCards");
     assert.equal(statFor("sustitucion"), null);
     assert.equal(statFor("penal"), null);
+    assert.equal(statFor("penal_definicion"), null, "un penal de la tanda no es un gol de juego");
   });
 
   test("los botones de la pantalla en vivo se traducen a tipos válidos de la API", () => {
@@ -60,6 +64,30 @@ describe("eventos", () => {
     assert.equal(EVENT_TYPE_FROM_ACTION.amarilla, "tarjeta_amarilla");
     assert.equal(EVENT_TYPE_FROM_ACTION.cambio, "sustitucion");
     assert.equal(isEventType("amarilla"), false, "el nombre de la pantalla no es un tipo de la API");
+  });
+});
+
+describe("fases de un partido decisivo", () => {
+  test("solo existen regulacion, tiempo_extra y penales", () => {
+    assert.deepEqual([...MATCH_PHASES], ["regulacion", "tiempo_extra", "penales"]);
+    assert.equal(isMatchPhase("penales"), true);
+    assert.equal(isMatchPhase("penalty"), false);
+    assert.equal(isMatchPhase(undefined), false);
+  });
+
+  test("solo avanza de a una, en orden", () => {
+    assert.equal(canTransitionPhase("regulacion", "tiempo_extra"), true);
+    assert.equal(canTransitionPhase("tiempo_extra", "penales"), true);
+    assert.equal(canTransitionPhase("regulacion", "penales"), false, "no se salta el tiempo extra");
+  });
+
+  test("no retrocede (eso es reabrir el partido, no un cambio de fase)", () => {
+    assert.equal(canTransitionPhase("tiempo_extra", "regulacion"), false);
+    assert.equal(canTransitionPhase("penales", "tiempo_extra"), false);
+  });
+
+  test("repetir la misma fase es inofensivo", () => {
+    for (const p of MATCH_PHASES) assert.equal(canTransitionPhase(p, p), true);
   });
 });
 

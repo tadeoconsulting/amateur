@@ -91,7 +91,7 @@ describe("permisos y validación", () => {
     assert.equal((await matchesOf(org.client, id)).length, 0);
   });
 
-  test("no se puede iniciar con menos de 2 equipos, ni por debajo del mínimo, ni con un formato sin fixture", async () => {
+  test("no se puede iniciar con menos de 2 equipos ni por debajo del mínimo", async () => {
     const org = await organizer("fxestado");
     const path = (id) => `/api/tournaments/${id}/fixture`;
 
@@ -104,15 +104,13 @@ describe("permisos y validación", () => {
     const r2 = await org.client.post(path(min), { mode: "manual" });
     assert.equal(r2.status, 409);
     assert.match(r2.data.error, /mínimo/);
-
-    for (const format of ["eliminacion", "copa", "relampago"]) {
-      const id = await tournamentWith(org, 4, { format });
-      const r = await org.client.post(path(id), { mode: "manual" });
-      assert.equal(r.status, 409, format);
-      assert.match(r.data.error, /formato/);
-      assert.equal(await statusOf(org.client, id), "inscripcion");
-    }
   });
+
+  // Los 5 formatos (liga, grupos, eliminacion, relampago, copa) tienen generación de fixture
+  // desde la especificación 007 (ver tests/fixture-eliminacion.test.mjs y
+  // tests/fixture-copa.test.mjs): ya no queda un formato real que dé "sin soporte" acá. Como
+  // el `format` de un torneo se valida al crearlo (no puede ser cualquier texto), no hay
+  // forma de llegar a este endpoint con un formato inválido para probar ese caso.
 });
 
 describe("programación automática", () => {

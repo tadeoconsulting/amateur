@@ -1,8 +1,8 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
-import { isRealDate } from "@/_lib/fixture";
-import { canTransition, isMatchStatus, type MatchStatus } from "@/_lib/match-live";
+import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
+import { canTransition, canTransitionPhase, isMatchPhase, isMatchStatus, MATCH_PHASES, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
 
 export async function GET(
   _request: NextRequest,
@@ -16,7 +16,7 @@ export async function GET(
       homeTeam: true,
       awayTeam: true,
       events: { orderBy: [{ minute: "asc" }, { createdAt: "asc" }] },
-      tournament: { select: { id: true, name: true, format: true, minutesPerHalf: true } },
+      tournament: { select: { id: true, name: true, format: true, minutesPerHalf: true, extraTimeMinutes: true } },
     },
   });
 
@@ -34,13 +34,19 @@ const isScore = (value: unknown) => value === null || (Number.isInteger(value) &
 const conflict = (error: string) => Response.json({ error }, { status: 409 });
 
 /**
- * Edita un partido: marcador, estado y programación (día, hora y sede).
+ * Edita un partido: marcador, estado, fase y programación (día, hora y sede).
  *
  * El estado sigue el ciclo programado → en_curso → finalizado (ver canTransition):
  * - Al empezar se guarda `startedAt` (el cronómetro sale de ahí) y el marcador arranca 0-0.
  * - Al terminar el marcador nunca queda vacío, porque las tablas ignoran los partidos sin
  *   marcador. Cuando termina el último partido del torneo, el torneo pasa a "finalizado"
  *   (y vuelve a "en_curso" si se reabre uno).
+ *
+ * Un partido `decisive` (de un cuadro de eliminación) no puede terminar empatado: si el
+ * marcador sigue igual, hay que pasarlo a `phase: "tiempo_extra"` y, si hace falta, a
+ * "penales" (ver especificación 007) antes de poder finalizarlo. Al finalizar con un
+ * ganador, si el partido tiene `nextMatchId`, se completa automáticamente el slot que le
+ * toca en el partido siguiente.
  */
 export async function PATCH(
   request: NextRequest,
@@ -54,13 +60,16 @@ export async function PATCH(
 
   const body = await readJson(request);
   if (!body) return badRequest();
-  const { homeScore, awayScore, status, date, time, location } = body;
+  const { homeScore, awayScore, status, phase, date, time, location } = body;
 
   if ((homeScore !== undefined && !isScore(homeScore)) || (awayScore !== undefined && !isScore(awayScore))) {
     return badRequest("El marcador debe ser un entero mayor o igual a 0");
   }
   if (status !== undefined && !isMatchStatus(status)) {
     return badRequest("status debe ser programado, en_curso o finalizado");
+  }
+  if (phase !== undefined && !isMatchPhase(phase)) {
+    return badRequest(`phase debe ser una de: ${MATCH_PHASES.join(", ")}`);
   }
 
   // Programación del partido: día (YYYY-MM-DD), hora (HH:MM, 24 h) y sede.
@@ -90,6 +99,13 @@ export async function PATCH(
       date: true,
       time: true,
       location: true,
+      decisive: true,
+      phase: true,
+      winnerTeamId: true,
+      nextMatchId: true,
+      nextMatchSlot: true,
+      penaltyHomeScore: true,
+      penaltyAwayScore: true,
       _count: { select: { events: true } },
     },
   });
@@ -108,18 +124,20 @@ export async function PATCH(
       location: typeof location === "string" ? location.trim() : current.location,
     };
     // No puede haber otro partido del torneo a la misma hora con un mismo equipo o en la misma sede.
-    if (next.time !== "") {
+    // Un partido "por definir" (sin equipos todavía, en un cuadro de eliminación) no choca por equipo.
+    const teamIds = [current.homeTeamId, current.awayTeamId].filter((teamId): teamId is string => teamId !== null);
+    const clashConditions = [
+      ...(teamIds.length ? [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }] : []),
+      ...(next.location ? [{ location: next.location }] : []),
+    ];
+    if (next.time !== "" && clashConditions.length > 0) {
       const clash = await prisma.match.findFirst({
         where: {
           tournamentId: current.tournamentId,
           id: { not: id },
           date: next.date,
           time: next.time,
-          OR: [
-            { homeTeamId: { in: [current.homeTeamId, current.awayTeamId] } },
-            { awayTeamId: { in: [current.homeTeamId, current.awayTeamId] } },
-            ...(next.location ? [{ location: next.location }] : []),
-          ],
+          OR: clashConditions,
         },
         select: { id: true },
       });
@@ -134,9 +152,44 @@ export async function PATCH(
   if (homeScore !== undefined) data.homeScore = homeScore as number | null;
   if (awayScore !== undefined) data.awayScore = awayScore as number | null;
 
+  // ─── Fase (solo partidos `decisive`, que no admiten empate) ───
+  if (phase !== undefined) {
+    if (!current.decisive) return conflict("Este partido admite empate: no tiene fases");
+    if (current.status !== "en_curso") return conflict("Solo se cambia de fase mientras el partido está en juego");
+    if (phase !== current.phase) {
+      if (!canTransitionPhase(current.phase as MatchPhase, phase)) {
+        return conflict(`No se puede pasar de "${current.phase}" a "${phase}"`);
+      }
+      const homeNow = data.homeScore !== undefined ? (data.homeScore as number | null) : current.homeScore;
+      const awayNow = data.awayScore !== undefined ? (data.awayScore as number | null) : current.awayScore;
+      if (homeNow !== awayNow) return conflict("Solo se pasa de fase si el partido sigue empatado");
+    }
+    data.phase = phase;
+  }
+
   // ─── Estado ───
   const from = current.status as MatchStatus;
   const to = status as MatchStatus | undefined;
+  // Un partido "por definir" (cuadro de eliminación sin resolver todavía) no se puede jugar.
+  if ((to === "en_curso" || to === "finalizado") && isTbd(current)) {
+    return conflict("Los equipos de este partido todavía no están definidos");
+  }
+
+  // Reabrir un partido decisivo que ya tenía ganador: se desarma ese resultado (y, si el
+  // ganador ya había pasado a un partido siguiente, hace falta que ese siga intacto).
+  const reopeningDecided = from === "finalizado" && to !== undefined && to !== "finalizado" && current.decisive && !!current.winnerTeamId;
+  let clearNextMatchSlot = false;
+  if (reopeningDecided && current.nextMatchId) {
+    const next = await prisma.match.findUnique({
+      where: { id: current.nextMatchId },
+      select: { status: true, homeScore: true, awayScore: true, _count: { select: { events: true } } },
+    });
+    const untouched = next && next.status === "programado" && next.homeScore === null && next.awayScore === null && next._count.events === 0;
+    if (!untouched) return conflict("Primero deshaz el resultado del partido siguiente");
+    clearNextMatchSlot = true;
+  }
+
+  let winnerTeamId: string | null | undefined;
   if (to !== undefined && to !== from) {
     if (!canTransition(from, to)) return conflict(`No se puede pasar un partido de ${from} a ${to}`);
 
@@ -144,14 +197,40 @@ export async function PATCH(
       data.startedAt = current.startedAt ?? new Date();
       if (current.homeScore === null && data.homeScore === undefined) data.homeScore = 0;
       if (current.awayScore === null && data.awayScore === undefined) data.awayScore = 0;
+      if (reopeningDecided) { data.winnerTeamId = null; winnerTeamId = null; }
     } else if (to === "finalizado") {
       if (current.homeScore === null && data.homeScore === undefined) data.homeScore = 0;
       if (current.awayScore === null && data.awayScore === undefined) data.awayScore = 0;
+
+      if (current.decisive) {
+        const homeFinal = (data.homeScore as number | null | undefined) ?? current.homeScore ?? 0;
+        const awayFinal = (data.awayScore as number | null | undefined) ?? current.awayScore ?? 0;
+        const currentPhase = (data.phase as MatchPhase | undefined) ?? (current.phase as MatchPhase);
+
+        if (homeFinal !== awayFinal) {
+          winnerTeamId = homeFinal > awayFinal ? current.homeTeamId : current.awayTeamId;
+        } else if (currentPhase !== "penales") {
+          return conflict("Este partido no puede terminar empatado: pasa a tiempo extra o a penales");
+        } else {
+          const [homeTaken, awayTaken] = await Promise.all([
+            prisma.matchEvent.count({ where: { matchId: id, type: "penal_definicion", teamId: current.homeTeamId } }),
+            prisma.matchEvent.count({ where: { matchId: id, type: "penal_definicion", teamId: current.awayTeamId } }),
+          ]);
+          const homeScored = current.penaltyHomeScore ?? 0;
+          const awayScored = current.penaltyAwayScore ?? 0;
+          const side = penaltyWinner(homeScored, homeTaken - homeScored, awayScored, awayTaken - awayScored);
+          if (!side) return conflict("La tanda de penales no terminó: falta patear");
+          winnerTeamId = side === "home" ? current.homeTeamId : current.awayTeamId;
+        }
+        data.winnerTeamId = winnerTeamId;
+      }
     } else if (to === "programado") {
       if (current._count.events > 0) return conflict("El partido ya tiene jugadas registradas: no se puede volver a programado");
       data.startedAt = null;
       data.homeScore = null;
       data.awayScore = null;
+      if (current.decisive) data.phase = "regulacion";
+      if (reopeningDecided) { data.winnerTeamId = null; winnerTeamId = null; }
     }
     data.status = to;
   }
@@ -169,6 +248,19 @@ export async function PATCH(
         data,
         include: { homeTeam: true, awayTeam: true },
       });
+
+      // Ganador de un cruce de eliminación: completa el slot que le toca en el partido siguiente.
+      if (data.status === "finalizado" && current.nextMatchId && typeof winnerTeamId === "string") {
+        await tx.match.update({
+          where: { id: current.nextMatchId },
+          data: { [current.nextMatchSlot === "home" ? "homeTeamId" : "awayTeamId"]: winnerTeamId },
+        });
+      } else if (clearNextMatchSlot && current.nextMatchId) {
+        await tx.match.update({
+          where: { id: current.nextMatchId },
+          data: { [current.nextMatchSlot === "home" ? "homeTeamId" : "awayTeamId"]: null },
+        });
+      }
 
       // El torneo termina cuando termina su último partido, y se reabre si se reabre uno.
       if (data.status === "finalizado") {
