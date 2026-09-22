@@ -261,8 +261,10 @@ describe("permisos sobre torneos, clubes y partidos", () => {
     });
 
     assert.equal((await stranger.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: club.data.id })).status, 403);
-    assert.equal((await owner.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: club.data.id })).status, 201);
-    assert.equal((await owner.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: club.data.id })).status, 409);
+    // El dueño no se inscribe solo: debe solicitar (ver solicitudes.test.mjs).
+    const own = await owner.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: club.data.id });
+    assert.equal(own.status, 403);
+    assert.equal(own.data.code, "request_required");
     assert.equal((await owner.client.post(`/api/tournaments/no-existe/teams`, { clubId: club.data.id })).status, 404);
   });
 });

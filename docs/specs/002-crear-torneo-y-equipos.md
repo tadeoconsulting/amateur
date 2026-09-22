@@ -57,7 +57,7 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 
 ### Reglas de la inscripción (`POST /api/tournaments/:id/teams`)
 1. Solo con el torneo en `draft` o `inscripcion` (`409` si ya empezó) y con cupo (`409` "ya tiene todos sus equipos").
-2. Inscribe el **organizador** (o admin), o el **dueño de un club** para inscribir el suyo. Otra persona: `403`.
+2. **Inscribe directo solo el organizador** (o admin), y solo equipos **temporales**, **propios** o, si es admin, cualquiera. Un club de **otro dueño** entra por invitación aceptada (`403` con `code: "invite_required"`) y el dueño de un club entra por solicitud aprobada (`403` con `code: "request_required"`): ver [006](006-solicitudes-de-equipos.md). Otra persona: `403`. El cupo y el estado se comprueban con el torneo bloqueado, así que dos inscripciones simultáneas nunca superan `maxTeams`.
 3. Un club que no existe: `404`. Uno ya inscrito: `409`.
 4. Con `{ groupName }` se asigna el grupo (solo tiene efecto en formato `grupos`).
 
@@ -73,8 +73,8 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 11. Un equipo temporal se **borra por completo** al quitarlo (si nada más depende de él).
 
 ## Pantallas
-- **Detalle del torneo en convocatoria:** pestaña *Inscritos* con la lista y "Quitar", el contador `n/máx`, "Agregar equipo" mientras haya cupo, y **"Iniciar torneo" con 2 equipos o más**. *Solicitudes* e *Invitados* muestran un texto vacío.
-- **Buscar equipo:** clubes reales de la comunidad con su delegado; "Agregar" y "Quitar" guardan; se ve el contador y se deshabilita si no hay cupo o el torneo empezó.
+- **Detalle del torneo en convocatoria:** pestaña *Inscritos* con la lista y "Quitar", el contador `n/máx`, "Agregar equipo" mientras haya cupo, y **"Iniciar torneo" con 2 equipos o más**. *Solicitudes* (con contador de pendientes) e *Invitados* muestran las solicitudes y las invitaciones reales, con Aceptar/Rechazar y Cancelar invitación ([006](006-solicitudes-de-equipos.md)).
+- **Buscar equipo:** clubes reales de la comunidad con su delegado. La acción depende del club: **Invitar** (de otro dueño), **Agregar** (propio), **Aceptar** (pidió unirse), **Cancelar** (ya invitado) o **Quitar** (inscrito). Se ve el contador y se deshabilita si no hay cupo o el torneo empezó.
 - **Crear equipo:** formulario de equipo temporal; al terminar vuelve al torneo.
 
 ## Limitaciones conocidas
@@ -84,6 +84,4 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 - **"Definir edad"** en la categoría no pregunta la edad.
 - **No hay forma de asignar grupos** desde la interfaz (formato `grupos`): solo por API.
 - **"Editar torneo"** no hace nada; el torneo solo se edita por API.
-- **La tarjeta "Invitar por WhatsApp" de agregar equipos** muestra un link inventado (`amateur.IA40Za.com`). Hacerla real necesita un modelo de solicitudes de equipos (ver [pendientes](pendientes-y-decisiones.md)).
 - **"Omitir este paso"** sale del asistente y descarta lo escrito; no guarda borradores.
-- Al inscribir un club, su dueño **no confirma**: el organizador lo agrega directo.

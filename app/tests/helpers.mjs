@@ -60,3 +60,14 @@ export async function newUser(label, roles = []) {
 
 export const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString();
 
+
+/**
+ * Inscribe el club de `owner` en un torneo por el camino real: el organizador invita y el
+ * dueño acepta. (El organizador ya no puede inscribir directo a un club de otro dueño.)
+ * Devuelve la respuesta de aceptar.
+ */
+export async function enrollByInvitation(org, tournamentId, owner) {
+  const invite = await org.client.post(`/api/tournaments/${tournamentId}/requests`, { clubId: owner.clubId });
+  assert.equal(invite.status, 201, `invitar: ${JSON.stringify(invite.data)}`);
+  return owner.client.post(`/api/tournament-requests/${invite.data.id}/accept`);
+}

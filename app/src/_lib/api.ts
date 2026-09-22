@@ -1,3 +1,5 @@
+import type { RequestAction, RequestKind, RequestStatus } from "@/_lib/tournament-request";
+
 const BASE = typeof window !== "undefined" ? "" : "http://localhost:3000";
 
 async function fetcher<T>(path: string): Promise<T> {
@@ -37,6 +39,12 @@ export interface TournamentDetail {
   endDate: string | null;
   location: string;
   organizerId: string;
+  registrationFee: string | null;
+  refereeFee: string | null;
+  rules: string[];
+  minutesPerHalf: number | null;
+  playersPerTeam: number | null;
+  organizer: { id: string; firstName: string; lastName: string };
   teams: {
     id: string;
     groupName: string | null;
@@ -124,6 +132,7 @@ export interface ClubListItem {
   logoUrl: string | null;
   color: string | null;
   delegadoNombre: string | null;
+  ownerId: string;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string };
@@ -236,4 +245,87 @@ export function getPlayers(params?: Record<string, string>) {
 export function searchUsers(params?: Record<string, string>) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
   return fetcher<UserItem[]>(`/api/users${qs}`);
+}
+
+// ─── Solicitudes e invitaciones de equipos a un torneo (especificación 006) ────
+
+/** Lo que ve el organizador en las pestañas Solicitudes e Invitados. */
+export interface TournamentRequestItem {
+  id: string;
+  kind: RequestKind;
+  status: RequestStatus;
+  createdAt: string;
+  resolvedAt: string | null;
+  club: {
+    id: string;
+    name: string;
+    shortName: string;
+    color: string | null;
+    logoUrl: string | null;
+    isTemporary: boolean;
+    delegadoNombre: string | null;
+  };
+  createdBy: { id: string; firstName: string; lastName: string };
+}
+
+/** Lo que ve el dueño de un club en su pestaña Solicitudes. */
+export interface MyRequestItem {
+  id: string;
+  kind: RequestKind;
+  status: RequestStatus;
+  createdAt: string;
+  club: { id: string; name: string; shortName: string; color: string | null };
+  tournament: {
+    id: string;
+    name: string;
+    category: string | null;
+    startDate: string;
+    location: string;
+    format: string;
+    modality: string | null;
+    status: string;
+    maxTeams: number | null;
+    teamsCount: number;
+    organizer: { firstName: string; lastName: string };
+  };
+}
+
+export function getTournamentRequests(tournamentId: string, params?: Record<string, string>) {
+  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+  return fetcher<TournamentRequestItem[]>(`/api/tournaments/${tournamentId}/requests${qs}`);
+}
+
+export function getMyRequests(params?: Record<string, string>) {
+  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+  return fetcher<MyRequestItem[]>(`/api/tournament-requests/mine${qs}`);
+}
+
+export type MutationResult<T = unknown> = { ok: boolean; status: number; data: T; error: string | null };
+
+async function send<T>(method: string, path: string, body?: unknown): Promise<MutationResult<T>> {
+  try {
+    const res = await fetch(path, {
+      method,
+      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const data = (await res.json().catch(() => ({}))) as T & { error?: string };
+    return { ok: res.ok, status: res.status, data, error: res.ok ? null : (data.error ?? "No se pudo completar la acción") };
+  } catch {
+    return { ok: false, status: 0, data: {} as T, error: "No se pudo conectar. Inténtalo de nuevo." };
+  }
+}
+
+/** Aceptar, rechazar o cancelar una solicitud o invitación. */
+export function resolveRequest(requestId: string, action: RequestAction) {
+  return send("POST", `/api/tournament-requests/${requestId}/${action}`, {});
+}
+
+/** El dueño del club solicita entrar; el organizador invita a un club. Lo decide el servidor. */
+export function createRequest(tournamentId: string, clubId: string) {
+  return send<{ id: string; kind: RequestKind; alreadyPending?: boolean }>(
+    "POST",
+    `/api/tournaments/${tournamentId}/requests`,
+    { clubId }
+  );
 }

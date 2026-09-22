@@ -81,8 +81,8 @@ tests/            integración (contra un servidor) y tests/unit/
 
 | Comando (desde `app/`) | Qué hace |
 |---|---|
-| `npm run test:unit` | 64 pruebas de lógica pura. Instantáneas, sin servidor ni base. |
-| `npm run test:api` | 108 pruebas de integración contra un servidor en marcha. |
+| `npm run test:unit` | 79 pruebas de lógica pura. Instantáneas, sin servidor ni base. |
+| `npm run test:api` | 125 pruebas de integración contra un servidor en marcha (3 son del bloque `admin` y solo corren si se definen `TEST_ADMIN_EMAIL` y `TEST_ADMIN_PASSWORD`). |
 | `npx tsc --noEmit` | Tipos. |
 | `npm run lint` | ESLint (hoy: 10 errores y 18 avisos preexistentes, casi todos reglas de React 19). |
 

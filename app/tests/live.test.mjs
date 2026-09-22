@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { Client, RUN, newUser } from "./helpers.mjs";
+import { Client, RUN, newUser, enrollByInvitation } from "./helpers.mjs";
 
 const payload = (overrides = {}) => ({
   name: "Vivo " + RUN,
@@ -39,7 +39,7 @@ async function liveSetup(label) {
   const t = await org.client.post("/api/tournaments", payload());
   assert.equal(t.status, 201, JSON.stringify(t.data));
   for (const c of clubs) {
-    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: c.id })).status, 201);
+    assert.equal((await enrollByInvitation(org, t.data.id, { client: c.owner.client, clubId: c.id })).status, 200);
   }
   const fx = await org.client.post(`/api/tournaments/${t.data.id}/fixture`, { mode: "manual" });
   assert.equal(fx.status, 201, JSON.stringify(fx.data));

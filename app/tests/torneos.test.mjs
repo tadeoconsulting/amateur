@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { Client, RUN, newUser, tomorrow } from "./helpers.mjs";
+import { Client, RUN, newUser, tomorrow, enrollByInvitation } from "./helpers.mjs";
 
 // Lo mismo que envía el paso 3 del asistente "Crear torneo".
 const wizardPayload = (overrides = {}) => ({
@@ -120,8 +120,8 @@ describe("crear torneo (asistente)", () => {
     const t = await org.client.post("/api/tournaments", wizardPayload({ maxTeams: 4 }));
     const a = await clubOwner("edA");
     const b = await clubOwner("edB");
-    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: a.clubId })).status, 201);
-    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: b.clubId })).status, 201);
+    assert.equal((await enrollByInvitation(org, t.data.id, a)).status, 200);
+    assert.equal((await enrollByInvitation(org, t.data.id, b)).status, 200);
 
     assert.equal((await org.client.patch(`/api/tournaments/${t.data.id}`, { maxTeams: 1 })).status, 400);
     assert.equal((await org.client.patch(`/api/tournaments/${t.data.id}`, { maxTeams: 2 })).status, 200);
@@ -145,14 +145,19 @@ describe("crear torneo (asistente)", () => {
 });
 
 describe("agregar equipos", () => {
-  test("el organizador inscribe un club existente; repetirlo da 409; uno que no existe, 404", async () => {
+  test("un club de otro dueño entra por invitación aceptada; repetirlo da 409; uno que no existe, 404", async () => {
     const org = await organizer("insc");
     const owner = await clubOwner("insc");
     const t = await org.client.post("/api/tournaments", wizardPayload());
 
-    const ok = await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId });
-    assert.equal(ok.status, 201);
-    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId })).status, 409);
+    // El organizador no lo inscribe directo: el dueño debe aceptar.
+    const direct = await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId });
+    assert.equal(direct.status, 403);
+    assert.equal(direct.data.code, "invite_required");
+
+    const ok = await enrollByInvitation(org, t.data.id, owner);
+    assert.equal(ok.status, 200);
+    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/requests`, { clubId: owner.clubId })).status, 409);
     assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: "no-existe" })).status, 404);
     assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, {})).status, 400);
 
@@ -167,9 +172,9 @@ describe("agregar equipos", () => {
     const t = await org.client.post("/api/tournaments", wizardPayload({ maxTeams: 2 }));
     const clubs = [await clubOwner("cupo1"), await clubOwner("cupo2"), await clubOwner("cupo3")];
 
-    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: clubs[0].clubId })).status, 201);
+    assert.equal((await enrollByInvitation(org, t.data.id, clubs[0])).status, 200);
     assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { newClub: { name: "Temporal", shortName: "TMP" } })).status, 201);
-    const third = await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: clubs[2].clubId });
+    const third = await org.client.post(`/api/tournaments/${t.data.id}/requests`, { clubId: clubs[2].clubId });
     assert.equal(third.status, 409);
     assert.match(third.data.error, /todos sus equipos/);
     const thirdTemp = await org.client.post(`/api/tournaments/${t.data.id}/teams`, { newClub: { name: "Otro", shortName: "OTR" } });
@@ -183,8 +188,8 @@ describe("agregar equipos", () => {
     const t = await org.client.post("/api/tournaments", wizardPayload());
 
     assert.equal((await stranger.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId })).status, 403);
-    // El dueño del club sí puede inscribir el suyo.
-    assert.equal((await owner.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId })).status, 201);
+    // El dueño del club no se inscribe solo: solicita, y el organizador decide.
+    assert.equal((await owner.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId })).status, 403);
   });
 
   test("el dueño de un club no puede inscribir el club de otro", async () => {
@@ -200,10 +205,10 @@ describe("agregar equipos", () => {
     const a = await clubOwner("empA");
     const b = await clubOwner("empB");
     const t = await org.client.post("/api/tournaments", wizardPayload());
-    await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: a.clubId });
+    await enrollByInvitation(org, t.data.id, a);
 
     assert.equal((await org.client.patch(`/api/tournaments/${t.data.id}`, { status: "en_curso" })).status, 200);
-    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: b.clubId })).status, 409);
+    assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/requests`, { clubId: b.clubId })).status, 409);
     assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { newClub: { name: "Tarde", shortName: "TAR" } })).status, 409);
     assert.equal((await org.client.del(`/api/tournaments/${t.data.id}/teams/${a.clubId}`)).status, 409);
   });
@@ -282,8 +287,8 @@ describe("quitar equipos", () => {
     const stranger = await organizer("quitarExt");
     const t = await org.client.post("/api/tournaments", wizardPayload());
     const path = `/api/tournaments/${t.data.id}/teams`;
-    await org.client.post(path, { clubId: owner.clubId });
-    await org.client.post(path, { clubId: other.clubId });
+    await enrollByInvitation(org, t.data.id, owner);
+    await enrollByInvitation(org, t.data.id, other);
 
     assert.equal((await stranger.client.del(`${path}/${owner.clubId}`)).status, 403);
     assert.equal((await owner.client.del(`${path}/${other.clubId}`)).status, 403, "un dueño no retira el club de otro");
@@ -314,8 +319,8 @@ describe("quitar equipos", () => {
     const b = await clubOwner("cpB");
     const t = await org.client.post("/api/tournaments", wizardPayload());
     const path = `/api/tournaments/${t.data.id}/teams`;
-    await org.client.post(path, { clubId: a.clubId });
-    await org.client.post(path, { clubId: b.clubId });
+    await enrollByInvitation(org, t.data.id, a);
+    await enrollByInvitation(org, t.data.id, b);
     const m = await org.client.post("/api/matches", {
       tournamentId: t.data.id, homeTeamId: a.clubId, awayTeamId: b.clubId, date: tomorrow(), time: "18:00",
     });
@@ -330,7 +335,7 @@ describe("quitar equipos", () => {
     const org = await organizer("anonquitar");
     const owner = await clubOwner("anonquitar");
     const t = await org.client.post("/api/tournaments", wizardPayload());
-    await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: owner.clubId });
+    await enrollByInvitation(org, t.data.id, owner);
     assert.equal((await new Client().del(`/api/tournaments/${t.data.id}/teams/${owner.clubId}`)).status, 401);
   });
 });

@@ -9,12 +9,16 @@ import {
   getMatches,
   getStandings,
   getScorers,
+  getTournamentRequests,
   type TournamentListItem,
   type MatchListItem,
   type StandingsRow,
   type ScorerRow,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { shareLink } from "@/_lib/share";
+import { Toast } from "@/_components/toast";
+import { RequestsPanel } from "./_components/requests-panel";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
@@ -70,12 +74,14 @@ export default function TournamentDetailPage() {
   const [selectedTournamentId, setSelectedTournamentId] = useState(params.id);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [teamError, setTeamError] = useState("");
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const { data: tournament, loading: loadingTournament, refetch } = useApi(() => getTournament(params.id));
   const { data: allTournaments } = useApi(() => getTournaments());
   const { data: tournamentMatches } = useApi(() => getMatches({ tournamentId: params.id }));
   const { data: standings } = useApi(() => getStandings(params.id));
   const { data: scorers } = useApi(() => getScorers(params.id));
+  const { data: requests, refetch: refetchRequests } = useApi(() => getTournamentRequests(params.id));
 
   if (loadingTournament || !tournament) {
     return (
@@ -101,6 +107,23 @@ export default function TournamentDetailPage() {
     }
   }
 
+  function onRequestsChanged() {
+    refetch();
+    refetchRequests();
+  }
+
+  async function shareConvocatoria() {
+    if (!tournament) return;
+    const result = await shareLink({
+      title: tournament.name,
+      text: `Únete a ${tournament.name} en Amateur`,
+      url: `${window.location.origin}/convocatoria/${params.id}`,
+    });
+    if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
+    if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
+  }
+
+  const pendingRequests = (requests ?? []).filter((r) => r.kind === "request" && r.status === "pending").length;
   const isConvocatoria = tournament.status === "inscripcion";
   const badge = statusLabel(tournament.status);
   const matches = tournamentMatches || [];
@@ -117,6 +140,7 @@ export default function TournamentDetailPage() {
 
   return (
     <div className="w-full pb-8">
+      {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
       {/* Header */}
       <header className="px-4 py-3">
         <Link
@@ -184,6 +208,14 @@ export default function TournamentDetailPage() {
                 }`}
               >
                 {tab.label}
+                {tab.key === "solicitudes" && pendingRequests > 0 && (
+                  <>
+                    <span aria-hidden="true" className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-text-primary">
+                      {pendingRequests}
+                    </span>
+                    <span className="sr-only"> ({pendingRequests} pendientes)</span>
+                  </>
+                )}
               </button>
             ))
           : competenciaTabs.map((tab) => (
@@ -259,9 +291,16 @@ export default function TournamentDetailPage() {
       )}
 
       {isConvocatoria && activeConvTab !== "inscritos" && (
-        <p className="px-4 py-10 text-center font-body text-sm text-text-secondary">
-          {activeConvTab === "solicitudes" ? "Todavía no hay solicitudes de equipos." : "Todavía no hay equipos invitados."}
-        </p>
+        <RequestsPanel
+          tournamentId={params.id}
+          kind={activeConvTab === "solicitudes" ? "request" : "invite"}
+          requests={(requests ?? []).filter((r) => r.kind === (activeConvTab === "solicitudes" ? "request" : "invite"))}
+          teamsCount={tournament._count.teams}
+          maxTeams={tournament.maxTeams}
+          onChanged={onRequestsChanged}
+          onNotify={(message, tone) => setToast({ message, tone })}
+          onShare={shareConvocatoria}
+        />
       )}
 
       {/* === Convocatoria Content (sin equipos todavía) === */}

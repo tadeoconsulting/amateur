@@ -11,6 +11,7 @@ User ──< Club (ownerId)                (un usuario puede ser dueño de vario
 User ──< Tournament (organizerId)
 Club ──< TeamCategory, StaffMember
 Club ──< TournamentTeam >── Tournament (inscripción de un club en un torneo)
+Club ──< TournamentRequest >── Tournament (solicitud del club o invitación del organizador)
 Tournament ──< Match >── Club (local y visitante)
 Match ──< MatchEvent >── PlayerProfile
 PlayerProfile ──< PlayerStats >── Tournament   (estadísticas por jugador y torneo)
@@ -53,6 +54,11 @@ Ciclo de vida: `inscripcion` → `en_curso` (al generar el fixture) → `finaliz
 
 ### TournamentTeam
 - Único por `(tournamentId, clubId)`. `groupName` solo aplica a torneos de formato `grupos`.
+
+### TournamentRequest
+- Solicitud de un club para entrar a un torneo (`kind: request`) o invitación del organizador a un club (`kind: invite`). `status`: `pending`, `accepted`, `declined`, `cancelled`.
+- **Una fila por par** `(tournamentId, clubId)`: volver a pedir tras un rechazo o una cancelación reabre la misma fila. Aceptar crea el `TournamentTeam` en la misma transacción.
+- Índice por `(clubId, status)`. Se borra en cascada con el torneo o el club. Detalle en [006](006-solicitudes-de-equipos.md).
 
 ### Match
 | Campo | Regla |

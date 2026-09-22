@@ -20,27 +20,28 @@ enum Role {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  email         String     @unique
-  passwordHash  String
-  firstName     String
-  lastName      String
-  dni           String?
-  phone         String?
-  avatarUrl     String?
-  department    String?
-  birthDate     DateTime?
-  gender        String?
-  organization  String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  dni          String?
+  phone        String?
+  avatarUrl    String?
+  department   String?
+  birthDate    DateTime?
+  gender       String?
+  organization String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  roles         UserRole[]
-  ownedClubs    Club[]           @relation("ClubOwner")
-  playerProfile PlayerProfile?
-  tournaments   Tournament[]     @relation("TournamentOrganizer")
-  staffRoles    StaffMember[]
-  invitations   PlayerInvitation[]
+  roles              UserRole[]
+  ownedClubs         Club[]              @relation("ClubOwner")
+  playerProfile      PlayerProfile?
+  tournaments        Tournament[]        @relation("TournamentOrganizer")
+  staffRoles         StaffMember[]
+  invitations        PlayerInvitation[]
+  tournamentRequests TournamentRequest[]
 }
 
 model UserRole {
@@ -56,43 +57,44 @@ model UserRole {
 // ─── Clubs & Teams ──────────────────────────────────────────────
 
 model Club {
-  id            String   @id @default(cuid())
-  name          String
-  shortName     String
-  logoUrl       String?
-  color         String?
+  id             String   @id @default(cuid())
+  name           String
+  shortName      String
+  logoUrl        String?
+  color          String?
   delegadoNombre String?
   delegadoTel    String?
   delegadoEmail  String?
-  ownerId       String
+  ownerId        String
   // Equipo temporal creado por un organizador para su torneo (sin delegado ni
   // métricas). No aparece en la búsqueda de equipos de la comunidad.
-  isTemporary   Boolean  @default(false)
+  isTemporary    Boolean  @default(false)
   // Link para compartir por WhatsApp: quien lo abre puede unirse al club como jugador.
   // Es un secreto: se puede revocar generando uno nuevo. null = todavía no se generó.
-  inviteToken   String?  @unique
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  inviteToken    String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  owner         User             @relation("ClubOwner", fields: [ownerId], references: [id])
-  categories    TeamCategory[]
-  staffMembers  StaffMember[]
-  players       PlayerProfile[]
-  homeMatches   Match[]          @relation("HomeTeam")
-  awayMatches   Match[]          @relation("AwayTeam")
-  enrollments   TournamentTeam[]
-  invitations   PlayerInvitation[]
+  owner              User                @relation("ClubOwner", fields: [ownerId], references: [id])
+  categories         TeamCategory[]
+  staffMembers       StaffMember[]
+  players            PlayerProfile[]
+  homeMatches        Match[]             @relation("HomeTeam")
+  awayMatches        Match[]             @relation("AwayTeam")
+  enrollments        TournamentTeam[]
+  invitations        PlayerInvitation[]
+  tournamentRequests TournamentRequest[]
 }
 
 model TeamCategory {
-  id           String   @id @default(cuid())
-  name         String
-  gender       String
-  ageType      String?
-  maxAge       Int?
-  minAge       Int?
-  clubId       String
-  createdAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  name      String
+  gender    String
+  ageType   String?
+  maxAge    Int?
+  minAge    Int?
+  clubId    String
+  createdAt DateTime @default(now())
 
   club    Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
   players PlayerProfile[]
@@ -127,10 +129,10 @@ model PlayerProfile {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  user       User           @relation(fields: [userId], references: [id])
-  club       Club?          @relation(fields: [clubId], references: [id])
-  category   TeamCategory?  @relation(fields: [categoryId], references: [id])
-  stats      PlayerStats[]
+  user        User          @relation(fields: [userId], references: [id])
+  club        Club?         @relation(fields: [clubId], references: [id])
+  category    TeamCategory? @relation(fields: [categoryId], references: [id])
+  stats       PlayerStats[]
   matchEvents MatchEvent[]
 }
 
@@ -167,36 +169,37 @@ model PlayerInvitation {
 // ─── Tournaments ────────────────────────────────────────────────
 
 model Tournament {
-  id            String   @id @default(cuid())
-  name          String
-  format        String
-  status        String   @default("draft")
-  sportType     String   @default("futbol")
-  maxTeams      Int
-  minTeams      Int?
-  startDate     DateTime
-  endDate       DateTime?
-  location      String
-  category      String?
-  organizerId   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid())
+  name        String
+  format      String
+  status      String    @default("draft")
+  sportType   String    @default("futbol")
+  maxTeams    Int
+  minTeams    Int?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String
+  category    String?
+  organizerId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Datos que pide el asistente "Crear torneo". Todos opcionales: los torneos
   // que ya existían no los tienen.
-  modality        String?   // "5 vs 5" ... "11 vs 11"
-  gender          String?   // "Femenino" | "Masculino" | "Mixto"
+  modality        String? // "5 vs 5" ... "11 vs 11"
+  gender          String? // "Femenino" | "Masculino" | "Mixto"
   minutesPerHalf  Int?
   playersPerTeam  Int?
-  assignDelegates Boolean   @default(false)
-  registrationFee String?   // texto libre, ej. "S/100"
+  assignDelegates Boolean  @default(false)
+  registrationFee String? // texto libre, ej. "S/100"
   refereeFee      String?
-  rules           String[]  @default([])   // condiciones / bases del torneo
+  rules           String[] @default([]) // condiciones / bases del torneo
 
-  organizer     User             @relation("TournamentOrganizer", fields: [organizerId], references: [id])
-  teams         TournamentTeam[]
-  matches       Match[]
-  playerStats   PlayerStats[]
+  organizer   User                @relation("TournamentOrganizer", fields: [organizerId], references: [id])
+  teams       TournamentTeam[]
+  requests    TournamentRequest[]
+  matches     Match[]
+  playerStats PlayerStats[]
 }
 
 model TournamentTeam {
@@ -212,16 +215,37 @@ model TournamentTeam {
   @@unique([tournamentId, clubId])
 }
 
+// Solicitud de un club para entrar a un torneo (kind "request") o invitación del
+// organizador a un club (kind "invite"). Aceptar crea el TournamentTeam.
+// Una fila por par (torneo, club): pedir de nuevo tras un rechazo la reabre.
+model TournamentRequest {
+  id           String    @id @default(cuid())
+  tournamentId String
+  clubId       String
+  kind         String // "request" | "invite"
+  status       String    @default("pending") // pending | accepted | declined | cancelled
+  createdById  String
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  club       Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdBy  User       @relation(fields: [createdById], references: [id])
+
+  @@unique([tournamentId, clubId])
+  @@index([clubId, status])
+}
+
 // ─── Matches & Events ───────────────────────────────────────────
 
 model Match {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   tournamentId String
   homeTeamId   String
   awayTeamId   String
   homeScore    Int?
   awayScore    Int?
-  status       String   @default("programado")
+  status       String    @default("programado")
   date         DateTime
   time         String
   location     String
@@ -230,12 +254,12 @@ model Match {
   // Cuándo se dio inicio al partido (pasó a "en_curso"). El cronómetro en vivo se calcula
   // desde acá, así sobrevive a recargar la página.
   startedAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   tournament Tournament   @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  homeTeam   Club          @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam   Club          @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeTeam   Club         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam   Club         @relation("AwayTeam", fields: [awayTeamId], references: [id])
   events     MatchEvent[]
 }
 

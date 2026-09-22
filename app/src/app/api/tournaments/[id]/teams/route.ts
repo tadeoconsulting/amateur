@@ -1,7 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
-import { OPEN_STATUSES } from "@/_lib/tournament-labels";
+import { EnrollmentError, isUniqueViolation, withOpenTournament } from "@/_lib/enrollment";
 
 export async function GET(
   _request: NextRequest,
@@ -36,8 +36,9 @@ export async function GET(
  *   { clubId, groupName? }                      un club que ya existe
  *   { newClub: { name, shortName, color? } }    crea un equipo temporal y lo inscribe
  *
- * Inscribe el organizador del torneo (o un admin); el dueño de un club también puede
- * inscribir el suyo. Solo el organizador puede crear equipos temporales.
+ * Inscribe directo solo el organizador del torneo (o un admin), y solo equipos temporales,
+ * suyos o de un admin. Un club de otro dueño entra por invitación y un dueño entra por
+ * solicitud: ver /api/tournaments/:id/requests y la especificación 006.
  */
 export async function POST(
   request: NextRequest,
@@ -53,7 +54,7 @@ export async function POST(
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
-    select: { id: true, status: true, maxTeams: true, organizerId: true, _count: { select: { teams: true } } },
+    select: { id: true, organizerId: true },
   });
   if (!tournament) {
     return Response.json({ error: "Torneo no encontrado" }, { status: 404 });
@@ -76,23 +77,20 @@ export async function POST(
       return badRequest("color debe tener formato #RRGGBB");
     }
 
-    if (!OPEN_STATUSES.includes(tournament.status)) {
-      return Response.json({ error: "El torneo ya empezó: no se pueden agregar equipos" }, { status: 409 });
-    }
-    if (tournament._count.teams >= tournament.maxTeams) {
-      return Response.json({ error: "El torneo ya tiene todos sus equipos" }, { status: 409 });
-    }
-
-    const enrollment = await prisma.$transaction(async (tx) => {
-      const club = await tx.club.create({
-        data: { name, shortName, color: typeof color === "string" ? color : null, ownerId: user.id, isTemporary: true },
+    try {
+      const enrollment = await withOpenTournament(id, async (tx) => {
+        const club = await tx.club.create({
+          data: { name, shortName, color: typeof color === "string" ? color : null, ownerId: user.id, isTemporary: true },
+        });
+        return tx.tournamentTeam.create({
+          data: { tournamentId: id, clubId: club.id, groupName },
+          include: { club: true },
+        });
       });
-      return tx.tournamentTeam.create({
-        data: { tournamentId: id, clubId: club.id, groupName },
-        include: { club: true },
-      });
-    });
-    return Response.json(enrollment, { status: 201 });
+      return Response.json(enrollment, { status: 201 });
+    } catch (error) {
+      return enrollmentFailure(error);
+    }
   }
 
   // Club que ya existe.
@@ -110,22 +108,34 @@ export async function POST(
     return forbidden();
   }
 
-  if (!isOrganizer && !(await canManageClub(user, clubId))) return forbidden();
-
-  if (!OPEN_STATUSES.includes(tournament.status)) {
-    return Response.json({ error: "El torneo ya empezó: no se pueden agregar equipos" }, { status: 409 });
+  if (!isOrganizer) {
+    if (!(await canManageClub(user, clubId))) return forbidden();
+    // Un dueño no se inscribe solo: solicita y el organizador decide.
+    return Response.json(
+      { error: "Solicita unirte al torneo: el organizador debe aprobar la inscripción", code: "request_required" },
+      { status: 403 }
+    );
   }
-  if (tournament._count.teams >= tournament.maxTeams) {
-    return Response.json({ error: "El torneo ya tiene todos sus equipos" }, { status: 409 });
+  // El organizador no mete a un club de otro dueño sin su consentimiento: lo invita.
+  if (!club.isTemporary && club.ownerId !== user.id && !isAdmin(user)) {
+    return Response.json(
+      { error: "Invita al equipo: su dueño debe aceptar la invitación", code: "invite_required" },
+      { status: 403 }
+    );
   }
 
   try {
-    const enrollment = await prisma.tournamentTeam.create({
-      data: { tournamentId: id, clubId, groupName },
-      include: { club: true },
-    });
+    const enrollment = await withOpenTournament(id, (tx) =>
+      tx.tournamentTeam.create({ data: { tournamentId: id, clubId, groupName }, include: { club: true } })
+    );
     return Response.json(enrollment, { status: 201 });
-  } catch {
-    return Response.json({ error: "El equipo ya está inscrito" }, { status: 409 });
+  } catch (error) {
+    return enrollmentFailure(error);
   }
+}
+
+function enrollmentFailure(error: unknown) {
+  if (error instanceof EnrollmentError) return Response.json({ error: error.message }, { status: error.status });
+  if (isUniqueViolation(error)) return Response.json({ error: "El equipo ya está inscrito" }, { status: 409 });
+  throw error;
 }
