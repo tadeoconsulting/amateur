@@ -5,13 +5,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
-import { planFixture } from "@/_lib/fixture";
+import { planFixture, planBracket } from "@/_lib/fixture";
 import { formatLabel, OPEN_STATUSES } from "@/_lib/tournament-labels";
+import { btnSolid, btnOutline } from "@/_components/button-styles";
+import { Spinner } from "@/_components/spinner";
+
+const BRACKET_FORMATS = ["eliminacion", "relampago"];
 
 export default function IniciarTorneoPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [confirmMode, setConfirmMode] = useState<"auto" | "manual" | null>(null);
+  const [showDayPicker, setShowDayPicker] = useState(false);
+  const [day, setDay] = useState({ date: "", startTime: "09:00", endTime: "18:00" });
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
   const { data: tournament, loading } = useApi(() => getTournament(params.id));
@@ -24,45 +30,82 @@ export default function IniciarTorneoPage() {
     );
   }
 
-  // Qué impide armar el fixture: ya empezó, el formato no está soportado, faltan equipos o grupos.
+  const isBracket = BRACKET_FORMATS.includes(tournament.format);
+  const isCopa = tournament.format === "copa";
   const started = !OPEN_STATUSES.includes(tournament.status);
-  const plan = planFixture(
-    tournament.teams.map((t) => ({ id: t.club.id, groupName: t.groupName })),
-    tournament.format
-  );
-  const blockReason = started ? "Este torneo ya empezó." : !plan.ok ? plan.error : null;
+
+  // Qué impide armar el fixture: ya empezó, faltan equipos, o (liga/grupos/la fase de
+  // grupos de copa) el formato o los grupos no están listos.
+  const teamIds = tournament.teams.map((t) => t.club.id);
+  const groupPlan = isBracket
+    ? null
+    : planFixture(
+        tournament.teams.map((t) => ({ id: t.club.id, groupName: t.groupName })),
+        isCopa ? "grupos" : tournament.format
+      );
+  const bracket = isBracket ? planBracket(teamIds) : null;
+
+  const blockReason = started
+    ? "Este torneo ya empezó."
+    : isBracket
+      ? bracket && !bracket.ok
+        ? bracket.error
+        : null
+      : groupPlan && !groupPlan.ok
+        ? groupPlan.error
+        : null;
   const missingTeams = Math.max(0, (tournament.maxTeams ?? 0) - tournament.teams.length);
 
-  async function start() {
-    if (!confirmMode || starting) return;
-    // La programación automática se define en la pantalla siguiente y ahí se crea el fixture.
-    if (confirmMode === "auto") {
-      setConfirmMode(null);
-      router.push(`/torneos/${params.id}/fixture`);
-      return;
-    }
-    // La manual crea los cruces sin día ni hora, para configurarlos partido por partido.
+  // Cuántos equipos entran directo a la ronda 2 (bye) por no alcanzar para un cuadro parejo:
+  // los que no aparecen jugando la ronda 1.
+  const round1Matches = bracket && bracket.ok ? bracket.matches.filter((m) => m.round === 1).length : 0;
+  const byeCount = teamIds.length - round1Matches * 2;
+
+  async function postFixture(body: Record<string, unknown>) {
     setError("");
     setStarting(true);
     try {
       const res = await fetch(`/api/tournaments/${params.id}/fixture`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "manual" }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "No se pudo iniciar el torneo");
-        setConfirmMode(null);
-        return;
+        return false;
       }
-      router.push(`/torneos/${params.id}/manual`);
+      return true;
     } catch {
       setError("No se pudo conectar. Inténtalo de nuevo.");
-      setConfirmMode(null);
+      return false;
     } finally {
       setStarting(false);
     }
+  }
+
+  async function start() {
+    if (!confirmMode || starting) return;
+    // liga/grupos/copa con programación automática: se define fecha por fecha en la
+    // pantalla siguiente, ahí se crea el fixture.
+    if (confirmMode === "auto" && !isBracket) {
+      setConfirmMode(null);
+      router.push(`/torneos/${params.id}/fixture`);
+      return;
+    }
+    // Todo lo demás (manual, y el cuadro de eliminación siempre) crea los partidos ahora.
+    const ok = await postFixture({ mode: "manual" });
+    setConfirmMode(null);
+    if (!ok) return;
+    router.push(isBracket ? `/torneos/${params.id}` : `/torneos/${params.id}/manual`);
+  }
+
+  async function startRelampagoAuto() {
+    if (!day.date || starting) return;
+    const ok = await postFixture({ mode: "auto", day });
+    if (!ok) return;
+    setShowDayPicker(false);
+    router.push(`/torneos/${params.id}`);
   }
 
   return (
@@ -161,11 +204,16 @@ export default function IniciarTorneoPage() {
         <h2 className="font-heading text-xl font-bold text-text-primary mb-2">
           El torneo ya puede empezar
         </h2>
-        <p className="font-body text-sm text-text-secondary leading-relaxed max-w-[280px] mb-10">
-          {blockReason ?? "Crea el fixture del torneo y que empiece esta fiesta deportiva."}
+        <p className="font-body text-sm text-text-secondary leading-relaxed max-w-[280px] mb-2">
+          {blockReason ?? (isCopa ? "Arma primero la fase de grupos; el cuadro se arma después, cuando termine." : "Crea el fixture del torneo y que empiece esta fiesta deportiva.")}
         </p>
-
-        <div className="flex w-full flex-col gap-3">
+        {!blockReason && isBracket && bracket?.ok && (
+          <p className="font-body text-xs text-text-secondary leading-relaxed max-w-[280px] mb-8">
+            El cuadro tendrá {bracket.totalRounds} {bracket.totalRounds === 1 ? "ronda" : "rondas"}
+            {byeCount > 0 ? ` y ${byeCount} ${byeCount === 1 ? "equipo pasa" : "equipos pasan"} directo a la siguiente ronda por no completar el cuadro` : ""}.
+          </p>
+        )}
+        <div className="mt-6 flex w-full flex-col gap-3">
           {error && <p className="font-body text-sm text-red-600">{error}</p>}
           {tournament.status === "en_curso" && (
             <Link
@@ -175,20 +223,52 @@ export default function IniciarTorneoPage() {
               Ver fixture
             </Link>
           )}
-          <button
-            onClick={() => setConfirmMode("auto")}
-            disabled={blockReason !== null}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Programación automática
-          </button>
-          <button
-            onClick={() => setConfirmMode("manual")}
-            disabled={blockReason !== null}
-            className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Programación manual
-          </button>
+
+          {isBracket ? (
+            tournament.format === "relampago" ? (
+              <>
+                <button
+                  onClick={() => setShowDayPicker(true)}
+                  disabled={blockReason !== null}
+                  className={`${btnSolid} w-full disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  Programación automática (un solo día)
+                </button>
+                <button
+                  onClick={() => setConfirmMode("manual")}
+                  disabled={blockReason !== null}
+                  className={`${btnOutline} w-full disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  Programación manual
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmMode("manual")}
+                disabled={blockReason !== null}
+                className={`${btnSolid} w-full disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                Armar el cuadro
+              </button>
+            )
+          ) : (
+            <>
+              <button
+                onClick={() => setConfirmMode("auto")}
+                disabled={blockReason !== null}
+                className={`${btnSolid} w-full disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                Programación automática
+              </button>
+              <button
+                onClick={() => setConfirmMode("manual")}
+                disabled={blockReason !== null}
+                className={`${btnOutline} w-full disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                Programación manual
+              </button>
+            </>
+          )}
           <Link
             href="/crear-torneo"
             className="mt-1 flex items-center justify-center font-heading text-sm font-semibold text-text-primary underline underline-offset-2"
@@ -201,11 +281,8 @@ export default function IniciarTorneoPage() {
       {/* Confirmation bottom sheet */}
       {confirmMode && (
         <>
-          <div
-            className="fixed inset-0 z-[110] bg-black/40"
-            onClick={() => setConfirmMode(null)}
-          />
-          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-[430px] animate-slide-up rounded-t-2xl bg-surface-primary px-6 pb-8 pt-6">
+          <div className="fixed inset-0 z-[110] bg-black/40" onClick={() => setConfirmMode(null)} />
+          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-[430px] animate-slide-up rounded-t-2xl bg-surface-primary px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-6">
             <h3 className="text-center font-heading text-lg font-bold text-text-primary mb-3">
               ¿Seguro que deseas iniciar el torneo?
             </h3>
@@ -222,12 +299,80 @@ export default function IniciarTorneoPage() {
               >
                 Cancelar
               </button>
-              <button
-                onClick={start}
-                disabled={starting}
-                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
-              >
+              <button onClick={start} disabled={starting} className={`${btnSolid} flex-1`}>
+                {starting && <Spinner size={16} label="Iniciando" />}
                 {starting ? "Iniciando..." : "Iniciar"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Relámpago: elegir el día */}
+      {showDayPicker && (
+        <>
+          <div className="fixed inset-0 z-[110] bg-black/40" onClick={() => !starting && setShowDayPicker(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-[430px] animate-slide-up rounded-t-2xl bg-surface-primary px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-6">
+            <h3 className="text-center font-heading text-lg font-bold text-text-primary mb-1">¿Qué día se juega?</h3>
+            <p className="mb-5 text-center font-body text-sm text-text-secondary">
+              Todos los partidos del cuadro se programan ese día, uno detrás de otro.
+            </p>
+            <div className="flex flex-col gap-4 mb-6">
+              <div>
+                <label htmlFor="rel-date" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+                  Fecha
+                </label>
+                <input
+                  id="rel-date"
+                  type="date"
+                  value={day.date}
+                  onChange={(e) => setDay((d) => ({ ...d, date: e.target.value }))}
+                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label htmlFor="rel-start" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+                    Desde
+                  </label>
+                  <input
+                    id="rel-start"
+                    type="time"
+                    value={day.startTime}
+                    onChange={(e) => setDay((d) => ({ ...d, startTime: e.target.value }))}
+                    className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="rel-end" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+                    Hasta
+                  </label>
+                  <input
+                    id="rel-end"
+                    type="time"
+                    value={day.endTime}
+                    onChange={(e) => setDay((d) => ({ ...d, endTime: e.target.value }))}
+                    className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+            {error && (
+              <p role="alert" className="mb-3 font-body text-sm text-brand-900">
+                {error}
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDayPicker(false)}
+                disabled={starting}
+                className="flex-1 cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button onClick={startRelampagoAuto} disabled={starting || !day.date} className={`${btnSolid} flex-1 disabled:opacity-40`}>
+                {starting && <Spinner size={16} label="Armando el cuadro" />}
+                {starting ? "Armando..." : "Armar el cuadro"}
               </button>
             </div>
           </div>

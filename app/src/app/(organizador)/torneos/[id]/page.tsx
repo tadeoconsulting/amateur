@@ -19,6 +19,7 @@ import { useApi } from "@/_lib/use-api";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { RequestsPanel } from "./_components/requests-panel";
+import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
@@ -78,7 +79,7 @@ export default function TournamentDetailPage() {
 
   const { data: tournament, loading: loadingTournament, refetch } = useApi(() => getTournament(params.id));
   const { data: allTournaments } = useApi(() => getTournaments());
-  const { data: tournamentMatches } = useApi(() => getMatches({ tournamentId: params.id }));
+  const { data: tournamentMatches, refetch: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
   const { data: standings } = useApi(() => getStandings(params.id));
   const { data: scorers } = useApi(() => getScorers(params.id));
   const { data: requests, refetch: refetchRequests } = useApi(() => getTournamentRequests(params.id));
@@ -418,10 +419,16 @@ export default function TournamentDetailPage() {
       )}
 
       {!isConvocatoria && activeTab === "llaves" && (
-        <div className="mt-6 flex flex-col items-center justify-center py-16 text-center px-4">
-          <p className="font-body text-sm text-text-secondary">
-            Las llaves se generarán cuando termine la fase de grupos
-          </p>
+        <div className="mt-4">
+          <BracketView
+            tournamentId={params.id}
+            tournament={tournament}
+            matches={matches}
+            onChanged={() => {
+              refetch();
+              refetchMatches();
+            }}
+          />
         </div>
       )}
 
