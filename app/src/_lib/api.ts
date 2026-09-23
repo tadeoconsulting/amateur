@@ -44,6 +44,9 @@ export interface TournamentDetail {
   rules: string[];
   minutesPerHalf: number | null;
   playersPerTeam: number | null;
+  // Solo aplican a eliminacion/relampago/copa (especificación 007).
+  extraTimeMinutes: number | null;
+  groupsAdvancePerGroup: number | null;
   organizer: { id: string; firstName: string; lastName: string };
   teams: {
     id: string;
@@ -61,11 +64,15 @@ export interface TournamentDetail {
   _count: { matches: number; teams: number };
 }
 
+/** Un equipo de un cuadro de eliminación: null ("por definir") hasta que se conoce el
+ * ganador del cruce anterior. Fuera de un cuadro (liga/grupos), siempre viene definido. */
+export type MatchTeamRef = { id: string; name: string; shortName: string; logoUrl: string | null } | null;
+
 export interface MatchListItem {
   id: string;
   tournamentId: string;
-  homeTeamId: string;
-  awayTeamId: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
   homeScore: number | null;
   awayScore: number | null;
   status: string;
@@ -76,9 +83,18 @@ export interface MatchListItem {
   groupName: string | null;
   /** Cuándo empezó el partido; null si todavía no. El cronómetro en vivo se calcula desde acá. */
   startedAt?: string | null;
-  homeTeam: { id: string; name: string; shortName: string; logoUrl: string | null };
-  awayTeam: { id: string; name: string; shortName: string; logoUrl: string | null };
+  homeTeam: MatchTeamRef;
+  awayTeam: MatchTeamRef;
   _count: { events: number };
+  // ─── Cuadro de eliminación (especificación 007) ───
+  /** ¿Este partido es parte de un cuadro de eliminación? Si no, siempre admite empate. */
+  decisive: boolean;
+  phase: "regulacion" | "tiempo_extra" | "penales";
+  winnerTeamId: string | null;
+  nextMatchId: string | null;
+  nextMatchSlot: "home" | "away" | null;
+  penaltyHomeScore: number | null;
+  penaltyAwayScore: number | null;
 }
 
 /** Jugada tal como la devuelve GET /api/matches/:id/events. */
@@ -94,7 +110,7 @@ export interface MatchEventItem {
 
 /** Partido con su torneo, como lo devuelve GET /api/matches/:id. */
 export interface MatchDetail extends MatchListItem {
-  tournament: { id: string; name: string; format: string; minutesPerHalf: number | null };
+  tournament: { id: string; name: string; format: string; minutesPerHalf: number | null; extraTimeMinutes: number | null };
 }
 
 export interface StandingsRow {

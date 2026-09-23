@@ -129,10 +129,10 @@ export default function ResultadoPage() {
   const showScore = started;
   const timeline: TimelineEvent[] = [
     ...(started
-      ? [{ minute: "0'", type: "inicio" as const, title: "Inicio del partido", description: `${match.homeTeam.name} vs ${match.awayTeam.name}` }]
+      ? [{ minute: "0'", type: "inicio" as const, title: "Inicio del partido", description: `${match.homeTeam?.name ?? "Por definir"} vs ${match.awayTeam?.name ?? "Por definir"}` }]
       : []),
     ...(events ?? []).map((e): TimelineEvent => {
-      const team = e.teamId === match.awayTeam.id ? match.awayTeam.name : match.homeTeam.name;
+      const team = e.teamId === match.awayTeam?.id ? match.awayTeam?.name ?? "Por definir" : match.homeTeam?.name ?? "Por definir";
       return {
         minute: `${e.minute}'`,
         type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
@@ -146,7 +146,7 @@ export default function ResultadoPage() {
           minute: "FT",
           type: "final" as const,
           title: "Final del partido",
-          description: `${match.homeTeam.name} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${match.awayTeam.name}`,
+          description: `${match.homeTeam?.name ?? "Por definir"} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${match.awayTeam?.name ?? "Por definir"}`,
         }]
       : []),
   ];
@@ -184,7 +184,7 @@ export default function ResultadoPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[0]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.homeTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.homeScore ?? 0}</span>}
             </div>
             <div className="flex items-center gap-2.5">
@@ -196,7 +196,7 @@ export default function ResultadoPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[1]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.awayTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.awayScore ?? 0}</span>}
             </div>
           </div>

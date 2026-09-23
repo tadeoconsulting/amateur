@@ -81,7 +81,7 @@ export default function ConfigurarPartidoPage() {
 
   // Sedes reales: la del torneo, la cancha del local y la que ya tenga el partido.
   const sedeOptions = [
-    ...new Set([tournament?.location, match ? `Cancha de ${match.homeTeam.name}` : null, match?.location].filter(Boolean)),
+    ...new Set([tournament?.location, match ? `Cancha de ${match.homeTeam?.name ?? "Por definir"}` : null, match?.location].filter(Boolean)),
   ] as string[];
   const minuteOptions = minuto && !minutes.includes(minuto) ? [...minutes, minuto].sort() : minutes;
 

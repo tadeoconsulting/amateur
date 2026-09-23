@@ -74,13 +74,13 @@ export default function JugadorTorneosPage() {
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </div>
-              <span className="text-sm text-text-primary">{m.homeTeam.name}</span>
+              <span className="text-sm text-text-primary">{m.homeTeam?.name ?? "Por definir"}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm font-semibold text-text-primary">
                 {m.homeScore ?? "-"} : {m.awayScore ?? "-"}
               </span>
-              <span className="text-xs text-text-secondary">{m.awayTeam.name}</span>
+              <span className="text-xs text-text-secondary">{m.awayTeam?.name ?? "Por definir"}</span>
             </div>
           </Link>
         ))}

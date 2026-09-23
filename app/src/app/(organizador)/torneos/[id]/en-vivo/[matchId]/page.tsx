@@ -31,12 +31,14 @@ export default function EnVivoPage() {
   const [playersByClub, setPlayersByClub] = useState<Record<string, PlayerListItem[]>>({});
 
   useEffect(() => {
-    if (!match) return;
-    const ids = [match.homeTeam.id, match.awayTeam.id];
+    // Un partido "por definir" (cuadro de eliminación sin resolver) todavía no tiene equipos.
+    if (!match || !match.homeTeam || !match.awayTeam) return;
+    const homeId = match.homeTeam.id;
+    const awayId = match.awayTeam.id;
     Promise.all(
-      ids.map((cid) => fetch(`/api/clubs/${cid}/players`).then((r) => r.json() as Promise<PlayerListItem[]>))
+      [homeId, awayId].map((cid) => fetch(`/api/clubs/${cid}/players`).then((r) => r.json() as Promise<PlayerListItem[]>))
     ).then(([home, away]) => {
-      setPlayersByClub({ [ids[0]]: home, [ids[1]]: away });
+      setPlayersByClub({ [homeId]: home, [awayId]: away });
     });
   }, [match]);
 
@@ -61,6 +63,17 @@ export default function EnVivoPage() {
       </div>
     );
   }
+  // Un partido "por definir" (cuadro de eliminación cuyo cruce anterior no terminó) no se
+  // puede jugar todavía: la API ya lo rechaza (409), acá solo se evita mostrar una pantalla rota.
+  if (!match.homeTeam || !match.awayTeam) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 px-6 py-20 text-center">
+        <p className="font-body text-sm text-text-secondary">
+          Este partido todavía no tiene los dos equipos definidos: espera a que termine el cruce anterior.
+        </p>
+      </div>
+    );
+  }
 
   const live = match.status === "en_curso";
   const finished = match.status === "finalizado";
@@ -74,7 +87,7 @@ export default function EnVivoPage() {
   const events: MatchEvent[] = (apiEvents ?? []).map((e) => ({
     id: e.id,
     type: ACTION_FROM_EVENT_TYPE[e.type] ?? "cambio",
-    team: e.teamId === match.awayTeam.id ? "visitante" : "local",
+    team: e.teamId === match.awayTeam?.id ? "visitante" : "local",
     minute: e.minute,
     playerId: e.playerId,
     playerName: e.playerName,
@@ -83,7 +96,7 @@ export default function EnVivoPage() {
   const homeScore = match.homeScore ?? 0;
   const awayScore = match.awayScore ?? 0;
 
-  const activeClubId = activeTeam === "local" ? match.homeTeam.id : match.awayTeam.id;
+  const activeClubId = activeTeam === "local" ? match.homeTeam?.id : match.awayTeam?.id;
   const teamPlayers = playersByClub[activeClubId] ?? [];
 
   const playerCards = (playerId: string): { yellow: number; red: number } => {
@@ -266,7 +279,7 @@ export default function EnVivoPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[0]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.homeTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               <span className="ml-auto font-heading text-base font-bold text-text-primary">{homeScore}</span>
             </div>
             <div className="flex items-center gap-2.5">
@@ -278,7 +291,7 @@ export default function EnVivoPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[1]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.awayTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               <span className="ml-auto font-heading text-base font-bold text-text-primary">{awayScore}</span>
             </div>
           </div>
@@ -465,7 +478,7 @@ export default function EnVivoPage() {
                 : "bg-surface-primary border border-border-primary text-text-primary";
               const minuteStyle = isGol ? "text-white" : "text-text-secondary";
               const descStyle = isGol ? "text-white/80" : "text-text-secondary";
-              const teamName = event.team === "local" ? match.homeTeam.name : match.awayTeam.name;
+              const teamName = event.team === "local" ? match.homeTeam?.name ?? "Por definir" : match.awayTeam?.name ?? "Por definir";
 
               return (
                 <div key={i} className={`rounded-xl px-4 py-3 ${cardStyle}`}>

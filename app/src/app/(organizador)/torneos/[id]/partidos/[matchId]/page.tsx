@@ -72,15 +72,15 @@ export default function MatchDetailPage() {
         <div className="flex">
           <div className="flex-1 space-y-1 px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <TeamLogo shortName={match.homeTeam.shortName} />
-              <span className="flex-1 text-sm text-text-primary">{match.homeTeam.name}</span>
+              <TeamLogo shortName={match.homeTeam?.shortName ?? "?"} />
+              <span className="flex-1 text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               {showScore && (
                 <span className="text-lg font-bold tabular-nums text-text-primary">{match.homeScore}</span>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <TeamLogo shortName={match.awayTeam.shortName} />
-              <span className="flex-1 text-sm text-text-primary">{match.awayTeam.name}</span>
+              <TeamLogo shortName={match.awayTeam?.shortName ?? "?"} />
+              <span className="flex-1 text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               {showScore && (
                 <span className="text-lg font-bold tabular-nums text-text-primary">{match.awayScore}</span>
               )}
@@ -119,7 +119,9 @@ export default function MatchDetailPage() {
       {(match.status === "en_curso" || match.status === "finalizado") && eventList.length > 0 && (
         <MatchTimeline
           events={eventList}
-          homeTeamId={match.homeTeam.id}
+          // en_curso/finalizado exige los dos equipos definidos (la API no deja arrancar un
+          // partido "por definir"), así que acá homeTeam siempre existe.
+          homeTeamId={match.homeTeam!.id}
           status={match.status === "en_curso" ? "en_vivo" : "finalizado"}
         />
       )}

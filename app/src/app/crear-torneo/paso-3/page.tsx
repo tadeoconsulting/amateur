@@ -12,7 +12,10 @@ import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
   const { state, update } = useWizard();
-  const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones } = state;
+  const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones, tiempoExtra, clasificanPorGrupo } = state;
+  const format = formatFromCompetitionLabel(state.tipoCompetencia);
+  // El tiempo extra y los penales solo existen en un cuadro de eliminación (especificación 007).
+  const esEliminatorio = format === "eliminacion" || format === "relampago" || format === "copa";
   const [showCondicionModal, setShowCondicionModal] = useState(false);
   const [showBasesList, setShowBasesList] = useState(false);
   const [torneoCreado, setTorneoCreado] = useState(false);
@@ -25,6 +28,8 @@ export default function CrearTorneoPaso3Page() {
   const setDelegado = (value: boolean) => update({ delegado: value });
   const setCostoInscripcion = (value: string) => update({ costoInscripcion: value });
   const setCostoArbitraje = (value: string) => update({ costoArbitraje: value });
+  const setTiempoExtra = (value: number) => update({ tiempoExtra: value });
+  const setClasificanPorGrupo = (value: number) => update({ clasificanPorGrupo: value });
 
   async function handleCrearTorneo() {
     if (saving || torneoCreado) return;
@@ -65,6 +70,9 @@ export default function CrearTorneoPaso3Page() {
           registrationFee: state.costoInscripcion.trim() || null,
           refereeFee: state.costoArbitraje.trim() || null,
           rules: state.condiciones,
+          // Solo tienen efecto en un cuadro de eliminación (eliminacion/relampago/copa).
+          extraTimeMinutes: esEliminatorio && state.tiempoExtra > 0 ? state.tiempoExtra : null,
+          groupsAdvancePerGroup: format === "copa" ? state.clasificanPorGrupo : null,
           // Un torneo recién creado queda abierto para inscribir equipos.
           status: "inscripcion",
         }),
@@ -150,7 +158,62 @@ export default function CrearTorneoPaso3Page() {
               className="w-24 rounded border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary text-center transition-colors hover:border-text-primary focus:border-text-primary focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
           </div>
+
+          {esEliminatorio && (
+            <div className="flex items-center justify-between">
+              <span className="font-body text-sm text-text-primary leading-snug max-w-[55%]">
+                Minutos de cada tiempo extra (si hay empate)
+              </span>
+              <input
+                type="number"
+                min={0}
+                value={tiempoExtra}
+                onChange={(e) => setTiempoExtra(Math.max(0, parseInt(e.target.value) || 0))}
+                aria-describedby="tiempo-extra-ayuda"
+                className="w-24 rounded border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary text-center transition-colors hover:border-text-primary focus:border-text-primary focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+            </div>
+          )}
+          {esEliminatorio && (
+            <p id="tiempo-extra-ayuda" className="-mt-2 font-body text-xs text-text-secondary">
+              Si el partido sigue empatado, se juega a tiempo extra y, de seguir igual, a penales. Déjalo en 0 para usar 15 minutos por tiempo.
+            </p>
+          )}
         </div>
+
+        {format === "copa" && (
+          <div className="mb-6">
+            <h2 className="font-heading text-base font-bold text-text-primary mb-4">
+              Cuadro de eliminación
+            </h2>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-sm text-text-primary leading-snug max-w-[55%]">
+                Equipos que clasifican por grupo
+              </span>
+              <div className="flex gap-2" role="radiogroup" aria-label="Equipos que clasifican por grupo">
+                {[2, 3, 4].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={clasificanPorGrupo === n}
+                    onClick={() => setClasificanPorGrupo(n)}
+                    className={`h-11 w-11 cursor-pointer rounded-lg border font-heading text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
+                      clasificanPorGrupo === n
+                        ? "border-border-primary bg-surface-secondary text-text-invert"
+                        : "border-border-primary text-text-primary hover:bg-btn-regular"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="mt-2 font-body text-xs text-text-secondary">
+              Cuando termine la fase de grupos, arman el cuadro con los mejores de cada grupo.
+            </p>
+          </div>
+        )}
 
         {/* Checkbox delegado */}
         <label

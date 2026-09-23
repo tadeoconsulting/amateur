@@ -144,7 +144,7 @@ export default function JugadorTorneoDetailPage() {
                             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
                               <span className="text-[8px]">⚽</span>
                             </div>
-                            <span className="text-sm text-text-primary">{match.homeTeam.name}</span>
+                            <span className="text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
                             <span className="ml-auto text-sm font-bold text-text-primary">
                               {match.homeScore ?? "-"}
                             </span>
@@ -153,7 +153,7 @@ export default function JugadorTorneoDetailPage() {
                             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
                               <span className="text-[8px]">⚽</span>
                             </div>
-                            <span className="text-sm text-text-primary">{match.awayTeam.name}</span>
+                            <span className="text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
                             <span className="ml-auto text-sm font-bold text-text-primary">
                               {match.awayScore ?? "-"}
                             </span>
