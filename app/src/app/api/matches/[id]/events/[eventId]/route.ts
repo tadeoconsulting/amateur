@@ -40,6 +40,12 @@ export async function DELETE(
         } else {
           await tx.match.updateMany({ where: { id, awayScore: { gt: 0 } }, data: { awayScore: { decrement: 1 } } });
         }
+      } else if (event.type === "penal_definicion" && event.scored === true) {
+        if (event.teamId === match.homeTeamId) {
+          await tx.match.updateMany({ where: { id, penaltyHomeScore: { gt: 0 } }, data: { penaltyHomeScore: { decrement: 1 } } });
+        } else {
+          await tx.match.updateMany({ where: { id, penaltyAwayScore: { gt: 0 } }, data: { penaltyAwayScore: { decrement: 1 } } });
+        }
       }
 
       const stat = isEventType(event.type) ? statFor(event.type) : null;

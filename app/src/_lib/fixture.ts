@@ -219,3 +219,209 @@ export function slotMinutesFor(minutesPerHalf: number | null | undefined) {
 export function isUnscheduled(match: { time: string }) {
   return match.time === "";
 }
+
+// ─── Cuadro de eliminación (especificación 007) ────────────────────────────
+// Sin sorteo: el orden es el de inscripción, igual que en `liga`. Un partido decide cada
+// cruce (esto es fútbol amateur: los clubes alquilan cancha, no hay ida y vuelta).
+
+/** Un cruce del cuadro. `homeTeamId`/`awayTeamId` son `null` ("por definir") hasta que se
+ * conoce el ganador del cruce anterior. `nextMatchIndex` apunta, dentro de este mismo
+ * arreglo, al partido al que pasa quien gane (`null` en la final). */
+export type BracketMatch = {
+  round: number; // 1 = primera ronda
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+  nextMatchIndex: number | null;
+  nextMatchSlot: "home" | "away" | null;
+};
+
+export type BracketResult =
+  | { ok: true; totalRounds: number; matches: BracketMatch[] }
+  | { ok: false; error: string };
+
+type BracketProvider = { teamId: string } | { matchIndex: number };
+
+/**
+ * Arma un cuadro de eliminación de partido único a partir de los equipos, en el orden en
+ * que se inscribieron (el primero es la semilla 1).
+ *
+ * Con una cantidad de equipos que no es potencia de 2, los primeros equipos inscritos
+ * (los que sobran para completar la potencia de 2 más cercana) pasan directo a la ronda 2
+ * sin jugar la ronda 1 ("bye"). El tamaño del cuadro (y por lo tanto si arranca en
+ * octavos, cuartos...) sale solo de la cantidad de equipos: no se elige.
+ */
+export function planBracket(teamIds: string[]): BracketResult {
+  if (teamIds.length < 2) {
+    return { ok: false, error: "Se necesitan al menos 2 equipos para armar el cuadro" };
+  }
+
+  const totalRounds = Math.ceil(Math.log2(teamIds.length));
+  const bracketSize = 2 ** totalRounds;
+  const byes = bracketSize - teamIds.length;
+  const byeTeams = teamIds.slice(0, byes);
+  const round1Teams = teamIds.slice(byes);
+
+  const matches: BracketMatch[] = [];
+
+  // Ronda 1: partidos reales, emparejados en el orden en que llegaron.
+  let providers: BracketProvider[] = byeTeams.map((teamId) => ({ teamId }));
+  for (let i = 0; i < round1Teams.length; i += 2) {
+    const matchIndex = matches.length;
+    matches.push({ round: 1, homeTeamId: round1Teams[i], awayTeamId: round1Teams[i + 1], nextMatchIndex: null, nextMatchSlot: null });
+    providers.push({ matchIndex });
+  }
+
+  // Rondas siguientes: cada una empareja, de a dos, lo que dejó la anterior (un equipo
+  // con bye ya conocido, o el ganador de un partido todavía sin jugar).
+  for (let round = 2; round <= totalRounds; round++) {
+    const nextProviders: BracketProvider[] = [];
+    for (let i = 0; i < providers.length; i += 2) {
+      const home = providers[i];
+      const away = providers[i + 1];
+      const matchIndex = matches.length;
+      matches.push({
+        round,
+        homeTeamId: "teamId" in home ? home.teamId : null,
+        awayTeamId: "teamId" in away ? away.teamId : null,
+        nextMatchIndex: null,
+        nextMatchSlot: null,
+      });
+      if ("matchIndex" in home) {
+        matches[home.matchIndex].nextMatchIndex = matchIndex;
+        matches[home.matchIndex].nextMatchSlot = "home";
+      }
+      if ("matchIndex" in away) {
+        matches[away.matchIndex].nextMatchIndex = matchIndex;
+        matches[away.matchIndex].nextMatchSlot = "away";
+      }
+      nextProviders.push({ matchIndex });
+    }
+    providers = nextProviders;
+  }
+
+  return { ok: true, totalRounds, matches };
+}
+
+const ROUND_NAMES_FROM_FINAL = ["Final", "Semifinal", "Cuartos de final", "Octavos de final", "Dieciseisavos de final", "Treintaidosavos de final"];
+
+/** Nombre de una ronda del cuadro para la pantalla. Un cuadro más grande que lo nombrado
+ * arriba se muestra como "Ronda n". */
+export function roundLabel(round: number, totalRounds: number): string {
+  return ROUND_NAMES_FROM_FINAL[totalRounds - round] ?? `Ronda ${round}`;
+}
+
+/**
+ * ¿Ya hay ganador en la tanda de penales, o hay que seguir pateando? Regla habitual:
+ * 5 intentos por lado y, si sigue empatado, muerte súbita (un intento cada uno; en cuanto
+ * los dos patearon la misma cantidad de veces y el marcador no quedó empatado, se decide).
+ * Puede cerrarse antes de los 5 si al que va perdiendo ya no le alcanza matemáticamente
+ * con los intentos que le quedan.
+ */
+export function penaltyWinner(
+  homeScored: number,
+  homeMissed: number,
+  awayScored: number,
+  awayMissed: number
+): "home" | "away" | null {
+  const homeTaken = homeScored + homeMissed;
+  const awayTaken = awayScored + awayMissed;
+
+  if (homeTaken < 5 || awayTaken < 5) {
+    const homeMaxFinal = homeScored + Math.max(0, 5 - homeTaken);
+    const awayMaxFinal = awayScored + Math.max(0, 5 - awayTaken);
+    if (awayScored > homeMaxFinal) return "away";
+    if (homeScored > awayMaxFinal) return "home";
+    return null;
+  }
+
+  // Los dos ya patearon al menos 5: en muerte súbita se decide apenas, tras la misma
+  // cantidad de intentos para ambos, el marcador no queda empatado.
+  if (homeTaken === awayTaken) {
+    if (homeScored === awayScored) return null;
+    return homeScored > awayScored ? "home" : "away";
+  }
+  return null; // uno ya pateó en esta ronda y hay que esperar al otro
+}
+
+/** El partido todavía no tiene los dos equipos definidos (cuadro de eliminación, cruce
+ * que depende del resultado de otro partido que todavía no se jugó). */
+export function isTbd(match: { homeTeamId: string | null; awayTeamId: string | null }) {
+  return !match.homeTeamId || !match.awayTeamId;
+}
+
+// ─── Relámpago: el mismo cuadro, programado en un solo día ──────────────────
+
+export type OneDayConfig = { date: string; startTime: string; endTime: string };
+
+export type ScheduledBracketMatch = BracketMatch & { date: string; time: string; location: string };
+
+export type ScheduleBracketResult =
+  | { ok: true; matches: ScheduledBracketMatch[] }
+  | { ok: false; error: string };
+
+/**
+ * Le pone hora a cada partido del cuadro, todos el mismo día, uno detrás de otro (una sola
+ * sede: no hay "cancha del local" porque los partidos de más adelante todavía no tienen
+ * equipos). Es una guía, no una promesa: si un partido se atrasa, la hora "prevista" de
+ * los siguientes ya no es exacta (no hay reprogramación automática).
+ */
+export function scheduleBracketOneDay(
+  matches: BracketMatch[],
+  config: OneDayConfig,
+  options: { slotMinutes: number; location: string }
+): ScheduleBracketResult {
+  if (!isRealDate(config.date)) return { ok: false, error: "La fecha no es válida" };
+  if (!TIME_RE.test(config.startTime) || !TIME_RE.test(config.endTime)) return { ok: false, error: "Los horarios no son válidos" };
+  const startMin = timeToMinutes(config.startTime);
+  const endMin = timeToMinutes(config.endTime);
+  if (endMin <= startMin) return { ok: false, error: "La hora de fin es anterior a la de inicio" };
+
+  const scheduled: ScheduledBracketMatch[] = [];
+  let t = startMin;
+  for (const m of matches) {
+    if (t + options.slotMinutes > endMin) {
+      return {
+        ok: false,
+        error: `El horario no alcanza para los ${matches.length} partidos del cuadro: entran ${scheduled.length}. Amplía el rango de horas.`,
+      };
+    }
+    scheduled.push({ ...m, date: config.date, time: minutesToTime(t), location: options.location });
+    t += options.slotMinutes;
+  }
+  return { ok: true, matches: scheduled };
+}
+
+// ─── Copa: grupos primero, cuadro después ───────────────────────────────────
+
+/**
+ * Ordena a los clasificados de "copa" para armar el cuadro con `planBracket`: primero los
+ * 1° de cada grupo, intercalados con los 2° de otro grupo (rotado uno), para que la ronda 1
+ * nunca cruce a dos equipos del mismo grupo; si clasifican más (3°, 4°), se agregan igual,
+ * de a pares. `groups` va en el orden de grupo (alfabético) y cada grupo en orden de
+ * posición (1°, 2°, 3°...). Sin sorteo, como el resto del proyecto.
+ */
+export function seedCopaBracket(groups: string[][]): string[] {
+  const k = groups.length;
+  if (k === 0) return [];
+  const maxRank = Math.max(...groups.map((g) => g.length));
+
+  const order: string[] = [];
+  let rank = 0;
+  for (; rank + 1 < maxRank; rank += 2) {
+    for (let g = 0; g < k; g++) {
+      const first = groups[g][rank];
+      const second = groups[(g + 1) % k][rank + 1];
+      if (first) order.push(first);
+      if (second) order.push(second);
+    }
+  }
+  if (rank < maxRank) {
+    // Un rango impar sobrante (por ejemplo, clasifican 3 por grupo): sin pareja con quién
+    // intercalar, se agrega en orden de grupo.
+    for (let g = 0; g < k; g++) {
+      const team = groups[g][rank];
+      if (team) order.push(team);
+    }
+  }
+  return order;
+}
