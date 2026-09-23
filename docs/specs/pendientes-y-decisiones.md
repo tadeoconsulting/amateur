@@ -11,9 +11,9 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 | 1 | **¿Qué significa "Penal"?** | Solo deja constancia en la crónica; un penal convertido se registra como gol | [004](004-partido-en-vivo.md) |
 | 2 | **¿El dueño aprueba a quienes entran por link?** | Entran directo, sin aprobación, hasta que se revoca el link | [005](005-invitaciones.md) |
 | 3 | **¿Los links del club deben vencer?** | No vencen; solo se revocan | [005](005-invitaciones.md) |
-| 4 | **¿Cómo se resuelven los empates en eliminación directa?** | No hay fixture de eliminación; el modelo no tiene penales | [003](003-fixture.md) |
+| 4 | **¿Cómo se resuelven los empates en eliminación directa?** | **Resuelta e implementada:** tiempo extra y, si sigue, penales (ver [007](007-fixture-eliminacion-copa-relampago.md)) | [007](007-fixture-eliminacion-copa-relampago.md) |
 | 5 | **¿Sorteo o el orden de inscripción?** ¿Ida y vuelta? | Orden de inscripción, una sola vuelta | [003](003-fixture.md) |
-| 6 | **¿Qué es "Copa" y qué es "Relámpago"?** | Se ofrecen en el asistente pero no tienen semántica ni fixture | [002](002-crear-torneo-y-equipos.md) |
+| 6 | **¿Qué es "Copa" y qué es "Relámpago"?** | **Resuelta e implementada:** Copa = grupos + eliminación; Relámpago = eliminación en un día (ver [007](007-fixture-eliminacion-copa-relampago.md)) | [007](007-fixture-eliminacion-copa-relampago.md) |
 | 7 | **¿Qué hace "Asignar un delegado a cada equipo"?** ¿Y "jugadores por equipo"? | Se guardan y no tienen efecto | [002](002-crear-torneo-y-equipos.md) |
 | 8 | **¿Dónde se muestran y cómo se usan las bases y los costos?** | Se guardan; ninguna pantalla los muestra | [002](002-crear-torneo-y-equipos.md) |
 | 9 | **¿El dueño del club confirma que lo inscriban? ¿El organizador aprueba a quien se inscribe solo?** | **Ambos, sí** (implementado por recomendación, falta tu confirmación): el dueño solicita y el organizador aprueba; al club ajeno se le invita y su dueño acepta | [006](006-solicitudes-de-equipos.md), decisiones A y B |
@@ -28,7 +28,7 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 
 En el orden que parece más útil (cada una debería empezar por su especificación):
 
-1. **Fixture de eliminación directa, copa y relámpago.** Requiere decidir 4 y 6. Probablemente: generar la primera ronda y las siguientes cuando termina la anterior.
+1. ~~Fixture de eliminación directa, copa y relámpago.~~ **Hecho por API** ([007](007-fixture-eliminacion-copa-relampago.md)); faltan las pantallas (ver la sección "Pantallas" de esa especificación, que quedó como lo único pendiente de esta línea).
 2. **Tiempo real para espectadores.** Hoy se ve el estado al abrir o recargar. La arquitectura prevista (SSE + Ably, hasta 100 000 espectadores y 5 000 organizadores simultáneos) está en los documentos de arquitectura del proyecto, fuera de este repo.
 3. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
 4. **Notificaciones** (decisión 12).
