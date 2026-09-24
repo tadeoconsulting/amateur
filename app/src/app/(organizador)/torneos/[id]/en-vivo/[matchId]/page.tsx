@@ -4,13 +4,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TYPE_FROM_ACTION, liveSeconds, matchDurationMinutes } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, liveSeconds, matchDurationMinutes, type MatchPhase } from "@/_lib/match-live";
+import { PenaltyShootout } from "./_components/penalty-shootout";
 
 const clubColors = ["#E53935", "#43A047"];
 
 type MatchEvent = {
   id: string;
   type: "gol" | "amarilla" | "roja" | "cambio" | "penal";
+  /** El tipo tal como lo guarda la API (ver EventType en match-live.ts): "cambio" arriba es un
+   * cajón de 5 acciones tapeables, pero acá hace falta el original para distinguir por ejemplo
+   * "penal_definicion" (tanda de penales) de una sustitución real. */
+  rawType: string;
   team: "local" | "visitante";
   minute: number;
   playerId: string | null;
@@ -87,6 +92,7 @@ export default function EnVivoPage() {
   const events: MatchEvent[] = (apiEvents ?? []).map((e) => ({
     id: e.id,
     type: ACTION_FROM_EVENT_TYPE[e.type] ?? "cambio",
+    rawType: e.type,
     team: e.teamId === match.awayTeam?.id ? "visitante" : "local",
     minute: e.minute,
     playerId: e.playerId,
@@ -217,6 +223,28 @@ export default function EnVivoPage() {
     await call(matchUrl, "PATCH", { status });
   };
 
+  // Un partido decisivo (cuadro de eliminación) no puede terminar empatado: mientras siga
+  // así, la pantalla ofrece pasar de fase en vez de "Finalizar partido" (especificación 007).
+  const tied = homeScore === awayScore;
+  const showPhaseButton = match.decisive && tied && match.phase !== "penales";
+  const nextPhase: MatchPhase = match.phase === "regulacion" ? "tiempo_extra" : "penales";
+  const nextPhaseLabel = match.phase === "regulacion" ? "Ir a tiempo extra" : "Ir a penales";
+
+  const advancePhase = async () => {
+    if (saving) return;
+    await call(matchUrl, "PATCH", { phase: nextPhase });
+  };
+
+  const registerPenalty = async (scored: boolean) => {
+    if (saving) return;
+    await call(`${matchUrl}/events`, "POST", {
+      type: "penal_definicion",
+      minute: minutes,
+      teamId: activeClubId,
+      scored,
+    });
+  };
+
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Header */}
@@ -231,7 +259,8 @@ export default function EnVivoPage() {
           Volver
         </button>
 
-        {/* Terminar el partido: se pide confirmación en el mismo lugar, sin ventanas emergentes. */}
+        {/* Terminar el partido: se pide confirmación en el mismo lugar, sin ventanas emergentes.
+            Un partido decisivo que sigue empatado ofrece pasar de fase en su lugar. */}
         {live &&
           (confirmEnd ? (
             <div className="flex items-center gap-3">
@@ -250,6 +279,14 @@ export default function EnVivoPage() {
                 No
               </button>
             </div>
+          ) : showPhaseButton ? (
+            <button
+              onClick={advancePhase}
+              disabled={saving}
+              className="cursor-pointer rounded-lg bg-surface-secondary px-3 py-1.5 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            >
+              {nextPhaseLabel}
+            </button>
           ) : (
             <button
               onClick={() => setConfirmEnd(true)}
@@ -303,7 +340,11 @@ export default function EnVivoPage() {
               {minutes}:{seconds.toString().padStart(2, "0")}&quot;
             </p>
             <p className="font-body text-xs text-text-secondary">
-              Fecha {match.matchday}
+              {match.decisive && match.phase !== "regulacion"
+                ? match.phase === "tiempo_extra"
+                  ? "Tiempo extra"
+                  : "Penales"
+                : `Fecha ${match.matchday}`}
             </p>
           </div>
         </div>
@@ -335,7 +376,14 @@ export default function EnVivoPage() {
       )}
       {finished && (
         <div className="mx-4 mb-5 rounded-xl bg-btn-regular px-4 py-4 text-center">
-          <p className="mb-3 font-heading text-sm font-bold text-text-primary">Partido finalizado</p>
+          <p className={match.decisive && match.winnerTeamId && homeScore === awayScore ? "mb-1 font-heading text-sm font-bold text-text-primary" : "mb-3 font-heading text-sm font-bold text-text-primary"}>
+            Partido finalizado
+          </p>
+          {match.decisive && match.winnerTeamId && homeScore === awayScore && (
+            <p className="mb-3 font-body text-xs text-text-secondary">
+              Se definió por penales: {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}
+            </p>
+          )}
           <button
             onClick={() => setStatus("en_curso")}
             disabled={saving}
@@ -345,7 +393,7 @@ export default function EnVivoPage() {
           </button>
         </div>
       )}
-      {live && events.length > 0 && !selectedAction && (
+      {live && match.phase !== "penales" && events.length > 0 && !selectedAction && (
         <button
           onClick={undoLast}
           disabled={saving}
@@ -379,8 +427,8 @@ export default function EnVivoPage() {
         </button>
       </div>
 
-      {/* Action icons */}
-      <div className={`mx-4 mb-4 flex justify-between${live ? "" : " hidden"}`}>
+      {/* Action icons (no aplican en la tanda de penales: ver PenaltyShootout más abajo) */}
+      <div className={`mx-4 mb-4 flex justify-between${live && match.phase !== "penales" ? "" : " hidden"}`}>
         {actions.map((action) => (
           <button
             key={action.id}
@@ -400,8 +448,20 @@ export default function EnVivoPage() {
         ))}
       </div>
 
-      {/* Player list or empty state */}
-      {selectedAction ? (
+      {/* Tanda de penales, lista de jugadores, o cronología/vacío */}
+      {live && match.phase === "penales" ? (
+        <PenaltyShootout
+          homeTeam={match.homeTeam}
+          awayTeam={match.awayTeam}
+          activeTeam={activeTeam}
+          events={apiEvents ?? []}
+          penaltyHomeScore={match.penaltyHomeScore}
+          penaltyAwayScore={match.penaltyAwayScore}
+          saving={saving}
+          onKick={registerPenalty}
+          onUndo={undoLast}
+        />
+      ) : selectedAction ? (
         <div className="flex-1 px-4 pb-2">
           <div className="flex flex-col">
             {teamPlayers.map((player) => {
@@ -500,12 +560,12 @@ export default function EnVivoPage() {
                           <rect x="6" y="3" width="8" height="13" rx="1.5" fill="#E53935" stroke="#1B1B1B" strokeWidth="1" />
                         </svg>
                       )}
-                      {event.type === "cambio" && (
+                      {event.type === "cambio" && event.rawType !== "penal_definicion" && (
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                           <path d="M5 7h7l-2.5-2.5M15 13H8l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
-                      {event.type === "penal" && (
+                      {(event.type === "penal" || event.rawType === "penal_definicion") && (
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                           <path d="M4 7l6-4 6 4v8l-6 4-6-4V7z" stroke="currentColor" strokeWidth="1.5" fill="none" />
                           <circle cx="10" cy="11" r="2" fill="currentColor" />
@@ -518,7 +578,7 @@ export default function EnVivoPage() {
                           {event.minute}&apos;
                         </span>
                         <span className="font-heading text-sm font-bold">
-                          {event.type === "gol" ? "¡Gooooolllll!" : event.type === "amarilla" ? "Tarjeta amarilla" : event.type === "roja" ? "Tarjeta roja" : event.type === "cambio" ? "Cambio" : "¡Penal!"}
+                          {isEventType(event.rawType) ? EVENT_TITLES[event.rawType] : "Cambio"}
                         </span>
                       </div>
                       <p className={`font-body text-xs ${descStyle}`}>
@@ -535,8 +595,8 @@ export default function EnVivoPage() {
 
       {error && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
 
-      {/* Bottom button */}
-      <div className={`sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3${live ? "" : " hidden"}`}>
+      {/* Bottom button (la tanda de penales tiene sus propios botones, ver PenaltyShootout) */}
+      <div className={`sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3${live && match.phase !== "penales" ? "" : " hidden"}`}>
         <button
           onClick={handleSave}
           className={`w-full cursor-pointer rounded-lg py-3.5 font-heading text-sm font-bold transition-colors ${

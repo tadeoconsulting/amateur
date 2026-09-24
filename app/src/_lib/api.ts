@@ -106,6 +106,9 @@ export interface MatchEventItem {
   playerName: string | null;
   teamId: string | null;
   detail: string | null;
+  phase: string;
+  /** Solo para el tipo "penal_definicion": ¿convirtió el intento? */
+  scored: boolean | null;
 }
 
 /** Partido con su torneo, como lo devuelve GET /api/matches/:id. */
