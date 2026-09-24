@@ -71,10 +71,13 @@ export default function FixturePage() {
     );
   }
 
-  // Las fechas salen del fixture real (una liga de 8 equipos tiene 7).
+  // Las fechas salen del fixture real (una liga de 8 equipos tiene 7). La fase de grupos de
+  // copa (especificación 007) se arma igual que "grupos": el cuadro de eliminación se arma
+  // aparte, después, desde /iniciar o la pestaña Llaves.
+  const isCopa = tournament.format === "copa";
   const plan = planFixture(
     tournament.teams.map((t) => ({ id: t.club.id, groupName: t.groupName })),
-    tournament.format
+    isCopa ? "grupos" : tournament.format
   );
   const started = !OPEN_STATUSES.includes(tournament.status);
   if (started || !plan.ok) {

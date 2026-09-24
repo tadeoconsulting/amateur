@@ -26,6 +26,68 @@ import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
 
+/** Una tabla de posiciones (de todo el torneo, o de un solo grupo). `advanceCount` marca en
+ * verde los primeros N puestos (por eso la posición es la del `rows` recibido, no la global de
+ * `row.position`, que en un torneo con grupos mezcla los grupos — ver el comentario en
+ * `_lib/standings.ts`); `showDescends` solo tiene sentido en una liga de tabla única. */
+function StandingsTable({ rows, advanceCount, showDescends }: { rows: StandingsRow[]; advanceCount: number; showDescends: boolean }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-brand-200">
+      <table className="w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-brand-200 bg-surface-alt">
+            <th className="py-2.5 pl-3 pr-1 font-medium text-text-secondary">#</th>
+            <th className="px-1 py-2.5 font-medium text-text-secondary">Equipo</th>
+            <th className="px-1 py-2.5 text-center font-medium text-text-secondary">PJ</th>
+            <th className="px-1 py-2.5 text-center font-medium text-text-secondary">G</th>
+            <th className="px-1 py-2.5 text-center font-medium text-text-secondary">E</th>
+            <th className="px-1 py-2.5 text-center font-medium text-text-secondary">P</th>
+            <th className="px-1 py-2.5 text-center font-medium text-text-secondary">DG</th>
+            <th className="px-1 py-2.5 pr-3 text-center font-medium text-text-secondary">Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => {
+            const position = i + 1;
+            const isTop = position <= advanceCount;
+            const isBottom = showDescends && position >= 7;
+            return (
+              <tr key={row.clubId} className="border-b border-brand-200 last:border-0">
+                <td className="py-2.5 pl-3 pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        isTop ? "bg-verification" : isBottom ? "bg-red-500" : "bg-transparent"
+                      }`}
+                    />
+                    <span className="text-xs font-medium text-text-secondary">{position}</span>
+                  </div>
+                </td>
+                <td className="px-1 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold">
+                      {row.shortName.slice(0, 2)}
+                    </div>
+                    <span className="truncate text-xs font-medium text-text-primary">{row.clubName}</span>
+                  </div>
+                </td>
+                <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.played}</td>
+                <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.won}</td>
+                <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.drawn}</td>
+                <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.lost}</td>
+                <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">
+                  {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
+                </td>
+                <td className="px-1 py-2.5 pr-3 text-center text-xs font-bold tabular-nums text-text-primary">{row.points}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 const competenciaTabs: { key: Tab; label: string }[] = [
   { key: "partidos", label: "Partidos" },
   { key: "llaves", label: "Llaves" },
@@ -432,72 +494,46 @@ export default function TournamentDetailPage() {
         </div>
       )}
 
-      {!isConvocatoria && activeTab === "tabla" && standings && (
-        <div className="mt-4 px-4">
-          <div className="overflow-hidden rounded-xl border border-brand-200">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-brand-200 bg-surface-alt">
-                  <th className="py-2.5 pl-3 pr-1 font-medium text-text-secondary">#</th>
-                  <th className="px-1 py-2.5 font-medium text-text-secondary">Equipo</th>
-                  <th className="px-1 py-2.5 text-center font-medium text-text-secondary">PJ</th>
-                  <th className="px-1 py-2.5 text-center font-medium text-text-secondary">G</th>
-                  <th className="px-1 py-2.5 text-center font-medium text-text-secondary">E</th>
-                  <th className="px-1 py-2.5 text-center font-medium text-text-secondary">P</th>
-                  <th className="px-1 py-2.5 text-center font-medium text-text-secondary">DG</th>
-                  <th className="px-1 py-2.5 pr-3 text-center font-medium text-text-secondary">Pts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standings.map((row: StandingsRow) => {
-                  const isTop = row.position <= 2;
-                  const isBottom = row.position >= 7;
-                  return (
-                    <tr key={row.clubId} className="border-b border-brand-200 last:border-0">
-                      <td className="py-2.5 pl-3 pr-1">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`h-2 w-2 rounded-full ${
-                              isTop ? "bg-verification" : isBottom ? "bg-red-500" : "bg-transparent"
-                            }`}
-                          />
-                          <span className="text-xs font-medium text-text-secondary">{row.position}</span>
-                        </div>
-                      </td>
-                      <td className="px-1 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold">
-                            {row.shortName.slice(0, 2)}
-                          </div>
-                          <span className="truncate text-xs font-medium text-text-primary">{row.clubName}</span>
-                        </div>
-                      </td>
-                      <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.played}</td>
-                      <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.won}</td>
-                      <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.drawn}</td>
-                      <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.lost}</td>
-                      <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">
-                        {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
-                      </td>
-                      <td className="px-1 py-2.5 pr-3 text-center text-xs font-bold tabular-nums text-text-primary">{row.points}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-3 flex items-center gap-4 px-1">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-verification" />
-              <span className="text-xs text-text-secondary">Clasifica a liguilla</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-red-500" />
-              <span className="text-xs text-text-secondary">Desciende</span>
+      {!isConvocatoria && activeTab === "tabla" && standings && (() => {
+        // Un torneo con grupos (copa, o el legado "grupos") no admite UNA tabla mezclando
+        // grupos: "arriba"/"abajo" de la lista global no dice nada de quién clasifica. Se
+        // arma una mini-tabla por grupo, con su propia numeración de 1 a N.
+        const byGroup = new Map<string, StandingsRow[]>();
+        for (const row of standings) {
+          const key = row.groupName ?? "";
+          byGroup.set(key, [...(byGroup.get(key) ?? []), row]);
+        }
+        const hasGroups = ![...byGroup.keys()].every((k) => k === "");
+        const isCopa = tournament.format === "copa";
+        // Copa no tiene descenso (los que no clasifican simplemente no siguen jugando);
+        // "grupos" (formato legado) conserva el descenso de siempre, ahora por grupo.
+        const advanceCount = isCopa ? (tournament.groupsAdvancePerGroup ?? 2) : 2;
+
+        return (
+          <div className="mt-4 flex flex-col gap-4 px-4">
+            {hasGroups
+              ? [...byGroup.entries()].map(([groupName, rows]) => (
+                  <div key={groupName}>
+                    <h3 className="mb-2 font-heading text-sm font-bold text-text-primary">{groupName || "Sin grupo"}</h3>
+                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!isCopa} />
+                  </div>
+                ))
+              : <StandingsTable rows={standings} advanceCount={2} showDescends />}
+            <div className="flex items-center gap-4 px-1">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-verification" />
+                <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : "Clasifica a liguilla"}</span>
+              </div>
+              {!isCopa && (
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="text-xs text-text-secondary">Desciende</span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {!isConvocatoria && activeTab === "goleadores" && scorers && (
         <div className="mt-4 px-4">
