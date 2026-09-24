@@ -28,17 +28,16 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 
 En el orden que parece más útil (cada una debería empezar por su especificación):
 
-1. ~~Fixture de eliminación directa, copa y relámpago.~~ **Hecho por API** ([007](007-fixture-eliminacion-copa-relampago.md)); faltan las pantallas (ver la sección "Pantallas" de esa especificación, que quedó como lo único pendiente de esta línea).
-2. **Tiempo real para espectadores.** Hoy se ve el estado al abrir o recargar. La arquitectura prevista (SSE + Ably, hasta 100 000 espectadores y 5 000 organizadores simultáneos) está en los documentos de arquitectura del proyecto, fuera de este repo.
-3. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
-4. **Notificaciones** (decisión 12).
-5. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
-6. **Editar un torneo** ("Editar torneo" no hace nada) y **regenerar o deshacer el fixture** desde la pantalla.
-7. **Alineaciones y `matchesPlayed`**, y asistencias.
-8. **Asignar grupos** desde la interfaz para el formato `grupos`.
-9. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
-10. **Cancelar una invitación personal.**
-11. **Las pantallas del dueño de club** aún usan un club fijo (`club-1`) en algunos lugares.
+1. **Tiempo real para espectadores.** Hoy se ve el estado al abrir o recargar. La arquitectura prevista (SSE + Ably, hasta 100 000 espectadores y 5 000 organizadores simultáneos) está en los documentos de arquitectura del proyecto, fuera de este repo.
+2. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
+3. **Notificaciones** (decisión 12).
+4. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
+5. **Editar un torneo** ("Editar torneo" no hace nada) y **regenerar o deshacer el fixture** desde la pantalla.
+6. **Alineaciones y `matchesPlayed`**, y asistencias.
+7. **Asignar grupos** desde la interfaz para el formato `grupos`.
+8. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
+9. **Cancelar una invitación personal.**
+10. **Las pantallas del dueño de club** aún usan un club fijo (`club-1`) en algunos lugares.
 
 ## 3. Deuda técnica y de operación
 
