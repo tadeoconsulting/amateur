@@ -1,8 +1,9 @@
 # 007 · Fixture de eliminación directa, Copa y Relámpago
 
-**Estado:** ✅ **implementada (as-built) por API.** Las pantallas todavía no existen — se usa llamando a la API directamente (ver "Limitaciones conocidas"). Se construyó en 4 fases, cada una con su propia regresión completa en verde; la 5ª fase (pantallas) queda pendiente, sin fecha.
-**Resuelve:** el pendiente nº 2 de [pendientes-y-decisiones.md](pendientes-y-decisiones.md) y las decisiones 4 y 6.
-**Código:** `src/_lib/fixture.ts` (`planBracket`, `roundLabel`, `penaltyWinner`, `scheduleBracketOneDay`, `seedCopaBracket`, `isTbd`), `src/_lib/standings.ts` (`computeStandings`, nuevo — antes vivía solo dentro de la ruta), `src/_lib/match-live.ts` (`MATCH_PHASES`, `canTransitionPhase`, tipo de evento `penal_definicion`), `src/app/api/tournaments/[id]/fixture/route.ts`, `src/app/api/matches/[id]/route.ts`, `src/app/api/matches/[id]/events/route.ts` y `.../[eventId]/route.ts`, `src/app/api/tournaments/[id]/standings/route.ts`.
+**Estado:** ✅ **implementada (as-built), API y pantallas.** Se construyó en 5 fases, cada una con su propia regresión completa en verde: 4 de API (modelo, `eliminacion`, `relampago`, `copa`) y una 5ª de pantallas (ver "Pantallas").
+**Resuelve:** la funcionalidad pendiente de fixture de eliminación directa, copa y relámpago (cerrada; ver [pendientes-y-decisiones.md](pendientes-y-decisiones.md)) y las decisiones 4 y 6.
+**Código (API):** `src/_lib/fixture.ts` (`planBracket`, `roundLabel`, `penaltyWinner`, `scheduleBracketOneDay`, `seedCopaBracket`, `isTbd`), `src/_lib/standings.ts` (`computeStandings`, nuevo — antes vivía solo dentro de la ruta), `src/_lib/match-live.ts` (`MATCH_PHASES`, `canTransitionPhase`, tipo de evento `penal_definicion`), `src/app/api/tournaments/[id]/fixture/route.ts`, `src/app/api/matches/[id]/route.ts`, `src/app/api/matches/[id]/events/route.ts` y `.../[eventId]/route.ts`, `src/app/api/tournaments/[id]/standings/route.ts`.
+**Código (pantallas):** `crear-torneo/paso-3` (campos `extraTimeMinutes`/`groupsAdvancePerGroup`), `torneos/[id]/iniciar` (armar el cuadro, programación automática de un día para relámpago, dos pasos de copa), `torneos/[id]/_components/bracket-view.tsx` (pestaña "Llaves"), `torneos/[id]/en-vivo/[matchId]/_components/penalty-shootout.tsx` y los cambios en `en-vivo/[matchId]/page.tsx` (tiempo extra/penales), `torneos/[id]/resultado/[matchId]/page.tsx` y `torneos/[id]/partidos/[matchId]/page.tsx` (crónica por fase), `torneos/[id]/page.tsx` (tabla por grupo), `torneos/[id]/fixture/page.tsx` (programación por fecha, ahora también para la fase de grupos de copa), `_lib/api.ts` (tipos `MatchTeamRef`, campos del cuadro).
 **Pruebas:** `tests/unit/fixture.test.mjs` (ampliado), `tests/unit/match-live.test.mjs` (ampliado), `tests/unit/standings.test.mjs` (nuevo), `tests/fixture-eliminacion.test.mjs` (16, integración), `tests/fixture-copa.test.mjs` (10, integración).
 **Toca:** [002](002-crear-torneo-y-equipos.md) (asistente), [003](003-fixture.md) (fixture), [004](004-partido-en-vivo.md) (partido en vivo), [modelo-de-datos.md](modelo-de-datos.md).
 
@@ -120,11 +121,11 @@ programado ──iniciar──▶ en_curso (fase: regulación)
         de nextMatch (nextMatchSlot: home | away)
 ```
 
-18. **Pasar de fase** es `PATCH /api/matches/:id { phase }`, una acción explícita (no automática: no hay pantalla todavía que la dispare sola). Nunca se salta una fase: `regulacion → tiempo_extra → penales`, en ese orden, y solo si el marcador sigue empatado en ese momento.
+18. **Pasar de fase** es `PATCH /api/matches/:id { phase }`, una acción explícita (el botón "Ir a tiempo extra"/"Ir a penales" de la pantalla en vivo, ver "Pantallas"). Nunca se salta una fase: `regulacion → tiempo_extra → penales`, en ese orden, y solo si el marcador sigue empatado en ese momento.
 19. **Los goles de tiempo extra suman al marcador real** (`homeScore`/`awayScore`): un gol es un gol. Cada jugada (`MatchEvent`) guarda en qué `phase` ocurrió.
 20. **Los penales no suman al marcador.** Cada intento es un `MatchEvent` de tipo `penal_definicion`, con `teamId` obligatorio y `scored: true|false`; solo se acepta con el partido en fase `penales` (cualquier otro tipo de jugada, `409`, en esa fase). `penaltyHomeScore`/`penaltyAwayScore` se actualizan igual que el marcador de goles, con la misma transacción atómica; deshacer un intento revierte el conteo.
 21. **Terminar en la fase de penales** exige que un equipo ya no pueda ser alcanzado con los intentos que quedan (alterna, 5 por lado como mínimo, muerte súbita después): `penaltyWinner(homeScored, homeMissed, awayScored, awayMissed)` decide si ya hay ganador matemático; si no, `409`.
-22. Al terminar con un ganador (por marcador o por penales), se completa `winnerTeamId` y, si el partido tiene `nextMatchId`, **se rellena automáticamente** `homeTeamId` o `awayTeamId` del partido siguiente, en la misma transacción. El torneo pasa a `finalizado` cuando la final tiene resultado, igual que en los demás formatos.
+22. Al terminar con un ganador (por marcador o por penales), se completa `winnerTeamId` y, si el partido tiene `nextMatchId`, **se rellena automáticamente** `homeTeamId` o `awayTeamId` del partido siguiente, en la misma transacción. El torneo pasa a `finalizado` cuando ya no quedan partidos pendientes, igual que en los demás formatos — con una salvedad en `copa`: terminar la fase de grupos por sí sola no alcanza (el cuadro todavía no existe, así que "no quedan partidos pendientes" sería cierto por las razones equivocadas); hace falta además que exista al menos un partido `decisive`, es decir, que el cuadro ya se haya armado.
 23. **Reabrir un partido decisivo que ya tenía ganador** (de `finalizado` a `en_curso` o a `programado`): si el partido tiene `nextMatchId` y ese siguiente **ya tiene resultado, está en curso o tiene jugadas**, `409` ("primero deshaz el resultado del partido siguiente"). Si el siguiente sigue intacto (o si es la final, sin siguiente), reabrir limpia `winnerTeamId` y, de corresponder, vacía el slot que había llenado. Volver a `programado` además resetea la fase a `regulacion`.
 24. Un partido "por definir" (`isTbd`) no se puede iniciar ni finalizar (`409`).
 
@@ -142,15 +143,14 @@ programado ──iniciar──▶ en_curso (fase: regulación)
 **No implementado:** un `GET /api/tournaments/:id/fixture` dedicado que devuelva el cuadro ya armado como árbol (se había previsto para dibujar las llaves). Por ahora `GET /api/matches?tournamentId=` alcanza para todo lo que hay (incluye `nextMatchId`, `decisive`, `phase`, etc.); se evalúa si hace falta un endpoint aparte recién al construir la pantalla de llaves.
 
 ## Pantallas
-**Nada de esto existe todavía** (fase 5, pendiente, sin fecha). Lo previsto:
-- Asistente "Crear torneo", paso 3: campos para `extraTimeMinutes` y, si el formato es Copa, `groupsAdvancePerGroup`.
-- `/torneos/:id/iniciar`: dejar de decir "formato sin soporte" para estos tres formatos.
-- Una vista de llaves para el cuadro, con "Por definir" en los partidos sin rival todavía.
-- En partido en vivo, los pasos "Ir a tiempo extra" / "Ir a penales", y una pantalla para la tanda de penales.
-- La crónica separando tiempo reglamentario, tiempo extra y penales.
-- Para Copa, un botón "Armar el cuadro" que aparezca recién cuando la fase de grupos terminó.
+25. **Asistente "Crear torneo", paso 3:** minutos de tiempo extra (eliminación/relámpago/copa) y, si el formato es Copa, cuántos clasifican por grupo (2/3/4).
+26. **`/torneos/:id/iniciar`:** un botón "Armar el cuadro" para `eliminacion`/`relampago` (con la vista previa de `planBracket`: cuántas rondas, cuántos equipos pasan por bye); `relampago` suma "Programación automática" (un solo día, pide fecha y horario) además del modo manual; `copa` mantiene el flujo de dos botones de siempre (automática/manual) para armar la fase de grupos, y el cuadro se arma después, aparte, desde "Llaves".
+27. **`BracketView`** (pestaña "Llaves" de `torneos/:id`): agrupa los partidos `decisive` por ronda (`roundLabel`), con "Por definir" en los que todavía no tienen rival; para Copa sin cuadro armado, muestra qué falta de la fase de grupos o el botón "Armar el cuadro" (`mode: "bracket"`) una vez que terminó.
+28. **Partido en vivo:** cuando el partido es `decisive` y va empatado, el botón "Finalizar partido" se reemplaza por "Ir a tiempo extra" / "Ir a penales" (`PATCH { phase }`). En fase `penales`, el selector de acciones (gol/tarjeta/cambio/penal) se reemplaza por `PenaltyShootout`: elige el equipo con el mismo selector Local/Visitante de siempre, un botón "Convirtió"/"Erró" por intento, tiras de intentos (✓/✗, mínimo 5, más si sigue en muerte súbita) y el aviso de que la tanda ya está decidida (`penaltyWinner`) antes de poder finalizar. El banner de partido finalizado anota "Se definió por penales: X-Y" cuando corresponde.
+29. **La crónica** (`resultado/:matchId`) separa "Tiempo reglamentario"/"Tiempo extra"/"Penales" con un divisor cuando el partido es `decisive`, aunque una fase no tenga jugadas propias (el hecho de haber llegado a esa fase ya importa); `partidos/:matchId` (el timeline compartido, sin concepto de fases) filtra los intentos de penal de su línea de tiempo y muestra el mismo aviso de resultado por penales aparte.
+30. **La tabla de posiciones** (`torneos/:id`, pestaña "Tabla") arma una mini-tabla por grupo cuando el torneo tiene grupos (Copa, o el formato legado `grupos`), con su propia numeración 1..N; Copa resalta los primeros `groupsAdvancePerGroup` de cada grupo con la leyenda "Clasifica al cuadro" (sin "Desciende", que no aplica).
 
-Hasta que exista, se usa por API (hay un script de ejemplo para `eliminacion` de punta a punta).
+Sin pantallas propias todavía: la vista previa/edición del árbol completo antes de armarlo (se arma directo) y una crónica con las tres fases también en `partidos/:matchId` (hoy solo filtra los penales, no las separa visualmente como sí hace `resultado`).
 
 ## Pruebas
 - **Unitarias**, sin servidor: `planBracket` (2, 3, 5, 7, 8, 9 equipos: byes, nadie repite ronda, la final es un solo partido), `roundLabel`, `penaltyWinner` (decisión anticipada, 5 parejo, muerte súbita), `isTbd`, `scheduleBracketOneDay` (secuencial, error claro si no alcanza el horario), `seedCopaBracket` (2, 3 y 4 grupos, rango impar, un grupo más chico, determinismo), fases de partido (`MATCH_PHASES`/`canTransitionPhase`), `computeStandings` (puntos, desempate, partidos "por definir" no cuentan, groupName se conserva).
@@ -160,7 +160,6 @@ Hasta que exista, se usa por API (hay un script de ejemplo para `eliminacion` de
 - Regresión completa (unitarias + las 6 suites de integración existentes) verificada en verde después de cada fase.
 
 ## Limitaciones conocidas
-- **Sin pantallas.** Se usa por API. Es la limitación principal hoy.
 - **`eliminacion` no tiene `mode: "auto"`:** cada partido se programa a mano, uno por uno, con `PATCH /api/matches/:id`, igual que el modo manual de `liga`.
 - **`relampago` con atrasos:** si un partido se demora, los horarios "previstos" de los siguientes no se actualizan solos.
 - **Sin sorteo real:** todo se arma por orden de inscripción, incluido el bye.
@@ -168,10 +167,12 @@ Hasta que exista, se usa por API (hay un script de ejemplo para `eliminacion` de
 - **La final de un cuadro de 2 equipos no tiene ronda anterior:** el fixture se reduce a un solo partido, sin bye que mostrar.
 - **`copa` no tiene forma de deshacer solo el cuadro** (para corregir la fase de grupos después de armado): hay que deshacer el fixture entero (`DELETE /fixture`) y volver a empezar.
 - **Sin `GET /fixture` dedicado** (ver "API"): se arma el árbol en el cliente a partir de `GET /matches`.
+- **`partidos/:matchId` no separa la crónica por fase**, solo filtra los intentos de penal (a diferencia de `resultado/:matchId`, que sí muestra "Tiempo reglamentario"/"Tiempo extra"/"Penales").
+- **Sin vista previa del árbol antes de armarlo:** "Armar el cuadro" lo crea directo (con la confirmación genérica de "esto ya no se puede deshacer"), no hay paso intermedio para revisar los cruces antes de confirmar.
 
 ## Fases de implementación
 1. ✅ **Modelo** (`homeTeamId`/`awayTeamId` nullable, columnas nuevas) + `planBracket`/`roundLabel`/`penaltyWinner`/`isTbd` puros, con pruebas unitarias.
 2. ✅ **`eliminacion`:** generación del cuadro, fases y penales, avance automático al siguiente partido, reapertura con guardas.
 3. ✅ **`relampago`:** `scheduleBracketOneDay` para el calendario de un solo día.
 4. ✅ **`copa`:** grupos + cuadro, `computeStandings` extraída, `seedCopaBracket`, `groupsAdvancePerGroup`.
-5. ⏳ **Pantallas:** pendiente.
+5. ✅ **Pantallas:** asistente, "Armar el cuadro"/Llaves, tiempo extra y penales en vivo, crónica separada por fase, fase de grupos de copa.
