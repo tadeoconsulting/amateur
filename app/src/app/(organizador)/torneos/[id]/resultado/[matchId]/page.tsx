@@ -3,13 +3,21 @@
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, isEventType } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, MATCH_PHASES, isEventType, isMatchPhase, type MatchPhase } from "@/_lib/match-live";
 
 const clubColors = ["#E53935", "#43A047"];
 
+/** Solo importa en un partido `decisive` (especificación 007): separa la crónica en
+ * "Tiempo reglamentario" / "Tiempo extra" / "Penales" cuando el partido llegó a esa fase. */
+const PHASE_LABELS: Record<MatchPhase, string> = {
+  regulacion: "Tiempo reglamentario",
+  tiempo_extra: "Tiempo extra",
+  penales: "Penales",
+};
+
 type TimelineEvent = {
   minute: string;
-  type: "inicio" | "gol" | "amarilla" | "roja" | "cambio" | "penal" | "comentario" | "halftime" | "final";
+  type: "inicio" | "gol" | "amarilla" | "roja" | "cambio" | "penal" | "comentario" | "halftime" | "final" | "fase";
   title: string;
   description: string;
   team?: string;
@@ -124,29 +132,50 @@ export default function ResultadoPage() {
     );
   }
 
-  // Crónica del partido a partir de las jugadas guardadas: inicio, jugadas y final.
+  // Crónica del partido a partir de las jugadas guardadas: inicio, jugadas (agrupadas por fase
+  // en un partido decisivo) y final.
   const started = match.status !== "programado";
   const showScore = started;
+
+  // Hasta qué fases llegó el partido: solo "regulacion" si no es decisivo, o todas las fases
+  // hasta la actual (incluida) si sí lo es. Se muestra un separador aunque una fase haya
+  // quedado sin jugadas registradas (p. ej. tiempo extra o penales sin tarjetas ni goles).
+  const reachedPhases: readonly MatchPhase[] = match.decisive
+    ? MATCH_PHASES.slice(0, MATCH_PHASES.indexOf(match.phase) + 1)
+    : (["regulacion"] as const);
+
+  const eventsByPhase: Record<MatchPhase, MatchEventItem[]> = { regulacion: [], tiempo_extra: [], penales: [] };
+  for (const e of events ?? []) {
+    (isMatchPhase(e.phase) ? eventsByPhase[e.phase] : eventsByPhase.regulacion).push(e);
+  }
+
+  const byPenalties = Boolean(match.decisive && match.winnerTeamId && (match.homeScore ?? 0) === (match.awayScore ?? 0));
+
   const timeline: TimelineEvent[] = [
     ...(started
-      ? [{ minute: "0'", type: "inicio" as const, title: "Inicio del partido", description: `${match.homeTeam.name} vs ${match.awayTeam.name}` }]
+      ? [{ minute: "0'", type: "inicio" as const, title: "Inicio del partido", description: `${match.homeTeam?.name ?? "Por definir"} vs ${match.awayTeam?.name ?? "Por definir"}` }]
       : []),
-    ...(events ?? []).map((e): TimelineEvent => {
-      const team = e.teamId === match.awayTeam.id ? match.awayTeam.name : match.homeTeam.name;
-      return {
-        minute: `${e.minute}'`,
-        type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
-        title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
-        description: e.playerName ? `${e.playerName} - ${team}` : team,
-        detail: e.detail ?? undefined,
-      };
-    }),
+    ...reachedPhases.flatMap((phase, i): TimelineEvent[] => [
+      ...(match.decisive && i > 0 ? [{ minute: "", type: "fase" as const, title: PHASE_LABELS[phase], description: "" }] : []),
+      ...eventsByPhase[phase].map((e): TimelineEvent => {
+        const team = e.teamId === match.awayTeam?.id ? match.awayTeam?.name ?? "Por definir" : match.homeTeam?.name ?? "Por definir";
+        return {
+          minute: `${e.minute}'`,
+          type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
+          title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
+          description: e.playerName ? `${e.playerName} - ${team}` : team,
+          detail: e.detail ?? undefined,
+        };
+      }),
+    ]),
     ...(match.status === "finalizado"
       ? [{
           minute: "FT",
           type: "final" as const,
           title: "Final del partido",
-          description: `${match.homeTeam.name} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${match.awayTeam.name}`,
+          description: byPenalties
+            ? `${match.homeTeam?.name ?? "Por definir"} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${match.awayTeam?.name ?? "Por definir"} (definido por penales ${match.penaltyHomeScore ?? 0}-${match.penaltyAwayScore ?? 0})`
+            : `${match.homeTeam?.name ?? "Por definir"} ${match.homeScore ?? 0} - ${match.awayScore ?? 0} ${match.awayTeam?.name ?? "Por definir"}`,
         }]
       : []),
   ];
@@ -184,7 +213,7 @@ export default function ResultadoPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[0]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.homeTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.homeScore ?? 0}</span>}
             </div>
             <div className="flex items-center gap-2.5">
@@ -196,7 +225,7 @@ export default function ResultadoPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[1]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.awayTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.awayScore ?? 0}</span>}
             </div>
           </div>
@@ -219,7 +248,16 @@ export default function ResultadoPage() {
             Aún no hay eventos registrados en este partido.
           </p>
         )}
-        {timeline.map((event, i) => (
+        {timeline.map((event, i) =>
+          event.type === "fase" ? (
+            <div key={i} className="my-1 flex items-center gap-3">
+              <div className="h-px flex-1 bg-border-primary" />
+              <span className="shrink-0 font-heading text-xs font-bold uppercase tracking-wide text-text-secondary">
+                {event.title}
+              </span>
+              <div className="h-px flex-1 bg-border-primary" />
+            </div>
+          ) : (
           <div
             key={i}
             className={`rounded-xl px-4 py-3 ${getEventStyle(event.type)}`}
@@ -274,7 +312,8 @@ export default function ResultadoPage() {
               </div>
             </div>
           </div>
-        ))}
+          )
+        )}
       </div>
 
       {/* Bottom button */}

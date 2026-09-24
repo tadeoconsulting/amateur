@@ -50,13 +50,19 @@ export default function MatchDetailPage() {
     );
   }
 
-  const eventList = (events ?? []).map((e) => ({
-    ...e,
-    matchId: params.matchId,
-    playerId: "",
-    playerName: e.playerName ?? "",
-  }));
+  // Un intento de la tanda de penales (especificación 007) no es una jugada de un jugador
+  // puntual: no tiene lugar en esta línea de tiempo, que solo entiende gol/tarjeta/cambio.
+  // Se resume aparte, más abajo, junto al resultado.
+  const eventList = (events ?? [])
+    .filter((e) => (e.type as string) !== "penal_definicion")
+    .map((e) => ({
+      ...e,
+      matchId: params.matchId,
+      playerId: "",
+      playerName: e.playerName ?? "",
+    }));
   const showScore = match.status === "en_curso" || match.status === "finalizado";
+  const byPenalties = Boolean(match.decisive && match.winnerTeamId && match.homeScore === match.awayScore);
 
   return (
     <div className="w-full">
@@ -72,15 +78,15 @@ export default function MatchDetailPage() {
         <div className="flex">
           <div className="flex-1 space-y-1 px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <TeamLogo shortName={match.homeTeam.shortName} />
-              <span className="flex-1 text-sm text-text-primary">{match.homeTeam.name}</span>
+              <TeamLogo shortName={match.homeTeam?.shortName ?? "?"} />
+              <span className="flex-1 text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               {showScore && (
                 <span className="text-lg font-bold tabular-nums text-text-primary">{match.homeScore}</span>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <TeamLogo shortName={match.awayTeam.shortName} />
-              <span className="flex-1 text-sm text-text-primary">{match.awayTeam.name}</span>
+              <TeamLogo shortName={match.awayTeam?.shortName ?? "?"} />
+              <span className="flex-1 text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               {showScore && (
                 <span className="text-lg font-bold tabular-nums text-text-primary">{match.awayScore}</span>
               )}
@@ -101,6 +107,14 @@ export default function MatchDetailPage() {
         </div>
       </div>
 
+      {byPenalties && (
+        <div className="mx-4 mt-3 rounded-xl bg-btn-regular px-4 py-3 text-center">
+          <p className="font-body text-sm text-text-secondary">
+            Se definió por penales: {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}
+          </p>
+        </div>
+      )}
+
       {/* Content based on status */}
       {match.status === "programado" && (
         <div className="mt-8 flex flex-col items-center px-4 pb-8">
@@ -119,12 +133,14 @@ export default function MatchDetailPage() {
       {(match.status === "en_curso" || match.status === "finalizado") && eventList.length > 0 && (
         <MatchTimeline
           events={eventList}
-          homeTeamId={match.homeTeam.id}
+          // en_curso/finalizado exige los dos equipos definidos (la API no deja arrancar un
+          // partido "por definir"), así que acá homeTeam siempre existe.
+          homeTeamId={match.homeTeam!.id}
           status={match.status === "en_curso" ? "en_vivo" : "finalizado"}
         />
       )}
 
-      {(match.status === "en_curso" || match.status === "finalizado") && eventList.length === 0 && (
+      {(match.status === "en_curso" || match.status === "finalizado") && eventList.length === 0 && !byPenalties && (
         <div className="px-4 py-12 text-center">
           <p className="text-sm text-text-secondary">No hay eventos registrados</p>
         </div>

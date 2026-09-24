@@ -148,9 +148,9 @@ export default function ClubTorneoDetallePage() {
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold">
-                        {m.homeTeam.shortName}
+                        {m.homeTeam?.shortName ?? "?"}
                       </div>
-                      <span className="font-body text-sm text-text-primary">{m.homeTeam.name}</span>
+                      <span className="font-body text-sm text-text-primary">{m.homeTeam?.name ?? "Por definir"}</span>
                     </div>
                     <span className="font-heading text-sm font-bold text-text-primary">
                       {m.homeScore ?? "-"}
@@ -159,9 +159,9 @@ export default function ClubTorneoDetallePage() {
                   <div className="mt-1 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold">
-                        {m.awayTeam.shortName}
+                        {m.awayTeam?.shortName ?? "?"}
                       </div>
-                      <span className="font-body text-sm text-text-primary">{m.awayTeam.name}</span>
+                      <span className="font-body text-sm text-text-primary">{m.awayTeam?.name ?? "Por definir"}</span>
                     </div>
                     <span className="font-heading text-sm font-bold text-text-primary">
                       {m.awayScore ?? "-"}
@@ -206,9 +206,9 @@ export default function ClubTorneoDetallePage() {
                   >
                     <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="font-body text-xs text-text-primary">{m.homeTeam.shortName}</span>
+                      <span className="font-body text-xs text-text-primary">{m.homeTeam?.shortName ?? "?"}</span>
                       <span className="font-heading text-xs font-bold text-text-secondary">vs</span>
-                      <span className="font-body text-xs text-text-primary">{m.awayTeam.shortName}</span>
+                      <span className="font-body text-xs text-text-primary">{m.awayTeam?.shortName ?? "?"}</span>
                     </div>
                     <span className="mt-1 font-body text-[10px] text-text-secondary">{m.location}</span>
                   </Link>
@@ -233,11 +233,11 @@ export default function ClubTorneoDetallePage() {
                   <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="font-body text-sm text-text-primary">{m.homeTeam.name}</span>
+                  <span className="font-body text-sm text-text-primary">{m.homeTeam?.name ?? "Por definir"}</span>
                   <span className="font-heading text-sm font-bold">
                     {m.homeScore ?? "-"} - {m.awayScore ?? "-"}
                   </span>
-                  <span className="font-body text-sm text-text-primary">{m.awayTeam.name}</span>
+                  <span className="font-body text-sm text-text-primary">{m.awayTeam?.name ?? "Por definir"}</span>
                 </div>
               </Link>
             ))}

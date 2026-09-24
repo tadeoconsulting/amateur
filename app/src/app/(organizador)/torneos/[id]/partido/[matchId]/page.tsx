@@ -105,7 +105,7 @@ export default function PartidoDetailPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[0]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.homeTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
             </div>
             <div className="flex items-center gap-2.5">
               <div
@@ -116,7 +116,7 @@ export default function PartidoDetailPage() {
                   <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[1]} strokeWidth="1" />
                 </svg>
               </div>
-              <span className="font-body text-sm text-text-primary">{match.awayTeam.name}</span>
+              <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
             </div>
           </div>
 

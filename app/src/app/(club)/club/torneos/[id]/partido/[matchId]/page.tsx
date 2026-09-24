@@ -38,8 +38,8 @@ export default function ClubPartidoDetallePage() {
   const isFinished = match.status === "finalizado";
   const isScheduled = match.status === "programado";
 
-  const homeEvents = events.filter((e) => e.teamId === match.homeTeam.id);
-  const awayEvents = events.filter((e) => e.teamId === match.awayTeam.id);
+  const homeEvents = events.filter((e) => e.teamId === match.homeTeam?.id);
+  const awayEvents = events.filter((e) => e.teamId === match.awayTeam?.id);
   const allMinutes = [...new Set(events.map((e) => e.minute))].sort((a, b) => a - b);
 
   return (
@@ -81,9 +81,9 @@ export default function ClubPartidoDetallePage() {
         <div className="mt-4 flex items-center justify-between">
           <div className="flex flex-col items-center gap-2">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-200 font-heading text-xs font-bold">
-              {match.homeTeam.shortName}
+              {match.homeTeam?.shortName ?? "?"}
             </div>
-            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.homeTeam.name}</span>
+            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -98,9 +98,9 @@ export default function ClubPartidoDetallePage() {
 
           <div className="flex flex-col items-center gap-2">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-200 font-heading text-xs font-bold">
-              {match.awayTeam.shortName}
+              {match.awayTeam?.shortName ?? "?"}
             </div>
-            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.awayTeam.name}</span>
+            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default function ClubPartidoDetallePage() {
                   {/* Home side events */}
                   <div className="flex w-[calc(50%-16px)] flex-col items-end gap-1 pr-3">
                     {eventsAtMinute
-                      .filter((e) => e.teamId === match.homeTeam.id)
+                      .filter((e) => e.teamId === match.homeTeam?.id)
                       .map((e) => (
                         <div key={e.id} className="flex items-center gap-1.5">
                           <span className="font-body text-xs text-text-primary">{e.playerName}</span>
@@ -165,7 +165,7 @@ export default function ClubPartidoDetallePage() {
                   {/* Away side events */}
                   <div className="flex w-[calc(50%-16px)] flex-col items-start gap-1 pl-3">
                     {eventsAtMinute
-                      .filter((e) => e.teamId === match.awayTeam.id)
+                      .filter((e) => e.teamId === match.awayTeam?.id)
                       .map((e) => (
                         <div key={e.id} className="flex items-center gap-1.5">
                           {e.type === "gol" && (

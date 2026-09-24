@@ -107,6 +107,7 @@ export async function PATCH(
       penaltyHomeScore: true,
       penaltyAwayScore: true,
       _count: { select: { events: true } },
+      tournament: { select: { format: true } },
     },
   });
   if (!current) return Response.json({ error: "Partido no encontrado" }, { status: 404 });
@@ -263,9 +264,16 @@ export async function PATCH(
       }
 
       // El torneo termina cuando termina su último partido, y se reabre si se reabre uno.
+      // En "copa" (especificación 007) eso no alcanza: terminar la fase de grupos dejaba, en
+      // ese momento, cero partidos pendientes (el cuadro todavía no existe), así que el
+      // torneo se daba por terminado antes de jugarse el cuadro. Hace falta además que el
+      // cuadro ya se haya armado (algún partido `decisive`) para dar el torneo por terminado.
       if (data.status === "finalizado") {
         const pending = await tx.match.count({ where: { tournamentId: current.tournamentId, status: { not: "finalizado" } } });
-        if (pending === 0) await tx.tournament.update({ where: { id: current.tournamentId }, data: { status: "finalizado" } });
+        const bracketReady =
+          current.tournament?.format !== "copa" ||
+          (await tx.match.count({ where: { tournamentId: current.tournamentId, decisive: true } })) > 0;
+        if (pending === 0 && bracketReady) await tx.tournament.update({ where: { id: current.tournamentId }, data: { status: "finalizado" } });
       } else if (data.status === "en_curso" || data.status === "programado") {
         await tx.tournament.updateMany({
           where: { id: current.tournamentId, status: "finalizado" },

@@ -94,10 +94,10 @@ export default function PartidosPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold text-text-primary">
-                            {m.homeTeam.shortName.slice(0, 2)}
+                            {m.homeTeam?.shortName ?? "?".slice(0, 2)}
                           </div>
                           <span className="flex-1 truncate font-body text-sm text-text-primary">
-                            {m.homeTeam.name}
+                            {m.homeTeam?.name ?? "Por definir"}
                           </span>
                           <span className="w-6 text-center font-heading text-base font-bold text-text-primary">
                             {m.homeScore ?? "-"}
@@ -105,10 +105,10 @@ export default function PartidosPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold text-text-primary">
-                            {m.awayTeam.shortName.slice(0, 2)}
+                            {m.awayTeam?.shortName ?? "?".slice(0, 2)}
                           </div>
                           <span className="flex-1 truncate font-body text-sm text-text-primary">
-                            {m.awayTeam.name}
+                            {m.awayTeam?.name ?? "Por definir"}
                           </span>
                           <span className="w-6 text-center font-heading text-base font-bold text-text-primary">
                             {m.awayScore ?? "-"}
