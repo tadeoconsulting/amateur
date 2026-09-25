@@ -21,8 +21,9 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 | 11 | **Sistema de puntos y desempates** | Fijos: 3/1/0; desempate por diferencia de gol y goles a favor (sin enfrentamiento directo) | [004](004-partido-en-vivo.md) |
 | 12 | **¿Cómo se entera un jugador de una invitación?** | Solo al abrir "Mis Equipos"; no hay notificaciones | [005](005-invitaciones.md) |
 | 13 | **Alcance geográfico** | Todo asume Perú: departamentos, DNI, moneda `S/` | — |
-| 14 | **¿Qué pasa con `FAN` y `SPONSOR`?** | Existen en el enum sin funcionalidad | [constitución](constitution.md) |
+| 14 | **¿Qué pasa con `FAN` y `SPONSOR`?** | Existen en el enum sin funcionalidad, y no se ofrecen al registrarse ni en `/seleccion-perfil` | [constitución](constitution.md), [001](001-autenticacion-y-permisos.md) |
 | 15 | **¿Las páginas `/dev` y `/design-system` deben ser públicas?** | Lo son (no pasan por el proxy). No exponen datos, pero muestran todas las pantallas. | — |
+| 16 | **¿"Ingresar como" debe activar un perfil que la cuenta no tenía?** | Sí, sin preguntar (es lo mismo que hace `/seleccion-perfil`) | [001](001-autenticacion-y-permisos.md) |
 
 ## 2. Funcionalidad pendiente
 
@@ -32,12 +33,14 @@ En el orden que parece más útil (cada una debería empezar por su especificaci
 2. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
 3. **Notificaciones** (decisión 12).
 4. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
-5. **Editar un torneo** ("Editar torneo" no hace nada) y **regenerar o deshacer el fixture** desde la pantalla.
+5. **Regenerar o deshacer el fixture** desde la pantalla. (Editar un torneo ya existe, pero su botón solo aparece cuando el torneo no tiene equipos: ver [002](002-crear-torneo-y-equipos.md).)
 6. **Alineaciones y `matchesPlayed`**, y asistencias.
 7. **Asignar grupos** desde la interfaz para el formato `grupos`.
 8. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
 9. **Cancelar una invitación personal.**
 10. **Las pantallas del dueño de club** aún usan un club fijo (`club-1`) en algunos lugares.
+11. **Dashboard del organizador.** `/dashboard` (el ítem de la barra inferior) hoy solo muestra tres indicadores: torneos activos, equipos inscritos y torneos totales. Faltan las demás secciones, y hay que definir qué datos van (partidos, solicitudes pendientes, goleadores…).
+12. **Sponsors.** En "Torneos" hay un título "Sponsors" con un "Ver Datos" que no hace nada. No existe modelo de datos ni pantalla; depende de la decisión 14.
 
 ## 3. Deuda técnica y de operación
 

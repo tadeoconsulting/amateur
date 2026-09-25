@@ -87,13 +87,42 @@ describe("registro y login", () => {
     assert.equal(me.data.user.passwordHash, undefined);
   });
 
-  test("no se puede elegir el rol al registrarse", async () => {
-    const c = new Client();
-    const r = await c.post("/api/auth/register", {
-      email: `roles-${RUN}@test.amateur`,
+  test("al registrarse se eligen uno o varios perfiles y se guardan exactamente esos", async () => {
+    const two = await new Client().post("/api/auth/register", {
+      email: `perfiles-${RUN}@test.amateur`,
       password: PASSWORD,
       firstName: "Eva",
-      roles: ["ADMIN"],
+      roles: ["ORGANIZADOR", "CLUB_OWNER"],
+    });
+    assert.equal(two.status, 201);
+    assert.deepEqual(two.data.roles.sort(), ["CLUB_OWNER", "ORGANIZADOR"]);
+
+    const repeated = await new Client().post("/api/auth/register", {
+      email: `repetido-${RUN}@test.amateur`,
+      password: PASSWORD,
+      firstName: "Eva",
+      roles: ["JUGADOR", "JUGADOR"],
+    });
+    assert.equal(repeated.status, 201);
+    assert.deepEqual(repeated.data.roles, ["JUGADOR"]);
+  });
+
+  test("al registrarse no se puede pedir ADMIN ni perfiles inválidos, y no se crea la cuenta", async () => {
+    const email = `invalido-${RUN}@test.amateur`;
+    for (const roles of [["ADMIN"], [], "ORGANIZADOR", ["ORGANIZADOR", "SUPERUSER"]]) {
+      const r = await new Client().post("/api/auth/register", { email, password: PASSWORD, firstName: "Eva", roles });
+      assert.equal(r.status, 400, `roles ${JSON.stringify(roles)}`);
+    }
+    // Ningún intento anterior creó la cuenta: registrarse con ese correo todavía funciona.
+    const ok = await new Client().post("/api/auth/register", { email, password: PASSWORD, firstName: "Eva" });
+    assert.equal(ok.status, 201);
+  });
+
+  test("sin `roles` queda como JUGADOR, y un `role` suelto se ignora", async () => {
+    const r = await new Client().post("/api/auth/register", {
+      email: `suelto-${RUN}@test.amateur`,
+      password: PASSWORD,
+      firstName: "Eva",
       role: "ADMIN",
     });
     assert.equal(r.status, 201);

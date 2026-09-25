@@ -1,7 +1,7 @@
 # 002 · Crear torneo y agregar equipos
 
 **Estado:** implementada (as-built).
-**Código:** `src/app/crear-torneo/*`, `src/_lib/tournament-input.ts`, `src/_lib/tournament-labels.ts`, `src/app/api/tournaments/route.ts`, `.../[id]/route.ts`, `.../[id]/teams/*`, `src/app/(organizador)/torneos/*`.
+**Código:** `src/app/crear-torneo/*` (incluye `tournament-to-wizard.ts`), `src/app/(organizador)/torneos/[id]/editar/*`, `src/app/(admin)/admin/torneos/_components/tournament-modal.tsx`, `src/_lib/tournament-input.ts`, `src/_lib/tournament-labels.ts`, `src/app/api/tournaments/route.ts`, `.../[id]/route.ts`, `.../[id]/teams/*`, `src/app/(organizador)/torneos/*`.
 **Pruebas:** `tests/torneos.test.mjs` (20), y los permisos de torneos y clubes en `tests/auth.test.mjs`.
 
 ## Objetivo
@@ -53,6 +53,14 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 
 "Crear torneo" envía todo con `status: "inscripcion"`, muestra la confirmación con las bases y lleva al torneo nuevo. Un `0` en minutos o jugadores significa "sin definir" (se envía `null`). La sede se guarda como el texto `"nombre, dirección"` en `location`.
 
+### Editar un torneo (`/torneos/[id]/editar`)
+Reutiliza los tres pasos de `/crear-torneo`, cargados con lo que el torneo ya tiene (`tournament-to-wizard.ts` convierte el torneo al estado del asistente). Cambia solo lo que corresponde: "Edita tu torneo" en vez de "Crea tu primer torneo", "Cancelar" (vuelve al torneo) en vez de "Omitir este paso", y "Guardar cambios", que envía `PATCH /api/tournaments/:id` con los mismos campos que al crear, **sin `status`** (editar no cambia el estado).
+
+- Rigen las mismas obligaciones que al crear. Un torneo antiguo al que le falta la modalidad, o con formato `grupos` (que el asistente ya no ofrece), pide elegirlas antes de guardar.
+- La sede se reconstruye del texto `location`, cortando en la primera `", "`.
+- Puede guardar el organizador del torneo o un admin. Otra persona ve el error de la API (`403`) al guardar, no antes.
+- El acceso en pantalla es el botón **"Editar torneo"** de "Invita tu primer equipo" (torneo en convocatoria sin equipos). Con equipos no hay botón; la ruta funciona igual por URL.
+
 ## Agregar equipos
 
 ### Reglas de la inscripción (`POST /api/tournaments/:id/teams`)
@@ -76,6 +84,7 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 - **Detalle del torneo en convocatoria:** pestaña *Inscritos* con la lista y "Quitar", el contador `n/máx`, "Agregar equipo" mientras haya cupo, y **"Iniciar torneo" con 2 equipos o más**. *Solicitudes* (con contador de pendientes) e *Invitados* muestran las solicitudes y las invitaciones reales, con Aceptar/Rechazar y Cancelar invitación ([006](006-solicitudes-de-equipos.md)).
 - **Buscar equipo:** clubes reales de la comunidad con su delegado. La acción depende del club: **Invitar** (de otro dueño), **Agregar** (propio), **Aceptar** (pidió unirse), **Cancelar** (ya invitado) o **Quitar** (inscrito). Se ve el contador y se deshabilita si no hay cupo o el torneo empezó.
 - **Crear equipo:** formulario de equipo temporal; al terminar vuelve al torneo.
+- **Panel de admin (`/admin/torneos`):** cada fila tiene **Editar**, que abre un formulario en ventana con todos los campos menos el organizador (un torneo no cambia de dueño por acá). El mismo formulario crea torneos a nombre de un organizador elegido. Solo aquí se puede cambiar el **estado** a mano (Borrador, Inscripción, En curso, Finalizado).
 
 ## Limitaciones conocidas
 - **Las sedes no se guardan:** hay que recrearlas en cada torneo. La pantalla "Mis sedes" de ajustes no está conectada. No existe una entidad `Sede`.
@@ -83,5 +92,5 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 - **Se guardan pero ninguna pantalla los muestra ni tienen efecto:** `rules`, `registrationFee`, `refereeFee`, `assignDelegates`, `playersPerTeam` y el `gender` del torneo. Solo `modality` (en "Mis torneos") y `minutesPerHalf` (duración del horario y del partido en vivo) se usan.
 - **"Definir edad"** en la categoría no pregunta la edad.
 - **No hay forma de asignar grupos** desde la interfaz (formato `grupos`): solo por API.
-- **"Editar torneo"** no hace nada; el torneo solo se edita por API.
+- **"Editar torneo" tiene un solo acceso en pantalla:** solo aparece en un torneo en convocatoria sin equipos (ver arriba). Con equipos hay que abrir `/torneos/[id]/editar` a mano o usar el panel de admin.
 - **"Omitir este paso"** sale del asistente y descarta lo escrito; no guarda borradores.
