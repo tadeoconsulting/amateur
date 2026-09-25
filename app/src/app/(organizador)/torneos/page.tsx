@@ -6,16 +6,6 @@ import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { formatLabel } from "@/_lib/tournament-labels";
 
-function IndicadorCard({ value, label, sub }: { value: number; label: string; sub: string }) {
-  return (
-    <div className="flex-1 rounded-lg bg-surface-secondary px-3 py-3">
-      <p className="font-heading text-xl font-bold text-text-invert">{value}</p>
-      <p className="font-heading text-xs font-semibold text-text-invert">{label}</p>
-      <p className="font-body text-[10px] text-brand-500">{sub}</p>
-    </div>
-  );
-}
-
 function TournamentCard({ tournament }: { tournament: TournamentListItem }) {
   return (
     <Link
@@ -141,34 +131,11 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
   if (loading || !tournaments) return <Spinner />;
 
   const hasTournaments = tournaments.length > 0;
-  const activeTournaments = tournaments.filter((t) => t.status === "en_curso" || t.status === "inscripcion");
-  const totalEquipos = tournaments.reduce((sum, t) => sum + t.teamsCount, 0);
 
   return (
     <div className="flex flex-col min-h-full">
-      {/* Indicadores */}
-      <div className="px-4 pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-text-primary">
-              <path d="M3 15l4-8 4 4 6-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <h2 className="font-heading text-lg font-bold text-text-primary">Indicadores</h2>
-          </div>
-          <button className="font-heading text-sm font-semibold text-text-primary underline cursor-pointer">
-            Ver Datos
-          </button>
-        </div>
-
-        <div className="flex gap-2 mb-6">
-          <IndicadorCard value={activeTournaments.length} label="Torneos" sub="Activos" />
-          <IndicadorCard value={totalEquipos} label="Equipos" sub="Inscritos" />
-          <IndicadorCard value={tournaments.length} label="Torneos" sub="Total" />
-        </div>
-      </div>
-
       {hasTournaments ? (
-        <div className="px-4 flex-1">
+        <div className="px-4 pt-4 flex-1">
           {/* Mis torneos */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
