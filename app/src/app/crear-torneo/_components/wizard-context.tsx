@@ -53,23 +53,46 @@ const INITIAL: WizardState = {
 type WizardContextValue = {
   state: WizardState;
   update: (patch: Partial<WizardState>) => void;
+  /** Id del torneo que se está editando; null al crear uno nuevo. */
+  tournamentId: string | null;
+  /** Prefijo de las rutas de los pasos (`/paso-2`, `/paso-3` se agregan a este). */
+  basePath: string;
+  /** A dónde lleva "Salir" o "Cancelar". */
+  exitHref: string;
 };
 
 const WizardContext = createContext<WizardContextValue | null>(null);
 
-export function WizardProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<WizardState>(INITIAL);
+/** Sin `tournamentId` crea un torneo; con `tournamentId` edita ese torneo, partiendo de `initial`. */
+export function WizardProvider({
+  children,
+  initial,
+  tournamentId = null,
+}: {
+  children: React.ReactNode;
+  initial?: WizardState;
+  tournamentId?: string | null;
+}) {
+  const [state, setState] = useState<WizardState>(initial ?? INITIAL);
   const update = useCallback((patch: Partial<WizardState>) => setState((prev) => ({ ...prev, ...patch })), []);
 
   // Crear un torneo es ser organizador. Quien llega directo a /crear-torneo (por ejemplo
   // después de que el proxy lo mandó a iniciar sesión) nunca pasó por "elegir perfil", y
   // sin este rol la API rechaza la creación con 403 justo al final del asistente.
+  // Al editar no aplica: quien puede editar ya es el organizador del torneo (o admin).
   const { user, addRole } = useAuth();
   useEffect(() => {
-    if (user && !user.roles.includes("ORGANIZADOR")) addRole("ORGANIZADOR");
-  }, [user, addRole]);
+    if (tournamentId === null && user && !user.roles.includes("ORGANIZADOR")) addRole("ORGANIZADOR");
+  }, [tournamentId, user, addRole]);
 
-  return <WizardContext.Provider value={{ state, update }}>{children}</WizardContext.Provider>;
+  const basePath = tournamentId ? `/torneos/${tournamentId}/editar` : "/crear-torneo";
+  const exitHref = tournamentId ? `/torneos/${tournamentId}` : "/torneos";
+
+  return (
+    <WizardContext.Provider value={{ state, update, tournamentId, basePath, exitHref }}>
+      {children}
+    </WizardContext.Provider>
+  );
 }
 
 export function useWizard() {

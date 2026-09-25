@@ -44,6 +44,7 @@ export interface TournamentDetail {
   rules: string[];
   minutesPerHalf: number | null;
   playersPerTeam: number | null;
+  assignDelegates: boolean;
   // Solo aplican a eliminacion/relampago/copa (especificación 007).
   extraTimeMinutes: number | null;
   groupsAdvancePerGroup: number | null;
