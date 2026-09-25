@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { safeInternalPath } from "@/_lib/safe-next";
+import { PROFILES, type ProfileRole } from "./profiles";
 
 export type AuthUser = {
   id: string;
@@ -15,17 +16,19 @@ export type AuthUser = {
 
 type Result = { ok: boolean; error?: string };
 
-type RegisterInput = { name: string; email: string; password: string };
+/** `roles`: los perfiles que la persona eligió al crear la cuenta (uno o varios). */
+type RegisterInput = { name: string; email: string; password: string; roles: ProfileRole[] };
 
 type AuthContextValue = {
   user: AuthUser | null;
   /** true mientras se consulta si ya hay una sesión abierta (al cargar la página). */
   loading: boolean;
-  login: (email: string, password: string, next?: string | null) => Promise<Result>;
+  /** `profile`: el perfil con el que se quiere entrar; se activa en la cuenta si todavía no lo tenía. */
+  login: (email: string, password: string, next?: string | null, profile?: ProfileRole) => Promise<Result>;
   register: (input: RegisterInput, next?: string | null) => Promise<Result>;
   logout: () => Promise<void>;
   /** Activa un perfil (ORGANIZADOR, CLUB_OWNER o JUGADOR) en la cuenta actual. */
-  addRole: (role: "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR") => Promise<Result>;
+  addRole: (role: ProfileRole) => Promise<Result>;
   /** Vuelve a consultar la sesión (por ejemplo después de registrarse por otro camino). */
   refresh: () => Promise<void>;
 };
@@ -33,10 +36,6 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const DEFAULT_LANDING = "/seleccion-perfil";
-
-function safeNext(next: string | null | undefined) {
-  return safeInternalPath(next, DEFAULT_LANDING);
-}
 
 async function postJson(url: string, body?: unknown) {
   const res = await fetch(url, {
@@ -70,28 +69,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string, password: string, next?: string | null): Promise<Result> => {
+    async (email: string, password: string, next?: string | null, profile?: ProfileRole): Promise<Result> => {
       const { res, data } = await postJson("/api/auth/login", { email, password });
       if (!res.ok) return { ok: false, error: data.error ?? "Error al iniciar sesión" };
       setUser(data);
-      router.push(safeNext(next));
+      // Si eligió con qué perfil entrar, se asegura de que la cuenta lo tenga (es lo mismo que hace
+      // "seleccion-perfil") y va a su pantalla, salvo que venga de una página concreta.
+      if (profile) {
+        const added = await postJson("/api/auth/roles", { role: profile });
+        if (added.res.ok) setUser({ ...data, roles: added.data.roles });
+      }
+      const home = profile ? PROFILES.find((p) => p.role === profile)?.href : undefined;
+      router.push(safeInternalPath(next, home ?? DEFAULT_LANDING));
       return { ok: true };
     },
     [router]
   );
 
   const register = useCallback(
-    async ({ name, email, password }: RegisterInput, next?: string | null): Promise<Result> => {
+    async ({ name, email, password, roles }: RegisterInput, next?: string | null): Promise<Result> => {
       const [firstName, ...rest] = name.trim().split(/\s+/);
       const { res, data } = await postJson("/api/auth/register", {
         email,
         password,
         firstName,
         lastName: rest.join(" "),
+        roles,
       });
       if (!res.ok) return { ok: false, error: data.error ?? "Error al crear cuenta" };
       setUser(data);
-      router.push(safeNext(next));
+      // Si venía de una página concreta (por ejemplo una convocatoria) vuelve ahí. Si no, con un solo
+      // perfil va a su pantalla, y con varios a la pantalla para elegir por dónde empezar.
+      const home = roles.length === 1 ? PROFILES.find((p) => p.role === roles[0])?.href : undefined;
+      router.push(safeInternalPath(next, home ?? DEFAULT_LANDING));
       return { ok: true };
     },
     [router]
@@ -103,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/");
   }, [router]);
 
-  const addRole = useCallback(async (role: "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR"): Promise<Result> => {
+  const addRole = useCallback(async (role: ProfileRole): Promise<Result> => {
     const { res, data } = await postJson("/api/auth/roles", { role });
     if (!res.ok) return { ok: false, error: data.error ?? "No se pudo activar el perfil" };
     setUser((prev) => (prev ? { ...prev, roles: data.roles } : prev));

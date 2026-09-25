@@ -2,10 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { Role } from "@prisma/client";
 import { badRequest, readJson, requireUser } from "@/_lib/auth";
-
-// Perfiles que cualquier usuario puede activar por su cuenta desde "seleccion-perfil".
-// ADMIN nunca se asigna por acá: solo lo otorga otro admin (PATCH /api/users/:id).
-const SELF_ASSIGNABLE: Role[] = [Role.ORGANIZADOR, Role.CLUB_OWNER, Role.JUGADOR];
+import { SELF_ASSIGNABLE_ROLES } from "@/_lib/roles";
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser();
@@ -13,7 +10,7 @@ export async function POST(request: NextRequest) {
 
   const body = await readJson(request);
   const role = body?.role as Role | undefined;
-  if (!role || !SELF_ASSIGNABLE.includes(role)) {
+  if (!role || !SELF_ASSIGNABLE_ROLES.includes(role)) {
     return badRequest("Rol no válido");
   }
 
