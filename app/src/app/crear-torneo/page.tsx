@@ -9,7 +9,8 @@ import { useWizard } from "./_components/wizard-context";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
-  const { state, update } = useWizard();
+  const { state, update, tournamentId, basePath, exitHref } = useWizard();
+  const editing = tournamentId !== null;
   const { nombre, fecha, sede, sedes } = state;
   const [showSedeList, setShowSedeList] = useState(false);
   const [showCrearSede, setShowCrearSede] = useState(false);
@@ -30,7 +31,7 @@ export default function CrearTorneoPage() {
   }
 
   function handleContinuar() {
-    router.push("/crear-torneo/paso-2");
+    router.push(`${basePath}/paso-2`);
   }
 
   return (
@@ -38,7 +39,7 @@ export default function CrearTorneoPage() {
       {/* Header */}
       <header className="px-4 py-3">
         <button
-          onClick={() => router.back()}
+          onClick={() => (editing ? router.push(exitHref) : router.back())}
           className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
@@ -53,7 +54,7 @@ export default function CrearTorneoPage() {
 
         {/* Titles */}
         <p className="font-heading text-sm font-semibold text-text-secondary mb-1">
-          Crea tu primer torneo
+          {editing ? "Edita tu torneo" : "Crea tu primer torneo"}
         </p>
         <h1 className="font-heading text-[22px] font-bold text-text-primary leading-tight mb-8">
           Información del torneo
@@ -149,10 +150,10 @@ export default function CrearTorneoPage() {
             Continuar
           </button>
           <button
-            onClick={() => router.push("/torneos")}
+            onClick={() => router.push(exitHref)}
             className="w-full py-3 font-heading text-sm font-semibold text-text-primary cursor-pointer"
           >
-            Omitir este paso
+            {editing ? "Cancelar" : "Omitir este paso"}
           </button>
         </div>
       </div>

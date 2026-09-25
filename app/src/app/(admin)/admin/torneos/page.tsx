@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
+import { formatLabel } from "@/_lib/tournament-labels";
+import { TournamentModal } from "./_components/tournament-modal";
 
 interface TournamentRow {
   id: string;
@@ -19,14 +21,6 @@ interface TournamentRow {
   organizer: { firstName: string; lastName: string };
 }
 
-interface UserOption {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roles: string[];
-}
-
 const statusLabels: Record<string, { label: string; color: string }> = {
   draft: { label: "Borrador", color: "bg-gray-100 text-gray-600" },
   inscripcion: { label: "Inscripción", color: "bg-amber-100 text-amber-700" },
@@ -35,261 +29,13 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   cancelado: { label: "Cancelado", color: "bg-red-100 text-red-700" },
 };
 
-const formatLabels: Record<string, string> = {
-  liga: "Liga",
-  eliminacion_directa: "Eliminación directa",
-  grupos: "Grupos + Eliminación",
-};
-
-function CreateTournamentModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({
-    name: "",
-    format: "liga",
-    maxTeams: 8,
-    minTeams: 4,
-    startDate: "",
-    endDate: "",
-    location: "",
-    category: "",
-    status: "inscripcion",
-  });
-  const [organizerSearch, setOrganizerSearch] = useState("");
-  const [organizerResults, setOrganizerResults] = useState<UserOption[]>([]);
-  const [selectedOrganizer, setSelectedOrganizer] = useState<UserOption | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (organizerSearch.length < 2) { setOrganizerResults([]); return; }
-    const timer = setTimeout(() => {
-      fetch(`/api/users?search=${encodeURIComponent(organizerSearch)}&role=ORGANIZADOR`)
-        .then((r) => r.json())
-        .then(setOrganizerResults)
-        .catch(() => setOrganizerResults([]));
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [organizerSearch]);
-
-  const handleSubmit = async () => {
-    if (!form.name || !form.startDate || !form.location || !selectedOrganizer) {
-      setError("Nombre, fecha de inicio, ubicación y organizador son requeridos");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-
-    const res = await fetch("/api/tournaments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        maxTeams: Number(form.maxTeams),
-        minTeams: Number(form.minTeams),
-        endDate: form.endDate || null,
-        category: form.category || null,
-        organizerId: selectedOrganizer.id,
-      }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error || "Error al crear torneo");
-      setSaving(false);
-      return;
-    }
-
-    onCreated();
-  };
-
-  const set = (key: string, value: string | number) => setForm((f) => ({ ...f, [key]: value }));
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-lg rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="font-heading text-lg font-bold text-text-primary">Crear torneo</h2>
-          <button onClick={onClose} className="cursor-pointer p-1 text-text-secondary hover:text-text-primary">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">{error}</div>
-        )}
-
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre del torneo *</label>
-            <input
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="Copa Comunidad 2026"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Formato *</label>
-              <select
-                value={form.format}
-                onChange={(e) => set("format", e.target.value)}
-                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              >
-                <option value="liga">Liga</option>
-                <option value="eliminacion_directa">Eliminación directa</option>
-                <option value="grupos">Grupos + Eliminación</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Estado inicial</label>
-              <select
-                value={form.status}
-                onChange={(e) => set("status", e.target.value)}
-                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              >
-                <option value="draft">Borrador</option>
-                <option value="inscripcion">Inscripción abierta</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Máx. equipos *</label>
-              <input
-                type="number"
-                value={form.maxTeams}
-                onChange={(e) => set("maxTeams", e.target.value)}
-                min={2}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Mín. equipos</label>
-              <input
-                type="number"
-                value={form.minTeams}
-                onChange={(e) => set("minTeams", e.target.value)}
-                min={2}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de inicio *</label>
-              <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => set("startDate", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de fin</label>
-              <input
-                type="date"
-                value={form.endDate}
-                onChange={(e) => set("endDate", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Ubicación *</label>
-              <input
-                value={form.location}
-                onChange={(e) => set("location", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="Complejo Deportivo Norte"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Categoría</label>
-              <input
-                value={form.category}
-                onChange={(e) => set("category", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="Sub 15"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Organizador *</label>
-            {selectedOrganizer ? (
-              <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2.5">
-                <span className="font-body text-sm text-text-primary">
-                  {selectedOrganizer.firstName} {selectedOrganizer.lastName} ({selectedOrganizer.email})
-                </span>
-                <button onClick={() => setSelectedOrganizer(null)} className="cursor-pointer text-text-secondary hover:text-text-primary">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="relative">
-                <input
-                  value={organizerSearch}
-                  onChange={(e) => setOrganizerSearch(e.target.value)}
-                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                  placeholder="Buscar organizador por nombre..."
-                />
-                {organizerResults.length > 0 && organizerSearch.length >= 2 && (
-                  <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-primary bg-surface-primary shadow-lg">
-                    {organizerResults.map((u) => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => { setSelectedOrganizer(u); setOrganizerSearch(""); }}
-                        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left hover:bg-brand-50 transition-colors"
-                      >
-                        <span className="font-body text-sm text-text-primary">
-                          {u.firstName} {u.lastName}
-                        </span>
-                        <span className="font-body text-xs text-text-secondary">{u.email}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
-          >
-            {saving ? "Creando..." : "Crear torneo"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function AdminTorneosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data: tournaments, loading, refetch } = useApi<TournamentRow[]>(() => {
     const params = new URLSearchParams();
@@ -306,6 +52,11 @@ function AdminTorneosContent() {
   const handleCreated = () => {
     setShowCreate(false);
     router.replace("/admin/torneos");
+    refetch();
+  };
+
+  const handleEdited = () => {
+    setEditingId(null);
     refetch();
   };
 
@@ -368,6 +119,7 @@ function AdminTorneosContent() {
 
         <button
           onClick={refetch}
+          aria-label="Actualizar lista"
           className="cursor-pointer rounded-lg border border-border-primary p-2.5 text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -384,7 +136,7 @@ function AdminTorneosContent() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border-primary bg-surface-primary">
-          <table className="w-full min-w-[950px]">
+          <table className="w-full min-w-[1050px]">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Torneo</th>
@@ -395,6 +147,7 @@ function AdminTorneosContent() {
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Ubicación</th>
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Organizador</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Estado</th>
+                <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -412,7 +165,7 @@ function AdminTorneosContent() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="font-body text-sm text-text-secondary">
-                        {formatLabels[t.format] || t.format}
+                        {formatLabel(t.format)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -441,12 +194,21 @@ function AdminTorneosContent() {
                         {st.label}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => setEditingId(t.id)}
+                        aria-label={`Editar ${t.name}`}
+                        className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+                      >
+                        Editar
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
+                  <td colSpan={9} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron torneos
                   </td>
                 </tr>
@@ -456,7 +218,13 @@ function AdminTorneosContent() {
         </div>
       )}
 
-      {showCreate && <CreateTournamentModal onClose={() => { setShowCreate(false); router.replace("/admin/torneos"); }} onCreated={handleCreated} />}
+      {showCreate && (
+        <TournamentModal
+          onClose={() => { setShowCreate(false); router.replace("/admin/torneos"); }}
+          onSaved={handleCreated}
+        />
+      )}
+      {editingId && <TournamentModal key={editingId} tournamentId={editingId} onClose={() => setEditingId(null)} onSaved={handleEdited} />}
     </div>
   );
 }

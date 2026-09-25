@@ -10,7 +10,8 @@ import { useWizard } from "../_components/wizard-context";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
-  const { state, update } = useWizard();
+  const { state, update, tournamentId, basePath, exitHref } = useWizard();
+  const editing = tournamentId !== null;
   const { modalidad, tipoCompetencia, genero, categoria, cantidadEquipos } = state;
   const [showCompetencia, setShowCompetencia] = useState(false);
   const [showModalidad, setShowModalidad] = useState(false);
@@ -25,7 +26,7 @@ export default function CrearTorneoPaso2Page() {
   const canContinue = modalidad !== "" && tipoCompetencia !== "" && cantidadEquipos >= 2;
 
   function handleContinuar() {
-    router.push("/crear-torneo/paso-3");
+    router.push(`${basePath}/paso-3`);
   }
 
   return (
@@ -48,7 +49,7 @@ export default function CrearTorneoPaso2Page() {
 
         {/* Titles */}
         <p className="font-heading text-sm font-semibold text-text-secondary mb-1">
-          Crea tu primer torneo
+          {editing ? "Edita tu torneo" : "Crea tu primer torneo"}
         </p>
         <h1 className="font-heading text-[22px] font-bold text-text-primary leading-tight mb-8">
           Define la modalidad
@@ -161,10 +162,10 @@ export default function CrearTorneoPaso2Page() {
             Continuar
           </button>
           <button
-            onClick={() => router.push("/torneos")}
+            onClick={() => router.push(exitHref)}
             className="w-full py-3 font-heading text-sm font-semibold text-text-primary cursor-pointer"
           >
-            Omitir este paso
+            {editing ? "Cancelar" : "Omitir este paso"}
           </button>
         </div>
       </div>

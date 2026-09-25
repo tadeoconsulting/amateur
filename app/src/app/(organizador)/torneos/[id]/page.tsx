@@ -412,9 +412,12 @@ export default function TournamentDetailPage() {
               Agregar equipo
             </Link>
 
-            <button className="cursor-pointer font-heading text-sm font-bold text-text-primary underline">
+            <Link
+              href={`/torneos/${params.id}/editar`}
+              className="font-heading text-sm font-bold text-text-primary underline"
+            >
               Editar torneo
-            </button>
+            </Link>
           </div>
         </div>
       )}

@@ -8,10 +8,12 @@ import { CondicionModal } from "../_components/condicion-modal";
 import { BasesListModal } from "../_components/bases-list-modal";
 import { useWizard } from "../_components/wizard-context";
 import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
+import { locationFromSede } from "../_components/tournament-to-wizard";
 
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
-  const { state, update } = useWizard();
+  const { state, update, tournamentId, exitHref } = useWizard();
+  const editing = tournamentId !== null;
   const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones, tiempoExtra, clasificanPorGrupo } = state;
   const format = formatFromCompetitionLabel(state.tipoCompetencia);
   // El tiempo extra y los penales solo existen en un cuadro de eliminación (especificación 007).
@@ -51,13 +53,13 @@ export default function CrearTorneoPaso3Page() {
     setError("");
     setSaving(true);
     try {
-      const res = await fetch("/api/tournaments", {
-        method: "POST",
+      const res = await fetch(editing ? `/api/tournaments/${tournamentId}` : "/api/tournaments", {
+        method: editing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: state.nombre.trim(),
           startDate: state.fecha,
-          location: `${state.sede!.nombre}, ${state.sede!.direccion}`,
+          location: locationFromSede(state.sede!),
           format: formatFromCompetitionLabel(state.tipoCompetencia),
           maxTeams: state.cantidadEquipos,
           modality: state.modalidad,
@@ -73,16 +75,16 @@ export default function CrearTorneoPaso3Page() {
           // Solo tienen efecto en un cuadro de eliminación (eliminacion/relampago/copa).
           extraTimeMinutes: esEliminatorio && state.tiempoExtra > 0 ? state.tiempoExtra : null,
           groupsAdvancePerGroup: format === "copa" ? state.clasificanPorGrupo : null,
-          // Un torneo recién creado queda abierto para inscribir equipos.
-          status: "inscripcion",
+          // Un torneo recién creado queda abierto para inscribir equipos. Al editar no se toca el estado.
+          ...(editing ? {} : { status: "inscripcion" }),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "No se pudo crear el torneo");
+        setError(data.error ?? (editing ? "No se pudo guardar el torneo" : "No se pudo crear el torneo"));
         return;
       }
-      setCreatedId(data.id);
+      setCreatedId(editing ? tournamentId : data.id);
       setTorneoCreado(true);
       setShowBasesList(true);
     } catch {
@@ -121,7 +123,7 @@ export default function CrearTorneoPaso3Page() {
 
         {/* Titles */}
         <p className="font-heading text-sm font-semibold text-text-secondary mb-1">
-          Crea tu primer torneo
+          {editing ? "Edita tu torneo" : "Crea tu primer torneo"}
         </p>
         <h1 className="font-heading text-[22px] font-bold text-text-primary leading-tight mb-6">
           Establece las bases
@@ -311,13 +313,13 @@ export default function CrearTorneoPaso3Page() {
             disabled={saving || torneoCreado}
             className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
           >
-            {saving ? "Creando..." : "Crear torneo"}
+            {saving ? (editing ? "Guardando..." : "Creando...") : editing ? "Guardar cambios" : "Crear torneo"}
           </button>
           <button
-            onClick={() => router.push("/torneos")}
+            onClick={() => router.push(exitHref)}
             className="w-full py-3 font-heading text-sm font-semibold text-text-primary cursor-pointer"
           >
-            Omitir este paso
+            {editing ? "Cancelar" : "Omitir este paso"}
           </button>
         </div>
       </div>
