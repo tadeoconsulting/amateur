@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import type { ProfileRole } from "@/lib/profiles";
+import { ProfilePicker } from "./profile-picker";
 
 type AuthView = "login" | "register";
 
@@ -24,6 +26,8 @@ export function AuthModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [roles, setRoles] = useState<ProfileRole[]>([]);
+  const [loginRole, setLoginRole] = useState<ProfileRole[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
@@ -38,6 +42,8 @@ export function AuthModal({
       setEmail("");
       setPassword("");
       setName("");
+      setRoles([]);
+      setLoginRole([]);
       setError("");
     } else {
       document.body.style.overflow = "";
@@ -56,17 +62,21 @@ export function AuthModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (view === "register" && roles.length === 0) {
+      setError("Elige al menos un perfil para continuar.");
+      return;
+    }
     setLoading(true);
 
     try {
       if (view === "login") {
-        const result = await login(email, password, next);
+        const result = await login(email, password, next, loginRole[0]);
         if (!result.ok) {
           setError(result.error ?? "Error al iniciar sesión");
           return;
         }
       } else {
-        const result = await register({ name, email, password }, next);
+        const result = await register({ name, email, password, roles }, next);
         if (!result.ok) {
           setError(result.error ?? "Error al crear cuenta");
           return;
@@ -187,6 +197,24 @@ export function AuthModal({
               autoComplete={view === "register" ? "new-password" : "current-password"}
               className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
             />
+
+            {view === "register" ? (
+              <ProfilePicker
+                multiple
+                label="¿Cómo vas a usar Amateur?"
+                hint="Elige uno o varios. Puedes agregar más después."
+                placeholder="Elige uno o varios perfiles"
+                value={roles}
+                onChange={setRoles}
+              />
+            ) : (
+              <ProfilePicker
+                label="Ingresar como"
+                placeholder="Elige un perfil (opcional)"
+                value={loginRole}
+                onChange={setLoginRole}
+              />
+            )}
 
             {error && (
               <p className="text-sm text-red-600 font-body">{error}</p>

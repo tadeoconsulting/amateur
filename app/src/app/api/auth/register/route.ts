@@ -1,5 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { Role } from "@prisma/client";
 import {
   badRequest,
   createSession,
@@ -10,6 +11,7 @@ import {
 } from "@/_lib/auth";
 import { invitationProblem, joinClub, resolveInvitation, type ResolvedInvitation } from "@/_lib/invite";
 import { isRealDate } from "@/_lib/fixture";
+import { SELF_ASSIGNABLE_ROLES } from "@/_lib/roles";
 
 const str = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
@@ -30,6 +32,21 @@ export async function POST(request: NextRequest) {
     }
     const passwordError = validatePassword(body.password);
     if (passwordError) return badRequest(passwordError);
+
+    // Perfiles que la persona eligió al registrarse; puede ser más de uno. Sin `roles` queda como
+    // JUGADOR, que es lo que usan los flujos de invitación de un club.
+    let roles: Role[] = [Role.JUGADOR];
+    if (body.roles !== undefined) {
+      const requested = body.roles;
+      if (
+        !Array.isArray(requested) ||
+        requested.length === 0 ||
+        !requested.every((r) => SELF_ASSIGNABLE_ROLES.includes(r as Role))
+      ) {
+        return badRequest("Elige al menos un perfil válido");
+      }
+      roles = [...new Set(requested as Role[])];
+    }
 
     // new Date("2026-02-31") no falla: da el 3 de marzo. Se valida que el día exista y sea razonable.
     const birthDate = str(body.birthDate);
@@ -59,8 +76,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await hashPassword(body.password as string);
 
-    // El rol siempre es JUGADOR al registrarse. Otros roles se piden después con
-    // /api/auth/roles, y ADMIN solo lo asigna otro admin.
+    // Más perfiles se pueden activar después con /api/auth/roles. ADMIN solo lo asigna otro admin.
     const user = await prisma.user.create({
       data: {
         email,
@@ -72,7 +88,7 @@ export async function POST(request: NextRequest) {
         gender: str(body.gender),
         department: str(body.department),
         birthDate: birthDate ? new Date(`${birthDate}T00:00:00Z`) : null,
-        roles: { create: [{ role: "JUGADOR" }] },
+        roles: { create: roles.map((role) => ({ role })) },
       },
       include: { roles: true },
     });
