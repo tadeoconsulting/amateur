@@ -6,6 +6,7 @@ import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
 import { getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import type { StaffRole } from "@/_lib/types";
 
 const roleOptions: { key: StaffRole; label: string }[] = [
@@ -15,9 +16,31 @@ const roleOptions: { key: StaffRole; label: string }[] = [
 ];
 
 export default function EditStaffPage() {
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="w-full py-20 text-center text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  return <EditStaffContent key={club.id} clubId={club.id} />;
+}
+
+function EditStaffContent({ clubId }: { clubId: string }) {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: staffMembers, loading } = useApi(() => getClubStaff("club-1"));
+  const { data: staffMembers, loading } = useApi(() => getClubStaff(clubId));
   const member = staffMembers?.find((s) => s.id === params.id) ?? null;
 
   const [name, setName] = useState("");

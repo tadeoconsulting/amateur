@@ -10,6 +10,7 @@ import { AssignDialog } from "@/_components/assign-dialog";
 import { Toast } from "@/_components/toast";
 import { getClubCategories, getClubPlayers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import type { PlayerCategory, PlayerGender, PlayerStatus, RosterPlayer } from "@/_lib/types";
 
 const genderTabs: { key: PlayerGender; label: string }[] = [
@@ -19,6 +20,28 @@ const genderTabs: { key: PlayerGender; label: string }[] = [
 ];
 
 export default function ClubCategoryDetailPage() {
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="w-full py-20 text-center text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  return <ClubCategoryDetailContent key={club.id} clubId={club.id} />;
+}
+
+function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
   const params = useParams<{ categoryId: string }>();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [gender, setGender] = useState<PlayerGender>("masculino");
@@ -26,9 +49,9 @@ export default function ClubCategoryDetailPage() {
   const [assignPlayer, setAssignPlayer] = useState<RosterPlayer | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const { data: playerCategories, loading: loadingCats } = useApi(() => getClubCategories("club-1"));
+  const { data: playerCategories, loading: loadingCats } = useApi(() => getClubCategories(clubId));
   const { data: playersData, loading: loadingPlayers } = useApi(() =>
-    getClubPlayers("club-1", { categoryId: params.categoryId })
+    getClubPlayers(clubId, { categoryId: params.categoryId })
   );
 
   const category = (playerCategories ?? []).find((c) => c.id === params.categoryId);
@@ -39,7 +62,7 @@ export default function ClubCategoryDetailPage() {
     position: p.position ?? "",
     age: 0,
     categoryId: p.category?.id ?? params.categoryId,
-    clubId: "club-1",
+    clubId,
     status: p.status as PlayerStatus,
     verified: true,
     avatarUrl: p.user.avatarUrl,

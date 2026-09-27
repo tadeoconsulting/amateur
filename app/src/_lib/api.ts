@@ -164,6 +164,9 @@ export interface ClubDetail {
   shortName: string;
   logoUrl: string | null;
   color: string | null;
+  delegadoNombre: string | null;
+  delegadoTel: string | null;
+  delegadoEmail: string | null;
   owner: { id: string; firstName: string; lastName: string };
   categories: { id: string; name: string; gender: string; _count: { players: number } }[];
   staff: { id: string; firstName: string; lastName: string; role: string; phone: string | null; email: string | null }[];
@@ -265,6 +268,25 @@ export function getPlayers(params?: Record<string, string>) {
 export function searchUsers(params?: Record<string, string>) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
   return fetcher<UserItem[]>(`/api/users${qs}`);
+}
+
+export interface UserDetail {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  gender: string | null;
+  department: string | null;
+  birthDate: string | null;
+  organization: string | null;
+  roles: string[];
+  playerProfile: { position: string | null } | null;
+}
+
+export function getUser(id: string) {
+  return fetcher<UserDetail>(`/api/users/${id}`);
 }
 
 // ─── Solicitudes e invitaciones de equipos a un torneo (especificación 006) ────

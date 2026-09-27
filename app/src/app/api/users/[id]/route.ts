@@ -37,6 +37,7 @@ export async function GET(
     gender: user.gender,
     department: user.department,
     birthDate: user.birthDate,
+    organization: user.organization,
     roles: user.roles.map((r) => r.role),
     playerProfile: user.playerProfile,
     ownedClubs: user.ownedClubs,
@@ -58,7 +59,7 @@ export async function PATCH(
   const body = await readJson(request);
   if (!body) return badRequest();
 
-  const { firstName, lastName, phone, avatarUrl, gender, department, birthDate, position } = body;
+  const { firstName, lastName, phone, avatarUrl, gender, department, birthDate, organization, position } = body;
 
   // Los roles los cambia solo un admin (para uno mismo se usa /api/auth/roles).
   let newRoles: Role[] | null = null;
@@ -87,6 +88,7 @@ export async function PATCH(
         ...(typeof gender === "string" && gender && { gender }),
         ...(typeof department === "string" && department && { department }),
         ...(typeof birthDate === "string" && birthDate && { birthDate: new Date(birthDate) }),
+        ...(organization !== undefined && { organization: organization as string | null }),
       },
     });
 

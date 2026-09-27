@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BackHeader } from "@/_components/back-header";
 import { getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import { Toast } from "@/_components/toast";
 
 type Gender = "femenino" | "masculino" | "mixto";
@@ -23,14 +24,44 @@ const categoryOptions: { key: CategoryType; label: string }[] = [
 ];
 
 export default function CrearCategoriaPage() {
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="w-full py-20 text-center text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  return <CrearCategoriaContent key={club.id} clubId={club.id} />;
+}
+
+const categoryLabels: Record<CategoryType, string> = {
+  definir_edad: "Definir edad",
+  libre: "Libre",
+  master: "Master",
+};
+
+function CrearCategoriaContent({ clubId }: { clubId: string }) {
   const router = useRouter();
-  const { data: staffMembers, loading: loadingStaff } = useApi(() => getClubStaff("club-1"));
+  const { data: staffMembers, loading: loadingStaff } = useApi(() => getClubStaff(clubId));
   const dtStaff = (staffMembers ?? []).filter((s) => s.role === "director_tecnico");
   const [gender, setGender] = useState<Gender | null>(null);
   const [category, setCategory] = useState<CategoryType | null>(null);
   const [age, setAge] = useState("");
   const [selectedDt, setSelectedDt] = useState<string | null>(null);
   const [showDtSheet, setShowDtSheet] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
   const ageLabel =
@@ -42,9 +73,37 @@ export default function CrearCategoriaPage() {
 
   const selectedDtMember = dtStaff.find((s) => s.id === selectedDt);
 
-  const handleCreate = () => {
-    setToast("Categoría creada con éxito.");
-    setTimeout(() => router.push("/club/equipo"), 1200);
+  const handleCreate = async () => {
+    if (!gender || !category || saving) return;
+    setError("");
+    setSaving(true);
+    try {
+      const ageNum = Number.parseInt(age, 10);
+      const res = await fetch(`/api/clubs/${clubId}/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: categoryLabels[category],
+          gender,
+          ageType: category,
+          // "Definir edad" pide la edad máxima; las otras dos, la mínima.
+          maxAge: category === "definir_edad" && Number.isInteger(ageNum) ? ageNum : null,
+          minAge: category !== "definir_edad" && Number.isInteger(ageNum) ? ageNum : null,
+          dtId: selectedDt,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo crear la categoría.");
+        return;
+      }
+      setToast("Categoría creada con éxito.");
+      setTimeout(() => router.push("/club/equipo"), 1200);
+    } catch {
+      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -131,11 +190,13 @@ export default function CrearCategoriaPage() {
         </div>
 
         {/* Create button */}
+        {error && <p className="font-body text-sm text-red-600">{error}</p>}
         <button
           onClick={handleCreate}
-          className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert"
+          disabled={!gender || !category || saving}
+          className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-40"
         >
-          Crear categoría
+          {saving ? "Creando..." : "Crear categoría"}
         </button>
       </div>
 

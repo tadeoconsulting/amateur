@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
+import { useAuth } from "@/lib/auth-context";
+import { getUser } from "@/_lib/api";
 
 const positions = [
   "Portero",
@@ -27,6 +29,8 @@ const departamentos = [
 type BottomSheetType = "posicion" | "departamento" | null;
 
 export default function JugadorPerfilPage() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [posicion, setPosicion] = useState("");
@@ -37,11 +41,74 @@ export default function JugadorPerfilPage() {
   const [telefono, setTelefono] = useState("");
   const [departamento, setDepartamento] = useState("");
   const [sheet, setSheet] = useState<BottomSheetType>(null);
+  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  const handleSave = () => {
-    setToast("Perfil actualizado correctamente.");
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getUser(user.id)
+      .then((u) => {
+        if (cancelled) return;
+        setNombre(u.firstName);
+        setApellidos(u.lastName);
+        setPosicion(u.playerProfile?.position ?? "");
+        if (u.birthDate) {
+          const [y, m, d] = u.birthDate.slice(0, 10).split("-");
+          setAnio(y);
+          setMes(m);
+          setDia(d);
+        }
+        setSexo(u.gender === "masculino" || u.gender === "femenino" ? u.gender : "");
+        setTelefono(u.phone ?? "");
+        setDepartamento(u.department ?? "");
+      })
+      .catch(() => setError("No se pudo cargar el perfil."))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user || saving) return;
+    setError("");
+    setSaving(true);
+    try {
+      const birthDate =
+        dia && mes && anio ? `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}` : undefined;
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: nombre.trim(),
+          lastName: apellidos.trim(),
+          phone: telefono.trim() || null,
+          gender: sexo || undefined,
+          department: departamento || undefined,
+          birthDate,
+          position: posicion || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo guardar el perfil.");
+        return;
+      }
+      setToast("Perfil actualizado correctamente.");
+    } catch {
+      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full pb-8">
@@ -71,6 +138,8 @@ export default function JugadorPerfilPage() {
 
         {/* Form */}
         <div className="mt-6 space-y-5">
+          {error && <p className="font-body text-sm text-red-600">{error}</p>}
+
           <div>
             <label className="text-sm text-text-secondary">Nombre completo</label>
             <input
@@ -114,6 +183,7 @@ export default function JugadorPerfilPage() {
                 value={dia}
                 onChange={(e) => setDia(e.target.value)}
                 maxLength={2}
+                placeholder="DD"
                 className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
               />
               <input
@@ -121,6 +191,7 @@ export default function JugadorPerfilPage() {
                 value={mes}
                 onChange={(e) => setMes(e.target.value)}
                 maxLength={2}
+                placeholder="MM"
                 className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
               />
               <input
@@ -128,6 +199,7 @@ export default function JugadorPerfilPage() {
                 value={anio}
                 onChange={(e) => setAnio(e.target.value)}
                 maxLength={4}
+                placeholder="AAAA"
                 className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
               />
             </div>
@@ -179,13 +251,10 @@ export default function JugadorPerfilPage() {
 
           <button
             onClick={handleSave}
-            className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert"
+            disabled={saving}
+            className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-50"
           >
-            Crear perfil
-          </button>
-
-          <button className="w-full cursor-pointer py-2 text-center text-sm font-medium text-text-primary">
-            Cancelar
+            {saving ? "Guardando..." : "Guardar cambios"}
           </button>
         </div>
       </div>

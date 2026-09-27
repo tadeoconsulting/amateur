@@ -1,16 +1,79 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { getUser } from "@/_lib/api";
+import { Toast } from "@/_components/toast";
 
 export default function PerfilPage() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState("");
   const [organizacion, setOrganizacion] = useState("");
   const [telefono, setTelefono] = useState("");
   const [correo, setCorreo] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    getUser(user.id)
+      .then((u) => {
+        if (cancelled) return;
+        setNombre(`${u.firstName} ${u.lastName}`.trim());
+        setOrganizacion(u.organization ?? "");
+        setTelefono(u.phone ?? "");
+        setCorreo(u.email);
+      })
+      .catch(() => setError("No se pudo cargar el perfil."))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user || saving) return;
+    setError("");
+    setSaving(true);
+    try {
+      const [firstName, ...rest] = nombre.trim().split(/\s+/);
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName,
+          lastName: rest.join(" "),
+          organization: organizacion.trim() || null,
+          phone: telefono.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo guardar el perfil.");
+        return;
+      }
+      setToast("Perfil actualizado correctamente.");
+    } catch {
+      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-dvh flex-col pb-8">
+      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+
       {/* Header */}
       <header className="px-4 py-3">
         <Link
@@ -26,6 +89,8 @@ export default function PerfilPage() {
 
       <div className="px-4">
         <h1 className="mb-6 font-heading text-xl font-bold text-text-primary">Perfil</h1>
+
+        {error && <p className="mb-4 font-body text-sm text-red-600">{error}</p>}
 
         <div className="flex flex-col gap-5">
           <div>
@@ -74,9 +139,9 @@ export default function PerfilPage() {
             <input
               type="email"
               value={correo}
-              onChange={(e) => setCorreo(e.target.value)}
-              placeholder="Ingresar correo"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
+              readOnly
+              disabled
+              className="w-full cursor-not-allowed rounded-lg border border-border-primary bg-btn-regular px-3 py-3 font-body text-sm text-text-secondary outline-none"
             />
           </div>
         </div>
@@ -88,8 +153,12 @@ export default function PerfilPage() {
           >
             Cancelar
           </Link>
-          <button className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700">
-            Guardar
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+          >
+            {saving ? "Guardando..." : "Guardar"}
           </button>
         </div>
       </div>

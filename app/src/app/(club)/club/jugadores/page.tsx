@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { getClubCategories } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import type { PlayerGender } from "@/_lib/types";
 
 const genderTabs: { key: PlayerGender; label: string }[] = [
@@ -13,8 +14,30 @@ const genderTabs: { key: PlayerGender; label: string }[] = [
 ];
 
 export default function ClubJugadoresPage() {
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  return <ClubJugadoresContent key={club.id} clubId={club.id} />;
+}
+
+function ClubJugadoresContent({ clubId }: { clubId: string }) {
   const [gender, setGender] = useState<PlayerGender>("masculino");
-  const { data: playerCategories, loading } = useApi(() => getClubCategories("club-1"));
+  const { data: playerCategories, loading } = useApi(() => getClubCategories(clubId));
 
   if (loading || !playerCategories) {
     return (
