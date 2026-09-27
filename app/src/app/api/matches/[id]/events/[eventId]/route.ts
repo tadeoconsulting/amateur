@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { canManageMatch, forbidden, requireUser } from "@/_lib/auth";
 import { changesScore, isEventType, statFor } from "@/_lib/match-live";
+import { publicarEventoPartido } from "@/_lib/realtime";
 
 /**
  * Deshace una jugada: la borra y revierte su efecto en el marcador y en las estadísticas del
@@ -56,6 +57,7 @@ export async function DELETE(
         });
       }
     });
+    await publicarEventoPartido(id);
     return Response.json({ success: true });
   } catch (error) {
     console.error("Delete event error:", error);

@@ -367,3 +367,22 @@ describe("jugadores del club", () => {
     assert.equal(p.user.birthDate, null, "la fecha de nacimiento solo la ve quien gestiona el club");
   });
 });
+
+describe("tiempo real (ficha del partido)", () => {
+  test("el token es público, y sin ABLY_API_KEY responde 503 (no rompe la ficha)", async () => {
+    const s = await liveSetup("lvrt");
+    // Sin sesión: el resto de las lecturas de un partido son públicas (especificación 001).
+    const r = await new Client().get(`/api/matches/${s.matchId}/realtime-token`);
+    if (process.env.ABLY_API_KEY) {
+      assert.equal(r.status, 200);
+      assert.ok(r.data.keyName || r.data.mac, "debe verse como un TokenRequest de Ably");
+    } else {
+      assert.equal(r.status, 503);
+    }
+  });
+
+  test("un partido inexistente da 404 (o 503 antes, si el tiempo real no está configurado)", async () => {
+    const r = await new Client().get("/api/matches/no-existe/realtime-token");
+    assert.ok([404, 503].includes(r.status));
+  });
+});

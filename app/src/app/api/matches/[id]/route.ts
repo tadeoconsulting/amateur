@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
 import { canTransition, canTransitionPhase, isMatchPhase, isMatchStatus, MATCH_PHASES, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
+import { publicarEventoPartido } from "@/_lib/realtime";
 
 export async function GET(
   _request: NextRequest,
@@ -283,6 +284,7 @@ export async function PATCH(
       return updated;
     });
 
+    await publicarEventoPartido(id);
     return Response.json(match);
   } catch {
     return Response.json({ error: "Error al actualizar partido" }, { status: 500 });

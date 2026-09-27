@@ -28,7 +28,10 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 
 En el orden que parece más útil (cada una debería empezar por su especificación):
 
-1. **Tiempo real para espectadores.** Hoy se ve el estado al abrir o recargar. La arquitectura prevista (SSE + Ably, hasta 100 000 espectadores y 5 000 organizadores simultáneos) está en los documentos de arquitectura del proyecto, fuera de este repo.
+1. **Tiempo real para espectadores — implementado solo en la ficha del partido.** `/torneos/:id/partidos/:matchId` recibe cada jugada sin recargar, con Ably (ver [004](004-partido-en-vivo.md), sección "Tiempo real"). Falta:
+   - Llevarlo a la previa, a "en vivo" del organizador, a la tabla de posiciones, a los goleadores y a la lista de partidos.
+   - **Aprovisionar `ABLY_API_KEY` en Vercel** (Production y Preview): sin ella, todo sigue funcionando, pero nadie recibe nada en vivo. Ver [constitución](constitution.md).
+   - **Modelar el costo de Ably contra el Revenue Streams del BMC** antes de acercarse a los picos previstos (100 000 espectadores): a esa escala no es trivial (`docs/arquitectura.md` §8, fuera de este repo).
 2. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
 3. **Notificaciones** (decisión 12).
 4. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).

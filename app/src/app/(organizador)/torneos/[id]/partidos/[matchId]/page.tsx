@@ -7,6 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { liveMinute } from "@/_lib/match-live";
+import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { useState } from "react";
 
 function TeamLogo({ shortName }: { shortName: string }) {
@@ -34,13 +35,19 @@ type MatchEventRow = {
 
 export default function MatchDetailPage() {
   const params = useParams<{ id: string; matchId: string }>();
-  const { data: match, loading: loadingMatch } = useApi<MatchListItem>(() =>
+  const { data: match, loading: loadingMatch, refetchSilently: refetchMatch } = useApi<MatchListItem>(() =>
     fetch(`/api/matches/${params.matchId}`).then((r) => r.json())
   );
-  const { data: events, loading: loadingEvents } = useApi<MatchEventRow[]>(() =>
+  const { data: events, loading: loadingEvents, refetchSilently: refetchEvents } = useApi<MatchEventRow[]>(() =>
     fetch(`/api/matches/${params.matchId}/events`).then((r) => r.json())
   );
   const [now] = useState(() => Date.now());
+
+  // Mientras el partido está en juego, cada gol, tarjeta o cambio de marcador llega sin recargar.
+  useMatchRealtime(params.matchId, () => {
+    refetchMatch();
+    refetchEvents();
+  });
 
   if (loadingMatch || !match) {
     return (

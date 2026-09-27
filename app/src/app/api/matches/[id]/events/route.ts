@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { changesScore, EVENT_TYPES, isEventType, statFor } from "@/_lib/match-live";
+import { publicarEventoPartido } from "@/_lib/realtime";
 
 export async function GET(
   _request: NextRequest,
@@ -144,6 +145,7 @@ export async function POST(
       return created;
     });
 
+    await publicarEventoPartido(id);
     return Response.json(event, { status: 201 });
   } catch (error) {
     console.error("Create event error:", error);

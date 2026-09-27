@@ -1,8 +1,8 @@
 # 004 · Partido en vivo y resultados
 
 **Estado:** implementada (as-built).
-**Código:** `src/_lib/match-live.ts` (lógica pura), `src/app/api/matches/[id]/route.ts`, `.../events/route.ts`, `.../events/[eventId]/route.ts`, `src/app/(organizador)/torneos/[id]/{en-vivo,resultado,partidos/[matchId],partido/[matchId]}`.
-**Pruebas:** `tests/unit/match-live.test.mjs` (11, sin servidor) y `tests/live.test.mjs` (23, API). El caso de goles simultáneos está en `tests/auth.test.mjs`.
+**Código:** `src/_lib/match-live.ts` (lógica pura), `src/_lib/realtime.ts`, `src/_lib/use-match-realtime.ts`, `src/app/api/matches/[id]/route.ts`, `.../events/route.ts`, `.../events/[eventId]/route.ts`, `.../realtime-token/route.ts`, `src/app/(organizador)/torneos/[id]/{en-vivo,resultado,partidos/[matchId],partido/[matchId]}`.
+**Pruebas:** `tests/unit/match-live.test.mjs` (11, sin servidor), `tests/unit/realtime.test.mjs` (4, sin servidor ni Ably real) y `tests/live.test.mjs` (25, API). El caso de goles simultáneos está en `tests/auth.test.mjs`.
 
 ## Objetivo
 Registrar un partido mientras se juega (marcador, goles, tarjetas), terminarlo, y que las tablas del torneo se actualicen solas.
@@ -63,6 +63,16 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 - **`/torneos/:id/partidos/:matchId`:** ficha del partido con marcador, minuto en vivo y la línea de tiempo.
 - **`/torneos/:id/partido/:matchId`:** previa con cuenta regresiva hasta la hora programada.
 
+## Tiempo real (ficha del partido)
+
+Implementa el ADR de `docs/arquitectura.md` §7-9 (SSE conceptualmente; en la práctica, Ably, que ya da esto sobre HTTP con reconexión incorporada — ver `docs/arquitectura.md` §8 para por qué Ably y no self-managed).
+
+- **Qué se publica:** un aviso vacío (`{ name: "update" }`) al canal `match:<id>` de Ably, **después** de que el cambio ya quedó guardado en la base. Nunca el detalle del evento: quien lo recibe vuelve a pedir `GET /api/matches/:id` y `GET /api/matches/:id/events`, que son la única fuente de verdad. Se publica al registrar una jugada, al deshacerla y en cualquier `PATCH` de partido que tenga éxito (empezar, terminar, reabrir, corregir marcador, cambiar de fase).
+- **El seam:** `publicarEventoPartido(matchId)` en `src/_lib/realtime.ts` es la única función que sabe que existe Ably. El resto del código (las tres rutas de arriba) solo la llama; cambiar de proveedor no toca esas rutas.
+- **Token (`GET /api/matches/:id/realtime-token`):** público, como el resto de las lecturas de un partido. Da un token de Ably que solo sirve para **suscribirse** (no publicar) al canal de **ese** partido, así que no sirve para espiar otro. `503` si `ABLY_API_KEY` no está configurada; `404` si el partido no existe.
+- **El cliente** (`use-match-realtime.ts`) carga el paquete de Ably de forma diferida (solo en esta pantalla) y se conecta con `authUrl` apuntando a ese endpoint, así que Ably renueva el token solo. Cualquier falla — sin `ABLY_API_KEY`, sin red, sin el paquete — se traga en silencio: la pantalla se queda con lo que trajo la carga inicial, igual que antes de esta funcionalidad.
+- **Sin `ABLY_API_KEY` (por ejemplo en local o en Preview si no se configuró) la app funciona exactamente igual que antes:** la publicación no hace nada y el token da `503`. No es un requisito para desarrollar ni para desplegar.
+
 ## Limitaciones conocidas
 - **Un penal convertido hay que registrarlo como gol.** El botón "Penal" solo deja constancia en la crónica y no cambia el marcador. *Decisión pendiente.*
 - **Sin alineaciones:** `matchesPlayed` de los goleadores queda en 0 y `assists` no se registra.
@@ -70,6 +80,8 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 - **El minuto de una jugada no se edita** (sale del reloj). Desde la pantalla solo se deshace la **última** jugada.
 - **El cambio no registra jugadores** (la pantalla no envía `detail` ni quién entra o sale).
 - **Un equipo temporal no tiene jugadores**, así que sus jugadas se registran sin jugador.
-- **Los espectadores no reciben nada en tiempo real:** ven el estado al abrir o recargar. La arquitectura prevista está en los documentos de arquitectura del proyecto (SSE + Ably).
+- **El tiempo real solo llega a la ficha del partido** (`/torneos/:id/partidos/:matchId`). Las demás pantallas (previa, en vivo del organizador, tabla de posiciones, goleadores, lista de partidos) siguen viendo el estado solo al abrir o recargar. Ver "Tiempo real" más abajo.
 - El cronómetro usa el reloj del navegador contra un `startedAt` del servidor: un reloj desajustado se nota.
+- **El tiempo real no avisa cuando un ganador avanza al siguiente partido del cuadro,** ni a quien mira la tabla de posiciones o los goleadores: hay que recargar esas pantallas.
+- **Sin backoff propio ante reconexión:** se apoya en el del cliente de Ably. Un `ABLY_API_KEY` sobregirado en su plan simplemente deja de repartir en vivo (la ficha sigue funcionando con lo último que cargó).
 - Las pantallas del dueño de club usan un club fijo (`club-1`) en algunos lugares.
