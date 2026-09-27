@@ -5,12 +5,35 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { getClubPlayers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 
 export default function ClubTitularesPage() {
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  return <ClubTitularesContent key={club.id} clubId={club.id} />;
+}
+
+function ClubTitularesContent({ clubId }: { clubId: string }) {
   const { id } = useParams<{ id: string }>();
   const maxTitulares = 15;
 
-  const { data: playersData, loading } = useApi(() => getClubPlayers("club-1"));
+  const { data: playersData, loading } = useApi(() => getClubPlayers(clubId));
   const availablePlayers = (playersData ?? []).filter((p) => p.status === "activo");
 
   const [selected, setSelected] = useState<Set<string>>(new Set());

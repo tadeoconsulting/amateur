@@ -41,6 +41,7 @@ model User {
   tournaments        Tournament[]        @relation("TournamentOrganizer")
   staffRoles         StaffMember[]
   invitations        PlayerInvitation[]
+  staffInvitations   StaffInvitation[]
   tournamentRequests TournamentRequest[]
 }
 
@@ -83,6 +84,7 @@ model Club {
   awayMatches        Match[]             @relation("AwayTeam")
   enrollments        TournamentTeam[]
   invitations        PlayerInvitation[]
+  staffInvitations   StaffInvitation[]
   tournamentRequests TournamentRequest[]
 }
 
@@ -156,6 +158,24 @@ model PlayerInvitation {
   id        String   @id @default(cuid())
   email     String
   clubId    String
+  invitedBy String
+  token     String   @unique @default(cuid())
+  status    String   @default("pending")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  club    Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  inviter User @relation(fields: [invitedBy], references: [id])
+}
+
+// Invitación de un miembro de staff (delegado, asistente o DT) que todavía no tiene cuenta.
+// Igual patrón que PlayerInvitation, pero un StaffMember no es exclusivo de un club: la
+// misma persona puede aceptar invitaciones de varios clubes.
+model StaffInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  clubId    String
+  role      String
   invitedBy String
   token     String   @unique @default(cuid())
   status    String   @default("pending")

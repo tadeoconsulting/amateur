@@ -39,6 +39,27 @@ export async function resolveInvitation(token: string): Promise<ResolvedInvitati
   return club ? { ok: true, kind: "link", club } : { ok: false, reason: "not_found" };
 }
 
+// ─── Invitaciones de staff (delegado, asistente o DT) ──────────────────────
+// Mismo patrón que PlayerInvitation, pero sin las dos "clases" (no hay link de staff) y sin
+// exclusividad de club: aceptarla solo agrega una fila a StaffMember, nunca reemplaza otra.
+
+export type ResolvedStaffInvitation =
+  | { ok: true; club: ClubPreview; invitation: { id: string; email: string; role: string } }
+  | { ok: false; reason: "not_found" | "expired" | "used" };
+
+export async function resolveStaffInvitation(token: string): Promise<ResolvedStaffInvitation> {
+  if (!token || token.length > 100) return { ok: false, reason: "not_found" };
+
+  const invitation = await prisma.staffInvitation.findUnique({
+    where: { token },
+    include: { club: { select: CLUB_SELECT } },
+  });
+  if (!invitation) return { ok: false, reason: "not_found" };
+  if (invitation.status !== "pending") return { ok: false, reason: "used" };
+  if (invitation.expiresAt <= new Date()) return { ok: false, reason: "expired" };
+  return { ok: true, club: invitation.club, invitation: { id: invitation.id, email: invitation.email, role: invitation.role } };
+}
+
 /** Respuesta HTTP para una invitación que no se puede usar. */
 export function invitationProblem(reason: "not_found" | "expired" | "used") {
   if (reason === "not_found") return Response.json({ error: "La invitación no existe o fue revocada" }, { status: 404 });

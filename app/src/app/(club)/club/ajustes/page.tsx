@@ -2,17 +2,12 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { otherProfiles } from "@/lib/profiles";
 
 const menuItems = [
   { label: "Mi Ajustes", href: "/club/ajustes/perfil" },
   { label: "Centro de ayuda", href: "/ayuda" },
   { label: "Términos y condiciones", href: "/terminos" },
-];
-
-const switchItems = [
-  { label: "Organizador", href: "/torneos" },
-  { label: "Jugador", href: "/seleccion-perfil" },
-  { label: "Otro club", href: "/club/ajustes/otro-club" },
 ];
 
 function MenuRow({ label, href }: { label: string; href: string }) {
@@ -30,7 +25,8 @@ function MenuRow({ label, href }: { label: string; href: string }) {
 }
 
 export default function ClubAjustesPage() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { mine, missing } = otherProfiles(user?.roles ?? [], "CLUB_OWNER");
 
   return (
     <div className="w-full pb-4">
@@ -54,15 +50,31 @@ export default function ClubAjustesPage() {
         ))}
       </div>
 
-      {/* Switch role section */}
+      {/* Switch profile section: solo los perfiles que la cuenta ya tiene, más la
+          opción de crear uno nuevo si le falta alguno. */}
+      {(mine.length > 0 || missing.length > 0) && (
+        <div className="mt-8 px-4">
+          <h2 className="font-heading text-lg font-bold text-text-primary">
+            Cambiar de perfil
+          </h2>
+          <div className="mt-2">
+            {mine.map((p) => (
+              <MenuRow key={p.role} label={p.label} href={p.href} />
+            ))}
+            {missing.length > 0 && (
+              <MenuRow label="Crear nuevo perfil" href="/seleccion-perfil" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Otro club: no es un perfil, es otro club que la misma cuenta administre. */}
       <div className="mt-8 px-4">
         <h2 className="font-heading text-lg font-bold text-text-primary">
-          Cambiar de ajustes
+          Otros clubes
         </h2>
         <div className="mt-2">
-          {switchItems.map((item) => (
-            <MenuRow key={item.label} label={item.label} href={item.href} />
-          ))}
+          <MenuRow label="Otro club" href="/club/ajustes/otro-club" />
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { PROFILE_ROLES, type ProfileRole } from "@/_lib/profiles";
 
 export type { ProfileRole };
-export { soleProfileHome } from "@/_lib/profiles";
+export { soleProfileHome, otherProfiles } from "@/_lib/profiles";
 
 const ICONS: Record<ProfileRole, ReactNode> = {
   ORGANIZADOR: (

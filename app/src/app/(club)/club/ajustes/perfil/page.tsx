@@ -1,21 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
+import { useMyClub } from "@/_lib/use-my-club";
+import { getClub } from "@/_lib/api";
 
 export default function ClubPerfilPage() {
+  const { club, loading: loadingClub } = useMyClub();
+  const [loading, setLoading] = useState(true);
   const [equipo, setEquipo] = useState("");
   const [nombreCorto, setNombreCorto] = useState("");
   const [color, setColor] = useState("#CCCCCC");
   const [delegadoNombre, setDelegadoNombre] = useState("");
   const [delegadoTel, setDelegadoTel] = useState("");
   const [delegadoEmail, setDelegadoEmail] = useState("");
+  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
-  const handleSave = () => {
-    setToast("Ajustes del club actualizados.");
+  useEffect(() => {
+    if (loadingClub) return;
+    if (!club) { setLoading(false); return; }
+    let cancelled = false;
+    getClub(club.id)
+      .then((c) => {
+        if (cancelled) return;
+        setEquipo(c.name);
+        setNombreCorto(c.shortName);
+        setColor(c.color ?? "#CCCCCC");
+        setDelegadoNombre(c.delegadoNombre ?? "");
+        setDelegadoTel(c.delegadoTel ?? "");
+        setDelegadoEmail(c.delegadoEmail ?? "");
+      })
+      .catch(() => setError("No se pudo cargar el club."))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [club, loadingClub]);
+
+  const handleSave = async () => {
+    if (!club || saving) return;
+    setError("");
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: equipo.trim(),
+          shortName: nombreCorto.trim(),
+          color,
+          delegadoNombre: delegadoNombre.trim() || null,
+          delegadoTel: delegadoTel.trim() || null,
+          delegadoEmail: delegadoEmail.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo guardar el club.");
+        return;
+      }
+      setToast("Ajustes del club actualizados.");
+    } catch {
+      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loadingClub || loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="w-full pb-8">
+        <BackHeader label="Editar ajustes" />
+        <p className="px-4 py-12 text-center font-body text-sm text-text-secondary">
+          Todavía no tienes un club para editar.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full pb-8">
@@ -42,6 +112,8 @@ export default function ClubPerfilPage() {
 
       {/* Form */}
       <div className="mt-6 space-y-5 px-4">
+        {error && <p className="font-body text-sm text-red-600">{error}</p>}
+
         <div>
           <label className="text-sm text-text-secondary">Equipo</label>
           <input
@@ -107,9 +179,10 @@ export default function ClubPerfilPage() {
 
         <button
           onClick={handleSave}
-          className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert"
+          disabled={saving}
+          className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-50"
         >
-          Completar ajustes del club
+          {saving ? "Guardando..." : "Completar ajustes del club"}
         </button>
       </div>
     </div>

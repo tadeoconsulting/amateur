@@ -20,3 +20,16 @@ export function soleProfileHome(roles: string[]): string | undefined {
   const own = PROFILE_ROLES.filter((p) => roles.includes(p.role));
   return own.length === 1 ? own[0].href : undefined;
 }
+
+/**
+ * Para el selector "Cambiar de perfil" de cada pantalla de ajustes: `mine` son los otros
+ * perfiles que la cuenta ya tiene (para cambiarse, sin pasar por "seleccion-perfil"); `missing`
+ * son los que todavía no tiene (para "Crear nuevo perfil"). `current` es el perfil de la
+ * pantalla en la que ya se está, así que no se repite en `mine`.
+ */
+export function otherProfiles(roles: string[], current: ProfileRole) {
+  return {
+    mine: PROFILE_ROLES.filter((p) => roles.includes(p.role) && p.role !== current),
+    missing: PROFILE_ROLES.filter((p) => !roles.includes(p.role)),
+  };
+}

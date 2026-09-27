@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { getClubCategories, getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import type { StaffRole } from "@/_lib/types";
 
 const tabs = ["Categorías", "Planilla"] as const;
@@ -25,8 +26,42 @@ function AvatarPlaceholder({ initials }: { initials: string }) {
 
 export default function ClubEquipoPage() {
   const [activeTab, setActiveTab] = useState<Tab>("Categorías");
-  const { data: teamCategories, loading: loadingCategories } = useApi(() => getClubCategories("club-1"));
-  const { data: staffMembers, loading: loadingStaff } = useApi(() => getClubStaff("club-1"));
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!club) {
+    return (
+      <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  // `key` fuerza a remontar si alguna vez cambia de club (por ejemplo al elegir "Otro club"),
+  // así el useApi de abajo no se queda pegado al id anterior.
+  return <ClubEquipoContent key={club.id} clubId={club.id} activeTab={activeTab} setActiveTab={setActiveTab} />;
+}
+
+function ClubEquipoContent({
+  clubId,
+  activeTab,
+  setActiveTab,
+}: {
+  clubId: string;
+  activeTab: Tab;
+  setActiveTab: (tab: Tab) => void;
+}) {
+  // Se monta solo cuando ya se conoce el club: el useApi de acá abajo pide una sola vez, al
+  // montar, así que necesita el id correcto desde el primer render (ver "use-api.ts").
+  const { data: teamCategories, loading: loadingCategories } = useApi(() => getClubCategories(clubId));
+  const { data: staffMembers, loading: loadingStaff } = useApi(() => getClubStaff(clubId));
 
   if ((loadingCategories && !teamCategories) || (loadingStaff && !staffMembers)) {
     return (
