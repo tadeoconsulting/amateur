@@ -101,6 +101,7 @@ tests/            integración (contra un servidor) y tests/unit/
 | `DATABASE_URL` | Conexión de la app (Neon, *pooled*) |
 | `DIRECT_URL` | Conexión directa, para `prisma db push` y migraciones |
 | `AUTH_SECRET` | Firma de la sesión (≥ 32 caracteres). Sin ella, la app no inicia sesión. |
+| `ABLY_API_KEY` | Tiempo real de la ficha del partido ([004](004-partido-en-vivo.md)). Opcional: sin ella, la app funciona igual, solo sin empuje en vivo. |
 
 - `prisma` **no lee `.env.local`**: para usarlo, cargarlo antes (`set -a; . ./.env.local; set +a`).
 - `prisma/seed.ts` **borra todo antes de insertar**. Nunca correrlo contra una base con datos reales. Los usuarios del seed tienen un hash inválido: no pueden iniciar sesión, a propósito.

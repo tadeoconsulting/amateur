@@ -27,8 +27,18 @@ export function useApi<T>(fetcher: () => Promise<T>) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { data, loading, error, refetch: () => {
-    setLoading(true);
-    fetcher().then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
-  }};
+  return {
+    data,
+    loading,
+    error,
+    refetch: () => {
+      setLoading(true);
+      fetcher().then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
+    },
+    /** Igual que `refetch`, pero sin pasar por `loading` — para no mostrar el spinner de carga
+     * completa cuando la novedad llega por una suscripción en vivo (ver `use-match-realtime.ts`). */
+    refetchSilently: () => {
+      fetcher().then(setData).catch(() => {});
+    },
+  };
 }
