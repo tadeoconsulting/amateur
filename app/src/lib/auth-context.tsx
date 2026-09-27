@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { safeInternalPath } from "@/_lib/safe-next";
-import { PROFILES, type ProfileRole } from "./profiles";
+import { PROFILES, soleProfileHome, type ProfileRole } from "./profiles";
 
 export type AuthUser = {
   id: string;
@@ -72,14 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (email: string, password: string, next?: string | null, profile?: ProfileRole): Promise<Result> => {
       const { res, data } = await postJson("/api/auth/login", { email, password });
       if (!res.ok) return { ok: false, error: data.error ?? "Error al iniciar sesión" };
-      setUser(data);
+      let roles: string[] = data.roles;
       // Si eligió con qué perfil entrar, se asegura de que la cuenta lo tenga (es lo mismo que hace
-      // "seleccion-perfil") y va a su pantalla, salvo que venga de una página concreta.
+      // "seleccion-perfil").
       if (profile) {
         const added = await postJson("/api/auth/roles", { role: profile });
-        if (added.res.ok) setUser({ ...data, roles: added.data.roles });
+        if (added.res.ok) roles = added.data.roles;
       }
-      const home = profile ? PROFILES.find((p) => p.role === profile)?.href : undefined;
+      setUser({ ...data, roles });
+      // Va a su pantalla, salvo que venga de una página concreta: la que eligió al entrar, o, si no
+      // eligió ninguna, la única que tenga la cuenta. Con más de un perfil (y sin elegir), a
+      // "seleccion-perfil".
+      const home = (profile ? PROFILES.find((p) => p.role === profile)?.href : undefined) ?? soleProfileHome(roles);
       router.push(safeInternalPath(next, home ?? DEFAULT_LANDING));
       return { ok: true };
     },
@@ -100,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data);
       // Si venía de una página concreta (por ejemplo una convocatoria) vuelve ahí. Si no, con un solo
       // perfil va a su pantalla, y con varios a la pantalla para elegir por dónde empezar.
-      const home = roles.length === 1 ? PROFILES.find((p) => p.role === roles[0])?.href : undefined;
+      const home = soleProfileHome(data.roles);
       router.push(safeInternalPath(next, home ?? DEFAULT_LANDING));
       return { ok: true };
     },
