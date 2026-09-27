@@ -1,8 +1,8 @@
 # 001 · Autenticación y permisos
 
 **Estado:** implementada (as-built).
-**Código:** `src/_lib/auth.ts`, `src/_lib/session.ts`, `src/_lib/roles.ts`, `src/proxy.ts`, `src/lib/auth-context.tsx`, `src/lib/profiles.tsx`, `src/app/api/auth/*`, `src/app/api/users/*`.
-**Pruebas:** `tests/auth.test.mjs` (31).
+**Código:** `src/_lib/auth.ts`, `src/_lib/session.ts`, `src/_lib/roles.ts`, `src/_lib/profiles.ts`, `src/proxy.ts`, `src/lib/auth-context.tsx`, `src/lib/profiles.tsx`, `src/app/api/auth/*`, `src/app/api/users/*`.
+**Pruebas:** `tests/auth.test.mjs` (31) y `tests/unit/profiles.test.mjs` (5, sin servidor).
 
 ## Objetivo
 Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corresponde. Antes existía un usuario de demo fijo en el navegador y una API abierta.
@@ -82,10 +82,10 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | Admin | `GET /api/admin/stats` | ADMIN |
 
 ## Pantallas
-Modal de login y registro en la landing (con contraseña). Los perfiles se eligen con un desplegable (`profile-picker.tsx`) que lee la lista de `src/lib/profiles.tsx`:
+Modal de login y registro en la landing (con contraseña). Los perfiles se eligen con un desplegable (`profile-picker.tsx`) que lee la lista de `src/_lib/profiles.ts` (`src/lib/profiles.tsx` le agrega el ícono de cada uno para la UI):
 - **Crear cuenta:** "¿Cómo vas a usar Amateur?", de selección múltiple y **obligatorio** (al menos uno).
-- **Iniciar sesión:** "Ingresar como", de un solo perfil y **opcional**. Si se elige uno, se activa en la cuenta (igual que en `/seleccion-perfil`) y se entra a su pantalla.
-- **Destino al terminar (registro o login):** la página `next` si viene de una (por ejemplo una convocatoria); si no, con un solo perfil elegido, su pantalla (Organizador → `/crear-torneo`, Equipo → `/club`, Jugador → `/jugador`); en cualquier otro caso, `/seleccion-perfil`.
+- **Iniciar sesión:** "Ingresar como", de un solo perfil y **opcional**. Si se elige uno, se activa en la cuenta (igual que en `/seleccion-perfil`).
+- **Destino al terminar (registro o login) — en este orden:** (1) la página `next` si viene de una (por ejemplo una convocatoria); (2) si no, el perfil elegido en "Ingresar como", si eligió uno; (3) si no, **el único perfil activable que ya tenga la cuenta** (`soleProfileHome`, en `src/_lib/profiles.ts`) — así que iniciar sesión sin tocar el desplegable también va directo a la pantalla, cuando la cuenta solo tiene un rol; (4) si nada de lo anterior aplica (varios perfiles, o ninguno todavía), `/seleccion-perfil`. Organizador → `/crear-torneo`, Equipo → `/club`, Jugador → `/jugador`. `ADMIN` no cuenta para esta regla: una cuenta con `ADMIN` y un solo perfil real va a la pantalla de ese perfil, y una cuenta solo con `ADMIN` va a `/seleccion-perfil`.
 
 `/seleccion-perfil` activa el rol elegido; los tres "Cerrar sesión" (organizador, club, jugador) cierran la sesión; el contexto `useAuth()` expone `user`, `loading`, `login(email, password, next?, profile?)`, `register({ name, email, password, roles }, next?)`, `logout`, `addRole`, `refresh`.
 
