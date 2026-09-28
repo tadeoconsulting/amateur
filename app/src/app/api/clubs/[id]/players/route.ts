@@ -11,9 +11,12 @@ export async function GET(
 
   const { id } = await params;
   const categoryId = request.nextUrl.searchParams.get("categoryId");
+  // "cat-sin" es el bucket virtual "Sin categoría" de la UI, no un id real de TeamCategory.
+  const categoryFilter =
+    categoryId === "cat-sin" ? { categoryId: null } : categoryId ? { categoryId } : {};
 
   const players = await prisma.playerProfile.findMany({
-    where: { clubId: id, ...(categoryId ? { categoryId } : {}) },
+    where: { clubId: id, ...categoryFilter },
     include: {
       user: { select: { firstName: true, lastName: true, avatarUrl: true, birthDate: true } },
       category: { select: { id: true, name: true } },
