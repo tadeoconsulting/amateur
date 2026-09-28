@@ -54,6 +54,9 @@ export default function EnVivoPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [confirmEnd, setConfirmEnd] = useState(false);
+  // Edición del minuto de una jugada puntual de la crónica: solo una a la vez.
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editMinute, setEditMinute] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -212,9 +215,27 @@ export default function EnVivoPage() {
     }
   };
 
+  const undoEvent = async (eventId: string) => {
+    if (saving) return;
+    if (editingEventId === eventId) setEditingEventId(null);
+    await call(`${matchUrl}/events/${eventId}`, "DELETE");
+  };
+
   const undoLast = async () => {
     const last = events[events.length - 1];
-    if (last && !saving) await call(`${matchUrl}/events/${last.id}`, "DELETE");
+    if (last) await undoEvent(last.id);
+  };
+
+  const startEditMinute = (event: MatchEvent) => {
+    setEditingEventId(event.id);
+    setEditMinute(String(event.minute));
+  };
+
+  const saveEditedMinute = async (eventId: string) => {
+    const value = Number(editMinute);
+    if (saving || !Number.isInteger(value) || value < 0) return;
+    const ok = await call(`${matchUrl}/events/${eventId}`, "PATCH", { minute: value });
+    if (ok) setEditingEventId(null);
   };
 
   const setStatus = async (status: "en_curso" | "finalizado") => {
@@ -574,9 +595,45 @@ export default function EnVivoPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`font-heading text-xs font-bold ${minuteStyle}`}>
-                          {event.minute}&apos;
-                        </span>
+                        {editingEventId === event.id ? (
+                          <span className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              value={editMinute}
+                              onChange={(e) => setEditMinute(e.target.value)}
+                              autoFocus
+                              className={`w-12 rounded border border-current/40 bg-transparent px-1 py-0.5 font-heading text-xs font-bold ${minuteStyle}`}
+                            />
+                            <button
+                              onClick={() => saveEditedMinute(event.id)}
+                              disabled={saving}
+                              className="cursor-pointer disabled:opacity-40"
+                              aria-label="Guardar minuto"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className={minuteStyle}>
+                                <path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => setEditingEventId(null)}
+                              className="cursor-pointer"
+                              aria-label="Cancelar edición"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className={minuteStyle}>
+                                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => live && startEditMinute(event)}
+                            disabled={!live}
+                            className={`font-heading text-xs font-bold ${minuteStyle} ${live ? "cursor-pointer underline decoration-dotted underline-offset-2" : ""}`}
+                          >
+                            {event.minute}&apos;
+                          </button>
+                        )}
                         <span className="font-heading text-sm font-bold">
                           {isEventType(event.rawType) ? EVENT_TITLES[event.rawType] : "Cambio"}
                         </span>
@@ -585,6 +642,15 @@ export default function EnVivoPage() {
                         {event.playerName ? `${event.playerName} - ${teamName}` : teamName}
                       </p>
                     </div>
+                    {live && editingEventId !== event.id && (
+                      <button
+                        onClick={() => undoEvent(event.id)}
+                        disabled={saving}
+                        className={`shrink-0 cursor-pointer font-body text-xs underline disabled:opacity-40 ${descStyle}`}
+                      >
+                        Deshacer
+                      </button>
+                    )}
                   </div>
                 </div>
               );
