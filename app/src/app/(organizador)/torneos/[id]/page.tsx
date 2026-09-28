@@ -207,7 +207,7 @@ export default function TournamentDetailPage() {
       {/* Header */}
       <header className="px-4 py-3">
         <Link
-          href="/torneos/todos"
+          href="/torneos"
           className="flex items-center gap-1 font-heading text-sm font-semibold text-text-primary"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
