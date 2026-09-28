@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApi } from "@/_lib/use-api";
 
 interface PlayerRow {
@@ -26,6 +26,12 @@ interface ClubOption {
   shortName: string;
 }
 
+interface CategoryOption {
+  id: string;
+  name: string;
+  gender: string;
+}
+
 const statusLabels: Record<string, { label: string; color: string }> = {
   activo: { label: "Activo", color: "bg-green-100 text-green-700" },
   inactivo: { label: "Inactivo", color: "bg-gray-100 text-gray-600" },
@@ -33,9 +39,190 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   suspendido: { label: "Suspendido", color: "bg-amber-100 text-amber-700" },
 };
 
+const positions = [
+  "Portero", "Defensa central", "Lateral", "Libre", "Carrilero",
+  "Pivote", "Media punta", "Volante", "Delantero centro", "Extremo",
+];
+
+function EditPlayerModal({
+  player,
+  clubs,
+  onClose,
+  onSaved,
+}: {
+  player: PlayerRow;
+  clubs: ClubOption[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    position: player.position ?? "",
+    number: player.number != null ? String(player.number) : "",
+    status: player.status,
+    clubId: player.club?.id ?? "",
+    categoryId: player.category?.id ?? "",
+  });
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  // Las categorías dependen del club elegido: al cambiar de club hay que volver a pedirlas.
+  // Sin club no hay fetch — el select simplemente no muestra opciones (ver más abajo).
+  useEffect(() => {
+    if (!form.clubId) return;
+    let cancelled = false;
+    fetch(`/api/clubs/${form.clubId}/categories`)
+      .then((r) => r.json())
+      .then((data: CategoryOption[]) => { if (!cancelled) setCategories(data); })
+      .catch(() => { if (!cancelled) setCategories([]); });
+    return () => { cancelled = true; };
+  }, [form.clubId]);
+
+  const visibleCategories = form.clubId ? categories : [];
+
+  const handleClubChange = (clubId: string) => {
+    setForm((f) => ({ ...f, clubId, categoryId: clubId === player.club?.id ? f.categoryId : "" }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    const res = await fetch(`/api/players/${player.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        position: form.position || null,
+        number: form.number ? Number(form.number) : null,
+        status: form.status,
+        clubId: form.clubId || null,
+        categoryId: form.categoryId || null,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "No se pudo guardar");
+      setSaving(false);
+      return;
+    }
+    onSaved();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-md rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-heading text-lg font-bold text-text-primary">
+            Editar jugador — {player.user.firstName} {player.user.lastName}
+          </h2>
+          <button onClick={onClose} className="cursor-pointer p-1 text-text-secondary hover:text-text-primary">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">{error}</div>
+        )}
+
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Posición</label>
+              <select
+                value={form.position}
+                onChange={(e) => set("position", e.target.value)}
+                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              >
+                <option value="">Sin definir</option>
+                {positions.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Número</label>
+              <input
+                type="number"
+                value={form.number}
+                onChange={(e) => set("number", e.target.value)}
+                min={1}
+                max={99}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+                placeholder="10"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Club</label>
+            <select
+              value={form.clubId}
+              onChange={(e) => handleClubChange(e.target.value)}
+              className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+            >
+              <option value="">Sin club</option>
+              {clubs.map((c) => (
+                <option key={c.id} value={c.id}>{c.name} ({c.shortName})</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Categoría</label>
+            <select
+              value={form.categoryId}
+              onChange={(e) => set("categoryId", e.target.value)}
+              disabled={!form.clubId}
+              className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Sin categoría</option>
+              {visibleCategories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name} ({c.gender})</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Estado</label>
+            <select
+              value={form.status}
+              onChange={(e) => set("status", e.target.value)}
+              className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+            >
+              {Object.entries(statusLabels).map(([key, { label }]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+          >
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminJugadoresPage() {
   const [search, setSearch] = useState("");
   const [clubFilter, setClubFilter] = useState<string | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerRow | null>(null);
 
   const { data: clubs } = useApi<ClubOption[]>(() =>
     fetch("/api/clubs").then((r) => r.json())
@@ -47,6 +234,11 @@ export default function AdminJugadoresPage() {
     if (clubFilter) params.set("clubId", clubFilter);
     return fetch(`/api/players?${params.toString()}`).then((r) => r.json());
   });
+
+  const handlePlayerSaved = () => {
+    setEditingPlayer(null);
+    refetch();
+  };
 
   return (
     <div className="px-8 py-6">
@@ -112,6 +304,7 @@ export default function AdminJugadoresPage() {
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Posición</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">#</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Estado</th>
+                <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -173,12 +366,20 @@ export default function AdminJugadoresPage() {
                         {st.label}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => setEditingPlayer(player)}
+                        className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+                      >
+                        Editar
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
               {players.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
+                  <td colSpan={8} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron jugadores
                   </td>
                 </tr>
@@ -186,6 +387,15 @@ export default function AdminJugadoresPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {editingPlayer && (
+        <EditPlayerModal
+          player={editingPlayer}
+          clubs={clubs ?? []}
+          onClose={() => setEditingPlayer(null)}
+          onSaved={handlePlayerSaved}
+        />
       )}
     </div>
   );
