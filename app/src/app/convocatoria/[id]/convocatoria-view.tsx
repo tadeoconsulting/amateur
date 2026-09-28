@@ -141,6 +141,31 @@ export function ConvocatoriaView() {
             )}
           </section>
         )}
+
+        {tournament.sponsors.length > 0 && (
+          <section className="mt-6">
+            <h2 className="font-heading text-lg font-bold text-text-primary">Con el auspicio de</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              {tournament.sponsors.map((s) => {
+                const logo = s.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- logo de sponsor: URL externa arbitraria.
+                  <img src={s.logoUrl} alt={s.name} className="h-12 max-w-[140px] rounded-lg border border-border-primary bg-white object-contain p-1.5" />
+                ) : (
+                  <div className="flex h-12 items-center rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary">
+                    {s.name}
+                  </div>
+                );
+                return s.website ? (
+                  <a key={s.id} href={s.website} target="_blank" rel="noreferrer" aria-label={s.name}>
+                    {logo}
+                  </a>
+                ) : (
+                  <span key={s.id}>{logo}</span>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Acción: fija abajo, respetando el área segura del celular */}
