@@ -224,6 +224,37 @@ model Tournament {
   requests    TournamentRequest[]
   matches     Match[]
   playerStats PlayerStats[]
+  sponsors    TournamentSponsor[]
+}
+
+// Un auspiciador (marca/negocio) que patrocina uno o más torneos. Venta gestionada por el
+// equipo comercial, no self-service: solo un admin crea y vincula sponsors (ver
+// pendientes-y-decisiones.md, decisión 14, y docs/canvases.md). Alcance del MVP: solo mostrar
+// la marca (nombre, logo, link) en la convocatoria pública del torneo — sin paquetes, pagos
+// ni reportes de alcance todavía.
+model Sponsor {
+  id        String   @id @default(cuid())
+  name      String
+  logoUrl   String?
+  website   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournaments TournamentSponsor[]
+}
+
+// Vincula un sponsor a un torneo puntual (un sponsor puede auspiciar varios torneos, y un
+// torneo puede tener varios sponsors).
+model TournamentSponsor {
+  id           String   @id @default(cuid())
+  tournamentId String
+  sponsorId    String
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  sponsor    Sponsor    @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, sponsorId])
 }
 
 model TournamentTeam {

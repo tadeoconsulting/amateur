@@ -22,6 +22,7 @@ export async function GET(
         },
         orderBy: { groupName: "asc" },
       },
+      sponsors: { include: { sponsor: true }, orderBy: { createdAt: "asc" } },
       _count: { select: { matches: true, teams: true } },
     },
   });
@@ -34,8 +35,11 @@ export async function GET(
     where: { tournamentId: id, status: "finalizado" },
   });
 
+  const { sponsors, ...rest } = tournament;
+
   return Response.json({
-    ...tournament,
+    ...rest,
+    sponsors: sponsors.map((s) => ({ id: s.sponsor.id, name: s.sponsor.name, logoUrl: s.sponsor.logoUrl, website: s.sponsor.website })),
     matchesPlayed,
     totalMatches: tournament._count.matches,
   });

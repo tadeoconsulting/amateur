@@ -49,6 +49,7 @@ export interface TournamentDetail {
   extraTimeMinutes: number | null;
   groupsAdvancePerGroup: number | null;
   organizer: { id: string; firstName: string; lastName: string };
+  sponsors: SponsorSummary[];
   teams: {
     id: string;
     groupName: string | null;
@@ -63,6 +64,20 @@ export interface TournamentDetail {
     };
   }[];
   _count: { matches: number; teams: number };
+}
+
+/** Como aparece un sponsor colgado de un torneo (convocatoria pública, detalle de torneo). */
+export interface SponsorSummary {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  website: string | null;
+}
+
+/** Un sponsor tal como lo ve el admin en /admin/sponsors. */
+export interface SponsorRow extends SponsorSummary {
+  tournamentsCount: number;
+  createdAt: string;
 }
 
 /** Un equipo de un cuadro de eliminación: null ("por definir") hasta que se conoce el
@@ -340,6 +355,15 @@ export function getTournamentRequests(tournamentId: string, params?: Record<stri
 export function getMyRequests(params?: Record<string, string>) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
   return fetcher<MyRequestItem[]>(`/api/tournament-requests/mine${qs}`);
+}
+
+export function getSponsors(params?: Record<string, string>) {
+  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+  return fetcher<SponsorRow[]>(`/api/sponsors${qs}`);
+}
+
+export function getTournamentSponsors(tournamentId: string) {
+  return fetcher<SponsorSummary[]>(`/api/tournaments/${tournamentId}/sponsors`);
 }
 
 export type MutationResult<T = unknown> = { ok: boolean; status: number; data: T; error: string | null };

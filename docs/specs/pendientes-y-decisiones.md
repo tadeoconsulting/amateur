@@ -21,7 +21,7 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 | 11 | **Sistema de puntos y desempates** | Fijos: 3/1/0; desempate por diferencia de gol y goles a favor (sin enfrentamiento directo) | [004](004-partido-en-vivo.md) |
 | 12 | **¿Cómo se entera un jugador de una invitación?** | **Resuelta e implementada:** badge en la pestaña de "Mis Equipos" (jugador) y "Equipo" (club, para invitaciones de staff); la de un club a un torneo ya tenía badge en "Solicitudes". Sigue sin cubrir a quien recibe una invitación de staff sin tener club propio (decisión explícita, ver funcionalidad pendiente 2). | [005](005-invitaciones.md) |
 | 13 | **Alcance geográfico** | Todo asume Perú: departamentos, DNI, moneda `S/` | — |
-| 14 | **¿Qué pasa con `FAN` y `SPONSOR`?** | Existen en el enum sin funcionalidad, y no se ofrecen al registrarse ni en `/seleccion-perfil` | [constitución](constitution.md), [001](001-autenticacion-y-permisos.md) |
+| 14 | **¿Qué pasa con `FAN` y `SPONSOR`?** | `FAN` sigue sin funcionalidad. `SPONSOR` **tiene un primer alcance implementado**: modelo `Sponsor`/`TournamentSponsor`, admin-only (`/admin/sponsors`), logo visible en la convocatoria pública del torneo — decisión explícita: alta gestionada por el admin (no self-service), sin paquetes ni reportes de alcance todavía. Ninguno de los dos se ofrece al registrarse ni en `/seleccion-perfil`. | [constitución](constitution.md), [001](001-autenticacion-y-permisos.md) |
 | 15 | **¿Las páginas `/dev` y `/design-system` deben ser públicas?** | Lo son (no pasan por el proxy). No exponen datos, pero muestran todas las pantallas. | — |
 
 ## 2. Funcionalidad pendiente
@@ -40,7 +40,7 @@ En el orden que parece más útil (cada una debería empezar por su especificaci
 7. **Asignar grupos** desde la interfaz para el formato `grupos`.
 8. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
 9. **Cancelar una invitación personal.**
-10. **Sponsors.** No existe modelo de datos ni pantalla (se quitó el botón placeholder que no hacía nada); depende de la decisión 14.
+10. **Sponsors — primer alcance implementado (decisión 14).** `/admin/sponsors`: alta y edición de sponsors, y de qué torneos auspicia cada uno (checklist de torneos). Su logo se ve en la convocatoria pública del torneo (`/convocatoria/:id`), con link a su sitio. Todo admin-only, sin self-service. Falta, si en algún momento se prioriza: paquetes de auspicio (nombre, precio de referencia, qué incluye) y reportes de alcance reales (requiere instrumentar tracking de vistas, que hoy no existe en la app).
 11. **Asignar o liberar un jugador entre categorías** del mismo club, desde la interfaz.
 
 ## 3. Deuda técnica y de operación
