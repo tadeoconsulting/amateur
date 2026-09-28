@@ -140,6 +140,19 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
   if (!hasTournaments) {
     return (
       <div className="flex min-h-full flex-col">
+        <div className="flex justify-end px-4 pt-4">
+          <Link href="/notificaciones" aria-label="Notificaciones" className="text-text-primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        </div>
         <EmptyState />
       </div>
     );
@@ -163,15 +176,28 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
           </svg>
           <h1 className="font-heading text-xl font-bold text-text-primary">Mis torneos</h1>
         </div>
-        <Link
-          href="/crear-torneo"
-          className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          Crear torneo
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/notificaciones" aria-label="Notificaciones" className="text-text-primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+          <Link
+            href="/crear-torneo"
+            className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            Crear torneo
+          </Link>
+        </div>
       </div>
 
       {/* Filter tabs */}
