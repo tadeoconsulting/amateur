@@ -10,6 +10,9 @@ interface ClubRow {
   shortName: string;
   logoUrl: string | null;
   color: string | null;
+  delegadoNombre: string | null;
+  delegadoTel: string | null;
+  delegadoEmail: string | null;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string };
@@ -231,11 +234,172 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
   );
 }
 
+function EditClubModal({
+  club,
+  onClose,
+  onSaved,
+}: {
+  club: ClubRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: club.name,
+    shortName: club.shortName,
+    color: club.color || clubColors[0],
+    delegadoNombre: club.delegadoNombre ?? "",
+    delegadoTel: club.delegadoTel ?? "",
+    delegadoEmail: club.delegadoEmail ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.shortName.trim()) {
+      setError("Nombre y abreviatura son requeridos");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    const res = await fetch(`/api/clubs/${club.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: form.name.trim(),
+        shortName: form.shortName.trim(),
+        color: form.color,
+        delegadoNombre: form.delegadoNombre || null,
+        delegadoTel: form.delegadoTel || null,
+        delegadoEmail: form.delegadoEmail || null,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "No se pudo guardar");
+      setSaving(false);
+      return;
+    }
+    onSaved();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-lg rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="font-heading text-lg font-bold text-text-primary">Editar club</h2>
+          <button onClick={onClose} className="cursor-pointer p-1 text-text-secondary hover:text-text-primary">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">{error}</div>
+        )}
+
+        <div className="flex flex-col gap-4">
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos del club</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+              <input
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Abreviatura *</label>
+              <input
+                value={form.shortName}
+                onChange={(e) => set("shortName", e.target.value.toUpperCase())}
+                maxLength={4}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Color del club</label>
+            <div className="flex gap-2">
+              {clubColors.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => set("color", c)}
+                  className={`h-8 w-8 cursor-pointer rounded-full transition-transform ${form.color === c ? "scale-110 ring-2 ring-offset-2 ring-brand-500" : ""}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <hr className="border-border-primary" />
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Delegado</p>
+
+          <div>
+            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre del delegado</label>
+            <input
+              value={form.delegadoNombre}
+              onChange={(e) => set("delegadoNombre", e.target.value)}
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              placeholder="Nombre completo del delegado"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono del delegado</label>
+              <input
+                value={form.delegadoTel}
+                onChange={(e) => set("delegadoTel", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+                placeholder="999 999 999"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo del delegado</label>
+              <input
+                type="email"
+                value={form.delegadoEmail}
+                onChange={(e) => set("delegadoEmail", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+                placeholder="delegado@club.com"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+          >
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminClubesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
+  const [editingClub, setEditingClub] = useState<ClubRow | null>(null);
 
   const { data: clubs, loading, refetch } = useApi<ClubRow[]>(() => {
     const params = new URLSearchParams();
@@ -246,6 +410,11 @@ function AdminClubesContent() {
   const handleCreated = () => {
     setShowCreate(false);
     router.replace("/admin/clubes");
+    refetch();
+  };
+
+  const handleClubSaved = () => {
+    setEditingClub(null);
     refetch();
   };
 
@@ -310,6 +479,7 @@ function AdminClubesContent() {
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Dueño</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Jugadores</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Categorías</th>
+                <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -344,11 +514,19 @@ function AdminClubesContent() {
                   <td className="px-4 py-3 text-center">
                     <span className="font-heading text-sm font-bold text-text-primary">{club.categoriesCount}</span>
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => setEditingClub(club)}
+                      className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+                    >
+                      Editar
+                    </button>
+                  </td>
                 </tr>
               ))}
               {clubs.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
+                  <td colSpan={6} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron clubes
                   </td>
                 </tr>
@@ -359,6 +537,7 @@ function AdminClubesContent() {
       )}
 
       {showCreate && <CreateClubModal onClose={() => { setShowCreate(false); router.replace("/admin/clubes"); }} onCreated={handleCreated} />}
+      {editingClub && <EditClubModal club={editingClub} onClose={() => setEditingClub(null)} onSaved={handleClubSaved} />}
     </div>
   );
 }

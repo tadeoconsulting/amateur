@@ -13,6 +13,7 @@ interface UserRow {
   gender: string | null;
   department: string | null;
   birthDate: string | null;
+  organization: string | null;
   createdAt: string;
   roles: string[];
   ownedClubs: { id: string; name: string }[];
@@ -406,7 +407,12 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   );
 }
 
-function EditRolesModal({
+/** Convierte una fecha ISO (o null) al formato que espera un <input type="date">. */
+function toDateInput(value: string | null) {
+  return value ? value.slice(0, 10) : "";
+}
+
+function EditUserModal({
   user,
   onClose,
   onSaved,
@@ -416,30 +422,63 @@ function EditRolesModal({
   onSaved: () => void;
 }) {
   const [roles, setRoles] = useState<string[]>(user.roles);
+  const [form, setForm] = useState({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    phone: user.phone ?? "",
+    department: user.department ?? "",
+    gender: (user.gender ?? "") as "" | "masculino" | "femenino",
+    birthDate: toDateInput(user.birthDate),
+    organization: user.organization ?? "",
+  });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
   const toggleRole = (role: string) => {
-    setRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
-    );
+    setRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
   };
 
   const handleSave = async () => {
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setError("Nombre y apellido son requeridos");
+      return;
+    }
+    if (roles.length === 0) {
+      setError("Debe tener al menos un rol");
+      return;
+    }
     setSaving(true);
-    await fetch(`/api/users/${user.id}`, {
+    setError(null);
+    const res = await fetch(`/api/users/${user.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roles }),
+      body: JSON.stringify({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        phone: form.phone || null,
+        department: form.department || null,
+        gender: form.gender || null,
+        birthDate: form.birthDate || null,
+        organization: form.organization || null,
+        roles,
+      }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "No se pudo guardar");
+      setSaving(false);
+      return;
+    }
     onSaved();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-md rounded-2xl bg-surface-primary p-6 shadow-xl">
+      <div className="w-full max-w-lg rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-heading text-lg font-bold text-text-primary">
-            Editar roles — {user.firstName} {user.lastName}
+            Editar usuario — {user.firstName} {user.lastName}
           </h2>
           <button onClick={onClose} className="cursor-pointer p-1 text-text-secondary hover:text-text-primary">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -448,23 +487,126 @@ function EditRolesModal({
           </button>
         </div>
 
-        <p className="mb-4 font-body text-sm text-text-secondary">{user.email}</p>
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">{error}</div>
+        )}
 
-        <div className="flex flex-wrap gap-2">
-          {allRoles.map((role) => (
-            <button
-              key={role.key}
-              type="button"
-              onClick={() => toggleRole(role.key)}
-              className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-sm font-semibold transition-colors ${
-                roles.includes(role.key)
-                  ? "bg-surface-secondary text-text-invert"
-                  : "border border-border-primary text-text-secondary hover:border-brand-300"
-              }`}
-            >
-              {role.label}
-            </button>
-          ))}
+        <div className="flex flex-col gap-4">
+          <div>
+            {/* El correo no se puede cambiar desde acá: es el identificador de login. */}
+            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Email</label>
+            <p className="rounded-lg border border-border-primary bg-brand-50 px-3 py-2.5 font-body text-sm text-text-secondary">
+              {user.email}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+              <input
+                value={form.firstName}
+                onChange={(e) => set("firstName", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellido *</label>
+              <input
+                value={form.lastName}
+                onChange={(e) => set("lastName", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono</label>
+              <input
+                value={form.phone}
+                onChange={(e) => set("phone", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+                placeholder="999 999 999"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de nacimiento</label>
+              <input
+                type="date"
+                value={form.birthDate}
+                onChange={(e) => set("birthDate", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Departamento</label>
+              <select
+                value={form.department}
+                onChange={(e) => set("department", e.target.value)}
+                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              >
+                <option value="">Seleccionar</option>
+                {departamentos.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block font-body text-xs font-medium text-text-secondary">Sexo</label>
+              <div className="flex gap-2">
+                {(["masculino", "femenino"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => set("gender", form.gender === s ? "" : s)}
+                    className={`flex-1 cursor-pointer rounded-lg py-2.5 text-center font-heading text-xs font-semibold transition-colors ${
+                      form.gender === s
+                        ? "bg-surface-secondary text-text-invert"
+                        : "border border-border-primary text-text-secondary hover:border-brand-300"
+                    }`}
+                  >
+                    {s === "masculino" ? "Masculino" : "Femenino"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {roles.includes("ORGANIZADOR") && (
+            <div>
+              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre de la organización</label>
+              <input
+                value={form.organization}
+                onChange={(e) => set("organization", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+                placeholder="Liga Premier Norte"
+              />
+            </div>
+          )}
+
+          <hr className="border-border-primary" />
+          <div>
+            <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Roles</label>
+            <div className="flex flex-wrap gap-2">
+              {allRoles.map((role) => (
+                <button
+                  key={role.key}
+                  type="button"
+                  onClick={() => toggleRole(role.key)}
+                  className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-sm font-semibold transition-colors ${
+                    roles.includes(role.key)
+                      ? "bg-surface-secondary text-text-invert"
+                      : "border border-border-primary text-text-secondary hover:border-brand-300"
+                  }`}
+                >
+                  {role.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
@@ -512,7 +654,7 @@ function AdminUsuariosContent() {
     refetch();
   };
 
-  const handleRolesSaved = () => {
+  const handleUserSaved = () => {
     setEditingUser(null);
     refetch();
   };
@@ -677,7 +819,7 @@ function AdminUsuariosContent() {
                       onClick={() => setEditingUser(user)}
                       className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
                     >
-                      Editar roles
+                      Editar
                     </button>
                   </td>
                 </tr>
@@ -695,7 +837,7 @@ function AdminUsuariosContent() {
       )}
 
       {showCreate && <CreateUserModal onClose={() => { setShowCreate(false); router.replace("/admin/usuarios"); }} onCreated={handleCreated} />}
-      {editingUser && <EditRolesModal user={editingUser} onClose={() => setEditingUser(null)} onSaved={handleRolesSaved} />}
+      {editingUser && <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSaved={handleUserSaved} />}
     </div>
   );
 }
