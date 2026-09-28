@@ -5,6 +5,8 @@ import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
 import { useMyClub } from "@/_lib/use-my-club";
 import { getClub } from "@/_lib/api";
+import { AvatarCropper } from "@/_components/avatar-cropper";
+import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 
 export default function ClubPerfilPage() {
   const { club, loading: loadingClub } = useMyClub();
@@ -15,6 +17,9 @@ export default function ClubPerfilPage() {
   const [delegadoNombre, setDelegadoNombre] = useState("");
   const [delegadoTel, setDelegadoTel] = useState("");
   const [delegadoEmail, setDelegadoEmail] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -32,6 +37,7 @@ export default function ClubPerfilPage() {
         setDelegadoNombre(c.delegadoNombre ?? "");
         setDelegadoTel(c.delegadoTel ?? "");
         setDelegadoEmail(c.delegadoEmail ?? "");
+        setLogoUrl(c.logoUrl);
       })
       .catch(() => setError("No se pudo cargar el club."))
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -68,6 +74,33 @@ export default function ClubPerfilPage() {
     }
   };
 
+  // El logo se guarda al toque, sin esperar a "Completar ajustes del club": es lo que la
+  // persona espera al ver "Usar esta foto" (igual que cualquier app de fotos de perfil).
+  const handleCropped = async (blob: Blob) => {
+    if (!club) return;
+    setShowCropper(false);
+    setUploadingPhoto(true);
+    setError("");
+    try {
+      const url = await uploadAvatarBlob(blob);
+      const res = await fetch(`/api/clubs/${club.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoUrl: url }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo guardar la foto.");
+        return;
+      }
+      setLogoUrl(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo subir la imagen.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   if (loadingClub || loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -96,19 +129,32 @@ export default function ClubPerfilPage() {
       {/* Avatar */}
       <div className="flex justify-center">
         <div className="relative">
-          <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-brand-200 bg-white">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="text-brand-400">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+          <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-2 border-brand-200 bg-white">
+            {uploadingPhoto ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+            ) : logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- URL externa (Vercel Blob), no un asset local
+              <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="text-brand-400">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            )}
           </div>
-          <div className="absolute -bottom-1 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-brand-900">
+          <button
+            onClick={() => setShowCropper(true)}
+            aria-label="Cambiar foto"
+            className="absolute -bottom-1 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-brand-900"
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </div>
+          </button>
         </div>
       </div>
+
+      <AvatarCropper open={showCropper} onClose={() => setShowCropper(false)} onCropped={handleCropped} />
 
       {/* Form */}
       <div className="mt-6 space-y-5 px-4">
