@@ -12,7 +12,7 @@ interface ClubRow {
   color: string | null;
   playerCount: number;
   categoriesCount: number;
-  owner: { firstName: string; lastName: string };
+  owner: { firstName: string; lastName: string; email?: string };
 }
 
 interface UserOption {
@@ -308,6 +308,7 @@ function AdminClubesContent() {
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Club</th>
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Abreviatura</th>
                 <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Dueño</th>
+                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Email</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Jugadores</th>
                 <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Categorías</th>
               </tr>
@@ -338,6 +339,9 @@ function AdminClubesContent() {
                       {club.owner.firstName} {club.owner.lastName}
                     </p>
                   </td>
+                  <td className="px-4 py-3">
+                    <p className="font-body text-sm text-text-secondary">{club.owner.email ?? "—"}</p>
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <span className="font-heading text-sm font-bold text-text-primary">{club.playerCount}</span>
                   </td>
@@ -348,7 +352,7 @@ function AdminClubesContent() {
               ))}
               {clubs.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
+                  <td colSpan={6} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron clubes
                   </td>
                 </tr>

@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
     where,
     include: {
       _count: { select: { players: true, categories: true } },
-      owner: { select: { firstName: true, lastName: true } },
+      // El correo del dueño solo lo ve un admin (mismo criterio que el resto de datos de
+      // contacto): al resto de sesiones no se le agrega el select y queda undefined.
+      owner: { select: { firstName: true, lastName: true, ...(isAdmin(auth.user) ? { email: true } : {}) } },
     },
     orderBy: { name: "asc" },
   });
