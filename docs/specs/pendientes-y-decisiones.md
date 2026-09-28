@@ -36,12 +36,8 @@ En el orden que parece más útil (cada una debería empezar por su especificaci
 3. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
 4. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
 5. **Regenerar o deshacer el fixture** desde la pantalla. (Editar un torneo ya existe, pero su botón solo aparece cuando el torneo no tiene equipos: ver [002](002-crear-torneo-y-equipos.md).)
-6. **Alineaciones y `matchesPlayed`, y asistencias.** Guardar la lista de titulares es solo un toast — no persiste. Tampoco hay forma de editar o borrar un integrante del staff.
-7. **Asignar grupos** desde la interfaz para el formato `grupos`.
-8. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
-9. **Cancelar una invitación personal.**
-10. **Sponsors — primer alcance implementado (decisión 14).** `/admin/sponsors`: alta y edición de sponsors, y de qué torneos auspicia cada uno (checklist de torneos). Su logo se ve en la convocatoria pública del torneo (`/convocatoria/:id`), con link a su sitio. Todo admin-only, sin self-service. Falta, si en algún momento se prioriza: paquetes de auspicio (nombre, precio de referencia, qué incluye) y reportes de alcance reales (requiere instrumentar tracking de vistas, que hoy no existe en la app).
-11. **Asignar o liberar un jugador entre categorías** del mismo club, desde la interfaz.
+6. **Alineaciones — persiste; `matchesPlayed` y asistencias, todavía no.** `/club/torneos/:id/titulares/:matchId` (antes el link ni siquiera llevaba el partido) guarda el once inicial de verdad (`MatchLineup`). Un club también puede editar el rol de un integrante del staff o quitarlo del equipo (antes era un mock completo). **Falta:** nada incrementa `matchesPlayed` ni `assists` de `PlayerStats` en ningún lado — se necesitaría enganchar la alineación con que el partido termine, y un evento de "asistencia" que hoy no existe en la crónica.
+7. **Sponsors — primer alcance implementado (decisión 14).** `/admin/sponsors`: alta y edición de sponsors, y de qué torneos auspicia cada uno (checklist de torneos). Su logo se ve en la convocatoria pública del torneo (`/convocatoria/:id`), con link a su sitio. Todo admin-only, sin self-service. Falta, si en algún momento se prioriza: paquetes de auspicio (nombre, precio de referencia, qué incluye) y reportes de alcance reales (requiere instrumentar tracking de vistas, que hoy no existe en la app).
 
 ## 3. Deuda técnica y de operación
 

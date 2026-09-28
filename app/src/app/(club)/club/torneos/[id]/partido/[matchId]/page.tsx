@@ -113,7 +113,7 @@ export default function ClubPartidoDetallePage() {
       {(isLive || isScheduled) && (
         <div className="mx-4 mt-3">
           <Link
-            href={`/club/torneos/${id}/titulares`}
+            href={`/club/torneos/${id}/titulares/${matchId}`}
             className="flex items-center justify-between rounded-xl border border-border-primary p-3 transition-colors hover:bg-btn-regular"
           >
             <span className="font-heading text-sm font-bold text-text-primary">Definir titulares</span>
