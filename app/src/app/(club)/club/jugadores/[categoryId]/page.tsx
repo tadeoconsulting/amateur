@@ -47,10 +47,11 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
   const [gender, setGender] = useState<PlayerGender>("masculino");
   const [releasePlayer, setReleasePlayer] = useState<RosterPlayer | null>(null);
   const [assignPlayer, setAssignPlayer] = useState<RosterPlayer | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const { data: playerCategories, loading: loadingCats } = useApi(() => getClubCategories(clubId));
-  const { data: playersData, loading: loadingPlayers } = useApi(() =>
+  const { data: playersData, loading: loadingPlayers, refetch: refetchPlayers } = useApi(() =>
     getClubPlayers(clubId, { categoryId: params.categoryId })
   );
 
@@ -94,16 +95,46 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
     }
   };
 
-  const confirmRelease = () => {
+  const confirmRelease = async () => {
+    if (!releasePlayer) return;
+    setBusy(true);
+    const res = await fetch(`/api/players/${releasePlayer.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      // Liberar saca al jugador del club (no solo de esta categoría): sin club no puede
+      // quedarse con una categoría de ese club.
+      body: JSON.stringify({ clubId: null, categoryId: null }),
+    });
+    setBusy(false);
     setReleasePlayer(null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setToast({ message: data.error ?? "No se pudo liberar al jugador", tone: "error" });
+      return;
+    }
     setSelectedIds(new Set());
-    setToast("Se libero al jugador con exito.");
+    setToast({ message: "Se liberó al jugador con éxito.", tone: "success" });
+    refetchPlayers();
   };
 
-  const confirmAssign = () => {
+  const confirmAssign = async (categoryId: string) => {
+    if (!assignPlayer) return;
+    setBusy(true);
+    const res = await fetch(`/api/players/${assignPlayer.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categoryId }),
+    });
+    setBusy(false);
     setAssignPlayer(null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setToast({ message: data.error ?? "No se pudo asignar la nueva categoría", tone: "error" });
+      return;
+    }
     setSelectedIds(new Set());
-    setToast("Se asigno al jugador a la nueva categoria.");
+    setToast({ message: "Se asignó al jugador a la nueva categoría.", tone: "success" });
+    refetchPlayers();
   };
 
   if (loadingCats || loadingPlayers) {
@@ -124,7 +155,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
 
   return (
     <div className="w-full pb-24">
-      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+      {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
 
       <BackHeader />
 
@@ -203,7 +234,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
           <div className="mx-auto flex max-w-[430px] gap-3">
             <button
               onClick={handleRelease}
-              disabled={!hasSelection}
+              disabled={!hasSelection || busy}
               className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-40"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -213,7 +244,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
             </button>
             <button
               onClick={handleAssign}
-              disabled={!hasSelection}
+              disabled={!hasSelection || busy}
               className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand-900 bg-white py-3.5 font-heading text-sm font-semibold text-text-primary disabled:opacity-40"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
