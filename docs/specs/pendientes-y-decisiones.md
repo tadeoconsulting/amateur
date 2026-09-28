@@ -40,9 +40,8 @@ En el orden que parece más útil (cada una debería empezar por su especificaci
 7. **Asignar grupos** desde la interfaz para el formato `grupos`.
 8. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
 9. **Cancelar una invitación personal.**
-10. **Dashboard del organizador.** `/dashboard` (el ítem de la barra inferior) hoy solo muestra tres indicadores: torneos activos, equipos inscritos y torneos totales. Faltan las demás secciones, y hay que definir qué datos van (partidos, solicitudes pendientes, goleadores…).
-11. **Sponsors.** No existe modelo de datos ni pantalla (se quitó el botón placeholder que no hacía nada); depende de la decisión 14.
-12. **Asignar o liberar un jugador entre categorías** del mismo club, desde la interfaz.
+10. **Sponsors.** No existe modelo de datos ni pantalla (se quitó el botón placeholder que no hacía nada); depende de la decisión 14.
+11. **Asignar o liberar un jugador entre categorías** del mismo club, desde la interfaz.
 
 ## 3. Deuda técnica y de operación
 
