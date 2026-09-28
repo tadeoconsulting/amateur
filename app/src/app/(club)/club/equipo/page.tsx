@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getClubCategories, getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
+import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
 
 const tabs = ["Categorías", "Planilla"] as const;
@@ -20,6 +21,93 @@ function AvatarPlaceholder({ initials }: { initials: string }) {
   return (
     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-300 text-sm font-semibold text-text-secondary">
       {initials}
+    </div>
+  );
+}
+
+interface StaffInvitationRow {
+  token: string;
+  role: StaffRole;
+  invitedBy: string;
+  club: { id: string; name: string; shortName: string; color: string | null };
+}
+
+/**
+ * Invitaciones de staff (DT, delegado, asistente) dirigidas al correo de quien tiene la sesión.
+ * Van al club que diga la invitación, no necesariamente al que se está viendo acá — por eso no
+ * depende del `clubId` de la página, solo de la sesión.
+ */
+function StaffInvitations({ onJoined }: { onJoined: () => void }) {
+  const { data: invitations, refetch } = useApi<StaffInvitationRow[]>(() =>
+    fetch("/api/staff-invitations/mine").then((r) => (r.ok ? r.json() : []))
+  );
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  async function respond(inv: StaffInvitationRow, action: "accept" | "decline") {
+    setBusy(inv.token);
+    setError("");
+    try {
+      const res = await fetch(`/api/staff-invitations/${inv.token}/${action}`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo completar la acción");
+        return;
+      }
+      refetch();
+      notifyChanged();
+      if (action === "accept") onJoined();
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (!invitations || invitations.length === 0) return null;
+
+  return (
+    <div className="mt-4 px-4">
+      <h2 className="font-heading text-sm font-bold text-text-primary">Invitaciones</h2>
+      <div className="mt-2 space-y-2">
+        {invitations.map((inv) => (
+          <div key={inv.token} className="rounded-lg border border-brand-200 bg-btn-regular px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: (inv.club.color || "#E5E7EB") + "20" }}
+              >
+                <span className="font-heading text-xs font-bold" style={{ color: inv.club.color || "#6B7280" }}>
+                  {inv.club.shortName}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-text-primary">
+                  {inv.club.name} te invitó como {roleLabels[inv.role] ?? inv.role}
+                </p>
+                <p className="truncate text-xs text-text-secondary">Invitó {inv.invitedBy}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => respond(inv, "accept")}
+                disabled={busy === inv.token}
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2 text-sm font-semibold text-text-invert disabled:opacity-50"
+              >
+                Aceptar
+              </button>
+              <button
+                onClick={() => respond(inv, "decline")}
+                disabled={busy === inv.token}
+                className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2 text-sm font-semibold text-text-primary disabled:opacity-50"
+              >
+                Rechazar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );
 }
@@ -61,7 +149,7 @@ function ClubEquipoContent({
   // Se monta solo cuando ya se conoce el club: el useApi de acá abajo pide una sola vez, al
   // montar, así que necesita el id correcto desde el primer render (ver "use-api.ts").
   const { data: teamCategories, loading: loadingCategories } = useApi(() => getClubCategories(clubId));
-  const { data: staffMembers, loading: loadingStaff } = useApi(() => getClubStaff(clubId));
+  const { data: staffMembers, loading: loadingStaff, refetch: refetchStaff } = useApi(() => getClubStaff(clubId));
 
   if ((loadingCategories && !teamCategories) || (loadingStaff && !staffMembers)) {
     return (
@@ -105,7 +193,7 @@ function ClubEquipoContent({
               </svg>
             </button>
           )}
-          <Link href="/club/notificaciones" className="text-text-primary">
+          <Link href="/club/torneos?tab=solicitudes" className="text-text-primary">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path
                 d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"
@@ -118,6 +206,8 @@ function ClubEquipoContent({
           </Link>
         </div>
       </div>
+
+      <StaffInvitations onJoined={refetchStaff} />
 
       {/* Tabs */}
       <div className="mt-4 flex border-b border-brand-200 px-4">

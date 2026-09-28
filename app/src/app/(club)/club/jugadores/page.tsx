@@ -72,7 +72,7 @@ function ClubJugadoresContent({ clubId }: { clubId: string }) {
               <path d="M15 15l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </Link>
-          <Link href="/club/notificaciones" className="text-text-primary">
+          <Link href="/club/torneos?tab=solicitudes" className="text-text-primary">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <path
                 d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"

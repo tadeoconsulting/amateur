@@ -59,7 +59,7 @@ Ambas son un **token secreto** en la URL. Se resuelven igual (`resolveInvitation
 - **"Mis Equipos"** (jugador): muestra **su** club (antes listaba todos los de la base) y las **invitaciones pendientes** con Aceptar y Rechazar.
 
 ## Limitaciones conocidas
-- **No hay notificaciones.** Un jugador invitado directamente se entera al abrir "Mis Equipos".
+- Un jugador invitado directamente lo ve con un badge en la pestaña "Equipos" del bottom nav (ver [pendientes](pendientes-y-decisiones.md), funcionalidad pendiente 2), no solo al abrir "Mis Equipos" a ciegas.
 - **El link del club no vence:** el único control es revocarlo. Quien lo tenga puede unirse hasta entonces, sin aprobación del dueño. *Decisión pendiente:* ¿el dueño aprueba a los que entran por link?
 - **Una invitación personal no se puede cancelar** desde el producto (existe `GET /api/clubs/:id/invite` para listarlas, pero no hay endpoint para retirarlas).
 - **El vencimiento a los 7 días está implementado pero no tiene prueba**: la API no permite fijar una fecha pasada.
