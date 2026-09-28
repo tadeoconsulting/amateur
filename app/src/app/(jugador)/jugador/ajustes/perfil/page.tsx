@@ -5,6 +5,8 @@ import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
 import { useAuth } from "@/lib/auth-context";
 import { getUser } from "@/_lib/api";
+import { AvatarCropper } from "@/_components/avatar-cropper";
+import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 
 const positions = [
   "Portero",
@@ -40,6 +42,9 @@ export default function JugadorPerfilPage() {
   const [sexo, setSexo] = useState<"masculino" | "femenino" | "">("");
   const [telefono, setTelefono] = useState("");
   const [departamento, setDepartamento] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [sheet, setSheet] = useState<BottomSheetType>(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -63,6 +68,7 @@ export default function JugadorPerfilPage() {
         setSexo(u.gender === "masculino" || u.gender === "femenino" ? u.gender : "");
         setTelefono(u.phone ?? "");
         setDepartamento(u.department ?? "");
+        setAvatarUrl(u.avatarUrl);
       })
       .catch(() => setError("No se pudo cargar el perfil."))
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -102,6 +108,31 @@ export default function JugadorPerfilPage() {
     }
   };
 
+  const handleCropped = async (blob: Blob) => {
+    if (!user) return;
+    setShowCropper(false);
+    setUploadingPhoto(true);
+    setError("");
+    try {
+      const url = await uploadAvatarBlob(blob);
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: url }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo guardar la foto.");
+        return;
+      }
+      setAvatarUrl(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo subir la imagen.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -122,19 +153,32 @@ export default function JugadorPerfilPage() {
         {/* Avatar */}
         <div className="mt-4 flex justify-center">
           <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-brand-200">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
-                <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-brand-200">
+              {uploadingPhoto ? (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+              ) : avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- URL externa (Vercel Blob), no un asset local
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              )}
             </div>
-            <div className="absolute -bottom-1 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-brand-900">
+            <button
+              onClick={() => setShowCropper(true)}
+              aria-label="Cambiar foto"
+              className="absolute -bottom-1 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-brand-900"
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white">
                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </div>
+            </button>
           </div>
         </div>
+
+        <AvatarCropper open={showCropper} onClose={() => setShowCropper(false)} onCropped={handleCropped} />
 
         {/* Form */}
         <div className="mt-6 space-y-5">
