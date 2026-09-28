@@ -138,6 +138,8 @@ export default function TournamentDetailPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [teamError, setTeamError] = useState("");
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+  const [confirmUndoFixture, setConfirmUndoFixture] = useState(false);
+  const [undoingFixture, setUndoingFixture] = useState(false);
 
   const { data: tournament, loading: loadingTournament, refetch } = useApi(() => getTournament(params.id));
   const { data: allTournaments } = useApi(() => getTournaments());
@@ -173,6 +175,27 @@ export default function TournamentDetailPage() {
   function onRequestsChanged() {
     refetch();
     refetchRequests();
+  }
+
+  // Deshace el fixture (borra los partidos y vuelve el torneo a "inscripción") — solo tiene
+  // sentido mientras ningún partido arrancó. Después, desde /iniciar se puede armar uno nuevo,
+  // porque el torneo vuelve a estar entre los estados que esa pantalla no bloquea.
+  async function undoFixture() {
+    setUndoingFixture(true);
+    try {
+      const res = await fetch(`/api/tournaments/${params.id}/fixture`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setToast({ message: data.error ?? "No se pudo deshacer el fixture", tone: "error" });
+        return;
+      }
+      setConfirmUndoFixture(false);
+      setToast({ message: "Fixture deshecho: el torneo volvió a inscripción.", tone: "success" });
+      refetch();
+      refetchMatches();
+    } finally {
+      setUndoingFixture(false);
+    }
   }
 
   async function shareConvocatoria() {
@@ -434,6 +457,14 @@ export default function TournamentDetailPage() {
       {/* === Competencia Content === */}
       {!isConvocatoria && activeTab === "partidos" && (
         <div className="mt-4 px-4">
+          {matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0) && (
+            <button
+              onClick={() => setConfirmUndoFixture(true)}
+              className="mb-4 cursor-pointer font-heading text-xs font-bold text-text-secondary underline"
+            >
+              Deshacer fixture
+            </button>
+          )}
           {matches.length > 0 && (
             <p className="mb-4 font-heading text-base font-semibold italic text-text-primary">
               {formatLongDate(matches[0].date)}
@@ -648,6 +679,35 @@ export default function TournamentDetailPage() {
                 className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
               >
                 Cambiar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Deshacer fixture: confirmación */}
+      {confirmUndoFixture && (
+        <>
+          <div className="fixed inset-0 z-[110] bg-black/40" onClick={() => !undoingFixture && setConfirmUndoFixture(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-[110] mx-auto max-w-[430px] rounded-t-2xl bg-surface-primary px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-6">
+            <h3 className="text-center font-heading text-lg font-bold text-text-primary mb-3">¿Deshacer el fixture?</h3>
+            <p className="mb-6 text-center font-body text-sm text-text-secondary">
+              Se borran los {matches.length} partidos programados y el torneo vuelve a inscripción — desde ahí podés armar uno nuevo. Solo se puede mientras nadie jugó.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmUndoFixture(false)}
+                disabled={undoingFixture}
+                className="flex-1 cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={undoFixture}
+                disabled={undoingFixture}
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+              >
+                {undoingFixture ? "Deshaciendo..." : "Sí, deshacer"}
               </button>
             </div>
           </div>
