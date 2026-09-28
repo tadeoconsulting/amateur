@@ -34,13 +34,13 @@ const screens: Screen[] = [
   {
     path: "/torneos",
     name: "Mis torneos",
-    description: "Dashboard con LiveMatchBar, torneos activos y torneos del organizador agrupados por estado",
+    description: "Pantalla de inicio del organizador: lista completa de sus torneos con filtro por estado (Competencia/Convocatoria/Finalizados)",
     status: "done",
   },
   {
     path: "/torneos/todos",
-    name: "Mis torneos - Lista",
-    description: "Lista completa de torneos del organizador con filtro por estado",
+    name: "Mis torneos (redirect)",
+    description: "Redirige a /torneos. Se mantiene para no romper links o marcadores viejos",
     status: "done",
   },
   {
