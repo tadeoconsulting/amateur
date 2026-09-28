@@ -4,9 +4,68 @@ import { useState, useEffect } from "react";
 import { BackHeader } from "@/_components/back-header";
 import { PlayerRosterRow } from "@/_components/player-roster-row";
 import { Toast } from "@/_components/toast";
+import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import { searchUsers, type UserItem } from "@/_lib/api";
 import type { RosterPlayer } from "@/_lib/types";
+
+interface SentInvitation {
+  id: string;
+  email: string;
+  status: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+/** Invitaciones personales que el club ya envió y siguen pendientes, con opción de
+ * cancelarlas — antes no había forma de verlas ni retirarlas (ver especificación 005). */
+function PendingInvitations({ clubId }: { clubId: string }) {
+  const { data: invitations, loading, refetch } = useApi<SentInvitation[]>(() =>
+    fetch(`/api/clubs/${clubId}/invite`).then((r) => r.json())
+  );
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const pending = (invitations ?? []).filter((i) => i.status === "pending");
+
+  const cancel = async (id: string) => {
+    setCancelling(id);
+    setError(null);
+    const res = await fetch(`/api/clubs/${clubId}/invite/${id}`, { method: "DELETE" });
+    setCancelling(null);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "No se pudo cancelar la invitación");
+      return;
+    }
+    refetch();
+  };
+
+  if (loading || pending.length === 0) return null;
+
+  return (
+    <div className="mt-6">
+      <p className="px-4 font-heading text-base font-bold text-text-primary">
+        Invitaciones pendientes
+      </p>
+      {error && <p className="px-4 pt-2 font-body text-sm text-red-600">{error}</p>}
+      <div className="mt-2">
+        {pending.map((inv) => (
+          <div key={inv.id} className="flex items-center justify-between gap-3 border-b border-brand-200 px-4 py-3 last:border-0">
+            <p className="min-w-0 truncate font-body text-sm text-text-primary">{inv.email}</p>
+            <button
+              onClick={() => cancel(inv.id)}
+              disabled={cancelling === inv.id}
+              className="shrink-0 cursor-pointer text-sm font-medium text-red-600 underline disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function ClubBuscarJugadorPage() {
   const [query, setQuery] = useState("");
@@ -143,6 +202,8 @@ export default function ClubBuscarJugadorPage() {
           )}
         </div>
       )}
+
+      {!showResults && club && <PendingInvitations clubId={club.id} />}
     </div>
   );
 }
