@@ -1,8 +1,39 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { canManageMatch, forbidden, requireUser } from "@/_lib/auth";
+import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { changesScore, isEventType, statFor } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
+
+/** Corrige el minuto de una jugada ya registrada — no cambia nada más de su efecto (marcador,
+ * estadísticas): esas ya quedaron aplicadas al crearla. Solo mientras el partido está en juego. */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; eventId: string }> }
+) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+
+  const { id, eventId } = await params;
+  if (!(await canManageMatch(auth.user, id))) return forbidden();
+
+  const body = await readJson(request);
+  if (!body || !Number.isInteger(body.minute) || (body.minute as number) < 0) {
+    return badRequest("minute inválido");
+  }
+
+  const event = await prisma.matchEvent.findFirst({ where: { id: eventId, matchId: id } });
+  if (!event) return Response.json({ error: "Jugada no encontrada" }, { status: 404 });
+
+  const match = await prisma.match.findUnique({ where: { id }, select: { status: true } });
+  if (!match) return Response.json({ error: "Partido no encontrado" }, { status: 404 });
+  if (match.status !== "en_curso") {
+    return Response.json({ error: "Reabre el partido para corregir sus jugadas" }, { status: 409 });
+  }
+
+  const updated = await prisma.matchEvent.update({ where: { id: eventId }, data: { minute: body.minute as number } });
+  await publicarEventoPartido(id);
+  return Response.json(updated);
+}
 
 /**
  * Deshace una jugada: la borra y revierte su efecto en el marcador y en las estadísticas del
