@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
+import { notifyChanged } from "@/_lib/notifications-changed";
 
 interface ClubRow {
   id: string;
@@ -60,6 +61,7 @@ function Invitations({ onJoined }: { onJoined: () => void }) {
       }
       setSwitching(null);
       refetch();
+      notifyChanged();
       if (action === "accept") onJoined();
     } catch {
       setError("No se pudo conectar. Inténtalo de nuevo.");

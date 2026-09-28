@@ -2,6 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useApi } from "@/_lib/use-api";
+import { getMyRequests } from "@/_lib/api";
+import { useRefetchOnChange } from "@/_lib/notifications-changed";
+
+interface StaffInvitationRow {
+  token: string;
+}
 
 const navItems = [
   {
@@ -69,8 +76,35 @@ const navItems = [
   },
 ];
 
+function NavBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute -right-2 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-verification px-1 text-[9px] font-bold leading-4 text-text-primary"
+    >
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
 export function ClubBottomNav() {
   const pathname = usePathname();
+  // Invitaciones de un organizador a un torneo (pestaña "Solicitudes" de /club/torneos).
+  const { data: requests, refetch: refetchRequests } = useApi(() => getMyRequests());
+  useRefetchOnChange(refetchRequests);
+  const invitesPending = requests?.filter((r) => r.kind === "invite").length ?? 0;
+  // Invitaciones de staff (DT, delegado, asistente) — se aceptan desde "Equipo".
+  const { data: staffInvitations, refetch: refetchStaffInvitations } = useApi<StaffInvitationRow[]>(() =>
+    fetch("/api/staff-invitations/mine").then((r) => (r.ok ? r.json() : []))
+  );
+  useRefetchOnChange(refetchStaffInvitations);
+  const staffInvitesPending = staffInvitations?.length ?? 0;
+
+  const badgeByHref: Record<string, number> = {
+    "/club/torneos": invitesPending,
+    "/club/equipo": staffInvitesPending,
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-200 bg-surface-primary">
@@ -85,7 +119,10 @@ export function ClubBottomNav() {
                 active ? "text-text-primary" : "text-text-secondary"
               }`}
             >
-              {item.icon(active)}
+              <span className="relative">
+                {item.icon(active)}
+                <NavBadge count={badgeByHref[item.href] ?? 0} />
+              </span>
               <span>{item.label}</span>
             </Link>
           );

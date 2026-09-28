@@ -19,7 +19,7 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 | 9 | **¿El dueño del club confirma que lo inscriban? ¿El organizador aprueba a quien se inscribe solo?** | **Ambos, sí** (implementado por recomendación, falta tu confirmación): el dueño solicita y el organizador aprueba; al club ajeno se le invita y su dueño acepta | [006](006-solicitudes-de-equipos.md), decisiones A y B |
 | 10 | **¿Qué es una sede?** | Es un texto; no se reutiliza entre torneos | [modelo](modelo-de-datos.md) |
 | 11 | **Sistema de puntos y desempates** | Fijos: 3/1/0; desempate por diferencia de gol y goles a favor (sin enfrentamiento directo) | [004](004-partido-en-vivo.md) |
-| 12 | **¿Cómo se entera un jugador de una invitación?** | Solo al abrir "Mis Equipos"; no hay notificaciones | [005](005-invitaciones.md) |
+| 12 | **¿Cómo se entera un jugador de una invitación?** | **Resuelta e implementada:** badge en la pestaña de "Mis Equipos" (jugador) y "Equipo" (club, para invitaciones de staff); la de un club a un torneo ya tenía badge en "Solicitudes". Sigue sin cubrir a quien recibe una invitación de staff sin tener club propio (decisión explícita, ver funcionalidad pendiente 2). | [005](005-invitaciones.md) |
 | 13 | **Alcance geográfico** | Todo asume Perú: departamentos, DNI, moneda `S/` | — |
 | 14 | **¿Qué pasa con `FAN` y `SPONSOR`?** | Existen en el enum sin funcionalidad, y no se ofrecen al registrarse ni en `/seleccion-perfil` | [constitución](constitution.md), [001](001-autenticacion-y-permisos.md) |
 | 15 | **¿Las páginas `/dev` y `/design-system` deben ser públicas?** | Lo son (no pasan por el proxy). No exponen datos, pero muestran todas las pantallas. | — |
@@ -32,17 +32,17 @@ En el orden que parece más útil (cada una debería empezar por su especificaci
    - Llevarlo a la previa, a "en vivo" del organizador, a la tabla de posiciones, a los goleadores y a la lista de partidos.
    - **Aprovisionar `ABLY_API_KEY` en Vercel** (Production y Preview): sin ella, todo sigue funcionando, pero nadie recibe nada en vivo. Ver [constitución](constitution.md).
    - **Modelar el costo de Ably contra el Revenue Streams del BMC** antes de acercarse a los picos previstos (100 000 espectadores): a esa escala no es trivial (`docs/arquitectura.md` §8, fuera de este repo).
-2. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
-3. **Notificaciones** (decisión 12).
+2. **Notificaciones — cubre organizador, club y jugador; falta un caso de borde.** `/notificaciones` (organizador) muestra las solicitudes reales de un club pidiendo unirse a un torneo. La invitación de un organizador a un club ya vivía en la pestaña "Solicitudes" de `/club/torneos` (con badge); la de un club a un jugador, en "Mis Equipos" del jugador — ahora ambas tienen badge en su tab del bottom nav, y las invitaciones de staff (DT, delegado, asistente) se ven y se aceptan desde "Equipo" del club, también con badge (`/club/notificaciones` ahora redirige ahí; antes era una pantalla vacía fija). **Falta:** alguien invitado como staff que no tiene ningún club propio no ve la invitación en ningún lado (decisión de producto: se aceptó esa limitación por ahora — ver decisión 12); y el organizador sigue sin badge de conteo en su propia campana.
+3. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
 4. **Entidad `Sede`** con pantalla "Mis sedes" funcional (decisión 10).
 5. **Regenerar o deshacer el fixture** desde la pantalla. (Editar un torneo ya existe, pero su botón solo aparece cuando el torneo no tiene equipos: ver [002](002-crear-torneo-y-equipos.md).)
-6. **Alineaciones y `matchesPlayed`**, y asistencias.
+6. **Alineaciones y `matchesPlayed`, y asistencias.** Guardar la lista de titulares es solo un toast — no persiste. Tampoco hay forma de editar o borrar un integrante del staff.
 7. **Asignar grupos** desde la interfaz para el formato `grupos`.
 8. **Editar el minuto de una jugada** y deshacer cualquiera, no solo la última.
 9. **Cancelar una invitación personal.**
-10. **Las pantallas del dueño de club** aún usan un club fijo (`club-1`) en algunos lugares.
-11. **Dashboard del organizador.** `/dashboard` (el ítem de la barra inferior) hoy solo muestra tres indicadores: torneos activos, equipos inscritos y torneos totales. Faltan las demás secciones, y hay que definir qué datos van (partidos, solicitudes pendientes, goleadores…).
-12. **Sponsors.** En "Torneos" hay un título "Sponsors" con un "Ver Datos" que no hace nada. No existe modelo de datos ni pantalla; depende de la decisión 14.
+10. **Dashboard del organizador.** `/dashboard` (el ítem de la barra inferior) hoy solo muestra tres indicadores: torneos activos, equipos inscritos y torneos totales. Faltan las demás secciones, y hay que definir qué datos van (partidos, solicitudes pendientes, goleadores…).
+11. **Sponsors.** No existe modelo de datos ni pantalla (se quitó el botón placeholder que no hacía nada); depende de la decisión 14.
+12. **Asignar o liberar un jugador entre categorías** del mismo club, desde la interfaz.
 
 ## 3. Deuda técnica y de operación
 

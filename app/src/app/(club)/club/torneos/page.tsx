@@ -12,6 +12,7 @@ import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
+import { notifyChanged } from "@/_lib/notifications-changed";
 
 type MainTab = "mis_torneos" | "solicitudes";
 type CategoryTab = "libre" | "sub18";
@@ -42,6 +43,7 @@ function ClubTorneosContent() {
     }
     setToast({ message: success, tone: "success" });
     refetchRequests();
+    notifyChanged();
   }
 
   const clubTournaments = tournaments.filter(

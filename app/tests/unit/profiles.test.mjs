@@ -7,7 +7,7 @@ describe("soleProfileHome", () => {
   test("con un solo perfil activable, va directo a su pantalla", () => {
     assert.equal(soleProfileHome(["CLUB_OWNER"]), "/club");
     assert.equal(soleProfileHome(["ORGANIZADOR"]), "/torneos");
-    assert.equal(soleProfileHome(["JUGADOR"]), "/jugador");
+    assert.equal(soleProfileHome(["JUGADOR"]), "/jugador/torneos");
   });
 
   test("un rol ajeno a los perfiles (por ejemplo ADMIN) no cuenta, y no destraba nada solo", () => {
