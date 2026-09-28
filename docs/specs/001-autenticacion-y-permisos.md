@@ -26,7 +26,7 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 10. Un correo inexistente y una contraseña mala dan **el mismo error** (`401`, "Correo o contraseña incorrectos"), y en ambos casos se hace la comparación de hash, para que el tiempo no delate qué correos existen.
 
 ### Roles
-11. Una misma cuenta puede tener **varios perfiles**. Además de elegirlos al registrarse (regla 7), cada persona activa `ORGANIZADOR`, `CLUB_OWNER` o `JUGADOR` con `POST /api/auth/roles` (desde `/seleccion-perfil`, o al iniciar sesión con "Ingresar como"). `ADMIN` da `400`. Activar un perfil que ya se tiene no hace nada.
+11. Una misma cuenta puede tener **varios perfiles**. Además de elegirlos al registrarse (regla 7), cada persona activa `ORGANIZADOR`, `CLUB_OWNER` o `JUGADOR` con `POST /api/auth/roles` (desde `/seleccion-perfil`). `ADMIN` da `400`. Activar un perfil que ya se tiene no hace nada.
 12. `ADMIN` se asigna únicamente con `npm run db:make-admin -- correo` (sobre una cuenta ya registrada) o lo cambia otro admin con `PATCH /api/users/:id`.
 13. Un admin no puede quitarse su propio rol `ADMIN`, y toda cuenta debe conservar al menos un rol.
 14. Entrar al asistente "Crear torneo" activa `ORGANIZADOR` automáticamente (quien llega por el redirect del login no pasó por `/seleccion-perfil`).
@@ -82,12 +82,10 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | Admin | `GET /api/admin/stats` | ADMIN |
 
 ## Pantallas
-Modal de login y registro en la landing (con contraseña). Los perfiles se eligen con un desplegable (`profile-picker.tsx`) que lee la lista de `src/_lib/profiles.ts` (`src/lib/profiles.tsx` le agrega el ícono de cada uno para la UI):
-- **Crear cuenta:** "¿Cómo vas a usar Amateur?", de selección múltiple y **obligatorio** (al menos uno).
-- **Iniciar sesión:** "Ingresar como", de un solo perfil y **opcional**. Si se elige uno, se activa en la cuenta (igual que en `/seleccion-perfil`).
-- **Destino al terminar (registro o login) — en este orden:** (1) la página `next` si viene de una (por ejemplo una convocatoria); (2) si no, el perfil elegido en "Ingresar como", si eligió uno; (3) si no, **el único perfil activable que ya tenga la cuenta** (`soleProfileHome`, en `src/_lib/profiles.ts`) — así que iniciar sesión sin tocar el desplegable también va directo a la pantalla, cuando la cuenta solo tiene un rol; (4) si nada de lo anterior aplica (varios perfiles, o ninguno todavía), `/seleccion-perfil`. Organizador → `/crear-torneo`, Equipo → `/club`, Jugador → `/jugador`. `ADMIN` no cuenta para esta regla: una cuenta con `ADMIN` y un solo perfil real va a la pantalla de ese perfil, y una cuenta solo con `ADMIN` va a `/seleccion-perfil`.
+Modal de login y registro en la landing (con contraseña). Al **crear cuenta**, los perfiles se eligen con un desplegable (`profile-picker.tsx`, que lee `src/_lib/profiles.ts`) llamado "¿Cómo vas a usar Amateur?": selección múltiple y **obligatorio** (al menos uno). El login no pregunta nada — no tiene forma de elegir un perfil ahí (existió un "Ingresar como" opcional, se quitó por confuso: `/seleccion-perfil` ya cubre el caso de elegir con cuál entrar).
+- **Destino al terminar (registro o login) — en este orden:** (1) la página `next` si viene de una (por ejemplo una convocatoria); (2) si no, **el único perfil activable que ya tenga la cuenta** (`soleProfileHome`, en `src/_lib/profiles.ts`); (3) si no (varios perfiles, o ninguno todavía), `/seleccion-perfil`. Organizador → `/torneos`, Equipo → `/club`, Jugador → `/jugador`. `ADMIN` no cuenta para esta regla: una cuenta con `ADMIN` y un solo perfil real va a la pantalla de ese perfil, y una cuenta solo con `ADMIN` va a `/seleccion-perfil`.
 
-`/seleccion-perfil` activa el rol elegido; los tres "Cerrar sesión" (organizador, club, jugador) cierran la sesión; el contexto `useAuth()` expone `user`, `loading`, `login(email, password, next?, profile?)`, `register({ name, email, password, roles }, next?)`, `logout`, `addRole`, `refresh`.
+`/seleccion-perfil` activa el rol elegido; los tres "Cerrar sesión" (organizador, club, jugador) cierran la sesión; el contexto `useAuth()` expone `user`, `loading`, `login(email, password, next?)`, `register({ name, email, password, roles }, next?)`, `logout`, `addRole`, `refresh`.
 
 ## Limitaciones conocidas
 - **Sin límite de intentos** en login ni registro (fuerza bruta). Conviene activar las reglas de límite del firewall de Vercel.
@@ -98,4 +96,3 @@ Modal de login y registro en la landing (con contraseña). Los perfiles se elige
 - Los 15 usuarios del seed no pueden entrar (hash inválido, a propósito).
 - **Fan y Auspiciador** existen en el enum pero no se ofrecen al registrarse ni en `/seleccion-perfil` (ver la decisión 14 de [pendientes](pendientes-y-decisiones.md)).
 - **"Continuar con Google" se salta la elección de perfil** cuando se implemente: hoy el botón no hace nada, pero un alta por ese camino tendría que pedirla.
-- **"Ingresar como" activa el perfil sin preguntar** si la cuenta no lo tenía. Es la misma acción que `/seleccion-perfil`, pero conviene confirmar que es lo esperado.

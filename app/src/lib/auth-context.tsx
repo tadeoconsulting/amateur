@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { safeInternalPath } from "@/_lib/safe-next";
-import { PROFILES, soleProfileHome, type ProfileRole } from "./profiles";
+import { soleProfileHome, type ProfileRole } from "./profiles";
 
 export type AuthUser = {
   id: string;
@@ -23,8 +23,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   /** true mientras se consulta si ya hay una sesión abierta (al cargar la página). */
   loading: boolean;
-  /** `profile`: el perfil con el que se quiere entrar; se activa en la cuenta si todavía no lo tenía. */
-  login: (email: string, password: string, next?: string | null, profile?: ProfileRole) => Promise<Result>;
+  login: (email: string, password: string, next?: string | null) => Promise<Result>;
   register: (input: RegisterInput, next?: string | null) => Promise<Result>;
   logout: () => Promise<void>;
   /** Activa un perfil (ORGANIZADOR, CLUB_OWNER o JUGADOR) en la cuenta actual. */
@@ -69,21 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (email: string, password: string, next?: string | null, profile?: ProfileRole): Promise<Result> => {
+    async (email: string, password: string, next?: string | null): Promise<Result> => {
       const { res, data } = await postJson("/api/auth/login", { email, password });
       if (!res.ok) return { ok: false, error: data.error ?? "Error al iniciar sesión" };
-      let roles: string[] = data.roles;
-      // Si eligió con qué perfil entrar, se asegura de que la cuenta lo tenga (es lo mismo que hace
-      // "seleccion-perfil").
-      if (profile) {
-        const added = await postJson("/api/auth/roles", { role: profile });
-        if (added.res.ok) roles = added.data.roles;
-      }
-      setUser({ ...data, roles });
-      // Va a su pantalla, salvo que venga de una página concreta: la que eligió al entrar, o, si no
-      // eligió ninguna, la única que tenga la cuenta. Con más de un perfil (y sin elegir), a
-      // "seleccion-perfil".
-      const home = (profile ? PROFILES.find((p) => p.role === profile)?.href : undefined) ?? soleProfileHome(roles);
+      setUser(data);
+      // Va a su pantalla, salvo que venga de una página concreta. Con un solo perfil activable va
+      // directo a él; con más de uno (o ninguno todavía), a "seleccion-perfil" a elegir.
+      const home = soleProfileHome(data.roles);
       router.push(safeInternalPath(next, home ?? DEFAULT_LANDING));
       return { ok: true };
     },

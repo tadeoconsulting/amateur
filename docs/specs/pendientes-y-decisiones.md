@@ -23,7 +23,6 @@ El código tomó un camino por omisión en cada una. Confirmarlo o cambiarlo es 
 | 13 | **Alcance geográfico** | Todo asume Perú: departamentos, DNI, moneda `S/` | — |
 | 14 | **¿Qué pasa con `FAN` y `SPONSOR`?** | Existen en el enum sin funcionalidad, y no se ofrecen al registrarse ni en `/seleccion-perfil` | [constitución](constitution.md), [001](001-autenticacion-y-permisos.md) |
 | 15 | **¿Las páginas `/dev` y `/design-system` deben ser públicas?** | Lo son (no pasan por el proxy). No exponen datos, pero muestran todas las pantallas. | — |
-| 16 | **¿"Ingresar como" debe activar un perfil que la cuenta no tenía?** | Sí, sin preguntar (es lo mismo que hace `/seleccion-perfil`) | [001](001-autenticacion-y-permisos.md) |
 
 ## 2. Funcionalidad pendiente
 
