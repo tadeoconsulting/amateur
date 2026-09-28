@@ -342,6 +342,15 @@ export default function TournamentDetailPage() {
             <p className="mt-5 text-center font-body text-sm text-text-secondary">El torneo ya tiene todos sus equipos.</p>
           )}
 
+          {(tournament.format === "grupos" || tournament.format === "copa") && tournament.teams.length >= 2 && (
+            <Link
+              href={`/torneos/${params.id}/grupos`}
+              className="mt-3 flex w-full items-center justify-center rounded-lg border border-border-primary py-3.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
+            >
+              Asignar grupos
+            </Link>
+          )}
+
           {tournament.teams.length >= 2 && (
             <Link
               href={`/torneos/${params.id}/iniciar`}

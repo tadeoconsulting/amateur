@@ -207,6 +207,14 @@ export default function IniciarTorneoPage() {
         <p className="font-body text-sm text-text-secondary leading-relaxed max-w-[280px] mb-2">
           {blockReason ?? (isCopa ? "Arma primero la fase de grupos; el cuadro se arma después, cuando termine." : "Crea el fixture del torneo y que empiece esta fiesta deportiva.")}
         </p>
+        {groupPlan && !groupPlan.ok && (
+          <Link
+            href={`/torneos/${params.id}/grupos`}
+            className="mb-6 font-heading text-sm font-bold text-text-primary underline"
+          >
+            Asignar grupos
+          </Link>
+        )}
         {!blockReason && isBracket && bracket?.ok && (
           <p className="font-body text-xs text-text-secondary leading-relaxed max-w-[280px] mb-8">
             El cuadro tendrá {bracket.totalRounds} {bracket.totalRounds === 1 ? "ronda" : "rondas"}
