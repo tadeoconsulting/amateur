@@ -6,7 +6,7 @@ import { PROFILE_ROLES, soleProfileHome } from "../../src/_lib/profiles.ts";
 describe("soleProfileHome", () => {
   test("con un solo perfil activable, va directo a su pantalla", () => {
     assert.equal(soleProfileHome(["CLUB_OWNER"]), "/club");
-    assert.equal(soleProfileHome(["ORGANIZADOR"]), "/crear-torneo");
+    assert.equal(soleProfileHome(["ORGANIZADOR"]), "/torneos");
     assert.equal(soleProfileHome(["JUGADOR"]), "/jugador");
   });
 
