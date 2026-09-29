@@ -1,13 +1,40 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function AgregarSedePage() {
+  const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [ciudad, setCiudad] = useState("");
   const [ubicacion, setUbicacion] = useState("");
   const [referencia, setReferencia] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async () => {
+    if (!nombre.trim() || saving) return;
+    setSaving(true);
+    setError("");
+    const res = await fetch("/api/sedes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: nombre.trim(),
+        city: ciudad || null,
+        address: ubicacion || null,
+        reference: referencia || null,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "No se pudo crear la sede");
+      return;
+    }
+    router.push("/ajustes/sedes");
+  };
 
   return (
     <div className="flex min-h-dvh flex-col pb-8">
@@ -85,8 +112,14 @@ export default function AgregarSedePage() {
           </div>
         </div>
 
-        <button className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700">
-          Crear sede
+        {error && <p className="mt-4 font-body text-sm text-red-600">{error}</p>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={!nombre.trim() || saving}
+          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saving ? "Creando..." : "Crear sede"}
         </button>
       </div>
     </div>

@@ -28,6 +28,13 @@ export default function CrearTorneoPage() {
 
   function handleCreatedSede(s: Sede) {
     update({ sedes: [...sedes, s], sede: s });
+    // Se guarda para reutilizarla en futuros torneos (decisión 10) — si falla, la sede
+    // igual queda elegida para este torneo, solo no quedará disponible la próxima vez.
+    fetch("/api/sedes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: s.nombre, address: s.direccion || null, reference: s.referencia || null }),
+    }).catch(() => {});
   }
 
   function handleContinuar() {
