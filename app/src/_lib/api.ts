@@ -82,7 +82,7 @@ export interface SponsorRow extends SponsorSummary {
 
 /** Un equipo de un cuadro de eliminación: null ("por definir") hasta que se conoce el
  * ganador del cruce anterior. Fuera de un cuadro (liga/grupos), siempre viene definido. */
-export type MatchTeamRef = { id: string; name: string; shortName: string; logoUrl: string | null } | null;
+export type MatchTeamRef = { id: string; name: string; shortName: string; logoUrl: string | null; color: string | null } | null;
 
 export interface MatchListItem {
   id: string;

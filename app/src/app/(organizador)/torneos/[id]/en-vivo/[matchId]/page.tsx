@@ -90,7 +90,9 @@ export default function EnVivoPage() {
   const minutes = Math.floor(elapsedSeconds / 60);
   const seconds = elapsedSeconds % 60;
   const matchDuration = matchDurationMinutes(match.tournament.minutesPerHalf);
-  const progress = Math.min((elapsedSeconds / 60 / matchDuration) * 100, 100);
+  // Al finalizar la barra se completa entera (antes se vaciaba, porque elapsedSeconds vuelve a 0
+  // fuera de juego) y hace un pulso una sola vez — ver animate-progress-complete en globals.css.
+  const progress = finished ? 100 : live ? Math.min((elapsedSeconds / 60 / matchDuration) * 100, 100) : 0;
 
   const events: MatchEvent[] = (apiEvents ?? []).map((e) => ({
     id: e.id,
@@ -371,15 +373,16 @@ export default function EnVivoPage() {
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress bar. field-green (no brand-500, un gris casi igual al riel) para que el avance
+          se note; al finalizar pulsa una vez sola (animate-progress-complete, ver globals.css). */}
       <div className="mx-4 mb-5 flex items-center gap-2">
-        <div className="h-2 flex-1 rounded-full bg-border-primary overflow-hidden">
+        <div className={`h-2 flex-1 rounded-full bg-border-primary overflow-hidden${finished ? " animate-progress-complete" : ""}`}>
           <div
-            className="h-full rounded-full bg-brand-500 transition-all duration-1000"
+            className="h-full rounded-full bg-field-green transition-all duration-1000"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="font-heading text-sm font-bold text-brand-500">{matchDuration}&apos;</span>
+        <span className="font-heading text-sm font-bold text-field-dark">{matchDuration}&apos;</span>
       </div>
 
       {/* Estado del partido: sin empezar o terminado, en lugar de los controles de jugadas */}
@@ -554,15 +557,22 @@ export default function EnVivoPage() {
           <div className="flex flex-col gap-3">
             {events.map((event, i) => {
               const isGol = event.type === "gol";
+              // El fondo de un gol es el color del equipo que lo metió (antes siempre azul,
+              // sin importar de quién era), para poder distinguir de un vistazo quién anota.
+              const teamColor = (event.team === "local" ? match.homeTeam?.color : match.awayTeam?.color) ?? "#1B1B1B";
               const cardStyle = isGol
-                ? "bg-[#2196F3] text-white"
+                ? "text-white"
                 : "bg-surface-primary border border-border-primary text-text-primary";
               const minuteStyle = isGol ? "text-white" : "text-text-secondary";
               const descStyle = isGol ? "text-white/80" : "text-text-secondary";
               const teamName = event.team === "local" ? match.homeTeam?.name ?? "Por definir" : match.awayTeam?.name ?? "Por definir";
 
               return (
-                <div key={i} className={`rounded-xl px-4 py-3 ${cardStyle}`}>
+                <div
+                  key={i}
+                  className={`rounded-xl px-4 py-3 ${cardStyle}`}
+                  style={isGol ? { backgroundColor: teamColor } : undefined}
+                >
                   <div className="flex items-start gap-3">
                     <div className={`mt-0.5 shrink-0 ${minuteStyle}`}>
                       {event.type === "gol" && (
