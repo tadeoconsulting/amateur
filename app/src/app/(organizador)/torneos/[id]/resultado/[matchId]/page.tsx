@@ -21,6 +21,8 @@ type TimelineEvent = {
   title: string;
   description: string;
   team?: string;
+  /** Solo para type "gol": el color del equipo que anotó (antes siempre azul fijo). */
+  teamColor?: string;
   player?: { name: string; position: string };
   detail?: string;
 };
@@ -94,7 +96,9 @@ function getEventStyle(type: TimelineEvent["type"]) {
     case "final":
       return "bg-brand-500 text-white";
     case "gol":
-      return "bg-[#2196F3] text-white";
+      // El color va aparte, inline (ver teamColor): acá solo el texto, el fondo variaba antes
+      // siempre en el mismo azul sin importar de qué equipo era el gol.
+      return "text-white";
     default:
       return "bg-surface-primary border border-border-primary text-text-primary";
   }
@@ -158,12 +162,14 @@ export default function ResultadoPage() {
     ...reachedPhases.flatMap((phase, i): TimelineEvent[] => [
       ...(match.decisive && i > 0 ? [{ minute: "", type: "fase" as const, title: PHASE_LABELS[phase], description: "" }] : []),
       ...eventsByPhase[phase].map((e): TimelineEvent => {
-        const team = e.teamId === match.awayTeam?.id ? match.awayTeam?.name ?? "Por definir" : match.homeTeam?.name ?? "Por definir";
+        const isAway = e.teamId === match.awayTeam?.id;
+        const team = isAway ? match.awayTeam?.name ?? "Por definir" : match.homeTeam?.name ?? "Por definir";
         return {
           minute: `${e.minute}'`,
           type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
           title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
           description: e.playerName ? `${e.playerName} - ${team}` : team,
+          teamColor: (isAway ? match.awayTeam?.color : match.homeTeam?.color) ?? "#1B1B1B",
           detail: e.detail ?? undefined,
         };
       }),
@@ -261,6 +267,7 @@ export default function ResultadoPage() {
           <div
             key={i}
             className={`rounded-xl px-4 py-3 ${getEventStyle(event.type)}`}
+            style={event.type === "gol" ? { backgroundColor: event.teamColor } : undefined}
           >
             <div className="flex items-start gap-3">
               <div className={`mt-0.5 shrink-0 ${getMinuteStyle(event.type)}`}>
