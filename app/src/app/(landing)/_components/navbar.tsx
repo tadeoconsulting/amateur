@@ -26,6 +26,9 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
             <a href="#como-funciona" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
               Cómo funciona
             </a>
+            <a href="#torneos" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
+              Torneos
+            </a>
             <a href="#numeros" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
               Números
             </a>
@@ -77,6 +80,9 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
             </a>
             <a href="#como-funciona" onClick={() => setMenuOpen(false)} className="text-sm font-medium text-text-secondary py-2">
               Cómo funciona
+            </a>
+            <a href="#torneos" onClick={() => setMenuOpen(false)} className="text-sm font-medium text-text-secondary py-2">
+              Torneos
             </a>
             <a href="#numeros" onClick={() => setMenuOpen(false)} className="text-sm font-medium text-text-secondary py-2">
               Números
