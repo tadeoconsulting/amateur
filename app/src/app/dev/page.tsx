@@ -328,9 +328,9 @@ const screens: Screen[] = [
     status: "done",
   },
   {
-    path: "/club/torneos/t1/titulares",
+    path: "/club/torneos/t1/titulares/m1",
     name: "Club - Definir titulares",
-    description: "Selección de titulares con checkboxes, contador X/15 jugadores y botón Guardar cambios",
+    description: "Selección de titulares con checkboxes, contador X/15 jugadores y botón Guardar cambios (persiste, por partido)",
     figmaNode: "4853:28411",
     status: "done",
   },
