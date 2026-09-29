@@ -1,13 +1,15 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { getTournament, getMatches, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { isUnscheduled } from "@/_lib/fixture";
+import { shareLink } from "@/_lib/share";
+import { Toast } from "@/_components/toast";
 
 const clubColors = ["#E53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#F4511E", "#7B1FA2"];
 
@@ -33,15 +35,24 @@ function PartidosFixtureContent() {
   const { data: tournament } = useApi(() => getTournament(params.id));
   const { data: allMatches, loading } = useApi(() => getMatches({ tournamentId: params.id }));
   const [activeMatchday, setActiveMatchday] = useState<number | null>(null);
-  const [showToast, setShowToast] = useState(false);
+  // Se lee una sola vez al montar (lazy init) en vez de en un efecto: evita el
+  // set-state-in-effect de React 19 para algo que no depende de nada externo.
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(() =>
+    searchParams.get("saved") === "true" ? { message: "Se definió los partidos con éxito.", tone: "success" } : null
+  );
 
-  useEffect(() => {
-    if (searchParams.get("saved") === "true") {
-      setShowToast(true);
-      const timer = setTimeout(() => setShowToast(false), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams]);
+  async function handleShare() {
+    if (!tournament) return;
+    // El link público es la convocatoria (ver decisiones — es la única pantalla del torneo
+    // que no exige haber iniciado sesión): cualquiera que lo abra ve el fixture y los equipos.
+    const result = await shareLink({
+      title: tournament.name,
+      text: `Mira el fixture de ${tournament.name} en Amateur`,
+      url: `${window.location.origin}/convocatoria/${params.id}`,
+    });
+    if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
+    if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
+  }
 
   if (loading || !tournament || !allMatches) {
     return (
@@ -66,26 +77,7 @@ function PartidosFixtureContent() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-20">
-      {/* Success toast */}
-      {showToast && (
-        <div className="fixed top-0 left-0 right-0 z-[120] flex justify-center">
-          <div className="mx-auto w-full max-w-[430px] px-4 pt-3">
-            <div className="flex items-center justify-between rounded-lg bg-verification px-4 py-3 animate-slide-down">
-              <p className="font-heading text-sm font-semibold text-text-primary">
-                Se definió los partidos con éxito.
-              </p>
-              <button
-                onClick={() => setShowToast(false)}
-                className="cursor-pointer p-1 text-text-primary"
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
 
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3">
@@ -101,7 +93,10 @@ function PartidosFixtureContent() {
           </svg>
           <h1 className="font-heading text-xl font-bold text-text-primary">Fixture</h1>
         </div>
-        <button className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer">
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer"
+        >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M2 5.5L7 2l5 3.5M7 2v10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M4 8l-2 1.5V12h4v-2.5a1 1 0 012 0V12h4V9.5L10 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
