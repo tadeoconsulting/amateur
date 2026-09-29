@@ -85,6 +85,20 @@ export function WizardProvider({
     if (tournamentId === null && user && !user.roles.includes("ORGANIZADOR")) addRole("ORGANIZADOR");
   }, [tournamentId, user, addRole]);
 
+  // Precarga las sedes ya guardadas (decisión 10): así "Sede del torneo" en el paso 1 no
+  // arranca vacío cada vez — solo se pide una vez, al montar el asistente.
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/sedes")
+      .then((r) => r.json())
+      .then((rows: { name: string; address: string | null; reference: string | null }[]) => {
+        const loaded: Sede[] = rows.map((s) => ({ nombre: s.name, direccion: s.address ?? "", referencia: s.reference ?? "" }));
+        setState((prev) => (prev.sedes.length > 0 ? prev : { ...prev, sedes: loaded }));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   const basePath = tournamentId ? `/torneos/${tournamentId}/editar` : "/crear-torneo";
   const exitHref = tournamentId ? `/torneos/${tournamentId}` : "/torneos";
 
