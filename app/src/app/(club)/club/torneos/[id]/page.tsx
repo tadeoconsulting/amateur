@@ -7,6 +7,8 @@ import { getTournament, getMatches, getStandings, getScorers } from "@/_lib/api"
 import { useApi } from "@/_lib/use-api";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { formatWhen, formatWhenDate } from "@/_lib/match-format";
+import { shareLink } from "@/_lib/share";
+import { Toast } from "@/_components/toast";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -17,6 +19,7 @@ export default function ClubTorneoDetallePage() {
   const [detailTab, setDetailTab] = useState<DetailTab>("torneo");
   const [torneoSubTab, setTorneoSubTab] = useState<TorneoSubTab>("partidos");
   const [resultadosSubTab, setResultadosSubTab] = useState<ResultadosSubTab>("tabla");
+  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const { data: tournament, loading: loadingTournament } = useApi(() => getTournament(id));
   const { data: allMatches, loading: loadingMatches } = useApi(() => getMatches({ tournamentId: id }));
@@ -29,6 +32,19 @@ export default function ClubTorneoDetallePage() {
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     );
+  }
+
+  async function handleShare() {
+    if (!tournament) return;
+    // El link público es la convocatoria (no exige haber iniciado sesión): cualquiera que lo
+    // abra ve el fixture, los equipos y ahora los resultados.
+    const result = await shareLink({
+      title: tournament.name,
+      text: `Mira los resultados de ${tournament.name} en Amateur`,
+      url: `${window.location.origin}/convocatoria/${id}`,
+    });
+    if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
+    if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
   }
 
   const tournamentMatches = allMatches ?? [];
@@ -45,6 +61,7 @@ export default function ClubTorneoDetallePage() {
 
   return (
     <div className="flex min-h-dvh flex-col pb-4">
+      {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
         <Link href="/club/torneos" className="shrink-0 p-1 text-text-primary">
@@ -357,7 +374,10 @@ export default function ClubTorneoDetallePage() {
               <p className="text-center font-body text-sm text-text-secondary">
                 Comparte los resultados del torneo con tu comunidad
               </p>
-              <button className="cursor-pointer rounded-lg bg-surface-secondary px-6 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700">
+              <button
+                onClick={handleShare}
+                className="cursor-pointer rounded-lg bg-surface-secondary px-6 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              >
                 Compartir resultados
               </button>
             </div>
