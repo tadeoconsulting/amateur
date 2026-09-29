@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { getMyRequests, getTournaments, modalityLabel, resolveRequest, type MyRequestItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import { formatLabel, OPEN_STATUSES } from "@/_lib/tournament-labels";
 import { timeAgo } from "@/_lib/time-ago";
 import type { RequestAction } from "@/_lib/tournament-request";
@@ -17,14 +18,18 @@ import { notifyChanged } from "@/_lib/notifications-changed";
 type MainTab = "mis_torneos" | "solicitudes";
 type CategoryTab = "libre" | "sub18";
 
-function ClubTorneosContent() {
+function ClubTorneosContent({ clubId }: { clubId: string }) {
   // ?tab=solicitudes abre directo esa pestaña (por ejemplo, desde "Buscar torneo").
   const initialTab: MainTab = useSearchParams().get("tab") === "solicitudes" ? "solicitudes" : "mis_torneos";
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
   const [categoryTab, setCategoryTab] = useState<CategoryTab>("libre");
   const [busy, setBusy] = useState<{ id: string; action: RequestAction } | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
-  const { data: tournaments, loading } = useApi(() => getTournaments());
+  // Antes pedía TODOS los torneos de la plataforma (sin clubId) y filtraba solo por estado, así
+  // que "Mis torneos" mostraba el fixture de cualquier organizador — y de paso se le escapaban
+  // los propios: uno recién aceptado, todavía en "inscripcion" (el organizador no dio inicio),
+  // no entraba en el filtro de abajo y parecía que la inscripción "no se reflejó".
+  const { data: tournaments, loading } = useApi(() => getTournaments({ clubId }));
   const { data: myRequests, refetch: refetchRequests } = useApi(() => getMyRequests());
 
   if (loading || !tournaments) return <PageSpinner />;
@@ -46,9 +51,10 @@ function ClubTorneosContent() {
     notifyChanged();
   }
 
-  const clubTournaments = tournaments.filter(
-    (t) => t.status === "en_curso" || t.status === "finalizado"
-  );
+  // Ya viene filtrado por clubId (arriba): acá solo se excluye "draft", que no debería tener
+  // equipos inscritos de todas formas. Antes exigía en_curso/finalizado, ocultando un torneo
+  // donde el club ya fue aceptado pero el organizador aún no dio inicio ("inscripcion").
+  const clubTournaments = tournaments.filter((t) => t.status !== "draft");
 
   return (
     <div className="flex min-h-dvh flex-col pb-4">
@@ -288,10 +294,27 @@ function ClubTorneosContent() {
   );
 }
 
+function ClubTorneosWithClub() {
+  const { club, loading: loadingClub } = useMyClub();
+
+  if (loadingClub) return <PageSpinner />;
+  if (!club) {
+    return (
+      <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">
+        Todavía no tienes un club.
+      </div>
+    );
+  }
+
+  // `key` fuerza a remontar si alguna vez cambia de club, así el useApi de arriba no se
+  // queda pegado al id anterior (mismo patrón que club/equipo).
+  return <ClubTorneosContent key={club.id} clubId={club.id} />;
+}
+
 export default function ClubTorneosPage() {
   return (
     <Suspense fallback={<PageSpinner />}>
-      <ClubTorneosContent />
+      <ClubTorneosWithClub />
     </Suspense>
   );
 }
