@@ -192,11 +192,15 @@ export default function TournamentDetailPage() {
   const matches = tournamentMatches || [];
   const tournaments = allTournaments || [];
 
-  const groups = [...new Set(matches.map((m) => m.groupName).filter(Boolean))].sort() as string[];
+  // Antes filtraba los groupName vacíos (.filter(Boolean)) sin dejar nada en su lugar: una
+  // liga simple, sin grupos, tiene TODOS sus partidos con groupName null, así que "groups"
+  // quedaba vacío y la pestaña "Partidos" no mostraba nada aunque el fixture sí existiera.
+  // "General" iguala la convención ya usada en la pantalla de Fixture (torneos/[id]/partidos).
+  const groups = [...new Set(matches.map((m) => m.groupName || "General"))].sort() as string[];
 
   const matchesByGroup: Record<string, MatchListItem[]> = {};
   for (const m of matches) {
-    const g = m.groupName || "Sin grupo";
+    const g = m.groupName || "General";
     if (!matchesByGroup[g]) matchesByGroup[g] = [];
     matchesByGroup[g].push(m);
   }
