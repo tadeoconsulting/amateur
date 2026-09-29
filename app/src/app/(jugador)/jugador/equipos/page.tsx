@@ -135,8 +135,16 @@ function MyTeams({ userId }: { userId: string }) {
 
   return (
     <div className="w-full">
-      <div className="px-4 pt-4">
+      <div className="flex items-center justify-between px-4 pt-4">
         <h1 className="font-heading text-xl font-bold text-text-primary">Mis Equipos</h1>
+        {!club && (
+          <Link href="/jugador/equipos/buscar" className="p-1 text-text-primary" aria-label="Buscar equipos">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </Link>
+        )}
       </div>
 
       <Invitations onJoined={refetch} />
@@ -154,9 +162,12 @@ function MyTeams({ userId }: { userId: string }) {
         <div className="flex flex-1 flex-col items-center justify-center px-6 pt-24 text-center">
           <h2 className="font-heading text-lg font-bold text-text-primary">Aún no perteneces a ningún equipo</h2>
           <p className="mt-2 text-sm text-text-secondary">
-            Pídele a tu club su link de invitación, o espera a que te inviten.
+            Busca un equipo y pide unirte, pídele a tu club su link de invitación, o espera a que te inviten.
           </p>
-          <Link href="/jugador/ajustes/perfil" className="mt-6 text-sm font-medium text-text-primary underline">
+          <Link href="/jugador/equipos/buscar" className="mt-6 w-full max-w-[280px] rounded-lg bg-surface-secondary py-3 text-center text-sm font-semibold text-text-invert">
+            Buscar equipos
+          </Link>
+          <Link href="/jugador/ajustes/perfil" className="mt-4 text-sm font-medium text-text-primary underline">
             Editar perfil
           </Link>
         </div>

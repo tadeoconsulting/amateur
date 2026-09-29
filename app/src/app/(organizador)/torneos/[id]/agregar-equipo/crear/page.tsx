@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const presetColors = [
   "#FF6363", "#FF9F43", "#FFD039", "#00CA81",
@@ -18,8 +18,36 @@ export default function CrearEquipoPage() {
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoError, setLogoError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canSubmit = nombre.trim() && nombreCorto.trim();
+
+  async function handleLogoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite volver a elegir el mismo archivo si falla
+    if (!file) return;
+    setLogoError("");
+    setUploadingLogo(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setLogoError(data.error ?? "No se pudo subir la imagen");
+        return;
+      }
+      const data = await res.json();
+      setLogoUrl(data.url);
+    } catch {
+      setLogoError("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!canSubmit || saving) return;
@@ -30,7 +58,7 @@ export default function CrearEquipoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          newClub: { name: nombre.trim(), shortName: nombreCorto.trim(), color: color || null },
+          newClub: { name: nombre.trim(), shortName: nombreCorto.trim(), color: color || null, logoUrl },
         }),
       });
       if (!res.ok) {
@@ -125,20 +153,38 @@ export default function CrearEquipoPage() {
       <div className="mt-4 flex justify-center">
         <div className="relative">
           <div
-            className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-brand-200"
-            style={color ? { backgroundColor: color + "20", borderColor: color } : undefined}
+            className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-brand-200"
+            style={color && !logoUrl ? { backgroundColor: color + "20", borderColor: color } : undefined}
           >
-            <svg width="32" height="32" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M4 2h8v4a4 4 0 01-8 0V2zM3 3H1.5a.5.5 0 00-.5.5v1a2 2 0 002 2H3M13 3h1.5a.5.5 0 01.5.5v1a2 2 0 01-2 2h-.5M6 10v2M10 10v2M5 12h6a1 1 0 011 1v1H4v-1a1 1 0 011-1z"
-                stroke={color || "var(--color-text-secondary)"}
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- URL dinámica de Blob, sin dominio fijo para next/image
+              <img src={logoUrl} alt="Escudo del equipo" className="h-full w-full object-cover" />
+            ) : uploadingLogo ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+            ) : (
+              <svg width="32" height="32" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M4 2h8v4a4 4 0 01-8 0V2zM3 3H1.5a.5.5 0 00-.5.5v1a2 2 0 002 2H3M13 3h1.5a.5.5 0 01.5.5v1a2 2 0 01-2 2h-.5M6 10v2M10 10v2M5 12h6a1 1 0 011 1v1H4v-1a1 1 0 011-1z"
+                  stroke={color || "var(--color-text-secondary)"}
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
           </div>
-          <button className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-surface-secondary text-text-invert shadow-md">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleLogoSelected}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingLogo}
+            className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-surface-secondary text-text-invert shadow-md disabled:opacity-60"
+          >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path
                 d="M6.5 2.5L7.5 1.5h1l1 1h2.5a1 1 0 011 1v8a1 1 0 01-1 1h-9a1 1 0 01-1-1v-8a1 1 0 011-1H6.5z"
@@ -152,6 +198,7 @@ export default function CrearEquipoPage() {
           </button>
         </div>
       </div>
+      {logoError && <p className="mt-2 text-center font-body text-xs text-red-600">{logoError}</p>}
 
       {/* Form */}
       <div className="mt-8 flex flex-col gap-5 px-4">

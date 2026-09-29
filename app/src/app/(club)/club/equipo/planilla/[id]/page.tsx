@@ -40,23 +40,18 @@ export default function EditStaffPage() {
 function EditStaffContent({ clubId }: { clubId: string }) {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: staffMembers, loading } = useApi(() => getClubStaff(clubId));
+  const { data: staffMembers, loading, refetch } = useApi(() => getClubStaff(clubId));
   const member = staffMembers?.find((s) => s.id === params.id) ?? null;
 
-  const [name, setName] = useState("");
   const [role, setRole] = useState<StaffRole>("delegado");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [showRoleSheet, setShowRoleSheet] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (member) {
-      setName(`${member.firstName} ${member.lastName}`);
       setRole((member.role as StaffRole) ?? "delegado");
-      setPhone(member.phone ?? "");
-      setEmail(member.email ?? "");
     }
   }, [member]);
 
@@ -78,13 +73,34 @@ function EditStaffContent({ clubId }: { clubId: string }) {
 
   const roleLabel = roleOptions.find((r) => r.key === role)?.label ?? "";
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaving(true);
+    const res = await fetch(`/api/clubs/${clubId}/staff/${member.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setToast(data.error ?? "No se pudo guardar");
+      return;
+    }
     setToast("Datos guardados con éxito.");
+    refetch();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setShowDeleteDialog(false);
-    setToast("Cuenta eliminada con éxito.");
+    setSaving(true);
+    const res = await fetch(`/api/clubs/${clubId}/staff/${member.id}`, { method: "DELETE" });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setToast(data.error ?? "No se pudo quitar del equipo");
+      return;
+    }
+    setToast("Se quitó a la persona del equipo.");
     setTimeout(() => router.push("/club/equipo"), 1200);
   };
 
@@ -113,17 +129,14 @@ function EditStaffContent({ clubId }: { clubId: string }) {
       {/* Form */}
       <div className="mt-6 space-y-5 px-4">
         <div>
-          <label className="text-sm text-text-secondary">Nombre completo</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-          />
+          <p className="text-sm text-text-secondary">Nombre completo</p>
+          <p className="mt-1 border-b border-brand-200 py-2 text-sm text-text-primary">
+            {member.firstName} {member.lastName}
+          </p>
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Elige el ajustes</label>
+          <label className="text-sm text-text-secondary">Rol en el club</label>
           <button
             onClick={() => setShowRoleSheet(true)}
             className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2"
@@ -136,37 +149,36 @@ function EditStaffContent({ clubId }: { clubId: string }) {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Número del delegado</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-          />
+          <p className="text-sm text-text-secondary">Teléfono</p>
+          <p className="mt-1 border-b border-brand-200 py-2 text-sm text-text-primary">
+            {member.phone || "—"}
+          </p>
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Correo del delegado</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-          />
+          <p className="text-sm text-text-secondary">Correo</p>
+          <p className="mt-1 border-b border-brand-200 py-2 text-sm text-text-primary">
+            {member.email || "—"}
+          </p>
         </div>
+        <p className="-mt-3 font-body text-xs text-text-secondary">
+          El teléfono y correo son de su cuenta: los cambia esa persona desde su propio perfil.
+        </p>
 
         <button
           onClick={handleSave}
-          className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert"
+          disabled={saving}
+          className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-50"
         >
-          Guardar datos
+          Guardar rol
         </button>
 
         <button
           onClick={() => setShowDeleteDialog(true)}
-          className="w-full cursor-pointer py-2 text-center text-sm font-medium text-text-primary underline"
+          disabled={saving}
+          className="w-full cursor-pointer py-2 text-center text-sm font-medium text-text-primary underline disabled:opacity-50"
         >
-          Eliminar cuenta
+          Quitar del equipo
         </button>
       </div>
 
@@ -212,10 +224,10 @@ function EditStaffContent({ clubId }: { clubId: string }) {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-heading text-lg font-bold text-text-primary">
-              ¿Estás seguro de eliminar la cuenta de {member.firstName} {member.lastName}?
+              ¿Quitar a {member.firstName} {member.lastName} del equipo?
             </h3>
             <p className="mt-2 text-sm text-text-secondary">
-              Si eliminas esta cuenta, ya no podrás recuperarla, tus datos personales serán borrados de nuestra base de datos.
+              Deja de ser {roleLabel.toLowerCase()} de este club. Su cuenta no se ve afectada — puede volver a sumarse si la invitan de nuevo.
             </p>
             <div className="mt-6 flex gap-3">
               <button
@@ -226,9 +238,10 @@ function EditStaffContent({ clubId }: { clubId: string }) {
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 cursor-pointer rounded-xl bg-brand-900 py-3 text-center font-heading text-sm font-semibold text-text-invert"
+                disabled={saving}
+                className="flex-1 cursor-pointer rounded-xl bg-brand-900 py-3 text-center font-heading text-sm font-semibold text-text-invert disabled:opacity-50"
               >
-                Sí, eliminar
+                Sí, quitar
               </button>
             </div>
           </div>

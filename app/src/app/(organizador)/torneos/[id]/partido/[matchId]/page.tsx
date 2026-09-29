@@ -29,10 +29,15 @@ function getCountdown(targetDate: Date): string {
   const now = new Date();
   const diff = targetDate.getTime() - now.getTime();
   if (diff <= 0) return "00:00:00";
-  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const totalHours = Math.floor(diff / (1000 * 60 * 60));
+  // Con partidos programados con varios días de anticipación, mostrar solo horas llegaba a
+  // pasar de 24 (ej. "36:15:22") en vez de contar los días aparte.
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((diff % (1000 * 60)) / 1000);
-  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const hhmmss = `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  return days > 0 ? `${days}d ${hhmmss}` : hhmmss;
 }
 
 /** Momento de inicio del partido: su día más la hora de reloj de la cancha. null si no está programado. */

@@ -51,3 +51,21 @@ export async function createMatchViewerToken(matchId: string) {
     ttl: 60 * 60 * 1000,
   });
 }
+
+/**
+ * Token de solo lectura para CUALQUIER partido (capability "match:*"), a diferencia de
+ * `createMatchViewerToken` que ata el token a uno solo. Lo usan las pantallas de fixture de un
+ * torneo (varios partidos a la vez, y cuál está en vivo cambia mientras la pantalla sigue
+ * abierta): pedir un token nuevo cada vez que otro partido arranca sería más complejo que
+ * simplemente cubrir todos — el aviso que se publica no lleva ningún dato (ver
+ * `publicarEventoPartido`), así que no hay nada sensible que este alcance más amplio exponga.
+ * `null` si el tiempo real no está configurado.
+ */
+export async function createTournamentViewerToken() {
+  const ably = getClient();
+  if (!ably) return null;
+  return ably.auth.createTokenRequest({
+    capability: { [`${CHANNEL_PREFIX}*`]: ["subscribe"] },
+    ttl: 60 * 60 * 1000,
+  });
+}
