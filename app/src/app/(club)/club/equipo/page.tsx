@@ -112,6 +112,85 @@ function StaffInvitations({ onJoined }: { onJoined: () => void }) {
   );
 }
 
+interface JoinRequestRow {
+  id: string;
+  createdAt: string;
+  user: { id: string; firstName: string; lastName: string; email: string };
+}
+
+/**
+ * Solicitudes de jugadores sin club que quieren unirse a ESTE club (vienen de "Buscar
+ * equipos" del jugador). A diferencia de StaffInvitations, sí depende del `clubId` de la
+ * página: son propias de este club, no de la sesión.
+ */
+function JoinRequests({ clubId, onJoined }: { clubId: string; onJoined: () => void }) {
+  const { data: requests, refetch } = useApi<JoinRequestRow[]>(() =>
+    fetch(`/api/clubs/${clubId}/join-requests`).then((r) => (r.ok ? r.json() : []))
+  );
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  async function respond(req: JoinRequestRow, action: "accept" | "decline") {
+    setBusy(req.id);
+    setError("");
+    try {
+      const res = await fetch(`/api/player-join-requests/${req.id}/${action}`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "No se pudo completar la acción");
+        return;
+      }
+      refetch();
+      notifyChanged();
+      if (action === "accept") onJoined();
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (!requests || requests.length === 0) return null;
+
+  return (
+    <div className="mt-4 px-4">
+      <h2 className="font-heading text-sm font-bold text-text-primary">Solicitudes para unirse</h2>
+      <div className="mt-2 space-y-2">
+        {requests.map((req) => (
+          <div key={req.id} className="rounded-lg border border-brand-200 bg-btn-regular px-4 py-3">
+            <div className="flex items-center gap-3">
+              <AvatarPlaceholder initials={`${req.user.firstName[0]}${req.user.lastName[0]}`} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-text-primary">
+                  {req.user.firstName} {req.user.lastName}
+                </p>
+                <p className="truncate text-xs text-text-secondary">Quiere unirse a tu equipo</p>
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={() => respond(req, "accept")}
+                disabled={busy === req.id}
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2 text-sm font-semibold text-text-invert disabled:opacity-50"
+              >
+                Aceptar
+              </button>
+              <button
+                onClick={() => respond(req, "decline")}
+                disabled={busy === req.id}
+                className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2 text-sm font-semibold text-text-primary disabled:opacity-50"
+              >
+                Rechazar
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
 export default function ClubEquipoPage() {
   const [activeTab, setActiveTab] = useState<Tab>("Categorías");
   const { club, loading: loadingClub } = useMyClub();
@@ -148,7 +227,7 @@ function ClubEquipoContent({
 }) {
   // Se monta solo cuando ya se conoce el club: el useApi de acá abajo pide una sola vez, al
   // montar, así que necesita el id correcto desde el primer render (ver "use-api.ts").
-  const { data: teamCategories, loading: loadingCategories } = useApi(() => getClubCategories(clubId));
+  const { data: teamCategories, loading: loadingCategories, refetch: refetchCategories } = useApi(() => getClubCategories(clubId));
   const { data: staffMembers, loading: loadingStaff, refetch: refetchStaff } = useApi(() => getClubStaff(clubId));
 
   if ((loadingCategories && !teamCategories) || (loadingStaff && !staffMembers)) {
@@ -208,6 +287,7 @@ function ClubEquipoContent({
       </div>
 
       <StaffInvitations onJoined={refetchStaff} />
+      <JoinRequests clubId={clubId} onJoined={() => { refetchCategories(); refetchStaff(); }} />
 
       {/* Tabs */}
       <div className="mt-4 flex border-b border-brand-200 px-4">

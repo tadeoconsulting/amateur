@@ -84,3 +84,27 @@ body {
 .animate-slide-down {
   animation: slide-down 0.25s ease-out;
 }
+
+/* Partido en vivo: la barra de progreso pulsa una vez cuando el partido llega a "finalizado". */
+@keyframes progress-complete {
+  0% { box-shadow: 0 0 0 0 rgba(0, 202, 129, 0.55); }
+  70% { box-shadow: 0 0 0 8px rgba(0, 202, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 202, 129, 0); }
+}
+
+.animate-progress-complete {
+  animation: progress-complete 0.8s ease-out;
+}
+
+/* Partido en vivo (vista de los fans): festejo breve cuando llega un gol nuevo. */
+@keyframes goal-celebration {
+  0% { transform: scale(0.85); opacity: 0; }
+  15% { transform: scale(1.04); opacity: 1; }
+  25% { transform: scale(1); }
+  85% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.98); opacity: 0; }
+}
+
+.animate-goal-celebration {
+  animation: goal-celebration 2.4s ease-in-out forwards;
+}

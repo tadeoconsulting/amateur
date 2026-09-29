@@ -71,16 +71,27 @@ export async function POST(
     const name = typeof input?.name === "string" ? input.name.trim() : "";
     const shortName = typeof input?.shortName === "string" ? input.shortName.trim() : "";
     const color = input?.color;
+    const logoUrl = input?.logoUrl;
     if (!name || name.length > 80) return badRequest("El nombre del equipo debe tener entre 1 y 80 caracteres");
     if (!shortName || shortName.length > 12) return badRequest("El nombre corto debe tener entre 1 y 12 caracteres");
     if (color !== undefined && color !== null && (typeof color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(color))) {
       return badRequest("color debe tener formato #RRGGBB");
     }
+    if (logoUrl !== undefined && logoUrl !== null && (typeof logoUrl !== "string" || logoUrl.length > 500)) {
+      return badRequest("logoUrl no es válido");
+    }
 
     try {
       const enrollment = await withOpenTournament(id, async (tx) => {
         const club = await tx.club.create({
-          data: { name, shortName, color: typeof color === "string" ? color : null, ownerId: user.id, isTemporary: true },
+          data: {
+            name,
+            shortName,
+            color: typeof color === "string" ? color : null,
+            logoUrl: typeof logoUrl === "string" ? logoUrl : null,
+            ownerId: user.id,
+            isTemporary: true,
+          },
         });
         return tx.tournamentTeam.create({
           data: { tournamentId: id, clubId: club.id, groupName },

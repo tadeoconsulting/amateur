@@ -8,7 +8,7 @@ import type { MatchListItem } from "@/_lib/api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { liveMinute } from "@/_lib/match-live";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function TeamLogo({ shortName }: { shortName: string }) {
   return (
@@ -41,13 +41,41 @@ export default function MatchDetailPage() {
   const { data: events, loading: loadingEvents, refetchSilently: refetchEvents } = useApi<MatchEventRow[]>(() =>
     fetch(`/api/matches/${params.matchId}/events`).then((r) => r.json())
   );
-  const [now] = useState(() => Date.now());
+  // Antes quedaba fijo en el momento en que se montó la pantalla, así que el minuto en vivo
+  // (más abajo) nunca avanzaba — "todo se queda en minuto 0" en el reporte de QA.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Festejo breve cuando llega un gol nuevo por tiempo real. Compara ids ya vistos (no la
+  // cantidad total) para no festejar de nuevo si se deshace un gol y se anota otro; y no
+  // festeja los goles que ya estaban ahí la primera vez que carga la pantalla.
+  const seenGoalIds = useRef<Set<string> | null>(null);
+  const [celebrating, setCelebrating] = useState<{ teamId: string; goalId: string } | null>(null);
 
   // Mientras el partido está en juego, cada gol, tarjeta o cambio de marcador llega sin recargar.
   useMatchRealtime(params.matchId, () => {
     refetchMatch();
     refetchEvents();
   });
+
+  useEffect(() => {
+    if (!events) return;
+    const goalIds = events.filter((e) => e.type === "gol").map((e) => e.id);
+    if (seenGoalIds.current === null) {
+      seenGoalIds.current = new Set(goalIds);
+      return;
+    }
+    const newGoal = events.find((e) => e.type === "gol" && !seenGoalIds.current!.has(e.id));
+    seenGoalIds.current = new Set(goalIds);
+    if (newGoal) {
+      setCelebrating({ teamId: newGoal.teamId, goalId: newGoal.id });
+      const timer = setTimeout(() => setCelebrating(null), 2400);
+      return () => clearTimeout(timer);
+    }
+  }, [events]);
 
   if (loadingMatch || !match) {
     return (
@@ -113,6 +141,18 @@ export default function MatchDetailPage() {
           </div>
         </div>
       </div>
+
+      {celebrating && (
+        <div
+          key={celebrating.goalId}
+          className="animate-goal-celebration mx-4 mt-3 rounded-xl px-4 py-3 text-center"
+          style={{ backgroundColor: (celebrating.teamId === match.homeTeam?.id ? match.homeTeam?.color : match.awayTeam?.color) ?? "#1B1B1B" }}
+        >
+          <p className="font-heading text-base font-bold text-white">
+            ¡Gooooolll! {celebrating.teamId === match.homeTeam?.id ? match.homeTeam?.name : match.awayTeam?.name}
+          </p>
+        </div>
+      )}
 
       {byPenalties && (
         <div className="mx-4 mt-3 rounded-xl bg-btn-regular px-4 py-3 text-center">
