@@ -6,6 +6,7 @@ import { Hero } from "./hero";
 import { Marquee } from "./marquee";
 import { Features } from "./features";
 import { HowItWorks } from "./how-it-works";
+import { PublicTournaments } from "./public-tournaments";
 import { Stats } from "./stats";
 import { CtaFinal } from "./cta-final";
 import { Footer } from "./footer";
@@ -33,6 +34,7 @@ export function LandingShell({
       <Marquee />
       <Features />
       <HowItWorks />
+      <PublicTournaments />
       <Stats />
       <CtaFinal onOpenAuth={openAuth} />
       <Footer />
