@@ -11,17 +11,16 @@ import {
   getScorers,
   getTournamentRequests,
   type TournamentListItem,
-  type MatchListItem,
   type StandingsRow,
   type ScorerRow,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
+import { FixtureTabs } from "@/_components/fixture-tabs";
 import { RequestsPanel } from "./_components/requests-panel";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
-import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
@@ -101,20 +100,6 @@ const convocatoriaTabs: { key: ConvocatoriaTab; label: string }[] = [
   { key: "invitados", label: "Invitados" },
 ];
 
-function formatShortDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  return `${days[d.getUTCDay()]}. ${String(d.getUTCDate()).padStart(2, "0")} ${months[d.getUTCMonth()]}`;
-}
-
-function formatLongDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-  const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  return `${days[d.getUTCDay()]} ${d.getUTCDate()} de ${months[d.getUTCMonth()]}`;
-}
-
 function statusLabel(status: string) {
   switch (status) {
     case "en_curso":
@@ -191,19 +176,6 @@ export default function TournamentDetailPage() {
   const badge = statusLabel(tournament.status);
   const matches = tournamentMatches || [];
   const tournaments = allTournaments || [];
-
-  // Antes filtraba los groupName vacíos (.filter(Boolean)) sin dejar nada en su lugar: una
-  // liga simple, sin grupos, tiene TODOS sus partidos con groupName null, así que "groups"
-  // quedaba vacío y la pestaña "Partidos" no mostraba nada aunque el fixture sí existiera.
-  // "General" iguala la convención ya usada en la pantalla de Fixture (torneos/[id]/partidos).
-  const groups = [...new Set(matches.map((m) => m.groupName || "General"))].sort() as string[];
-
-  const matchesByGroup: Record<string, MatchListItem[]> = {};
-  for (const m of matches) {
-    const g = m.groupName || "General";
-    if (!matchesByGroup[g]) matchesByGroup[g] = [];
-    matchesByGroup[g].push(m);
-  }
 
   return (
     <div className="w-full pb-8">
@@ -436,63 +408,11 @@ export default function TournamentDetailPage() {
       )}
 
       {/* === Competencia Content === */}
+      {/* Mismos tabs "Fecha N" + grupos que usa el fixture del club (ver FixtureTabs): antes
+          esta pestaña era una lista plana sin tabs, distinta de como se armó el torneo. */}
       {!isConvocatoria && activeTab === "partidos" && (
-        <div className="mt-4 px-4">
-          {matches.length > 0 && (
-            <p className="mb-4 font-heading text-base font-semibold italic text-text-primary">
-              {formatLongDate(matches[0].date)}
-            </p>
-          )}
-
-          <div className="flex flex-col gap-4">
-            {groups.map((group) => (
-              <div key={group} className="rounded-xl border border-border-primary overflow-hidden">
-                <div className="flex items-center gap-2 border-b border-border-primary bg-surface-primary px-4 py-2.5">
-                  <div className="h-5 w-1 rounded-full bg-surface-secondary" />
-                  <span className="font-heading text-sm font-bold text-text-primary">{group}</span>
-                </div>
-
-                {(matchesByGroup[group] || []).map((m, i, arr) => (
-                  <Link
-                    key={m.id}
-                    href={`/torneos/${params.id}/resultado/${m.id}`}
-                    className={`flex items-center px-4 py-3 transition-colors hover:bg-btn-regular ${i < arr.length - 1 ? "border-b border-brand-200" : ""}`}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2.5 mb-1.5">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold text-text-primary">
-                          {m.homeTeam?.shortName ?? "?".slice(0, 2)}
-                        </div>
-                        <span className="flex-1 truncate font-body text-sm text-text-primary">{m.homeTeam?.name ?? "Por definir"}</span>
-                        <span className="w-6 text-center font-heading text-base font-bold text-text-primary">
-                          {m.homeScore ?? "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold text-text-primary">
-                          {m.awayTeam?.shortName ?? "?".slice(0, 2)}
-                        </div>
-                        <span className="flex-1 truncate font-body text-sm text-text-primary">{m.awayTeam?.name ?? "Por definir"}</span>
-                        <span className="w-6 text-center font-heading text-base font-bold text-text-primary">
-                          {m.awayScore ?? "-"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mx-3 h-10 w-px bg-brand-200" />
-
-                    <div className="w-[80px] shrink-0 text-right">
-                      {m.status === "en_curso" ? (
-                        <span className="font-heading text-sm font-bold text-field-green">En vivo</span>
-                      ) : null}
-                      <p className="font-body text-xs text-text-secondary">Fecha {m.matchday}</p>
-                      <p className="font-body text-xs text-text-secondary">{m.time === "" ? UNSCHEDULED_LABEL : formatShortDate(m.date)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </div>
+        <div className="mt-4">
+          <FixtureTabs matches={matches} hrefFor={(m) => `/torneos/${params.id}/resultado/${m.id}`} />
         </div>
       )}
 

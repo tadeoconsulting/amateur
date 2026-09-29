@@ -5,10 +5,12 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { getTournament, getMatches, getStandings, getScorers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useMyClub } from "@/_lib/use-my-club";
 import { formatLabel } from "@/_lib/tournament-labels";
-import { formatWhen, formatWhenDate } from "@/_lib/match-format";
+import { formatWhen } from "@/_lib/match-format";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
+import { FixtureTabs } from "@/_components/fixture-tabs";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -21,6 +23,7 @@ export default function ClubTorneoDetallePage() {
   const [resultadosSubTab, setResultadosSubTab] = useState<ResultadosSubTab>("tabla");
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
+  const { club } = useMyClub();
   const { data: tournament, loading: loadingTournament } = useApi(() => getTournament(id));
   const { data: allMatches, loading: loadingMatches } = useApi(() => getMatches({ tournamentId: id }));
   const { data: standingsData, loading: loadingStandings } = useApi(() => getStandings(id));
@@ -51,7 +54,13 @@ export default function ClubTorneoDetallePage() {
   const standings = standingsData ?? [];
   const topScorers = scorersData ?? [];
   const finishedMatches = tournamentMatches.filter((m) => m.status === "finalizado");
-  const upcomingMatches = tournamentMatches.filter((m) => m.status === "programado");
+  // "Próximos partidos" es del club logueado, no de todo el torneo — antes mostraba los
+  // próximos partidos de CUALQUIER equipo. Incluye el que esté en vivo ahora mismo (si no,
+  // un partido del club desaparecía de acá justo al empezar, en vez de marcarse "En vivo").
+  const myUpcomingMatches = tournamentMatches
+    .filter((m) => m.status === "programado" || m.status === "en_curso")
+    .filter((m) => club && (m.homeTeam?.id === club.id || m.awayTeam?.id === club.id))
+    .sort((a, b) => (a.status === "en_curso" ? -1 : b.status === "en_curso" ? 1 : 0));
 
   const detailTabs: { key: DetailTab; label: string }[] = [
     { key: "torneo", label: "Torneo" },
@@ -143,49 +152,12 @@ export default function ClubTorneoDetallePage() {
           </div>
 
           {torneoSubTab === "partidos" && (
-            <div className="mt-4 flex flex-col gap-3 px-4">
-              {tournamentMatches.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/club/torneos/${id}/partido/${m.id}`}
-                  className="rounded-xl border border-border-primary p-3 transition-colors hover:bg-btn-regular"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-body text-[10px] text-text-secondary">
-                      {m.groupName} · Fecha {m.matchday}
-                    </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      m.status === "finalizado"
-                        ? "bg-brand-200 text-text-secondary"
-                        : "bg-verification/10 text-verification"
-                    }`}>
-                      {m.status === "finalizado" ? "FT" : formatWhenDate(m)}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold">
-                        {m.homeTeam?.shortName ?? "?"}
-                      </div>
-                      <span className="font-body text-sm text-text-primary">{m.homeTeam?.name ?? "Por definir"}</span>
-                    </div>
-                    <span className="font-heading text-sm font-bold text-text-primary">
-                      {m.homeScore ?? "-"}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-200 text-[10px] font-bold">
-                        {m.awayTeam?.shortName ?? "?"}
-                      </div>
-                      <span className="font-body text-sm text-text-primary">{m.awayTeam?.name ?? "Por definir"}</span>
-                    </div>
-                    <span className="font-heading text-sm font-bold text-text-primary">
-                      {m.awayScore ?? "-"}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+            <div className="mt-4">
+              <FixtureTabs
+                matches={tournamentMatches}
+                hrefFor={(m) => `/club/torneos/${id}/partido/${m.id}`}
+                highlightClubId={club?.id}
+              />
             </div>
           )}
 
@@ -210,18 +182,25 @@ export default function ClubTorneoDetallePage() {
       {/* Fixture tab content */}
       {detailTab === "fixture" && (
         <>
-          {/* Próximos partidos carousel */}
-          {upcomingMatches.length > 0 && (
+          {/* Próximos partidos: del club logueado, no de todo el torneo (ver myUpcomingMatches) */}
+          {myUpcomingMatches.length > 0 && (
             <div className="mt-4">
               <h3 className="px-4 font-heading text-sm font-bold text-text-primary">Próximos partidos</h3>
               <div className="mt-2 flex gap-3 overflow-x-auto px-4 pb-2">
-                {upcomingMatches.slice(0, 3).map((m) => (
+                {myUpcomingMatches.slice(0, 3).map((m) => (
                   <Link
                     key={m.id}
                     href={`/club/torneos/${id}/partido/${m.id}`}
                     className="flex w-56 shrink-0 flex-col rounded-xl border border-border-primary p-3"
                   >
-                    <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
+                    {m.status === "en_curso" ? (
+                      <span className="inline-flex items-center gap-1 font-heading text-[10px] font-bold text-field-green">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green" />
+                        En vivo
+                      </span>
+                    ) : (
+                      <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
+                    )}
                     <div className="mt-2 flex items-center justify-between">
                       <span className="font-body text-xs text-text-primary">{m.homeTeam?.shortName ?? "?"}</span>
                       <span className="font-heading text-xs font-bold text-text-secondary">vs</span>
@@ -234,30 +213,16 @@ export default function ClubTorneoDetallePage() {
             </div>
           )}
 
-          {/* All fixture matches */}
-          <div className="mt-4 flex flex-col gap-3 px-4">
-            <h3 className="font-heading text-sm font-bold text-text-primary">Todos los partidos</h3>
-            {tournamentMatches.map((m) => (
-              <Link
-                key={m.id}
-                href={`/club/torneos/${id}/partido/${m.id}`}
-                className="rounded-xl border border-border-primary p-3 transition-colors hover:bg-btn-regular"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-body text-[10px] text-text-secondary">
-                    {m.groupName} · Fecha {m.matchday}
-                  </span>
-                  <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="font-body text-sm text-text-primary">{m.homeTeam?.name ?? "Por definir"}</span>
-                  <span className="font-heading text-sm font-bold">
-                    {m.homeScore ?? "-"} - {m.awayScore ?? "-"}
-                  </span>
-                  <span className="font-body text-sm text-text-primary">{m.awayTeam?.name ?? "Por definir"}</span>
-                </div>
-              </Link>
-            ))}
+          {/* Todos los partidos del torneo, con los del club destacados */}
+          <div className="mt-4">
+            <h3 className="px-4 font-heading text-sm font-bold text-text-primary">Todos los partidos</h3>
+            <div className="mt-2">
+              <FixtureTabs
+                matches={tournamentMatches}
+                hrefFor={(m) => `/club/torneos/${id}/partido/${m.id}`}
+                highlightClubId={club?.id}
+              />
+            </div>
           </div>
         </>
       )}
