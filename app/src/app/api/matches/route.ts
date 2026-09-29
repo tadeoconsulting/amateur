@@ -7,12 +7,25 @@ export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get("status");
   const group = request.nextUrl.searchParams.get("group");
   const matchday = request.nextUrl.searchParams.get("matchday");
+  const clubId = request.nextUrl.searchParams.get("clubId");
+  // El id de USUARIO del jugador (no de PlayerProfile): sus partidos son los del club al que
+  // pertenece ahora mismo. Sin este filtro, la pantalla de un jugador pedía TODOS los partidos
+  // de la plataforma sin importar si tenía club — un jugador recién registrado, sin equipo
+  // todavía, veía el fixture completo de cualquier torneo ajeno.
+  const playerId = request.nextUrl.searchParams.get("playerId");
 
   const where: Record<string, unknown> = {};
   if (tournamentId) where.tournamentId = tournamentId;
   if (status) where.status = status;
   if (group) where.groupName = group;
   if (matchday) where.matchday = parseInt(matchday);
+  if (clubId) where.OR = [{ homeTeamId: clubId }, { awayTeamId: clubId }];
+  if (playerId) {
+    where.OR = [
+      { homeTeam: { players: { some: { userId: playerId } } } },
+      { awayTeam: { players: { some: { userId: playerId } } } },
+    ];
+  }
 
   const matches = await prisma.match.findMany({
     where,

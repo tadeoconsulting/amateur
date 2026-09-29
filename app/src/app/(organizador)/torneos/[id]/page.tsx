@@ -16,6 +16,7 @@ import {
   type ScorerRow,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { RequestsPanel } from "./_components/requests-panel";
@@ -142,9 +143,18 @@ export default function TournamentDetailPage() {
   const { data: tournament, loading: loadingTournament, refetch } = useApi(() => getTournament(params.id));
   const { data: allTournaments } = useApi(() => getTournaments());
   const { data: tournamentMatches, refetch: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
-  const { data: standings } = useApi(() => getStandings(params.id));
-  const { data: scorers } = useApi(() => getScorers(params.id));
+  const { data: standings, refetchSilently: refetchStandings } = useApi(() => getStandings(params.id));
+  const { data: scorers, refetchSilently: refetchScorers } = useApi(() => getScorers(params.id));
   const { data: requests, refetch: refetchRequests } = useApi(() => getTournamentRequests(params.id));
+
+  // Antes esta pantalla no tenía ninguna suscripción en vivo: un gol de otro dispositivo (u
+  // otra pestaña) no se reflejaba salvo que se recargara a mano.
+  const liveMatchIds = (tournamentMatches ?? []).filter((m) => m.status === "en_curso").map((m) => m.id);
+  useTournamentRealtime(liveMatchIds, () => {
+    refetchMatches();
+    refetchStandings();
+    refetchScorers();
+  });
 
   if (loadingTournament || !tournament) {
     return (

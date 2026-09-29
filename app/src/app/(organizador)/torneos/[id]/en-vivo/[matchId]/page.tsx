@@ -272,8 +272,11 @@ export default function EnVivoPage() {
     <div className="flex min-h-dvh flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3">
+        {/* Antes usaba router.back(): deshacía cada paso de navegación (partido → torneo →
+            lista...) en vez de ir a un destino fijo, así que finalizar un partido y volver
+            atrás dejaba a la persona haciendo varios clics para llegar a Partidos. */}
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push(`/torneos/${params.id}`)}
           className="flex cursor-pointer items-center gap-1 font-heading text-sm font-semibold text-text-primary"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">

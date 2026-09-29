@@ -5,6 +5,7 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { getTournament, getMatches, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { isUnscheduled } from "@/_lib/fixture";
@@ -33,8 +34,14 @@ function PartidosFixtureContent() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const { data: tournament } = useApi(() => getTournament(params.id));
-  const { data: allMatches, loading } = useApi(() => getMatches({ tournamentId: params.id }));
+  const { data: allMatches, loading, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
   const [activeMatchday, setActiveMatchday] = useState<number | null>(null);
+
+  // Antes esta pantalla no tenía ninguna suscripción en vivo: un gol no se reflejaba salvo que
+  // se recargara a mano. Cubre los partidos en vivo de CUALQUIER fecha, no solo la que se está
+  // viendo, para no perderse un gol de otra fecha mientras se mira esta.
+  const liveMatchIds = (allMatches ?? []).filter((m) => m.status === "en_curso").map((m) => m.id);
+  useTournamentRealtime(liveMatchIds, refetchMatches);
   // Se lee una sola vez al montar (lazy init) en vez de en un efecto: evita el
   // set-state-in-effect de React 19 para algo que no depende de nada externo.
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(() =>

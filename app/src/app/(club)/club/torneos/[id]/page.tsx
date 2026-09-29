@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { getTournament, getMatches, getStandings, getScorers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { formatWhen, formatWhenDate } from "@/_lib/match-format";
 import { shareLink } from "@/_lib/share";
@@ -22,9 +23,20 @@ export default function ClubTorneoDetallePage() {
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const { data: tournament, loading: loadingTournament } = useApi(() => getTournament(id));
-  const { data: allMatches, loading: loadingMatches } = useApi(() => getMatches({ tournamentId: id }));
-  const { data: standingsData, loading: loadingStandings } = useApi(() => getStandings(id));
-  const { data: scorersData, loading: loadingScorers } = useApi(() => getScorers(id));
+  const { data: allMatches, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: id }));
+  const { data: standingsData, loading: loadingStandings, refetchSilently: refetchStandings } = useApi(() => getStandings(id));
+  const { data: scorersData, loading: loadingScorers, refetchSilently: refetchScorers } = useApi(() => getScorers(id));
+
+  // Antes esta pantalla nunca se enteraba de un gol o un cambio de marcador salvo que se
+  // recargara a mano: no tenía ninguna suscripción en vivo. Se suscribe a los partidos en_curso
+  // del torneo (puede haber más de uno) y, ante cualquier novedad, refresca partidos, tabla y
+  // goleadores — los tres se ven afectados por un gol.
+  const liveMatchIds = (allMatches ?? []).filter((m) => m.status === "en_curso").map((m) => m.id);
+  useTournamentRealtime(liveMatchIds, () => {
+    refetchMatches();
+    refetchStandings();
+    refetchScorers();
+  });
 
   if (loadingTournament || !tournament) {
     return (

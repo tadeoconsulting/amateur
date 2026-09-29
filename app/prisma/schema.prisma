@@ -44,6 +44,7 @@ model User {
   staffInvitations   StaffInvitation[]
   tournamentRequests TournamentRequest[]
   sedes              Sede[]
+  joinRequests       PlayerJoinRequest[]
 }
 
 // Una dirección guardada por el organizador para reutilizar entre torneos (decisión 10:
@@ -103,6 +104,7 @@ model Club {
   invitations        PlayerInvitation[]
   staffInvitations   StaffInvitation[]
   tournamentRequests TournamentRequest[]
+  joinRequests       PlayerJoinRequest[]
 }
 
 model TeamCategory {
@@ -183,6 +185,25 @@ model PlayerInvitation {
 
   club    Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
   inviter User @relation(fields: [invitedBy], references: [id])
+}
+
+// El sentido contrario a PlayerInvitation: acá es el jugador quien pide unirse a un club (lo
+// encontró en "Buscar equipos"), y el club acepta o rechaza — no hace falta un token porque
+// ya tiene cuenta. Una fila por (club, jugador): re-pedir después de un rechazo reusa la misma
+// fila en vez de crear otra.
+model PlayerJoinRequest {
+  id         String    @id @default(cuid())
+  clubId     String
+  userId     String
+  status     String    @default("pending") // pending | accepted | declined | cancelled
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@index([userId, status])
 }
 
 // Invitación de un miembro de staff (delegado, asistente o DT) que todavía no tiene cuenta.

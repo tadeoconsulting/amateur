@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { getMatches, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useAuth } from "@/lib/auth-context";
 
-export default function JugadorTorneosPage() {
-  const { data: matches, loading } = useApi(() => getMatches());
+function JugadorTorneosContent({ userId }: { userId: string }) {
+  const { data: matches, loading } = useApi(() => getMatches({ playerId: userId }));
 
   if (loading) {
     return (
@@ -41,6 +42,9 @@ export default function JugadorTorneosPage() {
           <p className="mt-2 text-sm text-text-secondary">
             Aún no tienes partidos programados. Únete a un equipo para empezar.
           </p>
+          <Link href="/jugador/equipos" className="mt-4 text-sm font-medium text-text-primary underline">
+            Ir a Mis Equipos
+          </Link>
         </div>
       </div>
     );
@@ -87,4 +91,20 @@ export default function JugadorTorneosPage() {
       </div>
     </div>
   );
+}
+
+export default function JugadorTorneosPage() {
+  const { user, loading: loadingAuth } = useAuth();
+
+  if (loadingAuth || !user) {
+    return (
+      <div className="flex w-full items-center justify-center pt-32">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  // `key` fuerza a remontar si el usuario cambia, así el useApi de adentro no se queda
+  // pegado al id anterior (mismo patrón que club/equipo, club/torneos).
+  return <JugadorTorneosContent key={user.id} userId={user.id} />;
 }
