@@ -469,6 +469,13 @@ const screens: Screen[] = [
   },
   {
     path: "/jugador/ajustes/perfil",
+    name: "Jugador - Mi Perfil",
+    description: "Vista del jugador: foto, posición/dorsal/edad, club actual, estadísticas de carrera (goles, asistencias, tarjetas, partidos) y desglose por torneo",
+    figmaNode: "4712:26541",
+    status: "done",
+  },
+  {
+    path: "/jugador/ajustes/perfil/editar",
     name: "Jugador - Editar perfil",
     description: "Formulario del jugador: avatar, nombre, apellidos, posición, fecha nacimiento, sexo, teléfono, departamento",
     figmaNode: "4712:26541",

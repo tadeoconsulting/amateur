@@ -297,7 +297,24 @@ export interface UserDetail {
   birthDate: string | null;
   organization: string | null;
   roles: string[];
-  playerProfile: { position: string | null } | null;
+  playerProfile: {
+    id: string;
+    position: string | null;
+    number: number | null;
+    status: string;
+    club: { id: string; name: string; shortName: string; color: string | null; logoUrl: string | null } | null;
+    category: { id: string; name: string; gender: string } | null;
+    /** Por torneo — un jugador puede haber jugado varios. matchesPlayed y assists no se
+     * incrementan todavía en ningún lado (ver pendientes-y-decisiones.md): siempre en 0. */
+    stats: {
+      goals: number;
+      assists: number;
+      yellowCards: number;
+      redCards: number;
+      matchesPlayed: number;
+      tournament: { id: string; name: string };
+    }[];
+  } | null;
 }
 
 export function getUser(id: string) {

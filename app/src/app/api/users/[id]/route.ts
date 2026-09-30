@@ -18,7 +18,17 @@ export async function GET(
     where: { id },
     include: {
       roles: true,
-      playerProfile: { include: { club: true, category: true, stats: true } },
+      // El join con el torneo (nombre) es para el perfil del propio jugador (goles, tarjetas
+      // y partidos por torneo) — antes solo traía los números sueltos, sin decir de qué torneo.
+      // club/category van con `select` (no `include: true`, como antes): un include crudo del
+      // club traía también su inviteToken, que es secreto (cualquiera con el link se une solo).
+      playerProfile: {
+        include: {
+          club: { select: { id: true, name: true, shortName: true, color: true, logoUrl: true } },
+          category: { select: { id: true, name: true, gender: true } },
+          stats: { include: { tournament: { select: { id: true, name: true } } } },
+        },
+      },
       ownedClubs: true,
     },
   });

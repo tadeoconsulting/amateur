@@ -1,346 +1,215 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BackHeader } from "@/_components/back-header";
-import { Toast } from "@/_components/toast";
+import Link from "next/link";
+import { getUser, type UserDetail } from "@/_lib/api";
+import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { getUser } from "@/_lib/api";
-import { AvatarCropper } from "@/_components/avatar-cropper";
-import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 
-const positions = [
-  "Portero",
-  "Defensa central",
-  "Lateral",
-  "Libre",
-  "Carrilero",
-  "Pivote",
-  "Media punta",
-  "Volante",
-  "Delantero centro",
-  "Extremo",
-];
+/** Años cumplidos a partir de la fecha de nacimiento (UTC, sin horas: coincide con cómo se
+ * guarda — ver ajustes/perfil/editar). null si todavía no la cargó. */
+function ageFromBirthDate(birthDate: string | null): number | null {
+  if (!birthDate) return null;
+  const b = new Date(birthDate);
+  const now = new Date();
+  let age = now.getUTCFullYear() - b.getUTCFullYear();
+  const beforeBirthday = now.getUTCMonth() < b.getUTCMonth() || (now.getUTCMonth() === b.getUTCMonth() && now.getUTCDate() < b.getUTCDate());
+  if (beforeBirthday) age--;
+  return age;
+}
 
-const departamentos = [
-  "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho", "Cajamarca",
-  "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad",
-  "Lambayeque", "Lima", "Loreto", "Madre de Dios", "Moquegua", "Pasco",
-  "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali",
-];
+type PlayerStatsRow = NonNullable<UserDetail["playerProfile"]>["stats"][number];
 
-type BottomSheetType = "posicion" | "departamento" | null;
+function sumStats(stats: PlayerStatsRow[]) {
+  return stats.reduce(
+    (acc, s) => ({
+      goals: acc.goals + s.goals,
+      assists: acc.assists + s.assists,
+      yellowCards: acc.yellowCards + s.yellowCards,
+      redCards: acc.redCards + s.redCards,
+      matchesPlayed: acc.matchesPlayed + s.matchesPlayed,
+    }),
+    { goals: 0, assists: 0, yellowCards: 0, redCards: 0, matchesPlayed: 0 }
+  );
+}
 
-export default function JugadorPerfilPage() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [nombre, setNombre] = useState("");
-  const [apellidos, setApellidos] = useState("");
-  const [posicion, setPosicion] = useState("");
-  const [dia, setDia] = useState("");
-  const [mes, setMes] = useState("");
-  const [anio, setAnio] = useState("");
-  const [sexo, setSexo] = useState<"masculino" | "femenino" | "">("");
-  const [telefono, setTelefono] = useState("");
-  const [departamento, setDepartamento] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [showCropper, setShowCropper] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [sheet, setSheet] = useState<BottomSheetType>(null);
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const [error, setError] = useState("");
+function StatTile({ label, value, accent, card }: { label: string; value: number; accent?: string; card?: "amarilla" | "roja" }) {
+  return (
+    <div className="flex flex-col items-center rounded-xl border border-border-primary py-3">
+      <div className="flex items-center gap-1.5">
+        {/* Mismo swatch de tarjeta que usa el timeline del partido (bg-yellow/bg-red),
+         * en vez de pintar el número: el amarillo de marca es muy claro para texto. */}
+        {card && (
+          <span className={`h-3.5 w-2.5 rounded-[2px] ${card === "amarilla" ? "bg-yellow" : "bg-red"}`} aria-hidden />
+        )}
+        <span className="font-heading text-2xl font-bold" style={accent ? { color: accent } : undefined}>
+          {value}
+        </span>
+      </div>
+      <span className="mt-0.5 text-center text-[11px] leading-tight text-text-secondary">{label}</span>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    getUser(user.id)
-      .then((u) => {
-        if (cancelled) return;
-        setNombre(u.firstName);
-        setApellidos(u.lastName);
-        setPosicion(u.playerProfile?.position ?? "");
-        if (u.birthDate) {
-          const [y, m, d] = u.birthDate.slice(0, 10).split("-");
-          setAnio(y);
-          setMes(m);
-          setDia(d);
-        }
-        setSexo(u.gender === "masculino" || u.gender === "femenino" ? u.gender : "");
-        setTelefono(u.phone ?? "");
-        setDepartamento(u.department ?? "");
-        setAvatarUrl(u.avatarUrl);
-      })
-      .catch(() => setError("No se pudo cargar el perfil."))
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [user]);
+function ClubBadge({ club }: { club: { name: string; shortName: string; color: string | null; logoUrl: string | null } }) {
+  return (
+    <div
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+      style={{ backgroundColor: (club.color || "#E5E7EB") + "20" }}
+    >
+      <span className="font-heading text-[11px] font-bold" style={{ color: club.color || "#6B7280" }}>
+        {club.shortName}
+      </span>
+    </div>
+  );
+}
 
-  const handleSave = async () => {
-    if (!user || saving) return;
-    setError("");
-    setSaving(true);
-    try {
-      const birthDate =
-        dia && mes && anio ? `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}` : undefined;
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName: nombre.trim(),
-          lastName: apellidos.trim(),
-          phone: telefono.trim() || null,
-          gender: sexo || undefined,
-          department: departamento || undefined,
-          birthDate,
-          position: posicion || undefined,
-        }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "No se pudo guardar el perfil.");
-        return;
-      }
-      setToast("Perfil actualizado correctamente.");
-    } catch {
-      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
-    } finally {
-      setSaving(false);
-    }
-  };
+function JugadorPerfilContent({ userId }: { userId: string }) {
+  const { data: user, loading } = useApi(() => getUser(userId));
 
-  const handleCropped = async (blob: Blob) => {
-    if (!user) return;
-    setShowCropper(false);
-    setUploadingPhoto(true);
-    setError("");
-    try {
-      const url = await uploadAvatarBlob(blob);
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatarUrl: url }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error ?? "No se pudo guardar la foto.");
-        return;
-      }
-      setAvatarUrl(url);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo subir la imagen.");
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
-  if (loading) {
+  if (loading || !user) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex w-full items-center justify-center pt-32">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
       </div>
     );
   }
 
+  const profile = user.playerProfile;
+  const age = ageFromBirthDate(user.birthDate);
+  const stats = profile?.stats ?? [];
+  const totals = sumStats(stats);
+  const hasStats = stats.length > 0;
+
   return (
     <div className="w-full pb-8">
-      {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4">
+        <h1 className="font-heading text-xl font-bold text-text-primary">Mi Perfil</h1>
+        <Link href="/jugador/ajustes/perfil/editar" className="p-1 text-text-primary" aria-label="Editar perfil">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a4 4 0 100-8 4 4 0 000 8z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Link>
+      </div>
 
-      <BackHeader />
-
-      <div className="px-4">
-        <h2 className="font-heading text-lg font-bold text-text-primary">Perfil</h2>
-
-        {/* Avatar */}
-        <div className="mt-4 flex justify-center">
-          <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-brand-200">
-              {uploadingPhoto ? (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-              ) : avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- URL externa (Vercel Blob), no un asset local
-                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
-                  <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              )}
-            </div>
-            <button
-              onClick={() => setShowCropper(true)}
-              aria-label="Cambiar foto"
-              className="absolute -bottom-1 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-brand-900"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
+      {/* Tarjeta de jugador: foto, nombre, posición/dorsal, club, edad */}
+      <div className="mt-4 flex flex-col items-center px-4 text-center">
+        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-brand-200">
+          {user.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- URL externa (Vercel Blob), no un asset local
+            <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
+              <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )}
         </div>
 
-        <AvatarCropper open={showCropper} onClose={() => setShowCropper(false)} onCropped={handleCropped} />
+        <h2 className="mt-3 font-heading text-lg font-bold text-text-primary">
+          {user.firstName} {user.lastName}
+        </h2>
+        <p className="mt-0.5 text-sm text-text-secondary">
+          {[profile?.position, profile?.number ? `Dorsal ${profile.number}` : null, age !== null ? `${age} años` : null]
+            .filter(Boolean)
+            .join(" · ") || "Completa tu posición y fecha de nacimiento"}
+        </p>
 
-        {/* Form */}
-        <div className="mt-6 space-y-5">
-          {error && <p className="font-body text-sm text-red-600">{error}</p>}
-
-          <div>
-            <label className="text-sm text-text-secondary">Nombre completo</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-text-secondary">Apellidos</label>
-            <input
-              type="text"
-              value={apellidos}
-              onChange={(e) => setApellidos(e.target.value)}
-              className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-text-secondary">Posición</label>
-            <button
-              onClick={() => setSheet("posicion")}
-              className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2 text-sm"
-            >
-              <span className={posicion ? "text-text-primary" : "text-text-secondary"}>
-                {posicion || "Elige una opción"}
-              </span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-text-secondary">
-                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-
-          <div>
-            <label className="text-sm text-text-secondary">Fecha de nacimiento</label>
-            <div className="mt-1 flex gap-3">
-              <input
-                type="text"
-                value={dia}
-                onChange={(e) => setDia(e.target.value)}
-                maxLength={2}
-                placeholder="DD"
-                className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={mes}
-                onChange={(e) => setMes(e.target.value)}
-                maxLength={2}
-                placeholder="MM"
-                className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={anio}
-                onChange={(e) => setAnio(e.target.value)}
-                maxLength={4}
-                placeholder="AAAA"
-                className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-              />
+        <div className="mt-3">
+          {profile?.club ? (
+            <div className="flex items-center gap-2 rounded-full border border-border-primary py-1 pl-1 pr-3">
+              <ClubBadge club={profile.club} />
+              <span className="font-body text-sm text-text-primary">{profile.club.name}</span>
             </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-text-secondary">Sexo</label>
-            <div className="mt-1 flex gap-2">
-              {(["masculino", "femenino"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSexo(s)}
-                  className={`flex-1 cursor-pointer rounded-lg py-2.5 text-center text-sm font-semibold transition-colors ${
-                    sexo === s
-                      ? "bg-surface-secondary text-text-invert"
-                      : "border border-border-primary text-text-primary"
-                  }`}
-                >
-                  {s === "masculino" ? "Masculino" : "Femenino"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-text-secondary">Teléfono</label>
-            <input
-              type="tel"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-text-secondary">Departamento</label>
-            <button
-              onClick={() => setSheet("departamento")}
-              className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2 text-sm"
+          ) : (
+            <Link
+              href="/jugador/equipos/buscar"
+              className="rounded-full border border-dashed border-border-primary px-3 py-1.5 font-body text-xs text-text-secondary hover:bg-btn-regular"
             >
-              <span className={departamento ? "text-text-primary" : "text-text-secondary"}>
-                {departamento || "Elegir una ciudad"}
-              </span>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="text-text-secondary">
-                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-50"
-          >
-            {saving ? "Guardando..." : "Guardar cambios"}
-          </button>
+              Sin equipo · Buscar equipos
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Bottom Sheets */}
-      {sheet && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-          onClick={() => setSheet(null)}
-        >
-          <div
-            className="w-full max-w-[430px] rounded-t-2xl bg-white px-4 pb-8 pt-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-heading text-lg font-bold text-text-primary">
-                {sheet === "posicion" ? "Elige una posición" : "Elige un departamento"}
-              </h3>
-              <button onClick={() => setSheet(null)} className="cursor-pointer p-1 text-text-primary">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
+      {/* Estadísticas: totales de carrera, sumando todos los torneos jugados */}
+      <div className="mt-8 px-4">
+        <h3 className="font-heading text-sm font-bold text-text-primary">Estadísticas</h3>
+
+        {hasStats ? (
+          <>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <StatTile label="Partidos jugados" value={totals.matchesPlayed} />
+              <StatTile label="Goles" value={totals.goals} accent="var(--color-field-dark)" />
+              <StatTile label="Asistencias" value={totals.assists} />
+              <StatTile label="Tarjetas amarillas" value={totals.yellowCards} card="amarilla" />
+              <StatTile label="Tarjetas rojas" value={totals.redCards} card="roja" />
+              <StatTile label="Torneos" value={stats.length} />
             </div>
-            <div className="max-h-[50vh] overflow-y-auto">
-              {(sheet === "posicion" ? positions : departamentos).map((item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    if (sheet === "posicion") setPosicion(item);
-                    else setDepartamento(item);
-                    setSheet(null);
-                  }}
-                  className="w-full cursor-pointer border-b border-brand-100 py-3 text-left text-sm text-text-primary last:border-0 hover:bg-brand-50"
-                >
-                  {item}
-                </button>
-              ))}
+
+            {/* Desglose por torneo — un jugador puede haber jugado en varios */}
+            <div className="mt-6">
+              <h4 className="font-heading text-xs font-bold uppercase tracking-wide text-text-secondary">Por torneo</h4>
+              <div className="mt-2 overflow-hidden rounded-xl border border-border-primary">
+                <table className="w-full text-left font-body text-xs">
+                  <thead>
+                    <tr className="border-b border-border-primary bg-btn-regular">
+                      <th className="px-3 py-2 font-heading text-[10px] font-semibold text-text-secondary">Torneo</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">PJ</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">G</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">A</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">TA</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">TR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.map((s) => (
+                      <tr key={s.tournament.id} className="border-b border-border-primary last:border-0">
+                        <td className="truncate px-3 py-2.5 font-medium text-text-primary">{s.tournament.name}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{s.matchesPlayed}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{s.goals}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{s.assists}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{s.yellowCards}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{s.redCards}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
+          </>
+        ) : (
+          <div className="mt-3 rounded-xl border border-border-primary px-4 py-8 text-center">
+            <p className="font-body text-sm text-text-secondary">
+              {profile?.club
+                ? "Todavía no tienes estadísticas. En cuanto tu club te convoque a un torneo, tus goles y tarjetas van a aparecer acá."
+                : "Únete a un equipo para empezar a sumar goles, tarjetas y partidos jugados."}
+            </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
+}
+
+export default function JugadorPerfilPage() {
+  const { user, loading: loadingAuth } = useAuth();
+
+  if (loadingAuth || !user) {
+    return (
+      <div className="flex w-full items-center justify-center pt-32">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  // `key` fuerza a remontar si el usuario cambia, así el useApi de adentro no se queda
+  // pegado al id anterior (mismo patrón que club/equipo, club/torneos, buscar equipos).
+  return <JugadorPerfilContent key={user.id} userId={user.id} />;
 }
