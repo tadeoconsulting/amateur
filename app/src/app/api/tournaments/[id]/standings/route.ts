@@ -31,6 +31,7 @@ export async function GET(
       clubName: club.get(row.clubId)?.name ?? "",
       shortName: club.get(row.clubId)?.shortName ?? "",
       logoUrl: club.get(row.clubId)?.logoUrl ?? null,
+      color: club.get(row.clubId)?.color ?? null,
     }))
   );
 }

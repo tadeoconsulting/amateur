@@ -19,6 +19,7 @@ import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { ClubCrest } from "@/_components/club-crest";
 import { RequestsPanel } from "./_components/requests-panel";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
@@ -65,9 +66,7 @@ function StandingsTable({ rows, advanceCount, showDescends }: { rows: StandingsR
                 </td>
                 <td className="px-1 py-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold">
-                      {row.shortName.slice(0, 2)}
-                    </div>
+                    <ClubCrest club={row} size="h-6 w-6" />
                     <span className="truncate text-xs font-medium text-text-primary">{row.clubName}</span>
                   </div>
                 </td>
@@ -135,9 +134,11 @@ export default function TournamentDetailPage() {
   const { data: requests, refetch: refetchRequests } = useApi(() => getTournamentRequests(params.id));
 
   // Antes esta pantalla no tenía ninguna suscripción en vivo: un gol de otro dispositivo (u
-  // otra pestaña) no se reflejaba salvo que se recargara a mano.
-  const liveMatchIds = (tournamentMatches ?? []).filter((m) => m.status === "en_curso").map((m) => m.id);
-  useTournamentRealtime(liveMatchIds, () => {
+  // otra pestaña) no se reflejaba salvo que se recargara a mano. Se mira todo lo que no esté
+  // finalizado (no solo en_curso) para enterarse también de que un partido arrancó — hay que
+  // estar escuchando su canal desde antes (ver el comentario en useTournamentRealtime).
+  const watchMatchIds = (tournamentMatches ?? []).filter((m) => m.status !== "finalizado").map((m) => m.id);
+  useTournamentRealtime(watchMatchIds, () => {
     refetchMatches();
     refetchStandings();
     refetchScorers();

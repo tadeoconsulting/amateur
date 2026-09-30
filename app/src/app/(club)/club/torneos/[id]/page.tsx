@@ -12,6 +12,7 @@ import { formatWhen } from "@/_lib/match-format";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { ClubCrest } from "@/_components/club-crest";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -30,12 +31,13 @@ export default function ClubTorneoDetallePage() {
   const { data: standingsData, loading: loadingStandings, refetchSilently: refetchStandings } = useApi(() => getStandings(id));
   const { data: scorersData, loading: loadingScorers, refetchSilently: refetchScorers } = useApi(() => getScorers(id));
 
-  // Antes esta pantalla nunca se enteraba de un gol o un cambio de marcador salvo que se
-  // recargara a mano: no tenía ninguna suscripción en vivo. Se suscribe a los partidos en_curso
-  // del torneo (puede haber más de uno) y, ante cualquier novedad, refresca partidos, tabla y
-  // goleadores — los tres se ven afectados por un gol.
-  const liveMatchIds = (allMatches ?? []).filter((m) => m.status === "en_curso").map((m) => m.id);
-  useTournamentRealtime(liveMatchIds, () => {
+  // Antes esta pantalla nunca se enteraba de un gol, ni de que un partido arrancara, salvo que
+  // se recargara a mano: no tenía ninguna suscripción en vivo. Se suscribe a los partidos que
+  // todavía pueden tener novedades — programados o en curso, no finalizados — porque hay que
+  // estar escuchando el canal de un partido programado desde ANTES de que arranque para
+  // enterarse de que arrancó (ver el comentario en useTournamentRealtime).
+  const watchMatchIds = (allMatches ?? []).filter((m) => m.status !== "finalizado").map((m) => m.id);
+  useTournamentRealtime(watchMatchIds, () => {
     refetchMatches();
     refetchStandings();
     refetchScorers();
@@ -285,7 +287,12 @@ export default function ClubTorneoDetallePage() {
                             {row.position}
                           </div>
                         </td>
-                        <td className="px-2 py-2.5 font-heading text-xs font-semibold text-text-primary">{row.shortName}</td>
+                        <td className="px-2 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <ClubCrest club={row} />
+                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{row.shortName}</span>
+                          </div>
+                        </td>
                         <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>
                         <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>
                         <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>
