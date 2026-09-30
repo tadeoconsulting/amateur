@@ -167,7 +167,7 @@ function MyTeams({ userId }: { userId: string }) {
           <Link href="/jugador/equipos/buscar" className="mt-6 w-full max-w-[280px] rounded-lg bg-surface-secondary py-3 text-center text-sm font-semibold text-text-invert">
             Buscar equipos
           </Link>
-          <Link href="/jugador/ajustes/perfil" className="mt-4 text-sm font-medium text-text-primary underline">
+          <Link href="/jugador/ajustes/perfil/editar" className="mt-4 text-sm font-medium text-text-primary underline">
             Editar perfil
           </Link>
         </div>
