@@ -17,10 +17,12 @@ function PartidosFixtureContent() {
   const { data: allMatches, loading, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
 
   // Antes esta pantalla no tenía ninguna suscripción en vivo: un gol no se reflejaba salvo que
-  // se recargara a mano. Cubre los partidos en vivo de CUALQUIER fecha, no solo la que se está
-  // viendo, para no perderse un gol de otra fecha mientras se mira esta.
-  const liveMatchIds = (allMatches ?? []).filter((m) => m.status === "en_curso").map((m) => m.id);
-  useTournamentRealtime(liveMatchIds, refetchMatches);
+  // se recargara a mano. Cubre los partidos de CUALQUIER fecha que no estén finalizados (no
+  // solo los en_curso), para enterarse también de que uno arrancó — hay que estar escuchando su
+  // canal desde antes (ver el comentario en useTournamentRealtime) — y para no perderse un gol
+  // de otra fecha mientras se mira esta.
+  const watchMatchIds = (allMatches ?? []).filter((m) => m.status !== "finalizado").map((m) => m.id);
+  useTournamentRealtime(watchMatchIds, refetchMatches);
   // Se lee una sola vez al montar (lazy init) en vez de en un efecto: evita el
   // set-state-in-effect de React 19 para algo que no depende de nada externo.
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(() =>

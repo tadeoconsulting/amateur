@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { MatchListItem } from "@/_lib/api";
 import { formatMatchDate, formatTime12, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { isUnscheduled } from "@/_lib/fixture";
+import { ClubCrest } from "@/_components/club-crest";
 
 /**
  * Lista de partidos de un torneo, organizada en tabs "Fecha N" — como se armó el fixture —
@@ -87,11 +88,7 @@ export function FixtureTabs({
                   <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: match.homeTeam?.color ?? "var(--color-brand-300)" }}
-                          aria-hidden="true"
-                        />
+                        <ClubCrest club={match.homeTeam} />
                         <span className="truncate font-body text-sm text-text-primary">
                           {match.homeTeam?.name ?? "Por definir"}
                         </span>
@@ -100,11 +97,7 @@ export function FixtureTabs({
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: match.awayTeam?.color ?? "var(--color-brand-300)" }}
-                          aria-hidden="true"
-                        />
+                        <ClubCrest club={match.awayTeam} />
                         <span className="truncate font-body text-sm text-text-primary">
                           {match.awayTeam?.name ?? "Por definir"}
                         </span>

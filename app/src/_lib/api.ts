@@ -138,6 +138,7 @@ export interface StandingsRow {
   clubName: string;
   shortName: string;
   logoUrl: string | null;
+  color: string | null;
   played: number;
   won: number;
   drawn: number;

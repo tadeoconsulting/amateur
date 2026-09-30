@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getMatches, getStandings, getScorers, getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { ClubCrest } from "@/_components/club-crest";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
@@ -141,18 +142,14 @@ export default function JugadorTorneoDetailPage() {
                       <div key={match.id} className="flex items-center justify-between px-3 py-3">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
-                              <span className="text-[8px]">⚽</span>
-                            </div>
+                            <ClubCrest club={match.homeTeam} />
                             <span className="text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
                             <span className="ml-auto text-sm font-bold text-text-primary">
                               {match.homeScore ?? "-"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
-                              <span className="text-[8px]">⚽</span>
-                            </div>
+                            <ClubCrest club={match.awayTeam} />
                             <span className="text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
                             <span className="ml-auto text-sm font-bold text-text-primary">
                               {match.awayScore ?? "-"}
@@ -247,9 +244,7 @@ export default function JugadorTorneoDetailPage() {
                           <span className={`font-semibold ${row.position === 1 ? "text-accent-green" : "text-text-primary"}`}>
                             {row.position}
                           </span>
-                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
-                            <span className="text-[8px]">⚽</span>
-                          </div>
+                          <ClubCrest club={row} />
                           <span className="text-text-primary">{row.clubName}</span>
                         </div>
                       </td>
