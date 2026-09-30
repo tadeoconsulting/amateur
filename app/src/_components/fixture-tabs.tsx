@@ -22,7 +22,9 @@ export function FixtureTabs({
   highlightClubId,
 }: {
   matches: MatchListItem[];
-  hrefFor: (match: MatchListItem) => string;
+  /** Si no se pasa (vista pública de un fan: no hay a dónde llevarlo, ningún rol tiene una
+   * ficha de partido sin sesión), la fila se muestra igual pero sin link. */
+  hrefFor?: (match: MatchListItem) => string;
   /** Si se pasa, resalta (fondo + borde) los partidos donde juega este club. */
   highlightClubId?: string;
 }) {
@@ -76,55 +78,59 @@ export function FixtureTabs({
                 highlightClubId != null &&
                 (match.homeTeam?.id === highlightClubId || match.awayTeam?.id === highlightClubId);
               const live = match.status === "en_curso";
-
-              return (
-                <Link
-                  key={match.id}
-                  href={hrefFor(match)}
-                  className={`block px-4 py-3 transition-colors hover:bg-btn-regular ${mine ? "bg-field-light" : ""} ${
-                    mi > 0 ? "border-t border-border-primary" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <ClubCrest club={match.homeTeam} />
-                        <span className="truncate font-body text-sm text-text-primary">
-                          {match.homeTeam?.name ?? "Por definir"}
-                        </span>
-                        <span className="ml-auto shrink-0 font-heading text-sm font-bold text-text-primary">
-                          {match.homeScore ?? "-"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <ClubCrest club={match.awayTeam} />
-                        <span className="truncate font-body text-sm text-text-primary">
-                          {match.awayTeam?.name ?? "Por definir"}
-                        </span>
-                        <span className="ml-auto shrink-0 font-heading text-sm font-bold text-text-primary">
-                          {match.awayScore ?? "-"}
-                        </span>
-                      </div>
+              const rowClassName = `block px-4 py-3 transition-colors ${hrefFor ? "hover:bg-btn-regular" : ""} ${mine ? "bg-field-light" : ""} ${
+                mi > 0 ? "border-t border-border-primary" : ""
+              }`;
+              const rowContent = (
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <ClubCrest club={match.homeTeam} />
+                      <span className="truncate font-body text-sm text-text-primary">
+                        {match.homeTeam?.name ?? "Por definir"}
+                      </span>
+                      <span className="ml-auto shrink-0 font-heading text-sm font-bold text-text-primary">
+                        {match.homeScore ?? "-"}
+                      </span>
                     </div>
-                    <div className="shrink-0 text-right">
-                      {live ? (
-                        <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-field-green">
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green" />
-                          En vivo
-                        </span>
-                      ) : match.status === "finalizado" ? (
-                        <span className="font-heading text-xs font-bold text-text-secondary">Finalizado</span>
-                      ) : isUnscheduled(match) ? (
-                        <span className="font-body text-xs text-text-secondary">{UNSCHEDULED_LABEL}</span>
-                      ) : (
-                        <>
-                          <p className="font-heading text-xs font-bold text-text-primary">{formatTime12(match.time)}</p>
-                          <p className="font-body text-xs text-text-secondary">{formatMatchDate(match.date)}</p>
-                        </>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <ClubCrest club={match.awayTeam} />
+                      <span className="truncate font-body text-sm text-text-primary">
+                        {match.awayTeam?.name ?? "Por definir"}
+                      </span>
+                      <span className="ml-auto shrink-0 font-heading text-sm font-bold text-text-primary">
+                        {match.awayScore ?? "-"}
+                      </span>
                     </div>
                   </div>
+                  <div className="shrink-0 text-right">
+                    {live ? (
+                      <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-field-green">
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green" />
+                        En vivo
+                      </span>
+                    ) : match.status === "finalizado" ? (
+                      <span className="font-heading text-xs font-bold text-text-secondary">Finalizado</span>
+                    ) : isUnscheduled(match) ? (
+                      <span className="font-body text-xs text-text-secondary">{UNSCHEDULED_LABEL}</span>
+                    ) : (
+                      <>
+                        <p className="font-heading text-xs font-bold text-text-primary">{formatTime12(match.time)}</p>
+                        <p className="font-body text-xs text-text-secondary">{formatMatchDate(match.date)}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+
+              return hrefFor ? (
+                <Link key={match.id} href={hrefFor(match)} className={rowClassName}>
+                  {rowContent}
                 </Link>
+              ) : (
+                <div key={match.id} className={rowClassName}>
+                  {rowContent}
+                </div>
               );
             })}
           </div>
