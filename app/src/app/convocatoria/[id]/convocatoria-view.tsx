@@ -6,7 +6,10 @@ import { useMemo, useState } from "react";
 import {
   createRequest,
   getClubs,
+  getMatches,
   getMyRequests,
+  getScorers,
+  getStandings,
   getTournament,
   modalityLabel,
   resolveRequest,
@@ -14,14 +17,19 @@ import {
   type TournamentDetail,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { useAuth, type AuthUser } from "@/lib/auth-context";
 import { formatLabel, OPEN_STATUSES } from "@/_lib/tournament-labels";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
+import { FixtureTabs } from "@/_components/fixture-tabs";
+import { ClubCrest } from "@/_components/club-crest";
 
 type Notify = (message: string, tone: "success" | "error") => void;
+type MainTab = "torneo" | "fixture" | "resultados";
+type ResultadosSubTab = "tabla" | "goleadores";
 
 const longDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -39,8 +47,27 @@ export function ConvocatoriaView() {
   const params = useParams<{ id: string }>();
   const { user, loading: loadingAuth } = useAuth();
   const { data: tournament, error, refetch } = useApi(() => getTournament(params.id));
+  const { data: matchesData, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
+  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(params.id));
+  const { data: scorersData, refetchSilently: refetchScorers } = useApi(() => getScorers(params.id));
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+  const [mainTab, setMainTab] = useState<MainTab>("torneo");
+  const [resultadosTab, setResultadosTab] = useState<ResultadosSubTab>("tabla");
   const notify: Notify = (message, tone) => setToast({ message, tone });
+
+  const matches = matchesData ?? [];
+  const standings = standingsData ?? [];
+  const topScorers = scorersData ?? [];
+  // El fan que abre el link ve el seguimiento del torneo — no solo la convocatoria — así que
+  // esta pantalla también se suscribe a tiempo real, igual que las de organizador y club (ver
+  // el comentario en useTournamentRealtime: hay que escuchar los partidos programados desde
+  // antes de que arranquen, no solo los que ya están en_curso).
+  const watchMatchIds = matches.filter((m) => m.status !== "finalizado").map((m) => m.id);
+  useTournamentRealtime(watchMatchIds, () => {
+    refetchMatches();
+    refetchStandings();
+    refetchScorers();
+  });
 
   if (error) {
     return (
@@ -113,58 +140,192 @@ export function ConvocatoriaView() {
           </div>
         </section>
 
-        <dl className="mt-4">
-          <Detail label="Inicio">{longDate(tournament.startDate)}</Detail>
-          <Detail label="Sede">{tournament.location}</Detail>
-          {tournament.gender && <Detail label="Género">{tournament.gender}</Detail>}
-          {tournament.minutesPerHalf && <Detail label="Duración">2 tiempos de {tournament.minutesPerHalf} minutos</Detail>}
-          <Detail label="Organizador">
-            {tournament.organizer.firstName} {tournament.organizer.lastName}
-          </Detail>
-        </dl>
+        {/* Un fan que abre este link no solo viene a inscribir un equipo: quiere seguir el
+         * torneo — fixture, tabla, goleadores — igual que lo ve un organizador o un club. */}
+        <div className="mt-4 flex gap-2">
+          {([
+            { key: "torneo", label: "Torneo" },
+            { key: "fixture", label: "Fixture" },
+            { key: "resultados", label: "Resultados" },
+          ] as { key: MainTab; label: string }[]).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setMainTab(t.key)}
+              className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-sm font-medium transition-colors ${
+                mainTab === t.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-        {(tournament.registrationFee || tournament.refereeFee || tournament.rules.length > 0) && (
-          <section className="mt-6">
-            <h2 className="font-heading text-lg font-bold text-text-primary">Bases del torneo</h2>
-            {(tournament.registrationFee || tournament.refereeFee) && (
-              <dl className="mt-2">
-                {tournament.registrationFee && <Detail label="Costo de inscripción">{tournament.registrationFee}</Detail>}
-                {tournament.refereeFee && <Detail label="Arbitraje">{tournament.refereeFee}</Detail>}
-              </dl>
+        {mainTab === "torneo" && (
+          <>
+            <dl className="mt-4">
+              <Detail label="Inicio">{longDate(tournament.startDate)}</Detail>
+              <Detail label="Sede">{tournament.location}</Detail>
+              {tournament.gender && <Detail label="Género">{tournament.gender}</Detail>}
+              {tournament.minutesPerHalf && <Detail label="Duración">2 tiempos de {tournament.minutesPerHalf} minutos</Detail>}
+              <Detail label="Organizador">
+                {tournament.organizer.firstName} {tournament.organizer.lastName}
+              </Detail>
+            </dl>
+
+            {(tournament.registrationFee || tournament.refereeFee || tournament.rules.length > 0) && (
+              <section className="mt-6">
+                <h2 className="font-heading text-lg font-bold text-text-primary">Bases del torneo</h2>
+                {(tournament.registrationFee || tournament.refereeFee) && (
+                  <dl className="mt-2">
+                    {tournament.registrationFee && <Detail label="Costo de inscripción">{tournament.registrationFee}</Detail>}
+                    {tournament.refereeFee && <Detail label="Arbitraje">{tournament.refereeFee}</Detail>}
+                  </dl>
+                )}
+                {tournament.rules.length > 0 && (
+                  <ul className="mt-3 list-disc space-y-1.5 pl-5 font-body text-sm text-text-primary">
+                    {tournament.rules.map((rule, i) => (
+                      <li key={i}>{rule}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             )}
-            {tournament.rules.length > 0 && (
-              <ul className="mt-3 list-disc space-y-1.5 pl-5 font-body text-sm text-text-primary">
-                {tournament.rules.map((rule, i) => (
-                  <li key={i}>{rule}</li>
-                ))}
-              </ul>
+
+            {tournament.sponsors.length > 0 && (
+              <section className="mt-6">
+                <h2 className="font-heading text-lg font-bold text-text-primary">Con el auspicio de</h2>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {tournament.sponsors.map((s) => {
+                    const logo = s.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- logo de sponsor: URL externa arbitraria.
+                      <img src={s.logoUrl} alt={s.name} className="h-12 max-w-[140px] rounded-lg border border-border-primary bg-white object-contain p-1.5" />
+                    ) : (
+                      <div className="flex h-12 items-center rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary">
+                        {s.name}
+                      </div>
+                    );
+                    return s.website ? (
+                      <a key={s.id} href={s.website} target="_blank" rel="noreferrer" aria-label={s.name}>
+                        {logo}
+                      </a>
+                    ) : (
+                      <span key={s.id}>{logo}</span>
+                    );
+                  })}
+                </div>
+              </section>
             )}
-          </section>
+          </>
         )}
 
-        {tournament.sponsors.length > 0 && (
-          <section className="mt-6">
-            <h2 className="font-heading text-lg font-bold text-text-primary">Con el auspicio de</h2>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              {tournament.sponsors.map((s) => {
-                const logo = s.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- logo de sponsor: URL externa arbitraria.
-                  <img src={s.logoUrl} alt={s.name} className="h-12 max-w-[140px] rounded-lg border border-border-primary bg-white object-contain p-1.5" />
-                ) : (
-                  <div className="flex h-12 items-center rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary">
-                    {s.name}
-                  </div>
-                );
-                return s.website ? (
-                  <a key={s.id} href={s.website} target="_blank" rel="noreferrer" aria-label={s.name}>
-                    {logo}
-                  </a>
-                ) : (
-                  <span key={s.id}>{logo}</span>
-                );
-              })}
+        {mainTab === "fixture" && (
+          <div className="mt-4 -mx-4">
+            <FixtureTabs matches={matches} />
+          </div>
+        )}
+
+        {mainTab === "resultados" && (
+          <div className="mt-4">
+            <div className="flex gap-4 border-b border-border-primary">
+              {(["tabla", "goleadores"] as ResultadosSubTab[]).map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setResultadosTab(sub)}
+                  className={`cursor-pointer pb-2 font-body text-sm capitalize transition-colors ${
+                    resultadosTab === sub ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"
+                  }`}
+                >
+                  {sub}
+                </button>
+              ))}
             </div>
-          </section>
+
+            {resultadosTab === "tabla" && (
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border-primary">
+                <table className="w-full text-left font-body text-xs">
+                  <thead>
+                    <tr className="border-b border-border-primary bg-brand-100">
+                      <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">#</th>
+                      <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">Equipo</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">PJ</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">G</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">E</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">P</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">DG</th>
+                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">Pts</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {standings.map((row) => (
+                      <tr key={row.position} className="border-b border-border-primary last:border-0">
+                        <td className="px-2 py-2.5">
+                          <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                            row.position <= 2 ? "bg-verification text-white" : row.position >= 7 ? "bg-error text-white" : "bg-brand-200 text-text-secondary"
+                          }`}>
+                            {row.position}
+                          </div>
+                        </td>
+                        <td className="px-2 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <ClubCrest club={row} />
+                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{row.shortName}</span>
+                          </div>
+                        </td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.lost}</td>
+                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
+                        <td className="px-2 py-2.5 text-center font-heading font-bold text-text-primary">{row.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {standings.length === 0 && (
+                  <p className="px-4 py-8 text-center font-body text-sm text-text-secondary">Todavía no hay partidos jugados.</p>
+                )}
+              </div>
+            )}
+
+            {resultadosTab === "goleadores" && (
+              <div className="mt-4 flex flex-col gap-2">
+                {topScorers.map((p, i) => (
+                  <div
+                    key={p.playerId}
+                    className={`flex items-center gap-3 rounded-xl p-3 ${i === 0 ? "border-2 border-yellow bg-yellow/5" : "border border-border-primary"}`}
+                  >
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      i === 0 ? "bg-yellow text-white" : "bg-brand-200 text-text-secondary"
+                    }`}>
+                      {i + 1}
+                    </div>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-300">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary">
+                        <circle cx="7" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" />
+                        <path d="M2.5 12.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-heading text-sm font-bold text-text-primary">
+                        {p.firstName} {p.lastName}
+                      </p>
+                      <p className="font-body text-xs text-text-secondary">{p.clubName}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary">
+                        <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1" />
+                        <path d="M7 1.75l1 2h-2l1-2zM3.5 5l2 1-1 2-2-1 1-2zM10.5 5l-2 1 1 2 2-1-1-2zM5 10.5l2-1 2 1-1 2H6l-1-2z" fill="currentColor" opacity="0.3" />
+                      </svg>
+                      <span className="font-heading text-sm font-bold text-text-primary">{p.goals}</span>
+                    </div>
+                  </div>
+                ))}
+                {topScorers.length === 0 && (
+                  <p className="py-8 text-center font-body text-sm text-text-secondary">Todavía no hay goles registrados.</p>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </main>
 
