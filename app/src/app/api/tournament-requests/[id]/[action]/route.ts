@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { isAdmin, requireUser } from "@/_lib/auth";
 import { EnrollmentError, isUniqueViolation, withOpenTournament } from "@/_lib/enrollment";
 import { isRequestAction, sideForAction, STATUS_AFTER } from "@/_lib/tournament-request";
+import { CLUB_ENROLLED_SELECT } from "@/_lib/club-public";
 
 /**
  * Resuelve una solicitud o invitación pendiente:
@@ -63,7 +64,7 @@ export async function POST(
       if (claimed.count === 0) throw new EnrollmentError(409, "Esta solicitud ya fue resuelta");
       return tx.tournamentTeam.create({
         data: { tournamentId: found.tournamentId, clubId: found.clubId },
-        include: { club: true },
+        include: { club: { select: CLUB_ENROLLED_SELECT } },
       });
     });
     return Response.json({ id, status: "accepted", enrollment });
