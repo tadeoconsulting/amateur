@@ -4,6 +4,7 @@ import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/
 import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
 import { canTransition, canTransitionPhase, isMatchPhase, isMatchStatus, MATCH_PHASES, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
+import { CLUB_REF_SELECT } from "@/_lib/club-public";
 
 export async function GET(
   _request: NextRequest,
@@ -14,8 +15,8 @@ export async function GET(
   const match = await prisma.match.findUnique({
     where: { id },
     include: {
-      homeTeam: true,
-      awayTeam: true,
+      homeTeam: { select: CLUB_REF_SELECT },
+      awayTeam: { select: CLUB_REF_SELECT },
       events: { orderBy: [{ minute: "asc" }, { createdAt: "asc" }] },
       tournament: { select: { id: true, name: true, format: true, minutesPerHalf: true, extraTimeMinutes: true } },
     },
@@ -248,7 +249,7 @@ export async function PATCH(
       const updated = await tx.match.update({
         where: { id },
         data,
-        include: { homeTeam: true, awayTeam: true },
+        include: { homeTeam: { select: CLUB_REF_SELECT }, awayTeam: { select: CLUB_REF_SELECT } },
       });
 
       // Ganador de un cruce de eliminación: completa el slot que le toca en el partido siguiente.

@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageTournament, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { CLUB_REF_SELECT } from "@/_lib/club-public";
 
 export async function GET(request: NextRequest) {
   const tournamentId = request.nextUrl.searchParams.get("tournamentId");
@@ -30,8 +31,8 @@ export async function GET(request: NextRequest) {
   const matches = await prisma.match.findMany({
     where,
     include: {
-      homeTeam: { select: { id: true, name: true, shortName: true, logoUrl: true, color: true } },
-      awayTeam: { select: { id: true, name: true, shortName: true, logoUrl: true, color: true } },
+      homeTeam: { select: CLUB_REF_SELECT },
+      awayTeam: { select: CLUB_REF_SELECT },
       _count: { select: { events: true } },
     },
     orderBy: [{ date: "asc" }, { time: "asc" }],
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
         matchday: Number.isInteger(matchday) ? (matchday as number) : 1,
         groupName: typeof groupName === "string" ? groupName : null,
       },
-      include: { homeTeam: true, awayTeam: true },
+      include: { homeTeam: { select: CLUB_REF_SELECT }, awayTeam: { select: CLUB_REF_SELECT } },
     });
 
     return Response.json(match, { status: 201 });
