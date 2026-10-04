@@ -7,6 +7,7 @@ import { usePendingInvitations } from "@/_lib/use-pending-invitations";
 const menuItems = [
   { label: "Mi Perfil", href: "/jugador/ajustes/perfil" },
   { label: "Mis equipos", href: "/jugador/equipos" },
+  { label: "Cambiar contraseña", href: "/jugador/ajustes/contrasena" },
   { label: "Centro de ayuda", href: "/ayuda" },
   { label: "Términos y condiciones", href: "/terminos" },
   { label: "Políticas de privacidad", href: "/privacidad" },

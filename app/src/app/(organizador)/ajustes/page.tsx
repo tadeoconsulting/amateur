@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 const menuItems = [
   { label: "Mi Perfil", href: "/ajustes/perfil" },
   { label: "Mis sedes", href: "/ajustes/sedes" },
+  { label: "Cambiar contraseña", href: "/ajustes/contrasena" },
   { label: "Centro de ayuda", href: "#" },
   { label: "Términos y condiciones", href: "#" },
   { label: "Políticas de privacidad", href: "#" },
