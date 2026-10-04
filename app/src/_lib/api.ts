@@ -102,6 +102,8 @@ export interface MatchListItem {
   homeTeam: MatchTeamRef;
   awayTeam: MatchTeamRef;
   _count: { events: number };
+  /** Solo viene en GET /api/matches (la lista), no en el detalle de un partido. */
+  tournament?: { id: string; name: string };
   // ─── Cuadro de eliminación (especificación 007) ───
   /** ¿Este partido es parte de un cuadro de eliminación? Si no, siempre admite empate. */
   decisive: boolean;
