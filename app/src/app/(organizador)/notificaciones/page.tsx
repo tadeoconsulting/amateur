@@ -5,6 +5,8 @@ import { useAuth } from "@/lib/auth-context";
 import { getTournaments, getTournamentRequests, resolveRequest, type TournamentListItem, type TournamentRequestItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { Toast } from "@/_components/toast";
+import { organizerHistory } from "@/_lib/notification-history";
+import { timeAgo } from "@/_lib/time-ago";
 
 /** Una solicitud, junto con a qué torneo pertenece (varios torneos comparten esta pantalla). */
 type SolicitudConTorneo = TournamentRequestItem & { tournamentId: string; tournamentName: string };
@@ -36,18 +38,24 @@ function SolicitudesContent({ tournaments }: { tournaments: TournamentListItem[]
   const [resolving, setResolving] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
-  // Un club pidió unirse a alguno de mis torneos: es lo único que de verdad necesita mi
-  // decisión (una invitación que YO mandé solo espera al club, no a mí).
-  const { data: solicitudes, loading: loadingRequests, refetch } = useApi<SolicitudConTorneo[]>(async () => {
+  // Todas las solicitudes e invitaciones de mis torneos: de ahí salen las pendientes (arriba) y el
+  // historial de la última semana (abajo).
+  const { data: all, loading: loadingRequests, refetch } = useApi<SolicitudConTorneo[]>(async () => {
     const perTournament = await Promise.all(
       tournaments.map((t) =>
-        getTournamentRequests(t.id, { kind: "request", status: "pending" }).then((reqs) =>
-          reqs.map((r) => ({ ...r, tournamentId: t.id, tournamentName: t.name }))
-        )
+        getTournamentRequests(t.id).then((reqs) => reqs.map((r) => ({ ...r, tournamentId: t.id, tournamentName: t.name })))
       )
     );
-    return perTournament.flat().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return perTournament.flat();
   });
+  // Un club pidió unirse a alguno de mis torneos: es lo único que de verdad necesita mi
+  // decisión (una invitación que YO mandé solo espera al club, no a mí).
+  const solicitudes = all
+    ? all.filter((r) => r.kind === "request" && r.status === "pending").sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    : null;
+  const history = all
+    ? organizerHistory(all.map((r) => ({ ...r, clubName: r.club.name })))
+    : [];
 
   const handleResolve = async (id: string, action: "accept" | "decline", clubName: string) => {
     setResolving(id);
@@ -84,47 +92,7 @@ function SolicitudesContent({ tournaments }: { tournaments: TournamentListItem[]
 
       {loadingRequests || !solicitudes ? (
         <Spinner />
-      ) : solicitudes.length > 0 ? (
-        <div className="mt-4 flex flex-col gap-3 px-4">
-          {solicitudes.map((s) => (
-            <div key={s.id} className="rounded-xl border border-border-primary p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-text-primary">
-                  <path
-                    d="M2 2h4l1 3-2 2a11 11 0 004 4l2-2 3 1v4a1 1 0 01-1 1A13 13 0 011 3a1 1 0 011-1z"
-                    stroke="currentColor"
-                    strokeWidth="1.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <h3 className="font-heading text-sm font-bold text-text-primary">
-                  {s.club.name} quiere unirse a {s.tournamentName}
-                </h3>
-              </div>
-              <p className="font-body text-sm leading-relaxed text-text-secondary">
-                Pedido por {s.createdBy.firstName} {s.createdBy.lastName}
-              </p>
-              <div className="mt-3 flex gap-3">
-                <button
-                  onClick={() => handleResolve(s.id, "accept", s.club.name)}
-                  disabled={resolving === s.id}
-                  className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
-                >
-                  Aceptar
-                </button>
-                <button
-                  onClick={() => handleResolve(s.id, "decline", s.club.name)}
-                  disabled={resolving === s.id}
-                  className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
-                >
-                  Rechazar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
+      ) : solicitudes.length === 0 && history.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
@@ -139,6 +107,69 @@ function SolicitudesContent({ tournaments }: { tournaments: TournamentListItem[]
           </div>
           <p className="mt-4 font-body text-sm text-text-secondary">No tienes notificaciones aún.</p>
         </div>
+      ) : (
+        <>
+          {solicitudes.length > 0 && (
+            <div className="mt-4 flex flex-col gap-3 px-4">
+              {solicitudes.map((s) => (
+                <div key={s.id} className="rounded-xl border border-border-primary p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-text-primary">
+                      <path
+                        d="M2 2h4l1 3-2 2a11 11 0 004 4l2-2 3 1v4a1 1 0 01-1 1A13 13 0 011 3a1 1 0 011-1z"
+                        stroke="currentColor"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <h3 className="font-heading text-sm font-bold text-text-primary">
+                      {s.club.name} quiere unirse a {s.tournamentName}
+                    </h3>
+                  </div>
+                  <p className="font-body text-sm leading-relaxed text-text-secondary">
+                    Pedido por {s.createdBy.firstName} {s.createdBy.lastName}
+                  </p>
+                  <div className="mt-3 flex gap-3">
+                    <button
+                      onClick={() => handleResolve(s.id, "accept", s.club.name)}
+                      disabled={resolving === s.id}
+                      className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+                    >
+                      Aceptar
+                    </button>
+                    <button
+                      onClick={() => handleResolve(s.id, "decline", s.club.name)}
+                      disabled={resolving === s.id}
+                      className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lo que pasó la última semana con tus solicitudes e invitaciones */}
+          <section className="mt-6 px-4" aria-labelledby="historial-titulo">
+            <h2 id="historial-titulo" className="font-heading text-sm font-bold text-text-primary">
+              Última semana
+            </h2>
+            {history.length === 0 ? (
+              <p className="mt-2 font-body text-sm text-text-secondary">Sin movimientos en los últimos 7 días.</p>
+            ) : (
+              <ul className="mt-2">
+                {history.map((e) => (
+                  <li key={e.id} className="flex items-start justify-between gap-3 border-b border-border-primary py-3 last:border-0">
+                    <span className="font-body text-sm text-text-primary">{e.text}</span>
+                    <span className="shrink-0 font-body text-xs text-text-secondary">{timeAgo(e.at)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
       )}
     </div>
   );
