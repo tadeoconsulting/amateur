@@ -6,7 +6,7 @@ import { MatchTimeline } from "@/_components/match-timeline";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
-import { liveMinute } from "@/_lib/match-live";
+import { isStale, liveMinute } from "@/_lib/match-live";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { useEffect, useRef, useState } from "react";
 
@@ -129,7 +129,10 @@ export default function MatchDetailPage() {
           </div>
           <div className="flex w-20 flex-col items-center justify-center border-l border-brand-200 px-2 text-center">
             {match.status === "en_curso" && (
-              <span className="text-base font-bold text-verification">{liveMinute(match.startedAt, now)}&quot;</span>
+              <span className="text-base font-bold text-verification">
+                {/* Un partido que quedó en vivo sin finalizarse no muestra un minuto absurdo. */}
+                {isStale(match.startedAt, now, match.tournament?.minutesPerHalf) ? "En juego" : `${liveMinute(match.startedAt, now)}"`}
+              </span>
             )}
             {match.status === "finalizado" && (
               <span className="text-base font-bold text-text-primary">FT</span>

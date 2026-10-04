@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       _count: { select: { events: true } },
       // El nombre del torneo, para las pantallas que agrupan partidos de varios torneos
       // (la actividad del jugador).
-      tournament: { select: { id: true, name: true } },
+      tournament: { select: { id: true, name: true, minutesPerHalf: true } },
     },
     orderBy: [{ date: "asc" }, { time: "asc" }],
   });

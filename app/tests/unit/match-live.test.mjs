@@ -122,3 +122,37 @@ describe("cronómetro", () => {
     assert.equal(matchDurationMinutes(0), 70);
   });
 });
+
+// ─── Partido colgado: el cronómetro no pasa de la duración prevista + 1 h ─────
+
+import { clockSeconds, formatLiveFor, isStale, staleAfterMinutes } from "../../src/_lib/match-live.ts";
+
+const T0 = Date.parse("2026-10-01T15:00:00Z");
+const after = (minutes) => T0 + minutes * 60_000;
+
+test("el límite es la duración prevista (dos tiempos, o 70') más una hora", () => {
+  assert.equal(staleAfterMinutes(45), 150);
+  assert.equal(staleAfterMinutes(null), 130);
+  assert.equal(staleAfterMinutes(0), 130);
+});
+
+test("un partido normal no se considera colgado, ni con tiempo agregado y prórroga", () => {
+  assert.equal(isStale(new Date(T0), after(95), 45), false);
+  assert.equal(isStale(new Date(T0), after(150), 45), false);
+});
+
+test("pasado el límite sí, y el cronómetro se detiene ahí en vez de seguir contando", () => {
+  assert.equal(isStale(new Date(T0), after(151), 45), true);
+  assert.equal(clockSeconds(new Date(T0), after(8428), 45), 150 * 60);
+  assert.equal(clockSeconds(new Date(T0), after(30), 45), 30 * 60);
+});
+
+test("sin hora de inicio nunca está colgado", () => {
+  assert.equal(isStale(null, after(9999), 45), false);
+  assert.equal(clockSeconds(null, after(9999), 45), 0);
+});
+
+test("cuánto lleva en vivo: horas, y días si pasa de dos", () => {
+  assert.equal(formatLiveFor(new Date(T0), after(200)), "3 h");
+  assert.equal(formatLiveFor(new Date(T0), after(8428)), "5 días");
+});

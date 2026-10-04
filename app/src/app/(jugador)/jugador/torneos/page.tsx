@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { getMatches, getUser, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
-import { liveMinute } from "@/_lib/match-live";
+import { isStale, liveMinute } from "@/_lib/match-live";
 import { formatWhenDate } from "@/_lib/match-format";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
@@ -78,7 +78,9 @@ function MatchCard({ match, now }: { match: MatchListItem; now: number }) {
         <div className="flex w-20 shrink-0 flex-col items-center gap-1.5 text-center font-body text-xs text-text-primary">
           {live ? (
             <>
-              <span className="font-heading font-bold text-verification">{liveMinute(match.startedAt, now)}”</span>
+              <span className="font-heading font-bold text-verification">
+                {isStale(match.startedAt, now, match.tournament?.minutesPerHalf) ? "En juego" : `${liveMinute(match.startedAt, now)}”`}
+              </span>
               <span>Fecha {match.matchday}</span>
             </>
           ) : match.status === "finalizado" ? (
