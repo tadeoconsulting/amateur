@@ -63,7 +63,13 @@ export default function BuscarDelegadoPage() {
         return;
       }
       setInvited(true);
-      setToast(data.alreadyInvited ? "Ya tenía una invitación pendiente." : "Se envió la invitación por correo.");
+      setToast(
+        data.alreadyInvited
+          ? "Ya tenía una invitación pendiente."
+          : data.emailed
+            ? "Se envió la invitación por correo."
+            : "Invitación creada, pero el correo no pudo enviarse todavía."
+      );
     } catch {
       setInviteError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
     } finally {
