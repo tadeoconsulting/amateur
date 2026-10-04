@@ -11,13 +11,16 @@ import { Stats } from "./stats";
 import { CtaFinal } from "./cta-final";
 import { Footer } from "./footer";
 import { AuthModal } from "./auth-modal";
+import type { ProfileRole } from "@/_lib/profiles";
 
 export function LandingShell({
   initialAuth,
   next = null,
+  initialRoles = [],
 }: {
   initialAuth?: "login" | "register";
   next?: string | null;
+  initialRoles?: ProfileRole[];
 }) {
   const [authOpen, setAuthOpen] = useState(initialAuth !== undefined);
   const [authView, setAuthView] = useState<"login" | "register">(initialAuth ?? "login");
@@ -38,7 +41,7 @@ export function LandingShell({
       <Stats />
       <CtaFinal onOpenAuth={openAuth} />
       <Footer />
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} initialView={authView} next={next} />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} initialView={authView} next={next} initialRoles={initialRoles} />
     </div>
   );
 }
