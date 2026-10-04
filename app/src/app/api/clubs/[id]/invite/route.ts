@@ -2,6 +2,8 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, normalizeEmail, readJson, requireUser } from "@/_lib/auth";
 import { INVITE_DAYS } from "@/_lib/invite";
+import { enviarCorreo } from "@/_lib/email";
+import { invitacionJugador } from "@/_lib/email-templates";
 
 export async function POST(
   request: NextRequest,
@@ -50,11 +52,26 @@ export async function POST(
       data: { email, clubId: id, invitedBy: auth.user.id, expiresAt },
     });
 
+    // El jugador ve la invitación en "Mis equipos" al entrar; el correo es el aviso. Si no sale
+    // (sin proveedor configurado, o falló), la invitación existe igual.
+    const club = await prisma.club.findUnique({ where: { id }, select: { name: true } });
+    const result = await enviarCorreo({
+      to: email,
+      ...invitacionJugador({
+        clubName: club?.name ?? "un club",
+        inviterName: `${auth.user.firstName} ${auth.user.lastName}`.trim(),
+        // Con la sesión cerrada, el proxy lo manda a iniciar sesión y vuelve acá.
+        url: `${request.nextUrl.origin}/jugador/equipos`,
+        days: INVITE_DAYS,
+      }),
+    });
+
     return Response.json({
       id: invitation.id,
       token: invitation.token,
       email: invitation.email,
       expiresAt: invitation.expiresAt,
+      emailed: result === "sent",
     }, { status: 201 });
   } catch (error) {
     console.error("Invite error:", error);

@@ -2,6 +2,8 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, normalizeEmail, readJson, requireUser } from "@/_lib/auth";
 import { INVITE_DAYS } from "@/_lib/invite";
+import { enviarCorreo } from "@/_lib/email";
+import { invitacionStaff, STAFF_ROLE_LABELS } from "@/_lib/email-templates";
 import type { StaffRole } from "@/_lib/types";
 
 const STAFF_ROLES: StaffRole[] = ["delegado", "asistente", "director_tecnico"];
@@ -52,12 +54,27 @@ export async function POST(
       data: { email, role, clubId: id, invitedBy: auth.user.id, expiresAt },
     });
 
+    // Quien invita no tiene cómo mandarle el link a alguien sin cuenta: por eso va por correo.
+    // Si no sale (sin proveedor configurado, o falló), la invitación existe igual.
+    const club = await prisma.club.findUnique({ where: { id }, select: { name: true } });
+    const result = await enviarCorreo({
+      to: email,
+      ...invitacionStaff({
+        clubName: club?.name ?? "un club",
+        inviterName: `${auth.user.firstName} ${auth.user.lastName}`.trim(),
+        roleLabel: STAFF_ROLE_LABELS[role] ?? role,
+        url: `${request.nextUrl.origin}/staff/invitacion?token=${invitation.token}`,
+        days: INVITE_DAYS,
+      }),
+    });
+
     return Response.json({
       id: invitation.id,
       token: invitation.token,
       email: invitation.email,
       role: invitation.role,
       expiresAt: invitation.expiresAt,
+      emailed: result === "sent",
     }, { status: 201 });
   } catch (error) {
     console.error("Staff invitation error:", error);
