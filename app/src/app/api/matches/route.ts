@@ -34,6 +34,9 @@ export async function GET(request: NextRequest) {
       homeTeam: { select: CLUB_REF_SELECT },
       awayTeam: { select: CLUB_REF_SELECT },
       _count: { select: { events: true } },
+      // El nombre del torneo, para las pantallas que agrupan partidos de varios torneos
+      // (la actividad del jugador).
+      tournament: { select: { id: true, name: true } },
     },
     orderBy: [{ date: "asc" }, { time: "asc" }],
   });
