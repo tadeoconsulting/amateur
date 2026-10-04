@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
+import { ResetPassword } from "../_components/reset-password";
 
 interface UserRow {
   id: string;
@@ -607,6 +608,10 @@ function EditUserModal({
               ))}
             </div>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <ResetPassword userId={user.id} userLabel={`${user.firstName} ${user.lastName}`} />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useApi } from "@/_lib/use-api";
+import { ResetPassword } from "../_components/reset-password";
 
 interface PlayerRow {
   id: string;
@@ -197,6 +198,10 @@ function EditPlayerModal({
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <ResetPassword userId={player.userId} userLabel={`${player.user.firstName} ${player.user.lastName}`} />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">

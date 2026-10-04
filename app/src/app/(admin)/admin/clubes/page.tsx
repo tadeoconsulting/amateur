@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
+import { ResetPassword } from "../_components/reset-password";
 
 interface ClubRow {
   id: string;
@@ -13,6 +14,7 @@ interface ClubRow {
   delegadoNombre: string | null;
   delegadoTel: string | null;
   delegadoEmail: string | null;
+  ownerId: string;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string; email?: string };
@@ -372,6 +374,11 @@ function EditClubModal({
               />
             </div>
           </div>
+        </div>
+
+        <div className="mt-6">
+          {/* La contraseña es de quien dirige el club, no del club. */}
+          <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (dueño de ${club.name})`} />
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
