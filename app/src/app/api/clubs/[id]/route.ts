@@ -1,7 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, pick, readJson, requireUser } from "@/_lib/auth";
-
+import { omitInviteToken } from "@/_lib/club-public";
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -28,7 +28,8 @@ export async function GET(
     return Response.json({ error: "Club no encontrado" }, { status: 404 });
   }
 
-  return Response.json(club);
+  // Cualquier sesión puede pedir un club por id: su link de invitación (secreto) no sale de acá.
+  return Response.json(omitInviteToken(club));
 }
 
 // ownerId no está: un club no cambia de dueño por acá.
@@ -59,7 +60,7 @@ export async function PATCH(
 
   try {
     const club = await prisma.club.update({ where: { id }, data });
-    return Response.json(club);
+    return Response.json(omitInviteToken(club));
   } catch {
     return Response.json({ error: "Error al actualizar club" }, { status: 500 });
   }

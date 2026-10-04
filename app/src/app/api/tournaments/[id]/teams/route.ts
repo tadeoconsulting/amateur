@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { EnrollmentError, isUniqueViolation, withOpenTournament } from "@/_lib/enrollment";
+import { CLUB_ENROLLED_SELECT } from "@/_lib/club-public";
 
 export async function GET(
   _request: NextRequest,
@@ -95,7 +96,7 @@ export async function POST(
         });
         return tx.tournamentTeam.create({
           data: { tournamentId: id, clubId: club.id, groupName },
-          include: { club: true },
+          include: { club: { select: CLUB_ENROLLED_SELECT } },
         });
       });
       return Response.json(enrollment, { status: 201 });
@@ -137,7 +138,7 @@ export async function POST(
 
   try {
     const enrollment = await withOpenTournament(id, (tx) =>
-      tx.tournamentTeam.create({ data: { tournamentId: id, clubId, groupName }, include: { club: true } })
+      tx.tournamentTeam.create({ data: { tournamentId: id, clubId, groupName }, include: { club: { select: CLUB_ENROLLED_SELECT } } })
     );
     return Response.json(enrollment, { status: 201 });
   } catch (error) {
