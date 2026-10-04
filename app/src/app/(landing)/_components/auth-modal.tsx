@@ -14,12 +14,15 @@ export function AuthModal({
   onClose,
   initialView = "login",
   next = null,
+  initialRoles = [],
 }: {
   open: boolean;
   onClose: () => void;
   initialView?: AuthView;
   /** Página a la que volver después de entrar (la que el proxy interceptó). */
   next?: string | null;
+  /** Perfiles ya elegidos en el registro (p. ej. quien llega desde una convocatoria viene por un equipo). */
+  initialRoles?: ProfileRole[];
 }) {
   const { login, register } = useAuth();
   const [view, setView] = useState<AuthView>(initialView);
@@ -30,6 +33,8 @@ export function AuthModal({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
+  // Por contenido, no por identidad del array: el valor por omisión es uno nuevo en cada render.
+  const rolesKey = initialRoles.join(",");
 
   useEffect(() => {
     setView(initialView);
@@ -41,13 +46,13 @@ export function AuthModal({
       setEmail("");
       setPassword("");
       setName("");
-      setRoles([]);
+      setRoles(rolesKey ? (rolesKey.split(",") as ProfileRole[]) : []);
       setError("");
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  }, [open, rolesKey]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

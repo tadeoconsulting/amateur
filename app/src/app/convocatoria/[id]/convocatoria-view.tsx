@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createRequest,
   getClubs,
@@ -92,7 +92,9 @@ export function ConvocatoriaView() {
   const max = tournament.maxTeams;
   const free = max === null ? null : Math.max(0, max - teams);
   const percent = max ? Math.min(100, Math.round((teams / max) * 100)) : 0;
-  const nextPath = `/convocatoria/${params.id}`;
+  // `?unirme=1` es la intención de quien llegó por el botón de pedir unirse: al volver de iniciar
+  // sesión, registrarse o crear su equipo, la solicitud se envía sola (ver JoinPanel).
+  const nextPath = `/convocatoria/${params.id}?unirme=1`;
   const format = [formatLabel(tournament.format), modalityLabel(tournament.modality)].filter(Boolean).join(" · ");
 
   return (
@@ -338,12 +340,12 @@ export function ConvocatoriaView() {
       <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {!user ? (
           <div className="flex flex-col gap-2">
-            <p className="font-body text-xs text-text-secondary">Necesitas una cuenta para pedir unirte a este torneo.</p>
+            <p className="font-body text-xs text-text-secondary">Para pedir unirte, entra con la cuenta de tu equipo o crea una: al terminar, tu solicitud se envía sola.</p>
             <div className="flex gap-2">
               <Link href={`/?auth=login&next=${encodeURIComponent(nextPath)}`} className={`${btnSolid} flex-1`}>
                 Iniciar sesión
               </Link>
-              <Link href={`/?auth=register&next=${encodeURIComponent(nextPath)}`} className={`${btnOutline} flex-1`}>
+              <Link href={`/?auth=register&rol=CLUB_OWNER&next=${encodeURIComponent(nextPath)}`} className={`${btnOutline} flex-1`}>
                 Crear cuenta
               </Link>
             </div>
@@ -378,6 +380,34 @@ function JoinPanel({
   const [busy, setBusy] = useState(false);
 
   const enrolledIds = useMemo(() => new Set(tournament.teams.map((t) => t.club.id)), [tournament.teams]);
+
+  // Quien vino a pedir unirse (`?unirme=1`, que dejan los botones de iniciar sesión / crear cuenta /
+  // crear mi equipo de esta misma pantalla) no debería tener que volver a tocar "Solicitar unirme"
+  // después de registrarse o crear su equipo: con un solo equipo, la solicitud se envía sola. El
+  // organizador sigue decidiendo si entra. Con varios equipos no se adivina cuál: se elige abajo.
+  const autoRequested = useRef(false);
+  useEffect(() => {
+    if (autoRequested.current || !clubs || !mine) return;
+    if (new URLSearchParams(window.location.search).get("unirme") !== "1") return;
+    autoRequested.current = true;
+    window.history.replaceState(null, "", window.location.pathname); // la intención se usa una sola vez
+
+    const only = clubs.length === 1 ? clubs[0] : null;
+    const isFull = tournament.maxTeams !== null && tournament._count.teams >= tournament.maxTeams;
+    if (!only || !isOpen || isFull || user.id === tournament.organizerId) return;
+    if (enrolledIds.has(only.id) || mine.some((r) => r.club.id === only.id)) return;
+
+    void (async () => {
+      const result = await createRequest(tournament.id, only.id);
+      if (!result.ok) {
+        notify(result.error ?? "No se pudo enviar la solicitud", "error");
+        onChanged();
+        return;
+      }
+      notify(`Solicitud enviada con ${only.name}. El organizador la revisará.`, "success");
+      refetchMine();
+    })();
+  }, [clubs, mine, isOpen, user.id, tournament, enrolledIds, notify, onChanged, refetchMine]);
 
   if (user.id === tournament.organizerId) {
     return (
