@@ -6,6 +6,7 @@ import { otherProfiles } from "@/lib/profiles";
 
 const menuItems = [
   { label: "Mi Ajustes", href: "/club/ajustes/perfil" },
+  { label: "Cambiar contraseña", href: "/club/ajustes/contrasena" },
   { label: "Centro de ayuda", href: "/ayuda" },
   { label: "Términos y condiciones", href: "/terminos" },
 ];
