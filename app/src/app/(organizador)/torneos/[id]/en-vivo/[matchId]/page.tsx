@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, liveSeconds, matchDurationMinutes, type MatchPhase } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, clockSeconds, formatLiveFor, isStale, matchDurationMinutes, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
 
 const clubColors = ["#E53935", "#43A047"];
@@ -85,8 +85,11 @@ export default function EnVivoPage() {
 
   const live = match.status === "en_curso";
   const finished = match.status === "finalizado";
-  // El cronómetro cuenta desde el inicio real; fuera de juego se detiene en 0.
-  const elapsedSeconds = live ? liveSeconds(match.startedAt, now) : 0;
+  // El cronómetro cuenta desde el inicio real; fuera de juego se detiene en 0, y si el partido
+  // se quedó en vivo sin finalizar se detiene donde se da por colgado (ver isStale).
+  const minutesPerHalf = match.tournament.minutesPerHalf;
+  const elapsedSeconds = live ? clockSeconds(match.startedAt, now, minutesPerHalf) : 0;
+  const stale = live && isStale(match.startedAt, now, minutesPerHalf);
   const minutes = Math.floor(elapsedSeconds / 60);
   const seconds = elapsedSeconds % 60;
   const matchDuration = matchDurationMinutes(match.tournament.minutesPerHalf);
@@ -207,7 +210,8 @@ export default function EnVivoPage() {
     if (!selectedAction || saving) return;
     const ok = await call(`${matchUrl}/events`, "POST", {
       type: EVENT_TYPE_FROM_ACTION[selectedAction],
-      minute: minutes,
+      // El servidor no acepta más de 200 (ver api/matches/[id]/events).
+      minute: Math.min(minutes, 200),
       teamId: activeClubId,
       playerId: selectedPlayer,
     });
@@ -262,7 +266,8 @@ export default function EnVivoPage() {
     if (saving) return;
     await call(`${matchUrl}/events`, "POST", {
       type: "penal_definicion",
-      minute: minutes,
+      // El servidor no acepta más de 200 (ver api/matches/[id]/events).
+      minute: Math.min(minutes, 200),
       teamId: activeClubId,
       scored,
     });
@@ -387,6 +392,26 @@ export default function EnVivoPage() {
         </div>
         <span className="font-heading text-sm font-bold text-field-dark">{matchDuration}&apos;</span>
       </div>
+
+      {/* Un partido que lleva muchísimo en vivo se olvidó sin finalizar: se avisa en vez de seguir
+          contando (y dejando el minuto de las jugadas fuera de rango). */}
+      {stale && (
+        <div role="alert" className="mx-4 mb-5 rounded-xl border border-border-primary bg-btn-regular px-4 py-3">
+          <p className="font-heading text-sm font-bold text-text-primary">Este partido lleva {formatLiveFor(match.startedAt, now)} en juego</p>
+          <p className="mt-1 font-body text-xs text-text-secondary">
+            El cronómetro se detuvo en {minutes}&apos;. Si ya terminó, finalízalo para cerrar el marcador.
+          </p>
+          {!showPhaseButton && (
+            <button
+              onClick={() => setStatus("finalizado")}
+              disabled={saving}
+              className="mt-3 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            >
+              Finalizar con {homeScore}-{awayScore}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Estado del partido: sin empezar o terminado, en lugar de los controles de jugadas */}
       {match.status === "programado" && (

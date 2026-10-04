@@ -114,3 +114,31 @@ export function liveSeconds(startedAt: string | Date | null | undefined, now: nu
 export function matchDurationMinutes(minutesPerHalf: number | null | undefined) {
   return minutesPerHalf && minutesPerHalf > 0 ? minutesPerHalf * 2 : 70;
 }
+
+/**
+ * Cuánto pasada la duración prevista se da un partido por colgado: tiempo agregado, prórroga y
+ * penales caben de sobra en una hora. Más que eso es un partido que nadie finalizó — el
+ * cronómetro llegó a marcar 8428 minutos (casi seis días) en uno olvidado en vivo.
+ */
+export const STALE_AFTER_EXTRA_MINUTES = 60;
+
+/** Minutos a partir de los cuales un partido en vivo se considera colgado. */
+export function staleAfterMinutes(minutesPerHalf: number | null | undefined) {
+  return matchDurationMinutes(minutesPerHalf) + STALE_AFTER_EXTRA_MINUTES;
+}
+
+/** Igual que `liveSeconds`, pero el cronómetro se detiene donde el partido se da por colgado. */
+export function clockSeconds(startedAt: string | Date | null | undefined, now: number, minutesPerHalf: number | null | undefined) {
+  return Math.min(liveSeconds(startedAt, now), staleAfterMinutes(minutesPerHalf) * 60);
+}
+
+/** ¿Lleva tanto en vivo que seguramente terminó y nadie lo finalizó? */
+export function isStale(startedAt: string | Date | null | undefined, now: number, minutesPerHalf: number | null | undefined) {
+  return liveSeconds(startedAt, now) > staleAfterMinutes(minutesPerHalf) * 60;
+}
+
+/** "3 h" / "6 días": cuánto lleva en vivo, para avisar de un partido colgado. */
+export function formatLiveFor(startedAt: string | Date | null | undefined, now: number) {
+  const hours = Math.floor(liveSeconds(startedAt, now) / 3600);
+  return hours < 48 ? `${hours} h` : `${Math.floor(hours / 24)} días`;
+}
