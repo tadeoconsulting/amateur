@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ForgotPasswordPanel } from "./forgot-password-panel";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import type { ProfileRole } from "@/lib/profiles";
@@ -32,6 +33,7 @@ export function AuthModal({
   const [roles, setRoles] = useState<ProfileRole[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgot, setForgot] = useState(false);
   const backdropRef = useRef<HTMLDivElement>(null);
   // Por contenido, no por identidad del array: el valor por omisión es uno nuevo en cada render.
   const rolesKey = initialRoles.join(",");
@@ -48,6 +50,7 @@ export function AuthModal({
       setName("");
       setRoles(rolesKey ? (rolesKey.split(",") as ProfileRole[]) : []);
       setError("");
+      setForgot(false);
     } else {
       document.body.style.overflow = "";
     }
@@ -118,6 +121,10 @@ export function AuthModal({
             </button>
           </div>
 
+          {forgot ? (
+            <ForgotPasswordPanel initialEmail={email} onBack={() => setForgot(false)} />
+          ) : (
+          <>
           {/* Tabs */}
           <div className="flex gap-1 bg-brand-300 rounded-lg p-1 mb-8">
             <button
@@ -228,11 +235,13 @@ export function AuthModal({
           {/* Footer links */}
           {view === "login" && (
             <button
-              onClick={() => {}}
+              onClick={() => setForgot(true)}
               className="mt-4 w-full text-center font-heading text-sm font-semibold text-text-primary underline cursor-pointer"
             >
               Olvidé mi contraseña
             </button>
+          )}
+          </>
           )}
 
           <p className="mt-4 text-center text-xs text-text-secondary font-heading leading-relaxed">

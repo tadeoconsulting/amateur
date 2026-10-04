@@ -56,3 +56,18 @@ export function invitacionStaff(input: { clubName: string; inviterName: string; 
   });
   return { subject, text, html };
 }
+
+/** "Olvidé mi contraseña": el enlace para elegir una nueva (se abre en /restablecer). */
+export function restablecerContrasena(input: { url: string; minutes: number }): Contenido {
+  const { url, minutes } = input;
+  const subject = "Restablece tu contraseña de Amateur";
+  const text = `Pediste restablecer tu contraseña de Amateur.\n\nElige una nueva aquí (el enlace vale ${minutes} minutos y se usa una sola vez):\n${url}\n\nSi no fuiste tú, ignora este correo: tu contraseña actual sigue funcionando.`;
+  const html = layout({
+    title: "Restablece tu contraseña",
+    paragraphs: ["Pediste restablecer tu contraseña de Amateur.", `El enlace vale ${minutes} minutos y se usa una sola vez.`],
+    buttonLabel: "Elegir una contraseña nueva",
+    url,
+    footer: "Si no fuiste tú, ignora este correo: tu contraseña actual sigue funcionando.",
+  });
+  return { subject, text, html };
+}

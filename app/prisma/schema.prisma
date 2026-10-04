@@ -45,6 +45,22 @@ model User {
   tournamentRequests TournamentRequest[]
   sedes              Sede[]
   joinRequests       PlayerJoinRequest[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+// Un enlace de "Olvidé mi contraseña" (se manda por correo). Se guarda el hash del token, no el
+// token: quien lea la base no puede armar un enlace válido. Vale una hora y una sola vez.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Una dirección guardada por el organizador para reutilizar entre torneos (decisión 10:
