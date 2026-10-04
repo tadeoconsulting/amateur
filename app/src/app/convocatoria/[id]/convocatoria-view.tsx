@@ -28,7 +28,7 @@ import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
 
 type Notify = (message: string, tone: "success" | "error") => void;
-type MainTab = "torneo" | "fixture" | "resultados";
+type MainTab = "fixture" | "resultados" | "detalles";
 type ResultadosSubTab = "tabla" | "goleadores";
 
 const longDate = (iso: string) =>
@@ -47,11 +47,13 @@ export function ConvocatoriaView() {
   const params = useParams<{ id: string }>();
   const { user, loading: loadingAuth } = useAuth();
   const { data: tournament, error, refetch } = useApi(() => getTournament(params.id));
-  const { data: matchesData, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
+  const { data: matchesData, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
   const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(params.id));
   const { data: scorersData, refetchSilently: refetchScorers } = useApi(() => getScorers(params.id));
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
-  const [mainTab, setMainTab] = useState<MainTab>("torneo");
+  // null = todavía no eligió: abre en el fixture, o en los detalles si el torneo aún no tiene partidos
+  // (una convocatoria abierta no tiene nada que seguir todavía, sí tiene bases y cupos).
+  const [pickedTab, setPickedTab] = useState<MainTab | null>(null);
   const [resultadosTab, setResultadosTab] = useState<ResultadosSubTab>("tabla");
   const notify: Notify = (message, tone) => setToast({ message, tone });
 
@@ -82,7 +84,8 @@ export function ConvocatoriaView() {
       </main>
     );
   }
-  if (!tournament || loadingAuth) return <PageSpinner />;
+  if (!tournament || loadingAuth || loadingMatches) return <PageSpinner />;
+  const mainTab: MainTab = pickedTab ?? (matches.length > 0 ? "fixture" : "detalles");
 
   const isOpen = OPEN_STATUSES.includes(tournament.status);
   const teams = tournament._count.teams;
@@ -144,13 +147,15 @@ export function ConvocatoriaView() {
          * torneo — fixture, tabla, goleadores — igual que lo ve un organizador o un club. */}
         <div className="mt-4 flex gap-2">
           {([
-            { key: "torneo", label: "Torneo" },
             { key: "fixture", label: "Fixture" },
             { key: "resultados", label: "Resultados" },
+            // Para el fan esta pestaña se llama "Detalles" (no "Torneo", como en organizador y
+            // club) y va al final: lo primero que busca es el seguimiento.
+            { key: "detalles", label: "Detalles" },
           ] as { key: MainTab; label: string }[]).map((t) => (
             <button
               key={t.key}
-              onClick={() => setMainTab(t.key)}
+              onClick={() => setPickedTab(t.key)}
               className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-sm font-medium transition-colors ${
                 mainTab === t.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
               }`}
@@ -160,7 +165,7 @@ export function ConvocatoriaView() {
           ))}
         </div>
 
-        {mainTab === "torneo" && (
+        {mainTab === "detalles" && (
           <>
             <dl className="mt-4">
               <Detail label="Inicio">{longDate(tournament.startDate)}</Detail>
