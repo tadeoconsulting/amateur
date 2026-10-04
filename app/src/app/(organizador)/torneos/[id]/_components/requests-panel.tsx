@@ -63,7 +63,7 @@ export function RequestsPanel({ tournamentId, kind, requests, teamsCount, maxTea
         title="Sin solicitudes por ahora"
         action={
           <button onClick={onShare} className={`${btnOutline} w-full`}>
-            Compartir la convocatoria
+            Copiar link de la convocatoria
           </button>
         }
       >

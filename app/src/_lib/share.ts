@@ -18,3 +18,13 @@ export async function shareLink(input: { title: string; text: string; url: strin
     return "failed";
   }
 }
+
+/** Copia texto al portapapeles. `false` si el navegador no lo permite (p. ej. sin HTTPS). */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}

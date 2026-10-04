@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem } from "@/_lib/api";
@@ -128,7 +129,14 @@ export default function ResultadoPage() {
     fetch(`/api/matches/${params.matchId}/events`).then((r) => r.json())
   );
 
-  if (loading || !match) {
+  // Un partido que todavía no empezó no tiene resultado que ver ni "editar": va directo a la
+  // pantalla en vivo, donde está "Iniciar partido" (los links viejos siguen llegando acá).
+  const notStarted = match?.status === "programado";
+  useEffect(() => {
+    if (notStarted) router.replace(`/torneos/${params.id}/en-vivo/${params.matchId}`);
+  }, [notStarted, router, params.id, params.matchId]);
+
+  if (loading || !match || notStarted) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />

@@ -6,6 +6,7 @@ import { MobileShell } from "@/_components/mobile-shell";
 import { StepIndicator } from "./_components/step-indicator";
 import { CrearSedeModal, type Sede } from "./_components/crear-sede-modal";
 import { useWizard } from "./_components/wizard-context";
+import { DeleteTournament } from "./_components/delete-tournament";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
@@ -162,6 +163,7 @@ export default function CrearTorneoPage() {
           >
             {editing ? "Cancelar" : "Omitir este paso"}
           </button>
+          {editing && tournamentId && <DeleteTournament tournamentId={tournamentId} tournamentName={nombre || "este torneo"} />}
         </div>
       </div>
 

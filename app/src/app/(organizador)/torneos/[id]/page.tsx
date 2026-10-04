@@ -16,7 +16,7 @@ import {
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
-import { shareLink } from "@/_lib/share";
+import { copyText } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
@@ -194,15 +194,10 @@ export default function TournamentDetailPage() {
     }
   }
 
+  // Copia el link (no abre el menú del sistema): ver ConvocatoriaLinkCard.
   async function shareConvocatoria() {
-    if (!tournament) return;
-    const result = await shareLink({
-      title: tournament.name,
-      text: `Únete a ${tournament.name} en Amateur`,
-      url: `${window.location.origin}/convocatoria/${params.id}`,
-    });
-    if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
-    if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
+    const ok = await copyText(`${window.location.origin}/convocatoria/${params.id}`);
+    setToast(ok ? { message: "Link copiado. Pégalo en WhatsApp.", tone: "success" } : { message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
   }
 
   const pendingRequests = (requests ?? []).filter((r) => r.kind === "request" && r.status === "pending").length;
@@ -454,7 +449,12 @@ export default function TournamentDetailPage() {
               Deshacer fixture
             </button>
           )}
-          <FixtureTabs matches={matches} hrefFor={(m) => `/torneos/${params.id}/resultado/${m.id}`} />
+          {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
+            "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
+          <FixtureTabs
+            matches={matches}
+            hrefFor={(m) => `/torneos/${params.id}/${m.status === "finalizado" ? "resultado" : "en-vivo"}/${m.id}`}
+          />
         </div>
       )}
 

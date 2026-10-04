@@ -59,7 +59,7 @@ export default function AgregarEquipoPage() {
         </div>
 
         {/* Card 3 — Invitar por WhatsApp: link real de la convocatoria */}
-        {tournament && <ConvocatoriaLinkCard tournamentId={params.id} tournamentName={tournament.name} />}
+        {tournament && <ConvocatoriaLinkCard tournamentId={params.id} />}
 
       </div>
     </div>
