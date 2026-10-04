@@ -23,7 +23,7 @@ export default function JugadorLayout({
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface-primary">
-      <main className="mx-auto w-full max-w-[430px] flex-1 pb-20">{children}</main>
+      <main className="mx-auto w-full max-w-[430px] flex-1 pb-24">{children}</main>
       <JugadorBottomNav />
     </div>
   );
