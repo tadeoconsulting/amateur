@@ -137,12 +137,15 @@ function JugadorTorneosContent({ userId }: { userId: string }) {
           </svg>
           <h1 className="font-heading text-lg font-bold tracking-wide text-text-primary">Actividad</h1>
         </div>
-        {/* Un jugador pertenece a un solo club, así que no hay selector que abrir. */}
+        {/* Un jugador pertenece a un solo club: no hay selector, pero tocarlo lleva a Mis equipos. */}
         {club && (
-          <div className="flex min-w-0 items-center gap-1 rounded-full border border-border-primary bg-surface-alternative py-2 pl-3 pr-4">
+          <Link
+            href="/jugador/equipos"
+            className="flex min-w-0 items-center gap-1 rounded-full border border-border-primary bg-surface-alternative py-2 pl-3 pr-4"
+          >
             <ClubCrest club={club} size="h-6 w-6" />
             <span className="truncate font-heading text-xs font-semibold text-text-primary">{club.name}</span>
-          </div>
+          </Link>
         )}
       </div>
 

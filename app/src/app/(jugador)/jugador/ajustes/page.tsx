@@ -2,21 +2,30 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { usePendingInvitations } from "@/_lib/use-pending-invitations";
 
 const menuItems = [
   { label: "Mi Perfil", href: "/jugador/ajustes/perfil" },
+  { label: "Mis equipos", href: "/jugador/equipos" },
   { label: "Centro de ayuda", href: "/ayuda" },
   { label: "Términos y condiciones", href: "/terminos" },
   { label: "Políticas de privacidad", href: "/privacidad" },
 ];
 
-function MenuRow({ label, href }: { label: string; href: string }) {
+function MenuRow({ label, href, badge = 0 }: { label: string; href: string; badge?: number }) {
   return (
     <Link
       href={href}
       className="flex items-center justify-between border-b border-brand-200 py-4"
     >
-      <span className="text-sm text-text-primary">{label}</span>
+      <span className="flex items-center gap-2 text-sm text-text-primary">
+        {label}
+        {badge > 0 && (
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-surface-secondary">
+            {badge}
+          </span>
+        )}
+      </span>
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-text-secondary">
         <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -26,6 +35,8 @@ function MenuRow({ label, href }: { label: string; href: string }) {
 
 export default function JugadorAjustesPage() {
   const { logout } = useAuth();
+  // Las invitaciones de un club se aceptan desde "Mis equipos".
+  const invitesPending = usePendingInvitations();
 
   return (
     <div className="w-full pb-4">
@@ -45,7 +56,7 @@ export default function JugadorAjustesPage() {
       {/* Menu */}
       <div className="mt-6 px-4">
         {menuItems.map((item) => (
-          <MenuRow key={item.label} label={item.label} href={item.href} />
+          <MenuRow key={item.label} label={item.label} href={item.href} badge={item.href === "/jugador/equipos" ? invitesPending : 0} />
         ))}
       </div>
 
