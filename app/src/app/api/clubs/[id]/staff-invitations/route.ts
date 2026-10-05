@@ -8,6 +8,26 @@ import type { StaffRole } from "@/_lib/types";
 
 const STAFF_ROLES: StaffRole[] = ["delegado", "asistente", "director_tecnico"];
 
+/** Manda el correo de una invitación de staff (nueva o reenviada). Nunca lanza. */
+async function enviarInvitacionStaff(
+  request: NextRequest,
+  clubId: string,
+  inviter: { firstName: string; lastName: string },
+  invitation: { email: string; role: string; token: string }
+) {
+  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { name: true } });
+  return enviarCorreo({
+    to: invitation.email,
+    ...invitacionStaff({
+      clubName: club?.name ?? "un club",
+      inviterName: `${inviter.firstName} ${inviter.lastName}`.trim(),
+      roleLabel: STAFF_ROLE_LABELS[invitation.role] ?? invitation.role,
+      url: `${request.nextUrl.origin}/staff/invitacion?token=${invitation.token}`,
+      days: INVITE_DAYS,
+    }),
+  });
+}
+
 /**
  * Invita por correo a alguien que todavía no tiene cuenta para un rol de staff (por ejemplo,
  * el director técnico que no aparece en la búsqueda porque nunca se registró). Quien ya tiene
@@ -43,7 +63,11 @@ export async function POST(
     where: { clubId: id, role, email: { equals: email, mode: "insensitive" }, status: "pending", expiresAt: { gt: new Date() } },
   });
   if (pending) {
-    return Response.json({ id: pending.id, token: pending.token, email: pending.email, role: pending.role, expiresAt: pending.expiresAt, alreadyInvited: true });
+    // Volver a invitar al mismo correo REENVÍA el correo: la invitación pudo crearse antes de que
+    // hubiera proveedor de correo, o el mensaje perderse, y de otro modo esa persona no tendría cómo
+    // recibirlo nunca.
+    const emailed = (await enviarInvitacionStaff(request, id, auth.user, pending)) === "sent";
+    return Response.json({ id: pending.id, token: pending.token, email: pending.email, role: pending.role, expiresAt: pending.expiresAt, alreadyInvited: true, emailed });
   }
 
   const expiresAt = new Date();
@@ -56,17 +80,7 @@ export async function POST(
 
     // Quien invita no tiene cómo mandarle el link a alguien sin cuenta: por eso va por correo.
     // Si no sale (sin proveedor configurado, o falló), la invitación existe igual.
-    const club = await prisma.club.findUnique({ where: { id }, select: { name: true } });
-    const result = await enviarCorreo({
-      to: email,
-      ...invitacionStaff({
-        clubName: club?.name ?? "un club",
-        inviterName: `${auth.user.firstName} ${auth.user.lastName}`.trim(),
-        roleLabel: STAFF_ROLE_LABELS[role] ?? role,
-        url: `${request.nextUrl.origin}/staff/invitacion?token=${invitation.token}`,
-        days: INVITE_DAYS,
-      }),
-    });
+    const result = await enviarInvitacionStaff(request, id, auth.user, invitation);
 
     return Response.json({
       id: invitation.id,
