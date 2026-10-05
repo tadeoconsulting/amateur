@@ -224,7 +224,8 @@ export interface UserItem {
   createdAt: string;
   roles: string[];
   ownedClubs: { id: string; name: string }[];
-  playerProfile: { id: string; position: string | null; club: { id: string; name: string } | null } | null;
+  /** Una ficha por club donde juega (puede ser más de uno). */
+  playerProfiles: { id: string; position: string | null; club: { id: string; name: string } | null }[];
   tournamentsCount: number;
 }
 
@@ -300,15 +301,17 @@ export interface UserDetail {
   birthDate: string | null;
   organization: string | null;
   roles: string[];
-  playerProfile: {
+  /** Una ficha por club donde juega, la más antigua primero. Una ficha sin `club` es la "libre"
+   * (solo posición: todavía sin equipo). */
+  playerProfiles: {
     id: string;
     position: string | null;
     number: number | null;
     status: string;
     club: { id: string; name: string; shortName: string; color: string | null; logoUrl: string | null } | null;
     category: { id: string; name: string; gender: string } | null;
-    /** Por torneo — un jugador puede haber jugado varios. matchesPlayed y assists no se
-     * incrementan todavía en ningún lado (ver pendientes-y-decisiones.md): siempre en 0. */
+    /** Por torneo. matchesPlayed y assists no se incrementan todavía en ningún lado (ver
+     * pendientes-y-decisiones.md): siempre en 0. */
     stats: {
       goals: number;
       assists: number;
@@ -317,11 +320,25 @@ export interface UserDetail {
       matchesPlayed: number;
       tournament: { id: string; name: string };
     }[];
-  } | null;
+  }[];
+  /** El equipo con el que sale hoy (el que eligió, o el más antiguo); null si no tiene equipo. */
+  activeClubId: string | null;
 }
 
 export function getUser(id: string) {
   return fetcher<UserDetail>(`/api/users/${id}`);
+}
+
+/** Elige con qué equipo sale a la cancha el jugador (el que muestra Actividad). Debe ser uno de sus equipos. */
+export async function setActiveClub(userId: string, clubId: string): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(`/api/users/${userId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ activeClubId: clubId }),
+  });
+  if (res.ok) return { ok: true };
+  const data = await res.json().catch(() => ({}));
+  return { ok: false, error: data.error ?? "No se pudo cambiar de equipo" };
 }
 
 // ─── Solicitudes e invitaciones de equipos a un torneo (especificación 006) ────

@@ -57,12 +57,5 @@ export async function POST(
 
   const result = await joinClub(found.userId, found.clubId);
 
-  // El jugador puede haber pedido unirse a más de un club a la vez: al entrar a este, las
-  // demás solicitudes pendientes quedan sin sentido.
-  await prisma.playerJoinRequest.updateMany({
-    where: { userId: found.userId, status: "pending", id: { not: id } },
-    data: { status: "cancelled", resolvedAt: new Date() },
-  });
-
   return Response.json({ id, status: "accepted", result });
 }

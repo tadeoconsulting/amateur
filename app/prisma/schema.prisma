@@ -35,16 +35,21 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  roles              UserRole[]
-  ownedClubs         Club[]              @relation("ClubOwner")
-  playerProfile      PlayerProfile?
-  tournaments        Tournament[]        @relation("TournamentOrganizer")
-  staffRoles         StaffMember[]
-  invitations        PlayerInvitation[]
-  staffInvitations   StaffInvitation[]
-  tournamentRequests TournamentRequest[]
-  sedes              Sede[]
-  joinRequests       PlayerJoinRequest[]
+  roles               UserRole[]
+  ownedClubs          Club[]               @relation("ClubOwner")
+  // Un jugador puede estar en varios clubes: una ficha (PlayerProfile) por club, más a lo sumo una
+  // "libre" (clubId null: solo tiene posición, todavía sin equipo). Ver _lib/player-clubs.ts.
+  playerProfiles      PlayerProfile[]
+  // Con qué equipo "sale a la cancha" hoy: el que muestra la pestaña Actividad. Es un id de club
+  // sin relación a propósito: si ya no es de sus equipos, se ignora y se usa el primero.
+  activeClubId        String?
+  tournaments         Tournament[]         @relation("TournamentOrganizer")
+  staffRoles          StaffMember[]
+  invitations         PlayerInvitation[]
+  staffInvitations    StaffInvitation[]
+  tournamentRequests  TournamentRequest[]
+  sedes               Sede[]
+  joinRequests        PlayerJoinRequest[]
   passwordResetTokens PasswordResetToken[]
 }
 
@@ -156,11 +161,13 @@ model StaffMember {
 
 // ─── Players ────────────────────────────────────────────────────
 
+// La ficha de un jugador EN un club (dorsal, categoría, estadísticas por torneo). Un mismo usuario
+// puede tener varias, una por club donde juega.
 model PlayerProfile {
   id         String   @id @default(cuid())
   position   String?
   number     Int?
-  userId     String   @unique
+  userId     String
   clubId     String?
   categoryId String?
   status     String   @default("activo")
@@ -173,6 +180,11 @@ model PlayerProfile {
   stats       PlayerStats[]
   matchEvents MatchEvent[]
   lineups     MatchLineup[]
+
+  // Una ficha por club (el clubId null — la ficha "libre" — queda fuera de esta regla en la base:
+  // que haya una sola lo cuida _lib/player-clubs.ts).
+  @@unique([userId, clubId])
+  @@index([userId])
 }
 
 model PlayerStats {

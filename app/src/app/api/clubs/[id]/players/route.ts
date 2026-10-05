@@ -66,14 +66,17 @@ export async function POST(
 
   const target = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, playerProfile: { select: { clubId: true } } },
+    select: { id: true, playerProfiles: { select: { id: true, clubId: true } } },
   });
   if (!target) {
     return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
   }
-  // Un jugador de otro club no se puede llevar sin su consentimiento: para eso está la invitación.
-  const currentClub = target.playerProfile?.clubId;
-  if (currentClub && currentClub !== id) {
+  // Un jugador que ya está en otro club no se suma sin su consentimiento: para eso está la
+  // invitación (puede estar en varios, pero que decida él). Se agrega directo solo a quien no tiene
+  // club todavía o ya es de este.
+  const inThisClub = target.playerProfiles.find((p) => p.clubId === id);
+  const free = target.playerProfiles.find((p) => p.clubId === null);
+  if (!inThisClub && !free && target.playerProfiles.length > 0) {
     return Response.json({ error: "El jugador ya está en otro equipo: invítalo para que decida" }, { status: 409 });
   }
 
@@ -91,11 +94,10 @@ export async function POST(
   };
 
   try {
-    const profile = await prisma.playerProfile.upsert({
-      where: { userId },
-      update: data,
-      create: { userId, ...data },
-    });
+    const existing = inThisClub ?? free;
+    const profile = existing
+      ? await prisma.playerProfile.update({ where: { id: existing.id }, data })
+      : await prisma.playerProfile.create({ data: { userId, ...data } });
     return Response.json(profile, { status: 201 });
   } catch (error) {
     console.error("Add player error:", error);

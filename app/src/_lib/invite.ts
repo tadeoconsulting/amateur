@@ -67,46 +67,54 @@ export function invitationProblem(reason: "not_found" | "expired" | "used") {
   return Response.json({ error }, { status: 410 });
 }
 
-export type JoinResult =
-  | { joined: true; already: boolean }
-  | { joined: false; currentClub: { id: string; name: string } };
+export type JoinResult = { joined: true; already: boolean };
 
 /**
- * Suma a un usuario al club como jugador. Un jugador pertenece a un solo club: si ya está en
- * otro, no se lo mueve salvo que se pida explícitamente (`replace`). Al cambiar de club se
- * pierden la categoría y el dorsal, que eran del club anterior.
+ * Suma a un usuario al club como jugador. Puede estar en varios clubes: cada uno es una ficha
+ * (PlayerProfile) propia con su categoría, dorsal y estadísticas, así que entrar a uno no toca los
+ * otros. Si ya estaba en este club no hace nada (solo actualiza la posición, si se mandó una). Si
+ * tenía una ficha "libre" (sin club, p. ej. la del registro) se usa esa en vez de crear otra.
  */
 export async function joinClub(
   userId: string,
   clubId: string,
-  options: { position?: string | null; replace?: boolean } = {}
+  options: { position?: string | null } = {}
 ): Promise<JoinResult> {
-  const profile = await prisma.playerProfile.findUnique({
-    where: { userId },
-    select: { clubId: true, club: { select: { id: true, name: true } } },
-  });
-
   const position = options.position?.trim() || null;
 
-  if (profile?.clubId === clubId) {
-    if (position) await prisma.playerProfile.update({ where: { userId }, data: { position } });
+  const profiles = await prisma.playerProfile.findMany({
+    where: { userId },
+    select: { id: true, clubId: true, position: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const inClub = profiles.find((p) => p.clubId === clubId);
+  if (inClub) {
+    if (position) await prisma.playerProfile.update({ where: { id: inClub.id }, data: { position } });
     return { joined: true, already: true };
   }
-  if (profile?.clubId && profile.club && !options.replace) {
-    return { joined: false, currentClub: profile.club };
-  }
 
-  await prisma.$transaction([
-    prisma.userRole.upsert({
-      where: { userId_role: { userId, role: Role.JUGADOR } },
-      update: {},
-      create: { userId, role: Role.JUGADOR },
-    }),
-    prisma.playerProfile.upsert({
-      where: { userId },
-      update: { clubId, categoryId: null, number: null, ...(position && { position }) },
-      create: { userId, clubId, ...(position && { position }) },
-    }),
-  ]);
+  const free = profiles.find((p) => p.clubId === null);
+  const roleUpsert = prisma.userRole.upsert({
+    where: { userId_role: { userId, role: Role.JUGADOR } },
+    update: {},
+    create: { userId, role: Role.JUGADOR },
+  });
+
+  if (free) {
+    await prisma.$transaction([
+      roleUpsert,
+      prisma.playerProfile.update({
+        where: { id: free.id },
+        data: { clubId, categoryId: null, number: null, ...(position && { position }) },
+      }),
+    ]);
+  } else {
+    await prisma.$transaction([
+      roleUpsert,
+      // La posición se hereda de otra ficha: es de la persona, no se vuelve a preguntar por club.
+      prisma.playerProfile.create({ data: { userId, clubId, position: position ?? profiles[0]?.position ?? null } }),
+    ]);
+  }
   return { joined: true, already: false };
 }

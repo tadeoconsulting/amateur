@@ -97,13 +97,13 @@ export default function ClubBuscarJugadorPage() {
     id: u.id,
     firstName: u.firstName,
     lastName: u.lastName,
-    position: u.playerProfile?.position ?? "",
+    position: u.playerProfiles[0]?.position ?? "",
     age: 0,
     avatarUrl: u.avatarUrl,
     verified: false,
     status: "activo",
     categoryId: "",
-    clubId: u.playerProfile?.club?.id ?? "",
+    clubId: u.playerProfiles.find((p) => p.club)?.club?.id ?? "",
   }));
 
   // Invita de verdad: el jugador la ve en su área ("Mis equipos") y decide si acepta.

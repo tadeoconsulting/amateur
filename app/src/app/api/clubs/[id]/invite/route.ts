@@ -30,7 +30,7 @@ export async function POST(
   }
 
   const alreadyMember = await prisma.user.findFirst({
-    where: { email: { equals: email, mode: "insensitive" }, playerProfile: { clubId: id } },
+    where: { email: { equals: email, mode: "insensitive" }, playerProfiles: { some: { clubId: id } } },
     select: { id: true },
   });
   if (alreadyMember) return Response.json({ error: "Ya es parte del club" }, { status: 409 });

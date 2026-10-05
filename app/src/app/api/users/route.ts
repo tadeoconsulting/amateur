@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     include: {
       roles: true,
       ownedClubs: { select: { id: true, name: true } },
-      playerProfile: { include: { club: { select: { id: true, name: true } } } },
+      playerProfiles: { orderBy: { createdAt: "asc" }, include: { club: { select: { id: true, name: true } } } },
       _count: { select: { tournaments: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -63,13 +63,7 @@ export async function GET(request: NextRequest) {
       lastName: u.lastName,
       avatarUrl: u.avatarUrl,
       roles: u.roles.map((r) => r.role),
-      playerProfile: u.playerProfile
-        ? {
-            id: u.playerProfile.id,
-            position: u.playerProfile.position,
-            club: u.playerProfile.club,
-          }
-        : null,
+      playerProfiles: u.playerProfiles.map((p) => ({ id: p.id, position: p.position, club: p.club })),
       // Datos personales y de contacto: solo para admins.
       ...(admin && {
         email: u.email,
@@ -142,7 +136,7 @@ export async function POST(request: NextRequest) {
         roles: { create: userRoles.map((role) => ({ role })) },
         ...(userRoles.includes(Role.JUGADOR) && playerData
           ? {
-              playerProfile: {
+              playerProfiles: {
                 create: {
                   position: typeof playerData.position === "string" ? playerData.position : null,
                   number: playerData.number ? Number(playerData.number) : null,
@@ -152,7 +146,7 @@ export async function POST(request: NextRequest) {
             }
           : {}),
       },
-      include: { roles: true, playerProfile: true },
+      include: { roles: true, playerProfiles: true },
     });
 
     return Response.json(
@@ -162,7 +156,7 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         roles: user.roles.map((r) => r.role),
-        playerProfile: user.playerProfile,
+        playerProfiles: user.playerProfiles,
         ...(temporaryPassword && { temporaryPassword }),
       },
       { status: 201 }
