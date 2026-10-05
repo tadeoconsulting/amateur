@@ -13,6 +13,7 @@ import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
+import { PlayerAvatar } from "@/_components/player-avatar";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -323,12 +324,7 @@ export default function ClubTorneoDetallePage() {
                   }`}>
                     {i + 1}
                   </div>
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-300">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary">
-                      <circle cx="7" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" />
-                      <path d="M2.5 12.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1" />
-                    </svg>
-                  </div>
+                  <PlayerAvatar avatarUrl={p.avatarUrl} size="h-8 w-8" iconSize={14} iconClass="text-text-secondary" />
                   <div className="min-w-0 flex-1">
                     <p className="font-heading text-sm font-bold text-text-primary">
                       {p.firstName} {p.lastName}
