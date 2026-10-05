@@ -54,6 +54,17 @@ body {
   scroll-behavior: smooth;
 }
 
+/* Safari de iPhone/iPad hace zoom sobre un campo al tocarlo si su texto mide menos de 16px, y
+   después la pantalla se queda ampliada. Casi todos los campos de la app usan text-sm (14px), así
+   que en celular y tablets (pantalla táctil o ancho de teléfono) se llevan a 16px. Va fuera de
+   cualquier @layer a propósito: así le gana a las clases text-sm / text-xs de Tailwind. No se
+   desactiva el zoom de la página (maximum-scale), que es accesibilidad. */
+@media (pointer: coarse), (max-width: 767px) {
+  :where(input, select, textarea) {
+    font-size: 16px;
+  }
+}
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
