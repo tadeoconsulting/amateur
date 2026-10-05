@@ -13,7 +13,7 @@ const faqs: Record<string, { question: string; answer: string }[]> = {
     {
       question: "Como creo mi cuenta?",
       answer:
-        "Podes crear tu cuenta usando tu correo electronico o tu cuenta de Google desde la pantalla de inicio de sesion. Solo necesitas un email valido para comenzar.",
+        "Podes crear tu cuenta con tu correo electronico desde la pantalla de inicio de sesion. Solo necesitas un email valido para comenzar.",
     },
     {
       question: "Puedo tener mas de un rol?",
