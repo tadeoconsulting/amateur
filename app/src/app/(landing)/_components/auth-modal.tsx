@@ -10,6 +10,10 @@ import { ProfilePicker } from "./profile-picker";
 
 type AuthView = "login" | "register";
 
+// El inicio de sesión con Google todavía no existe: el botón no tenía ninguna acción. Se oculta hasta
+// construirlo (no basta cambiar este valor: falta la integración con Google y su ruta en la API).
+const GOOGLE_SIGN_IN_ENABLED = false;
+
 export function AuthModal({
   open,
   onClose,
@@ -159,20 +163,24 @@ export function AuthModal({
               : "Regístrate y crea tu primer torneo gratis."}
           </p>
 
-          {/* Google button */}
-          <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-border-primary bg-white px-4 py-3 transition-colors hover:bg-brand-300 cursor-pointer">
-            <Image src="/google-icon.svg" alt="" width={20} height={20} />
-            <span className="font-heading text-sm font-semibold text-text-primary">
-              Continuar con Google
-            </span>
-          </button>
+          {GOOGLE_SIGN_IN_ENABLED && (
+            <>
+              {/* Google button */}
+              <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-border-primary bg-white px-4 py-3 transition-colors hover:bg-brand-300 cursor-pointer">
+                <Image src="/google-icon.svg" alt="" width={20} height={20} />
+                <span className="font-heading text-sm font-semibold text-text-primary">
+                  Continuar con Google
+                </span>
+              </button>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="h-px flex-1 bg-brand-200" />
-            <span className="font-heading text-xs text-text-secondary">o</span>
-            <div className="h-px flex-1 bg-brand-200" />
-          </div>
+              {/* Divider */}
+              <div className="flex items-center gap-3 my-5">
+                <div className="h-px flex-1 bg-brand-200" />
+                <span className="font-heading text-xs text-text-secondary">o</span>
+                <div className="h-px flex-1 bg-brand-200" />
+              </div>
+            </>
+          )}
 
           {/* Email form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">

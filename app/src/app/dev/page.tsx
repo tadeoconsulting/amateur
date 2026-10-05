@@ -20,7 +20,7 @@ const screens: Screen[] = [
   {
     path: "/login",
     name: "Login",
-    description: "Inicio de sesión con Google o email, términos legales y recuperar contraseña",
+    description: "Inicio de sesión con email (Google, oculto hasta construirlo), términos legales y recuperar contraseña",
     figmaNode: "4372:18839",
     status: "done",
   },
