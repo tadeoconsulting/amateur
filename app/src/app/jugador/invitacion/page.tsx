@@ -74,7 +74,6 @@ function InvitacionContent() {
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [conflict, setConflict] = useState<{ id: string; name: string } | null>(null);
 
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -97,7 +96,7 @@ function InvitacionContent() {
     nombre && apellidos && dni && posicion && dia && mes && anio && sexo && telefono && correoFinal && departamento && password.length >= 8;
 
   // Alguien con cuenta y sesión no llena el formulario: solo acepta.
-  async function accept(replace = false) {
+  async function accept() {
     if (saving) return;
     setError("");
     setSaving(true);
@@ -105,18 +104,13 @@ function InvitacionContent() {
       const res = await fetch(`/api/invitations/${token}/accept`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ replace }),
+        body: JSON.stringify({}),
       });
       const data = await res.json().catch(() => ({}));
-      if (res.status === 409 && data.currentClub) {
-        setConflict(data.currentClub);
-        return;
-      }
       if (!res.ok) {
         setError(data.error ?? "No se pudo aceptar la invitación");
         return;
       }
-      setConflict(null);
       await refresh();
       setStep("success");
     } catch {
@@ -203,20 +197,14 @@ function InvitacionContent() {
             Entrarás como {user.firstName} {user.lastName}.
           </p>
 
-          {conflict && (
-            <div className="mt-5 rounded-xl bg-btn-regular px-4 py-3 text-sm text-text-primary">
-              Ya perteneces a <span className="font-semibold">{conflict.name}</span>. Si aceptas, dejarás ese equipo y
-              perderás tu categoría y dorsal.
-            </div>
-          )}
           {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
           <button
-            onClick={() => accept(conflict !== null)}
+            onClick={() => accept()}
             disabled={saving}
             className="mt-6 w-full cursor-pointer rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-50"
           >
-            {saving ? "Uniéndome..." : conflict ? `Cambiarme a ${clubName}` : `Unirme a ${clubName}`}
+            {saving ? "Uniéndome..." : `Unirme a ${clubName}`}
           </button>
           <Link href="/jugador/equipos" className="mt-4 text-sm font-medium text-text-primary underline">
             Ahora no

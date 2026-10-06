@@ -33,8 +33,10 @@ Club ──< PlayerInvitation                (invitaciones personales)
 - `delegado*`: datos de contacto del delegado del club (texto libre).
 
 ### PlayerProfile
-- `userId` es único: **un usuario tiene un solo perfil de jugador, y por tanto un solo club a la vez**.
-- `clubId` es opcional (jugador libre). `categoryId` y `number` son del club actual: **al cambiar de club se borran**.
+- **Un usuario puede jugar en varios clubes: tiene una ficha (`PlayerProfile`) por club.** `(userId, clubId)` es único. Además puede tener una ficha "libre" (`clubId` null: solo la posición, todavía sin equipo, p. ej. la del registro); al sumarse a un club se usa esa ficha en vez de crear otra. Que haya una sola libre lo cuida el código (`_lib/invite.ts › joinClub`), no la base: en Postgres los `NULL` no chocan en un índice único.
+- `categoryId`, `number` y las estadísticas son **de cada ficha** (de cada club). La posición es de la persona: se aplica a todas sus fichas.
+- `User.activeClubId`: con qué equipo "sale a la cancha" hoy (el que muestra Actividad). Sin relación a propósito: si ya no es uno de sus equipos, se ignora y se usa el más antiguo (`_lib/player-clubs.ts › resolveActiveClubId`).
+- `clubId` es opcional (ficha libre).
 - `status` por defecto `"activo"`.
 
 ### PlayerStats

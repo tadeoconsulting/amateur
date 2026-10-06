@@ -5,8 +5,8 @@ import { invitationProblem, joinClub, resolveInvitation } from "@/_lib/invite";
 
 /**
  * La persona con sesión acepta la invitación y entra al club como jugador.
- * Body opcional: { position?: string, replace?: boolean }. Si ya está en otro club responde
- * 409 con `currentClub`, y solo se lo mueve si repite el pedido con replace: true.
+ * Body opcional: { position?: string }. Si ya está en otros clubes se suma a este: puede jugar en
+ * varios (cada club es una ficha propia).
  */
 export async function POST(
   request: NextRequest,
@@ -27,13 +27,7 @@ export async function POST(
   const body = (await readJson(request)) ?? {};
   const position = typeof body.position === "string" ? body.position : null;
 
-  const result = await joinClub(user.id, resolved.club.id, { position, replace: body.replace === true });
-  if (!result.joined) {
-    return Response.json(
-      { error: `Ya perteneces a ${result.currentClub.name}. Para pasarte a ${resolved.club.name} confírmalo.`, currentClub: result.currentClub },
-      { status: 409 }
-    );
-  }
+  const result = await joinClub(user.id, resolved.club.id, { position });
 
   if (resolved.kind === "email") {
     await prisma.playerInvitation.update({ where: { id: resolved.invitation.id }, data: { status: "accepted" } });

@@ -27,7 +27,8 @@ export function useMatchRealtime(matchId: string, onUpdate: () => void) {
           // El endpoint ya devuelve un TokenRequest (POJO); nada de reintentar con una API key.
           autoConnect: true,
         });
-        client.channels.get(`match:${matchId}`).subscribe(() => onUpdateRef.current());
+        // La promesa de conexión al canal se rechaza si la pantalla se cierra antes de conectar: se ignora.
+        client.channels.get(`match:${matchId}`).subscribe(() => onUpdateRef.current()).catch(() => {});
       })
       .catch(() => {
         // Sin el paquete o sin red: la ficha se queda con lo que trajo la carga inicial.

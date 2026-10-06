@@ -30,7 +30,7 @@ Ambas son un **token secreto** en la URL. Se resuelven igual (`resolveInvitation
 ### Aceptar (`POST /api/invitations/:token/accept`)
 5. Requiere sesión. Una invitación **personal solo la acepta la cuenta con ese correo** (`403` a cualquier otra, aunque tenga el token).
 6. Suma a la persona al club como jugador: le da el rol `JUGADOR` y crea o actualiza su perfil. Con `position` la guarda.
-7. **Un jugador pertenece a un solo club.** Si ya está en el mismo, responde `200` con `already: true`. Si está en **otro**, responde `409` con `currentClub` y **no lo mueve**; solo lo hace si el pedido se repite con `replace: true`. Al cambiar de club se pierden la categoría y el dorsal.
+7. **Un jugador puede estar en varios clubes** (una ficha por club, ver [modelo de datos](modelo-de-datos.md)). Aceptar **suma** el club a los que ya tiene, sin tocar los otros ni sus categorías, dorsales y estadísticas. Si ya está en este mismo, responde `200` con `already: true`. (Antes un jugador tenía un solo club y aceptar otro pedía confirmar con `replace: true`; ese flujo se quitó.)
 8. Aceptar una invitación personal la marca `accepted`; volver a usarla da `410`.
 
 ### Rechazar (`POST /api/invitations/:token/decline`)

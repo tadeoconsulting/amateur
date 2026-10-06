@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.findFirst({
       where: { email: { equals: email, mode: "insensitive" } },
-      include: { roles: true, playerProfile: { select: { id: true } } },
+      include: { roles: true, playerProfiles: { select: { id: true } } },
     });
 
     // Siempre se hace la comparación, exista o no el usuario, y el error es el mismo.
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       lastName: user.lastName,
       avatarUrl: user.avatarUrl,
       roles: user.roles.map((r) => r.role),
-      hasPlayerProfile: !!user.playerProfile,
+      hasPlayerProfile: user.playerProfiles.length > 0,
     });
   } catch (error) {
     console.error("Login error:", error);

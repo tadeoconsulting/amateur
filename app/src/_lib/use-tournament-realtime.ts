@@ -42,7 +42,9 @@ export function useTournamentRealtime(matchIds: string[], onUpdate: () => void) 
           autoConnect: true,
         });
         for (const id of key.split(",")) {
-          client.channels.get(`match:${id}`).subscribe(() => onUpdateRef.current());
+          // subscribe() devuelve la promesa de la conexión al canal; si la pantalla se cierra antes de
+          // conectar, se rechaza ("Connection closed") — es esperado, no un error: se ignora.
+          client.channels.get(`match:${id}`).subscribe(() => onUpdateRef.current()).catch(() => {});
         }
       })
       .catch(() => {

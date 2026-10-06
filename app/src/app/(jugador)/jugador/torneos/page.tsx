@@ -9,6 +9,7 @@ import { isStale, liveMinute } from "@/_lib/match-live";
 import { formatWhenDate } from "@/_lib/match-format";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
+import { ClubSwitcher, type PlayerClub } from "../../_components/club-switcher";
 
 type TournamentActivity = {
   id: string;
@@ -100,9 +101,25 @@ function MatchCard({ match, now }: { match: MatchListItem; now: number }) {
   );
 }
 
-function JugadorTorneosContent({ userId }: { userId: string }) {
-  const { data: matches, loading, refetchSilently } = useApi(() => getMatches({ playerId: userId }));
-  const { data: me } = useApi(() => getUser(userId));
+/**
+ * La actividad del equipo con el que sale hoy (un jugador puede estar en varios). Se monta con la
+ * `key` del equipo elegido: al cambiar de equipo se remonta y pide los partidos del nuevo (el useApi
+ * de adentro pide una sola vez, al montar).
+ */
+function JugadorTorneosContent({
+  userId,
+  clubs,
+  activeClub,
+  onSwitched,
+}: {
+  userId: string;
+  clubs: PlayerClub[];
+  activeClub: PlayerClub | null;
+  onSwitched: () => void;
+}) {
+  const { data: matches, loading, refetchSilently } = useApi(() =>
+    getMatches(activeClub ? { clubId: activeClub.id } : { playerId: userId })
+  );
 
   // El minuto del partido en vivo avanza solo; sin sesión de tiempo real el resto de la
   // pantalla se actualiza con la suscripción de abajo.
@@ -126,7 +143,7 @@ function JugadorTorneosContent({ userId }: { userId: string }) {
   }
 
   const activity = activityByTournament(matches ?? []);
-  const club = me?.playerProfile?.club ?? null;
+  const club = activeClub;
 
   return (
     <div className="w-full pb-8">
@@ -139,15 +156,16 @@ function JugadorTorneosContent({ userId }: { userId: string }) {
           </svg>
           <h1 className="font-heading text-lg font-bold tracking-wide text-text-primary">Actividad</h1>
         </div>
-        {/* Con un solo equipo es solo una etiqueta: no navega a ningún lado (antes llevaba a Mis
-            equipos, y no debe). El selector para cambiar de equipo aparece cuando el jugador tiene
-            más de uno. */}
-        {club && (
+        {/* Con varios equipos el botón abre el diálogo para cambiar de equipo. Con uno solo es una
+            etiqueta: no navega ni abre nada (no hay otro equipo que elegir). */}
+        {club && clubs.length > 1 ? (
+          <ClubSwitcher userId={userId} clubs={clubs} activeClubId={club.id} onSwitched={onSwitched} />
+        ) : club ? (
           <div className="flex min-w-0 items-center gap-1 rounded-full border border-border-primary bg-surface-alternative py-2 pl-3 pr-4">
             <ClubCrest club={club} size="h-6 w-6" />
             <span className="truncate font-heading text-xs font-semibold text-text-primary">{club.name}</span>
           </div>
-        )}
+        ) : null}
       </div>
 
       {activity.length === 0 ? (
@@ -198,6 +216,32 @@ function JugadorTorneosContent({ userId }: { userId: string }) {
   );
 }
 
+/** Carga al jugador (sus equipos y con cuál sale hoy) y monta la actividad de ese equipo. */
+function JugadorTorneosLoader({ userId }: { userId: string }) {
+  const { data: me, loading, refetch } = useApi(() => getUser(userId));
+
+  if (loading && !me) {
+    return (
+      <div className="flex w-full items-center justify-center pt-32">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  const clubs = (me?.playerProfiles ?? []).flatMap((p) => (p.club ? [p.club] : []));
+  const activeClub = clubs.find((c) => c.id === me?.activeClubId) ?? clubs[0] ?? null;
+
+  return (
+    <JugadorTorneosContent
+      key={activeClub?.id ?? "sin-equipo"}
+      userId={userId}
+      clubs={clubs}
+      activeClub={activeClub}
+      onSwitched={refetch}
+    />
+  );
+}
+
 export default function JugadorTorneosPage() {
   const { user, loading: loadingAuth } = useAuth();
 
@@ -211,5 +255,5 @@ export default function JugadorTorneosPage() {
 
   // `key` fuerza a remontar si el usuario cambia, así el useApi de adentro no se queda
   // pegado al id anterior (mismo patrón que club/equipo, club/torneos).
-  return <JugadorTorneosContent key={user.id} userId={user.id} />;
+  return <JugadorTorneosLoader key={user.id} userId={user.id} />;
 }

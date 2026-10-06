@@ -11,6 +11,8 @@ export default function JugadorLayout({
   const pathname = usePathname();
   const isDetailView =
     /^\/jugador\/torneos\/.+/.test(pathname) ||
+    // Mis equipos (¿con qué equipo sales hoy?) y la búsqueda de equipos van sin barra, como en el diseño.
+    /^\/jugador\/equipos/.test(pathname) ||
     /^\/jugador\/ajustes\/.+/.test(pathname);
 
   if (isDetailView) {

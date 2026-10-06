@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { Role } from "@prisma/client";
 import { badRequest, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { resolveActiveClubId } from "@/_lib/player-clubs";
 
 export async function GET(
   _request: NextRequest,
@@ -18,11 +19,12 @@ export async function GET(
     where: { id },
     include: {
       roles: true,
-      // El join con el torneo (nombre) es para el perfil del propio jugador (goles, tarjetas
-      // y partidos por torneo) — antes solo traía los números sueltos, sin decir de qué torneo.
-      // club/category van con `select` (no `include: true`, como antes): un include crudo del
-      // club traía también su inviteToken, que es secreto (cualquiera con el link se une solo).
-      playerProfile: {
+      // Una ficha por club donde juega (puede ser más de uno). El join con el torneo (nombre) es para
+      // el perfil del propio jugador (goles, tarjetas y partidos por torneo). club/category van con
+      // `select` (no `include: true`): un include crudo del club traería también su inviteToken,
+      // que es secreto (cualquiera con el link se une solo).
+      playerProfiles: {
+        orderBy: { createdAt: "asc" },
         include: {
           club: { select: { id: true, name: true, shortName: true, color: true, logoUrl: true } },
           category: { select: { id: true, name: true, gender: true } },
@@ -49,7 +51,9 @@ export async function GET(
     birthDate: user.birthDate,
     organization: user.organization,
     roles: user.roles.map((r) => r.role),
-    playerProfile: user.playerProfile,
+    playerProfiles: user.playerProfiles,
+    // El equipo con el que sale hoy (el que eligió, o el más antiguo): ver resolveActiveClubId.
+    activeClubId: resolveActiveClubId(user.playerProfiles, user.activeClubId),
     ownedClubs: user.ownedClubs,
   });
 }
@@ -69,7 +73,7 @@ export async function PATCH(
   const body = await readJson(request);
   if (!body) return badRequest();
 
-  const { firstName, lastName, phone, avatarUrl, gender, department, birthDate, organization, position } = body;
+  const { firstName, lastName, phone, avatarUrl, gender, department, birthDate, organization, position, activeClubId } = body;
 
   // Los roles los cambia solo un admin (para uno mismo se usa /api/auth/roles).
   let newRoles: Role[] | null = null;
@@ -102,12 +106,22 @@ export async function PATCH(
       },
     });
 
+    // La posición es de la persona: se aplica a todas sus fichas (una por club), o se crea una ficha
+    // libre si todavía no tiene ninguna.
     if (typeof position === "string" && position) {
-      await prisma.playerProfile.upsert({
-        where: { userId: id },
-        update: { position },
-        create: { userId: id, position },
-      });
+      const updated = await prisma.playerProfile.updateMany({ where: { userId: id }, data: { position } });
+      if (updated.count === 0) await prisma.playerProfile.create({ data: { userId: id, position } });
+    }
+
+    // Con qué equipo sale a la cancha: tiene que ser uno de sus equipos (o null para volver al
+    // más antiguo).
+    if (activeClubId !== undefined) {
+      if (activeClubId !== null && typeof activeClubId !== "string") return badRequest("activeClubId inválido");
+      if (activeClubId) {
+        const member = await prisma.playerProfile.findFirst({ where: { userId: id, clubId: activeClubId }, select: { id: true } });
+        if (!member) return badRequest("Ese no es uno de tus equipos");
+      }
+      await prisma.user.update({ where: { id }, data: { activeClubId } });
     }
 
     if (newRoles) {

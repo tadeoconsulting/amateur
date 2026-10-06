@@ -19,7 +19,7 @@ function ageFromBirthDate(birthDate: string | null): number | null {
   return age;
 }
 
-type PlayerStatsRow = NonNullable<UserDetail["playerProfile"]>["stats"][number];
+type PlayerStatsRow = UserDetail["playerProfiles"][number]["stats"][number];
 
 function sumStats(stats: PlayerStatsRow[]) {
   return stats.reduce(
@@ -77,9 +77,13 @@ function JugadorPerfilContent({ userId }: { userId: string }) {
     );
   }
 
-  const profile = user.playerProfile;
+  // Una ficha por club donde juega: las estadísticas son todas las suyas (sumando sus equipos) y el
+  // dorsal y la posición son los del equipo con el que sale hoy.
+  const profiles = user.playerProfiles;
+  const clubs = profiles.flatMap((p) => (p.club ? [p.club] : []));
+  const profile = profiles.find((p) => p.club?.id === user.activeClubId) ?? profiles[0] ?? null;
   const age = ageFromBirthDate(user.birthDate);
-  const stats = profile?.stats ?? [];
+  const stats = profiles.flatMap((p) => p.stats);
   const totals = sumStats(stats);
   const hasStats = stats.length > 0;
 
@@ -128,12 +132,14 @@ function JugadorPerfilContent({ userId }: { userId: string }) {
             .join(" · ") || "Completa tu posición y fecha de nacimiento"}
         </p>
 
-        <div className="mt-3">
-          {profile?.club ? (
-            <div className="flex items-center gap-2 rounded-full border border-border-primary py-1 pl-1 pr-3">
-              <ClubBadge club={profile.club} />
-              <span className="font-body text-sm text-text-primary">{profile.club.name}</span>
-            </div>
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {clubs.length > 0 ? (
+            clubs.map((club) => (
+              <div key={club.id} className="flex items-center gap-2 rounded-full border border-border-primary py-1 pl-1 pr-3">
+                <ClubBadge club={club} />
+                <span className="font-body text-sm text-text-primary">{club.name}</span>
+              </div>
+            ))
           ) : (
             <Link
               href="/jugador/equipos/buscar"
@@ -194,7 +200,7 @@ function JugadorPerfilContent({ userId }: { userId: string }) {
         ) : (
           <div className="mt-3 rounded-xl border border-border-primary px-4 py-8 text-center">
             <p className="font-body text-sm text-text-secondary">
-              {profile?.club
+              {clubs.length > 0
                 ? "Todavía no tienes estadísticas. En cuanto tu club te convoque a un torneo, tus goles y tarjetas van a aparecer acá."
                 : "Únete a un equipo para empezar a sumar goles, tarjetas y partidos jugados."}
             </p>

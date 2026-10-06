@@ -24,7 +24,8 @@ function ClubBadge({ club }: { club: Pick<ClubListItem, "shortName" | "color"> }
   );
 }
 
-function BuscarEquiposContent({ hasClub }: { hasClub: boolean }) {
+/** `myClubIds`: los equipos donde ya juega. Puede sumarse a otros (cada uno es una ficha propia). */
+function BuscarEquiposContent({ myClubIds }: { myClubIds: string[] }) {
   const [search, setSearch] = useState("");
   const { data: clubs, loading } = useApi(() => getClubs());
   const { data: myRequests, refetch: refetchMine } = useApi<MyJoinRequest[]>(() =>
@@ -34,6 +35,7 @@ function BuscarEquiposContent({ hasClub }: { hasClub: boolean }) {
   const [error, setError] = useState("");
 
   const pendingClubIds = new Set((myRequests ?? []).map((r) => r.club.id));
+  const memberClubIds = new Set(myClubIds);
 
   async function solicitar(clubId: string) {
     setBusyId(clubId);
@@ -84,17 +86,7 @@ function BuscarEquiposContent({ hasClub }: { hasClub: boolean }) {
         <h1 className="font-heading text-xl font-bold text-text-primary">Buscar equipos</h1>
       </div>
 
-      {hasClub ? (
-        <div className="px-6 pt-16 text-center">
-          <p className="text-sm text-text-secondary">
-            Ya perteneces a un club. Para unirte a otro, primero debes dejar el actual.
-          </p>
-          <Link href="/jugador/equipos" className="mt-4 inline-block text-sm font-medium text-text-primary underline">
-            Ir a Mis Equipos
-          </Link>
-        </div>
-      ) : (
-        <>
+      <>
           <div className="px-4 pt-4">
             <input
               type="text"
@@ -127,7 +119,11 @@ function BuscarEquiposContent({ hasClub }: { hasClub: boolean }) {
                       <p className="truncate text-sm font-semibold text-text-primary">{club.name}</p>
                       <p className="text-xs text-text-secondary">{club.playerCount} jugadores</p>
                     </div>
-                    {pending && pendingRequest ? (
+                    {memberClubIds.has(club.id) ? (
+                      <span className="shrink-0 rounded-lg border border-border-primary px-3 py-2 text-xs font-semibold text-text-secondary">
+                        Ya eres parte
+                      </span>
+                    ) : pending && pendingRequest ? (
                       <button
                         onClick={() => cancelar(pendingRequest.id)}
                         disabled={busyId === pendingRequest.id}
@@ -149,8 +145,7 @@ function BuscarEquiposContent({ hasClub }: { hasClub: boolean }) {
               })}
             </div>
           )}
-        </>
-      )}
+      </>
     </div>
   );
 }
@@ -158,7 +153,7 @@ function BuscarEquiposContent({ hasClub }: { hasClub: boolean }) {
 /** Se monta solo cuando ya se conoce el usuario: el useApi de adentro pide una sola vez, al
  * montar, así que necesita el id correcto desde el primer render (ver "use-api.ts"). */
 function BuscarEquiposForUser({ userId }: { userId: string }) {
-  const { data: me, loading } = useApi<{ playerProfile: { club: { id: string } | null } | null }>(() =>
+  const { data: me, loading } = useApi<{ playerProfiles: { club: { id: string } | null }[] }>(() =>
     fetch(`/api/users/${userId}`).then((r) => r.json())
   );
 
@@ -170,7 +165,7 @@ function BuscarEquiposForUser({ userId }: { userId: string }) {
     );
   }
 
-  return <BuscarEquiposContent hasClub={!!me?.playerProfile?.club} />;
+  return <BuscarEquiposContent myClubIds={(me?.playerProfiles ?? []).flatMap((p) => (p.club ? [p.club.id] : []))} />;
 }
 
 export default function BuscarEquiposPage() {

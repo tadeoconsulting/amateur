@@ -58,7 +58,7 @@ export default function JugadorPerfilPage() {
         if (cancelled) return;
         setNombre(u.firstName);
         setApellidos(u.lastName);
-        setPosicion(u.playerProfile?.position ?? "");
+        setPosicion(u.playerProfiles[0]?.position ?? "");
         if (u.birthDate) {
           const [y, m, d] = u.birthDate.slice(0, 10).split("-");
           setAnio(y);

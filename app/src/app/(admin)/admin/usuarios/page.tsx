@@ -18,7 +18,7 @@ interface UserRow {
   createdAt: string;
   roles: string[];
   ownedClubs: { id: string; name: string }[];
-  playerProfile: { id: string; position: string | null; club: { id: string; name: string } | null } | null;
+  playerProfiles: { id: string; position: string | null; club: { id: string; name: string } | null }[];
   tournamentsCount: number;
 }
 
@@ -798,9 +798,9 @@ function AdminUsuariosContent() {
                           Club: {user.ownedClubs.map((c) => c.name).join(", ")}
                         </p>
                       )}
-                      {user.playerProfile?.club && (
+                      {user.playerProfiles.some((p) => p.club) && (
                         <p className="font-body text-xs text-text-secondary">
-                          Juega en: {user.playerProfile.club.name}
+                          Juega en: {user.playerProfiles.flatMap((p) => (p.club ? [p.club.name] : [])).join(", ")}
                         </p>
                       )}
                       {user.tournamentsCount > 0 && (
