@@ -20,6 +20,7 @@ import { copyText } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
+import { PlayerAvatar } from "@/_components/player-avatar";
 import { RequestsPanel } from "./_components/requests-panel";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
@@ -530,7 +531,10 @@ export default function TournamentDetailPage() {
                   <tr key={p.playerId} className="border-b border-brand-200 last:border-0">
                     <td className="py-2.5 pl-3 pr-1 text-xs font-medium text-text-secondary">{p.position}</td>
                     <td className="px-2 py-2.5 text-xs font-medium text-text-primary">
-                      {p.firstName} {p.lastName}
+                      <div className="flex items-center gap-2">
+                        <PlayerAvatar avatarUrl={p.avatarUrl} size="h-6 w-6" iconSize={12} />
+                        <span>{p.firstName} {p.lastName}</span>
+                      </div>
                     </td>
                     <td className="px-2 py-2.5 text-xs text-text-secondary">{p.clubName}</td>
                     <td className="px-2 py-2.5 pr-3 text-center text-xs font-bold text-text-primary">{p.goals}</td>
