@@ -65,7 +65,9 @@ export default function BuscarDelegadoPage() {
       setInvited(true);
       setToast(
         data.alreadyInvited
-          ? "Ya tenía una invitación pendiente."
+          ? data.emailed
+            ? "Ya tenía una invitación: le reenviamos el correo."
+            : "Ya tenía una invitación pendiente, pero el correo no pudo enviarse."
           : data.emailed
             ? "Se envió la invitación por correo."
             : "Invitación creada, pero el correo no pudo enviarse todavía."

@@ -13,17 +13,28 @@ export const STAFF_ROLE_LABELS: Record<string, string> = {
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-/** Marco común: una tarjeta sobria con el nombre de la app y un botón. */
+// Colores y tipografías de la plataforma (globals.css): superficie #FAFAFA, tinta y bordes #1B1B1B,
+// texto secundario #6D6D6D y el verde de verificación #00CA81. Lexend para títulos y botón, Lato para el
+// texto. Las fuentes se piden a Google Fonts (las respetan Apple Mail y otros; Gmail las ignora y usa
+// la de respaldo), así que siempre hay una tipografía de sistema detrás.
+const HEADING = "Lexend,'Helvetica Neue',Helvetica,Arial,sans-serif";
+const BODY = "Lato,'Helvetica Neue',Helvetica,Arial,sans-serif";
+
+/** Marco común: la banda oscura con la marca, la tarjeta con borde y esquinas de 4px, y el botón del diseño. */
 function layout({ title, paragraphs, buttonLabel, url, footer }: { title: string; paragraphs: string[]; buttonLabel: string; url: string; footer: string }) {
-  const body = paragraphs.map((p) => `<p style="margin:0 0 16px;font-size:15px;line-height:22px;color:#1b1b1b">${p}</p>`).join("");
-  return `<!doctype html><html lang="es"><body style="margin:0;padding:24px;background:#fafafa;font-family:Helvetica,Arial,sans-serif">
+  const body = paragraphs
+    .map((p) => `<p style="margin:0 0 16px;font-family:${BODY};font-size:16px;line-height:24px;color:#1b1b1b">${p}</p>`)
+    .join("");
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet"></head>
+<body style="margin:0;padding:24px 12px;background:#fafafa">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-<table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border:1px solid #1b1b1b;border-radius:8px">
-<tr><td style="padding:24px 24px 8px;font-size:18px;font-weight:700;color:#1b1b1b">Amateur</td></tr>
-<tr><td style="padding:8px 24px 0"><h1 style="margin:0 0 16px;font-size:20px;line-height:26px;color:#1b1b1b">${title}</h1>${body}
-<p style="margin:24px 0"><a href="${escapeHtml(url)}" style="display:inline-block;background:#1b1b1b;color:#fafafa;text-decoration:none;font-weight:700;font-size:15px;padding:12px 20px;border-radius:8px">${buttonLabel}</a></p>
-<p style="margin:0 0 8px;font-size:12px;line-height:18px;color:#6d6d6d">Si el botón no funciona, copia este link en tu navegador:<br><a href="${escapeHtml(url)}" style="color:#6d6d6d;word-break:break-all">${escapeHtml(url)}</a></p>
-<p style="margin:0 0 24px;font-size:12px;line-height:18px;color:#6d6d6d">${footer}</p></td></tr>
+<table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;background:#ffffff;border:1px solid #1b1b1b;border-radius:4px;border-collapse:separate;overflow:hidden">
+<tr><td style="background:#1b1b1b;padding:16px 24px"><span style="font-family:${HEADING};font-size:20px;font-weight:700;letter-spacing:.2px;color:#fafafa">Amateur</span><span style="display:inline-block;width:8px;height:8px;margin-left:6px;border-radius:50%;background:#00ca81"></span></td></tr>
+<tr><td style="padding:32px 24px 0"><h1 style="margin:0 0 16px;font-family:${HEADING};font-size:22px;line-height:28px;font-weight:700;color:#1b1b1b">${title}</h1>${body}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0"><tr><td style="background:#1b1b1b;border-radius:4px"><a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 24px;font-family:${HEADING};font-size:14px;line-height:18px;font-weight:700;color:#fafafa;text-decoration:none">${buttonLabel}</a></td></tr></table>
+<p style="margin:0 0 8px;font-family:${BODY};font-size:12px;line-height:18px;color:#6d6d6d">Si el botón no funciona, copia este link en tu navegador:<br><a href="${escapeHtml(url)}" style="color:#6d6d6d;word-break:break-all">${escapeHtml(url)}</a></p>
+<p style="margin:0 0 32px;font-family:${BODY};font-size:12px;line-height:18px;color:#6d6d6d">${footer}</p></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
