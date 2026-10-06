@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { BackHeader } from "@/_components/back-header";
 import { getUser, type UserDetail } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
@@ -64,6 +66,7 @@ function ClubBadge({ club }: { club: { name: string; shortName: string; color: s
 }
 
 function JugadorPerfilContent({ userId }: { userId: string }) {
+  const router = useRouter();
   const { data: user, loading } = useApi(() => getUser(userId));
 
   if (loading || !user) {
@@ -82,13 +85,17 @@ function JugadorPerfilContent({ userId }: { userId: string }) {
 
   return (
     <div className="w-full pb-8">
+      {/* Esta pantalla no lleva la barra inferior: sin esto no había cómo volver. Va a Ajustes (de ahí
+          se llega) y no a "atrás", que fallaría si se abrió el link directo. */}
+      <BackHeader onBack={() => router.push("/jugador/ajustes")} />
+
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
+      <div className="flex items-center justify-between px-4">
         <h1 className="font-heading text-xl font-bold text-text-primary">Mi Perfil</h1>
         <Link href="/jugador/ajustes/perfil/editar" className="p-1 text-text-primary" aria-label="Editar perfil">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path
-              d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2zM12 17a4 4 0 100-8 4 4 0 000 8z"
+              d="M17 3a2.83 2.83 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"

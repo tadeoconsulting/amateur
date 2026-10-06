@@ -226,13 +226,15 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-heading text-sm font-bold text-text-primary">{t.name}</h3>
-                      <RequestStatusChip status="pending" />
+                      {/* "Pendiente" solo mientras todavía se puede responder: una solicitud de un
+                          torneo que ya empezó no está pendiente de nada, queda como historial. */}
+                      {isOpen && <RequestStatusChip status="pending" />}
                     </div>
                     <p className="mt-0.5 font-body text-xs text-text-secondary">
                       {t.category || "Libre"} | {new Date(t.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
                     </p>
                     <p className="mt-1 font-body text-xs font-semibold text-text-primary">
-                      {isInvite ? "Te invitaron" : "Esperando respuesta del organizador"} · {timeAgo(sol.createdAt)}
+                      {isInvite ? "Te invitaron" : isOpen ? "Esperando respuesta del organizador" : "Pediste unirte"} · {timeAgo(sol.createdAt)}
                     </p>
                     <dl className="mt-2 flex flex-col gap-1 font-body text-xs text-text-secondary">
                       <div className="flex gap-1.5"><dt className="sr-only">Sede</dt><dd>{t.location}</dd></div>
@@ -245,7 +247,7 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
 
                 {!isOpen && (
                   <p role="status" className="mt-3 rounded-lg bg-brand-300 px-3 py-2 font-body text-xs text-text-primary">
-                    Este torneo ya empezó: no se pueden aceptar más equipos.
+                    Este torneo ya empezó
                   </p>
                 )}
                 {isOpen && isInvite && isFull && (
@@ -254,6 +256,8 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
                   </p>
                 )}
 
+                {/* Con el torneo ya empezado no hay nada que aceptar, rechazar ni cancelar: solo queda el mensaje. */}
+                {isOpen && (
                 <div className="mt-4 flex gap-2">
                   {isInvite ? (
                     <>
@@ -285,6 +289,7 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
                     </button>
                   )}
                 </div>
+                )}
               </div>
             );
           })}
