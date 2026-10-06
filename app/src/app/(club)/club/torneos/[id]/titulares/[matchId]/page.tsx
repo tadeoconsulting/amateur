@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { getClubPlayers, type PlayerListItem } from "@/_lib/api";
+import { PlayerAvatar } from "@/_components/player-avatar";
 import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import { Toast } from "@/_components/toast";
@@ -150,12 +151,7 @@ function TitularesForm({
                 )}
               </div>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-300">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary">
-                  <circle cx="7" cy="5" r="2.5" stroke="currentColor" strokeWidth="1" />
-                  <path d="M2.5 12.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1" />
-                </svg>
-              </div>
+              <PlayerAvatar avatarUrl={player.user.avatarUrl} size="h-9 w-9" iconSize={14} iconClass="text-text-secondary" />
 
               <div className="min-w-0 flex-1">
                 <p className="font-heading text-sm font-semibold text-text-primary">

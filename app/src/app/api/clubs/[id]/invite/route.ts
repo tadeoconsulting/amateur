@@ -5,6 +5,26 @@ import { INVITE_DAYS } from "@/_lib/invite";
 import { enviarCorreo } from "@/_lib/email";
 import { invitacionJugador } from "@/_lib/email-templates";
 
+/** Manda el correo de una invitación a un jugador (nueva o reenviada). Nunca lanza. */
+async function enviarInvitacionJugador(
+  request: NextRequest,
+  clubId: string,
+  inviter: { firstName: string; lastName: string },
+  email: string
+) {
+  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { name: true } });
+  return enviarCorreo({
+    to: email,
+    ...invitacionJugador({
+      clubName: club?.name ?? "un club",
+      inviterName: `${inviter.firstName} ${inviter.lastName}`.trim(),
+      // Con la sesión cerrada, el proxy lo manda a iniciar sesión y vuelve acá.
+      url: `${request.nextUrl.origin}/jugador/equipos`,
+      days: INVITE_DAYS,
+    }),
+  });
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -40,7 +60,10 @@ export async function POST(
     where: { clubId: id, email: { equals: email, mode: "insensitive" }, status: "pending", expiresAt: { gt: new Date() } },
   });
   if (pending) {
-    return Response.json({ id: pending.id, token: pending.token, email: pending.email, expiresAt: pending.expiresAt, alreadyInvited: true });
+    // Igual que con el staff: volver a invitar reenvía el correo (la invitación pudo crearse antes
+    // de que hubiera proveedor de correo).
+    const emailed = (await enviarInvitacionJugador(request, id, auth.user, pending.email)) === "sent";
+    return Response.json({ id: pending.id, token: pending.token, email: pending.email, expiresAt: pending.expiresAt, alreadyInvited: true, emailed });
   }
 
   const expiresAt = new Date();
@@ -54,17 +77,7 @@ export async function POST(
 
     // El jugador ve la invitación en "Mis equipos" al entrar; el correo es el aviso. Si no sale
     // (sin proveedor configurado, o falló), la invitación existe igual.
-    const club = await prisma.club.findUnique({ where: { id }, select: { name: true } });
-    const result = await enviarCorreo({
-      to: email,
-      ...invitacionJugador({
-        clubName: club?.name ?? "un club",
-        inviterName: `${auth.user.firstName} ${auth.user.lastName}`.trim(),
-        // Con la sesión cerrada, el proxy lo manda a iniciar sesión y vuelve acá.
-        url: `${request.nextUrl.origin}/jugador/equipos`,
-        days: INVITE_DAYS,
-      }),
-    });
+    const result = await enviarInvitacionJugador(request, id, auth.user, email);
 
     return Response.json({
       id: invitation.id,

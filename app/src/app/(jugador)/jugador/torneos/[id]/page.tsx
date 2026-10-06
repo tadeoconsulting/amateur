@@ -6,6 +6,7 @@ import { getMatches, getStandings, getScorers, getTournament } from "@/_lib/api"
 import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { ClubCrest } from "@/_components/club-crest";
+import { PlayerAvatar } from "@/_components/player-avatar";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
@@ -279,12 +280,13 @@ export default function JugadorTorneoDetailPage() {
                   {idx > 0 && (
                     <span className="w-4 text-sm font-semibold text-text-secondary">{idx + 1}</span>
                   )}
-                  <div className={`flex items-center justify-center rounded-full bg-brand-200 ${idx === 0 ? "h-12 w-12" : "h-8 w-8"}`}>
-                    <svg width={idx === 0 ? 24 : 16} height={idx === 0 ? 24 : 16} viewBox="0 0 24 24" fill="none" className="text-text-secondary">
-                      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
-                      <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </div>
+                  <PlayerAvatar
+                    avatarUrl={scorer.avatarUrl}
+                    size={idx === 0 ? "h-12 w-12" : "h-8 w-8"}
+                    iconSize={idx === 0 ? 24 : 16}
+                    background="bg-brand-200"
+                    iconClass="text-text-secondary"
+                  />
                   <div>
                     <p className={`font-semibold text-text-primary ${idx === 0 ? "text-sm" : "text-sm"}`}>
                       {scorer.firstName} {scorer.lastName}

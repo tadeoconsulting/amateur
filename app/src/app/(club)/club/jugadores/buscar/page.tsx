@@ -125,7 +125,7 @@ export default function ClubBuscarJugadorPage() {
         return;
       }
       setInvited((prev) => new Set(prev).add(id));
-      setToast(data.alreadyInvited ? `${name} ya tenía una invitación pendiente.` : data.emailed ? `Se envió la invitación a ${name}, también por correo.` : `Se envió la invitación a ${name}.`);
+      setToast(data.alreadyInvited ? (data.emailed ? `${name} ya tenía una invitación: le reenviamos el correo.` : `${name} ya tenía una invitación pendiente.`) : data.emailed ? `Se envió la invitación a ${name}, también por correo.` : `Se envió la invitación a ${name}.`);
     } catch {
       setToast("No se pudo conectar. Inténtalo de nuevo.");
     }
