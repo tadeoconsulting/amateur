@@ -26,6 +26,7 @@ import { RequestsPanel } from "./_components/requests-panel";
 import { MatchEditor } from "./_components/match-editor";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
+import { tournamentPublicPath } from "@/_lib/slug";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
@@ -204,7 +205,8 @@ export default function TournamentDetailPage() {
 
   // Copia el link (no abre el menú del sistema): ver ConvocatoriaLinkCard.
   async function shareConvocatoria() {
-    const ok = await copyText(`${window.location.origin}/convocatoria/${params.id}`);
+    if (!tournament) return;
+    const ok = await copyText(`${window.location.origin}${tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}`);
     setToast(ok ? { message: "Link copiado. Pégalo en WhatsApp.", tone: "success" } : { message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
   }
 

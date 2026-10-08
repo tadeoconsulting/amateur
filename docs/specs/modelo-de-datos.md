@@ -25,10 +25,13 @@ Club ──< PlayerInvitation                (invitaciones personales)
 - `passwordHash` es un hash de `bcryptjs`. Un valor que no es un hash válido (como `$2b$10$placeholder` del seed) **nunca** autentica.
 - Un usuario debería tener al menos un rol: lo hace cumplir la API (registro y quitar rol), no la base de datos. `(userId, role)` sí es único en la base.
 - Roles: `ADMIN`, `ORGANIZADOR`, `CLUB_OWNER`, `JUGADOR`, `SPONSOR`, `FAN`. Los dos últimos no tienen funcionalidad todavía.
+- **Un administrador es solo administrador:** `ADMIN` no se combina con ningún otro rol (lo hacen cumplir la API de usuarios y de activar perfiles, `_lib/admin-roles.ts`). Entra por `/admin/login`; el login público lo rechaza. `npm run db:make-admin` deja una cuenta solo con `ADMIN` (y se niega si ya tiene torneos, clubes o equipos); `npm run db:remove-admin` le quita el rol a una cuenta con otros perfiles.
+- `organizerSlug`: primer tramo de la URL pública de sus torneos (`/{organizerSlug}/{slug}`). Único; se asigna al crear su primer torneo, a partir de la organización (o de su nombre si no tiene), con sufijo `-2`, `-3`… si ya existe, y nunca es una pantalla de la app (`_lib/slug.ts › RESERVED_SLUGS`). No cambia aunque se edite la organización.
 
 ### Club
 - `ownerId` es obligatorio: todo club tiene un dueño, incluso un equipo temporal (su dueño es el organizador que lo creó).
 - `isTemporary`: equipo creado por un organizador para su torneo, sin delegado ni métricas. No aparece en la búsqueda de la comunidad y solo lo puede inscribir su creador (o un admin). Al quitarlo del torneo se borra.
+- **Oficializar:** un admin puede pasar un equipo temporal a un delegado con cuenta propia (`POST /api/clubs/:id/oficializar`): cambia el `ownerId`, quita `isTemporary` y da el rol `CLUB_OWNER`. No admite un administrador ni un dueño que ya dirige otro equipo (la app del club trabaja con un equipo por cuenta). El equipo sigue inscrito en sus torneos.
 - `inviteToken`: link para compartir; único; `null` hasta que se genera; secreto; rotarlo revoca el anterior.
 - `delegado*`: datos de contacto del delegado del club (texto libre).
 
@@ -49,6 +52,7 @@ Club ──< PlayerInvitation                (invitaciones personales)
 | `status` | `draft`, `inscripcion`, `en_curso`, `finalizado` |
 | `maxTeams` | entero 2–256; `minTeams` opcional, ≤ `maxTeams` |
 | `startDate` / `endDate` | fechas reales; `endDate` ≥ `startDate` |
+| `slug` | Segundo tramo de la URL pública (`/{organizerSlug}/{slug}`): sale del nombre al crearlo, con sufijo `-2`, `-3`… si el organizador ya tiene uno igual (único por `(organizerId, slug)`). No cambia al renombrarlo. `null` en torneos anteriores hasta correr `npm run db:backfill-slugs`; mientras tanto se usa `/convocatoria/{id}`. |
 | `location` | texto libre: la sede ("nombre, dirección"). **No existe una entidad Sede.** |
 | `modality`, `gender`, `minutesPerHalf`, `playersPerTeam`, `assignDelegates`, `registrationFee`, `refereeFee`, `rules` | Datos del asistente. Todos opcionales; los torneos anteriores no los tienen. |
 

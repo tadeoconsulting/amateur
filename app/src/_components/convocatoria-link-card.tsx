@@ -7,12 +7,12 @@ import { copyText } from "@/_lib/share";
 
 const subscribe = () => () => {};
 
-/** Link público de la convocatoria de un torneo: lo abre un equipo que quiere pedir unirse. */
-export function ConvocatoriaLinkCard({ tournamentId }: { tournamentId: string }) {
+/** Link público de un torneo (`path`: ver tournamentPublicPath): lo abre un equipo que quiere pedir unirse. */
+export function ConvocatoriaLinkCard({ path }: { path: string }) {
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   // El origen solo existe en el navegador: en el servidor se renderiza vacío.
   const origin = useSyncExternalStore(subscribe, () => window.location.origin, () => "");
-  const url = origin ? `${origin}/convocatoria/${tournamentId}` : "";
+  const url = origin ? `${origin}${path}` : "";
 
   // Siempre copia (antes "Compartir" abría el menú del sistema en vez de copiar, y en una
   // computadora no había forma de llevarse el link para pegarlo donde se quisiera).

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createRequest,
@@ -44,13 +43,17 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
-export function ConvocatoriaView() {
-  const params = useParams<{ id: string }>();
+/**
+ * Página pública de un torneo (la que se comparte por WhatsApp). `publicPath` es su ruta
+ * canónica (/{organizador}/{torneo}, o /convocatoria/{id} en torneos viejos): a ella vuelven
+ * quienes inician sesión o se registran desde acá.
+ */
+export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: string; publicPath: string }) {
   const { user, loading: loadingAuth } = useAuth();
-  const { data: tournament, error, refetch } = useApi(() => getTournament(params.id));
-  const { data: matchesData, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
-  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(params.id));
-  const { data: scorersData, refetchSilently: refetchScorers } = useApi(() => getScorers(params.id));
+  const { data: tournament, error, refetch } = useApi(() => getTournament(tournamentId));
+  const { data: matchesData, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: tournamentId }));
+  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId));
+  const { data: scorersData, refetchSilently: refetchScorers } = useApi(() => getScorers(tournamentId));
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   // null = todavía no eligió: abre en el fixture, o en los detalles si el torneo aún no tiene partidos
   // (una convocatoria abierta no tiene nada que seguir todavía, sí tiene bases y cupos).
@@ -95,7 +98,7 @@ export function ConvocatoriaView() {
   const percent = max ? Math.min(100, Math.round((teams / max) * 100)) : 0;
   // `?unirme=1` es la intención de quien llegó por el botón de pedir unirse: al volver de iniciar
   // sesión, registrarse o crear su equipo, la solicitud se envía sola (ver JoinPanel).
-  const nextPath = `/convocatoria/${params.id}?unirme=1`;
+  const nextPath = `${publicPath}?unirme=1`;
   const format = [formatLabel(tournament.format), modalityLabel(tournament.modality)].filter(Boolean).join(" · ");
 
   return (
