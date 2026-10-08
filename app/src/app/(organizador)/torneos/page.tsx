@@ -47,7 +47,7 @@ function TournamentCard({ tournament, colorIndex }: { tournament: TournamentList
           <p className="truncate font-heading text-sm font-bold text-text-primary">{tournament.name}</p>
           <p className="mt-0.5 font-body text-xs text-text-secondary">
             {tournament.category || "Libre"} |{" "}
-            {new Date(tournament.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric" })}
+            {new Date(tournament.startDate).toLocaleDateString("es-PE", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" })}
           </p>
 
           <div className="mt-2 flex flex-col gap-1">
@@ -278,7 +278,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
                           <path d="M5 1v2M9 1v2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
                         </svg>
                         <span className="font-body text-xs text-text-secondary">
-                          {new Date(t.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric" })}
+                          {new Date(t.startDate).toLocaleDateString("es-PE", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" })}
                         </span>
                       </div>
                     </div>

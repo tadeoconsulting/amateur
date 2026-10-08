@@ -15,6 +15,7 @@ import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { tournamentPublicPath } from "@/_lib/slug";
+import { displayShortName } from "@/_lib/short-name";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -218,9 +219,9 @@ export default function ClubTorneoDetallePage() {
                       <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>
                     )}
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="font-body text-xs text-text-primary">{m.homeTeam?.shortName ?? "?"}</span>
+                      <span className="font-body text-xs text-text-primary">{m.homeTeam ? displayShortName(m.homeTeam.shortName) : "?"}</span>
                       <span className="font-heading text-xs font-bold text-text-secondary">vs</span>
-                      <span className="font-body text-xs text-text-primary">{m.awayTeam?.shortName ?? "?"}</span>
+                      <span className="font-body text-xs text-text-primary">{m.awayTeam ? displayShortName(m.awayTeam.shortName) : "?"}</span>
                     </div>
                     <span className="mt-1 font-body text-[10px] text-text-secondary">{m.location}</span>
                   </Link>
@@ -292,7 +293,7 @@ export default function ClubTorneoDetallePage() {
                         <td className="px-2 py-2.5">
                           <div className="flex items-center gap-2">
                             <ClubCrest club={row} />
-                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{row.shortName}</span>
+                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{displayShortName(row.shortName)}</span>
                           </div>
                         </td>
                         <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>

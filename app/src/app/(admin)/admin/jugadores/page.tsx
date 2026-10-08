@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { displayShortName } from "@/_lib/short-name";
 
 interface PlayerRow {
   id: string;
@@ -166,7 +167,7 @@ function EditPlayerModal({
             >
               <option value="">Sin club</option>
               {clubs.map((c) => (
-                <option key={c.id} value={c.id}>{c.name} ({c.shortName})</option>
+                <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>
               ))}
             </select>
           </div>
@@ -339,7 +340,7 @@ export default function AdminJugadoresPage() {
                       {player.club ? (
                         <div className="flex items-center gap-2">
                           <span className="inline-flex rounded bg-brand-100 px-1.5 py-0.5 font-heading text-[10px] font-bold text-text-primary">
-                            {player.club.shortName}
+                            {displayShortName(player.club.shortName)}
                           </span>
                           <span className="font-body text-sm text-text-secondary">{player.club.name}</span>
                         </div>

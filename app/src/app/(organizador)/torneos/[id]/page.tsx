@@ -24,11 +24,12 @@ import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { RequestsPanel } from "./_components/requests-panel";
 import { MatchEditor } from "./_components/match-editor";
+import { TeamsList } from "./_components/teams-list";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { tournamentPublicPath } from "@/_lib/slug";
 
-type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
+type Tab = "partidos" | "llaves" | "tabla" | "goleadores" | "equipos";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
 
 /** Una tabla de posiciones (de todo el torneo, o de un solo grupo). `advanceCount` marca en
@@ -96,6 +97,7 @@ const competenciaTabs: { key: Tab; label: string }[] = [
   { key: "llaves", label: "Llaves" },
   { key: "tabla", label: "Tabla" },
   { key: "goleadores", label: "Goleadores" },
+  { key: "equipos", label: "Equipos" },
 ];
 
 const convocatoriaTabs: { key: ConvocatoriaTab; label: string }[] = [
@@ -215,6 +217,18 @@ export default function TournamentDetailPage() {
   const badge = statusLabel(tournament.status);
   const matches = tournamentMatches || [];
   const tournaments = allTournaments || [];
+
+  // "Llaves" solo aparece cuando hay llaves que ver: el cuadro ya está armado, o es una Copa cuya
+  // fase de grupos terminó y falta armarlo (desde esa pestaña, "Armar el cuadro"). En una liga o
+  // con la fase de grupos en juego no hay nada que mostrar ahí.
+  const hasBracket = matches.some((m) => m.decisive);
+  const groupMatches = matches.filter((m) => m.groupName !== null);
+  const canBuildBracket =
+    tournament.format === "copa" && !hasBracket && groupMatches.length > 0 && groupMatches.every((m) => m.status === "finalizado");
+  const showLlaves = hasBracket || canBuildBracket;
+  const visibleTabs = competenciaTabs.filter((t) => t.key !== "llaves" || showLlaves);
+  // Si la pestaña elegida dejó de existir (por ejemplo al deshacer el fixture), se vuelve a Partidos.
+  const shownTab: Tab = activeTab === "llaves" && !showLlaves ? "partidos" : activeTab;
   // Con un solo torneo no hay nada que elegir: la tarjeta no abre el selector ni muestra la flecha.
   const canSwitch = tournaments.length > 1;
 
@@ -300,12 +314,16 @@ export default function TournamentDetailPage() {
                 )}
               </button>
             ))
-          : competenciaTabs.map((tab) => (
+          : visibleTabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={(e) => {
+                  setActiveTab(tab.key);
+                  // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
+                  e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+                }}
                 className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
-                  activeTab === tab.key
+                  shownTab === tab.key
                     ? "bg-surface-secondary text-text-invert"
                     : "border border-border-primary text-text-primary"
                 }`}
@@ -453,7 +471,7 @@ export default function TournamentDetailPage() {
       {/* === Competencia Content === */}
       {/* Mismos tabs "Fecha N" + grupos que usa el fixture del club (ver FixtureTabs): antes
           esta pestaña era una lista plana sin tabs, distinta de como se armó el torneo. */}
-      {!isConvocatoria && activeTab === "partidos" && (
+      {!isConvocatoria && shownTab === "partidos" && (
         <div className="mt-4">
           {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan y
               editar el torneo o un partido pendiente (el lápiz de cada fila). */}
@@ -486,7 +504,7 @@ export default function TournamentDetailPage() {
         </div>
       )}
 
-      {!isConvocatoria && activeTab === "llaves" && (
+      {!isConvocatoria && shownTab === "llaves" && (
         <div className="mt-4">
           <BracketView
             tournamentId={params.id}
@@ -500,7 +518,7 @@ export default function TournamentDetailPage() {
         </div>
       )}
 
-      {!isConvocatoria && activeTab === "tabla" && standings && (() => {
+      {!isConvocatoria && shownTab === "tabla" && standings && (() => {
         // Un torneo con grupos (copa, o el legado "grupos") no admite UNA tabla mezclando
         // grupos: "arriba"/"abajo" de la lista global no dice nada de quién clasifica. Se
         // arma una mini-tabla por grupo, con su propia numeración de 1 a N.
@@ -541,7 +559,9 @@ export default function TournamentDetailPage() {
         );
       })()}
 
-      {!isConvocatoria && activeTab === "goleadores" && scorers && (
+      {!isConvocatoria && shownTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} />}
+
+      {!isConvocatoria && shownTab === "goleadores" && scorers && (
         <div className="mt-4 px-4">
           <div className="overflow-hidden rounded-xl border border-brand-200">
             <table className="w-full text-left text-sm">

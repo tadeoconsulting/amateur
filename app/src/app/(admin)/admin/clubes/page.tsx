@@ -7,6 +7,7 @@ import { ResetPassword } from "../_components/reset-password";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { ClubCrest } from "@/_components/club-crest";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
+import { displayShortName } from "@/_lib/short-name";
 
 interface ClubRow {
   id: string;
@@ -729,7 +730,7 @@ function AdminClubesContent() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex rounded bg-brand-100 px-2 py-0.5 font-heading text-xs font-bold text-text-primary">
-                      {club.shortName}
+                      {displayShortName(club.shortName)}
                     </span>
                   </td>
                   <td className="px-4 py-3">

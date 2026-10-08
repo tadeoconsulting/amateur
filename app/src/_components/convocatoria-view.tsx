@@ -26,6 +26,7 @@ import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
+import { displayShortName } from "@/_lib/short-name";
 
 type Notify = (message: string, tone: "success" | "error") => void;
 type MainTab = "fixture" | "resultados" | "detalles";
@@ -279,7 +280,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
                         <td className="px-2 py-2.5">
                           <div className="flex items-center gap-2">
                             <ClubCrest club={row} />
-                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{row.shortName}</span>
+                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{displayShortName(row.shortName)}</span>
                           </div>
                         </td>
                         <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>

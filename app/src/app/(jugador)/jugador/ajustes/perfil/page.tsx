@@ -6,6 +6,7 @@ import { BackHeader } from "@/_components/back-header";
 import { getUser, type UserDetail } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
+import { displayShortName } from "@/_lib/short-name";
 
 /** Años cumplidos a partir de la fecha de nacimiento (UTC, sin horas: coincide con cómo se
  * guarda — ver ajustes/perfil/editar). null si todavía no la cargó. */
@@ -59,7 +60,7 @@ function ClubBadge({ club }: { club: { name: string; shortName: string; color: s
       style={{ backgroundColor: (club.color || "#E5E7EB") + "20" }}
     >
       <span className="font-heading text-[11px] font-bold" style={{ color: club.color || "#6B7280" }}>
-        {club.shortName}
+        {displayShortName(club.shortName)}
       </span>
     </div>
   );
