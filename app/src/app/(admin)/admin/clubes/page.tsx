@@ -4,6 +4,9 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { AvatarCropper } from "@/_components/avatar-cropper";
+import { ClubCrest } from "@/_components/club-crest";
+import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 
 interface ClubRow {
   id: string;
@@ -242,10 +245,13 @@ function EditClubModal({
   club,
   onClose,
   onSaved,
+  onLogoChanged,
 }: {
   club: ClubRow;
   onClose: () => void;
   onSaved: () => void;
+  /** La imagen se guarda al momento (sin esperar a "Guardar"): se avisa para refrescar la lista. */
+  onLogoChanged: () => void;
 }) {
   const [form, setForm] = useState({
     name: club.name,
@@ -257,8 +263,42 @@ function EditClubModal({
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(club.logoUrl);
+  const [showCropper, setShowCropper] = useState(false);
+  const [savingLogo, setSavingLogo] = useState(false);
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  // La imagen de perfil del equipo se guarda al instante, igual que en los ajustes del club.
+  // `getUrl` devuelve la URL a guardar, o null para quitarla (vuelve a mostrar iniciales y color).
+  const saveLogo = async (getUrl: () => Promise<string | null>) => {
+    setSavingLogo(true);
+    setError(null);
+    try {
+      const url = await getUrl();
+      const res = await fetch(`/api/clubs/${club.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoUrl: url }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "No se pudo guardar la imagen");
+        return;
+      }
+      setLogoUrl(url);
+      onLogoChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setSavingLogo(false);
+    }
+  };
+
+  const handleCropped = (blob: Blob) => {
+    setShowCropper(false);
+    void saveLogo(() => uploadAvatarBlob(blob));
+  };
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.shortName.trim()) {
@@ -290,6 +330,7 @@ function EditClubModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <AvatarCropper open={showCropper} onClose={() => setShowCropper(false)} onCropped={handleCropped} />
       <div className="w-full max-w-lg rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-heading text-lg font-bold text-text-primary">Editar club</h2>
@@ -305,6 +346,34 @@ function EditClubModal({
         )}
 
         <div className="flex flex-col gap-4">
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Imagen de perfil</p>
+
+          <div className="flex items-center gap-4">
+            <ClubCrest club={{ shortName: form.shortName || club.shortName, logoUrl, color: form.color }} size="h-16 w-16" textSize="text-base" />
+            <div className="flex flex-col items-start gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowCropper(true)}
+                disabled={savingLogo}
+                className="cursor-pointer rounded-lg border border-border-primary px-4 py-2 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
+              >
+                {savingLogo ? "Guardando..." : logoUrl ? "Cambiar imagen" : "Subir imagen"}
+              </button>
+              {logoUrl && (
+                <button
+                  type="button"
+                  onClick={() => void saveLogo(async () => null)}
+                  disabled={savingLogo}
+                  className="cursor-pointer font-body text-xs text-text-secondary underline disabled:opacity-50"
+                >
+                  Quitar imagen
+                </button>
+              )}
+              <p className="font-body text-xs text-text-secondary">JPG, PNG o WebP, hasta 5 MB. Se guarda al elegirla.</p>
+            </div>
+          </div>
+
+          <hr className="border-border-primary" />
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos del club</p>
 
           <div className="grid grid-cols-2 gap-3">
@@ -498,14 +567,18 @@ function AdminClubesContent() {
                 <tr key={club.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                        style={{ backgroundColor: (club.color || clubColors[i % clubColors.length]) + "20" }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path d="M3.5 1.5h7v3.5a3.5 3.5 0 01-7 0V1.5z" stroke={club.color || clubColors[i % clubColors.length]} strokeWidth="1" />
-                        </svg>
-                      </div>
+                      {club.logoUrl ? (
+                        <ClubCrest club={club} size="h-9 w-9" />
+                      ) : (
+                        <div
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                          style={{ backgroundColor: (club.color || clubColors[i % clubColors.length]) + "20" }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3.5 1.5h7v3.5a3.5 3.5 0 01-7 0V1.5z" stroke={club.color || clubColors[i % clubColors.length]} strokeWidth="1" />
+                          </svg>
+                        </div>
+                      )}
                       <span className="font-heading text-sm font-semibold text-text-primary">{club.name}</span>
                       {club.isTemporary && (
                         <span
@@ -559,7 +632,7 @@ function AdminClubesContent() {
       )}
 
       {showCreate && <CreateClubModal onClose={() => { setShowCreate(false); router.replace("/admin/clubes"); }} onCreated={handleCreated} />}
-      {editingClub && <EditClubModal club={editingClub} onClose={() => setEditingClub(null)} onSaved={handleClubSaved} />}
+      {editingClub && <EditClubModal club={editingClub} onClose={() => setEditingClub(null)} onSaved={handleClubSaved} onLogoChanged={refetch} />}
     </div>
   );
 }
