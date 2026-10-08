@@ -20,6 +20,7 @@ export function FixtureTabs({
   matches,
   hrefFor,
   highlightClubId,
+  onEdit,
 }: {
   matches: MatchListItem[];
   /** Si no se pasa (vista pública de un fan: no hay a dónde llevarlo, ningún rol tiene una
@@ -27,6 +28,8 @@ export function FixtureTabs({
   hrefFor?: (match: MatchListItem) => string;
   /** Si se pasa, resalta (fondo + borde) los partidos donde juega este club. */
   highlightClubId?: string;
+  /** Si se pasa (el organizador), los partidos que todavía no empezaron muestran un botón para editarlos. */
+  onEdit?: (match: MatchListItem) => void;
 }) {
   const matchdays = [...new Set(matches.map((m) => m.matchday))].sort((a, b) => a - b);
   const [activeMatchday, setActiveMatchday] = useState<number | null>(null);
@@ -122,6 +125,29 @@ export function FixtureTabs({
                   </div>
                 </div>
               );
+
+              if (hrefFor && onEdit && match.status === "programado") {
+                return (
+                  <div
+                    key={match.id}
+                    className={`flex items-stretch ${mine ? "bg-field-light" : ""} ${mi > 0 ? "border-t border-border-primary" : ""}`}
+                  >
+                    <Link href={hrefFor(match)} className="block min-w-0 flex-1 px-4 py-3 transition-colors hover:bg-btn-regular">
+                      {rowContent}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => onEdit(match)}
+                      aria-label={`Editar el partido ${match.homeTeam?.name ?? "por definir"} vs ${match.awayTeam?.name ?? "por definir"}`}
+                      className="flex shrink-0 cursor-pointer items-center border-l border-border-primary px-3.5 text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M3 17l1-4L14.5 2.5a1.4 1.4 0 012 0l1 1a1.4 1.4 0 010 2L7 16l-4 1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              }
 
               return hrefFor ? (
                 <Link key={match.id} href={hrefFor(match)} className={rowClassName}>

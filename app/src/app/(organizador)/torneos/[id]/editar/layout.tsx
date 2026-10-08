@@ -32,7 +32,7 @@ export default function EditarTorneoLayout({ children }: { children: React.React
   }
 
   return (
-    <WizardProvider tournamentId={id} initial={wizardStateFromTournament(tournament)}>
+    <WizardProvider tournamentId={id} initial={wizardStateFromTournament(tournament)} formatLocked={tournament._count.matches > 0}>
       {children}
     </WizardProvider>
   );

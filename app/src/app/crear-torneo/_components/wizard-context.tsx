@@ -59,6 +59,8 @@ type WizardContextValue = {
   basePath: string;
   /** A dónde lleva "Salir" o "Cancelar". */
   exitHref: string;
+  /** El torneo ya tiene partidos: el tipo de competencia no se puede cambiar (define el fixture). */
+  formatLocked: boolean;
 };
 
 const WizardContext = createContext<WizardContextValue | null>(null);
@@ -68,10 +70,12 @@ export function WizardProvider({
   children,
   initial,
   tournamentId = null,
+  formatLocked = false,
 }: {
   children: React.ReactNode;
   initial?: WizardState;
   tournamentId?: string | null;
+  formatLocked?: boolean;
 }) {
   const [state, setState] = useState<WizardState>(initial ?? INITIAL);
   const update = useCallback((patch: Partial<WizardState>) => setState((prev) => ({ ...prev, ...patch })), []);
@@ -103,7 +107,7 @@ export function WizardProvider({
   const exitHref = tournamentId ? `/torneos/${tournamentId}` : "/torneos";
 
   return (
-    <WizardContext.Provider value={{ state, update, tournamentId, basePath, exitHref }}>
+    <WizardContext.Provider value={{ state, update, tournamentId, basePath, exitHref, formatLocked }}>
       {children}
     </WizardContext.Provider>
   );

@@ -10,7 +10,7 @@ import { useWizard } from "../_components/wizard-context";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
-  const { state, update, tournamentId, basePath, exitHref } = useWizard();
+  const { state, update, tournamentId, basePath, exitHref, formatLocked } = useWizard();
   const editing = tournamentId !== null;
   const { modalidad, tipoCompetencia, genero, categoria, cantidadEquipos } = state;
   const [showCompetencia, setShowCompetencia] = useState(false);
@@ -82,7 +82,8 @@ export default function CrearTorneoPaso2Page() {
             </label>
             <button
               onClick={() => setShowCompetencia(true)}
-              className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary"
+              disabled={formatLocked}
+              className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-transparent disabled:hover:bg-btn-regular"
             >
               <span className={`flex-1 font-body text-sm ${tipoCompetencia ? "text-text-primary" : "text-text-primary/60"}`}>
                 {tipoCompetencia || "Fechas, Relámpago o Liga"}
@@ -91,6 +92,11 @@ export default function CrearTorneoPaso2Page() {
                 <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
+            {formatLocked && (
+              <p className="mt-1.5 font-body text-xs text-text-secondary">
+                El torneo ya tiene partidos: el tipo de competencia no se puede cambiar.
+              </p>
+            )}
           </div>
 
           {/* Elige el género */}
