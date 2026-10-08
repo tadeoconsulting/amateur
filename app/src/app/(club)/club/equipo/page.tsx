@@ -7,7 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
-import { displayShortName } from "@/_lib/short-name";
+import { ClubCrest } from "@/_components/club-crest";
 
 const tabs = ["Categorías", "Planilla"] as const;
 type Tab = (typeof tabs)[number];
@@ -74,14 +74,7 @@ function StaffInvitations({ onJoined }: { onJoined: () => void }) {
         {invitations.map((inv) => (
           <div key={inv.token} className="rounded-lg border border-brand-200 bg-btn-regular px-4 py-3">
             <div className="flex items-center gap-3">
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: (inv.club.color || "#E5E7EB") + "20" }}
-              >
-                <span className="font-heading text-xs font-bold" style={{ color: inv.club.color || "#6B7280" }}>
-                  {displayShortName(inv.club.shortName)}
-                </span>
-              </div>
+              <ClubCrest club={inv.club} size="h-10 w-10" textSize="text-xs" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-text-primary">
                   {inv.club.name} te invitó como {roleLabels[inv.role] ?? inv.role}

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { BackHeader } from "@/_components/back-header";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
+import { ClubCrest } from "@/_components/club-crest";
 
 type Preview = {
   kind: "link" | "email";
@@ -186,11 +187,8 @@ function InvitacionContent() {
     return (
       <div className="flex min-h-dvh flex-col bg-surface-primary">
         <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col items-center justify-center px-6 text-center">
-          <div
-            className="mb-6 flex h-20 w-20 items-center justify-center rounded-full font-heading text-lg font-bold text-white"
-            style={{ backgroundColor: preview.club.color ?? "#8B2D2D" }}
-          >
-            {preview.club.shortName.slice(0, 3).toUpperCase()}
+          <div className="mb-6">
+            <ClubCrest club={preview.club} size="h-20 w-20" textSize="text-lg" />
           </div>
           <h1 className="font-heading text-xl font-bold text-text-primary">Te invitaron a unirte a {clubName}</h1>
           <p className="mt-3 text-sm text-text-secondary">

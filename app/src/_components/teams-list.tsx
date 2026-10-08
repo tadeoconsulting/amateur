@@ -2,11 +2,20 @@ import { ClubCrest } from "@/_components/club-crest";
 import type { StandingsRow, TournamentDetail } from "@/_lib/api";
 
 /**
- * Los equipos de un torneo que ya empezó, con su escudo, quién los lleva (o si son temporales),
- * el grupo si el torneo los tiene y cómo van (partidos jugados y puntos, de la tabla). Antes de
- * empezar, esos mismos equipos se ven y se quitan desde "Inscritos" (ver la convocatoria).
+ * Los equipos de un torneo, con su escudo (la imagen que tengan), el grupo si el torneo los tiene y
+ * cómo van (partidos jugados y puntos, de la tabla). Con `showDelegate` (el organizador) dice además
+ * quién lleva cada equipo o si es temporal; la pantalla pública no muestra esos datos de contacto.
+ * Antes de empezar, el organizador ve y quita esos equipos desde "Inscritos".
  */
-export function TeamsList({ teams, standings }: { teams: TournamentDetail["teams"]; standings: StandingsRow[] }) {
+export function TeamsList({
+  teams,
+  standings,
+  showDelegate = false,
+}: {
+  teams: TournamentDetail["teams"];
+  standings: StandingsRow[];
+  showDelegate?: boolean;
+}) {
   const byClub = new Map(standings.map((s) => [s.clubId, s]));
   const rows = [...teams].sort((a, b) => a.club.name.localeCompare(b.club.name, "es"));
 
@@ -22,20 +31,20 @@ export function TeamsList({ teams, standings }: { teams: TournamentDetail["teams
       <ul className="flex flex-col">
         {rows.map((team) => {
           const s = byClub.get(team.club.id);
-          const who = team.club.isTemporary
-            ? "Equipo temporal"
-            : team.club.delegadoNombre
-              ? `Delegado ${team.club.delegadoNombre}`
-              : "Sin delegado";
+          const who = !showDelegate
+            ? null
+            : team.club.isTemporary
+              ? "Equipo temporal"
+              : team.club.delegadoNombre
+                ? `Delegado ${team.club.delegadoNombre}`
+                : "Sin delegado";
+          const subtitle = [team.groupName, who].filter(Boolean).join(" · ");
           return (
             <li key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
               <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
-                <p className="mt-0.5 truncate font-body text-xs text-text-secondary">
-                  {team.groupName ? `${team.groupName} · ` : ""}
-                  {who}
-                </p>
+                {subtitle && <p className="mt-0.5 truncate font-body text-xs text-text-secondary">{subtitle}</p>}
               </div>
               {s && (
                 <div className="shrink-0 text-right">

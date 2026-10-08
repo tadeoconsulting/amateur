@@ -9,13 +9,10 @@ import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { isStale, liveMinute } from "@/_lib/match-live";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { useEffect, useRef, useState } from "react";
+import { ClubCrest } from "@/_components/club-crest";
 
-function TeamLogo({ shortName }: { shortName: string }) {
-  return (
-    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[9px] font-bold text-text-primary">
-      {shortName.slice(0, 2)}
-    </div>
-  );
+function TeamLogo({ team }: { team: MatchListItem["homeTeam"] }) {
+  return <ClubCrest club={team} size="h-7 w-7" textSize="text-[9px]" />;
 }
 
 function formatShortDate(dateStr: string): string {
@@ -113,14 +110,14 @@ export default function MatchDetailPage() {
         <div className="flex">
           <div className="flex-1 space-y-1 px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <TeamLogo shortName={match.homeTeam?.shortName ?? "?"} />
+              <TeamLogo team={match.homeTeam} />
               <span className="flex-1 text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               {showScore && (
                 <span className="text-lg font-bold tabular-nums text-text-primary">{match.homeScore}</span>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <TeamLogo shortName={match.awayTeam?.shortName ?? "?"} />
+              <TeamLogo team={match.awayTeam} />
               <span className="flex-1 text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               {showScore && (
                 <span className="text-lg font-bold tabular-nums text-text-primary">{match.awayScore}</span>

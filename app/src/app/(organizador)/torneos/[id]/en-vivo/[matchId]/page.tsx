@@ -6,8 +6,8 @@ import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
 import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, clockSeconds, formatLiveFor, isStale, matchDurationMinutes, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
+import { ClubCrest } from "@/_components/club-crest";
 
-const clubColors = ["#E53935", "#43A047"];
 
 type MatchEvent = {
   id: string;
@@ -339,26 +339,12 @@ export default function EnVivoPage() {
         <div className="flex items-center px-4 py-3">
           <div className="flex-1">
             <div className="flex items-center gap-2.5 mb-2">
-              <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: clubColors[0] + "20" }}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[0]} strokeWidth="1" />
-                </svg>
-              </div>
+              <ClubCrest club={match.homeTeam} size="h-7 w-7" textSize="text-[9px]" />
               <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
               <span className="ml-auto font-heading text-base font-bold text-text-primary">{homeScore}</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: clubColors[1] + "20" }}
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[1]} strokeWidth="1" />
-                </svg>
-              </div>
+              <ClubCrest club={match.awayTeam} size="h-7 w-7" textSize="text-[9px]" />
               <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
               <span className="ml-auto font-heading text-base font-bold text-text-primary">{awayScore}</span>
             </div>

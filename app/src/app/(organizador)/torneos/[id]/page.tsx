@@ -24,7 +24,7 @@ import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { RequestsPanel } from "./_components/requests-panel";
 import { MatchEditor } from "./_components/match-editor";
-import { TeamsList } from "./_components/teams-list";
+import { TeamsList } from "@/_components/teams-list";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { tournamentPublicPath } from "@/_lib/slug";
@@ -339,12 +339,7 @@ export default function TournamentDetailPage() {
           <div className="flex flex-col">
             {tournament.teams.map((team) => (
               <div key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-heading text-xs font-bold text-white"
-                  style={{ backgroundColor: team.club.color ?? "var(--color-brand-500)" }}
-                >
-                  {team.club.shortName.slice(0, 3).toUpperCase()}
-                </div>
+                <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
                   <p className="mt-0.5 truncate font-body text-xs text-text-secondary">
@@ -559,7 +554,7 @@ export default function TournamentDetailPage() {
         );
       })()}
 
-      {!isConvocatoria && shownTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} />}
+      {!isConvocatoria && shownTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} showDelegate />}
 
       {!isConvocatoria && shownTab === "goleadores" && scorers && (
         <div className="mt-4 px-4">

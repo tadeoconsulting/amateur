@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
-import { displayShortName } from "@/_lib/short-name";
+import { ClubCrest } from "@/_components/club-crest";
 
 interface MatchEventItem {
   id: string;
@@ -81,9 +81,7 @@ export default function ClubPartidoDetallePage() {
         {/* Teams and score */}
         <div className="mt-4 flex items-center justify-between">
           <div className="flex flex-col items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-brand-200 font-heading text-xs font-bold">
-              {match.homeTeam ? displayShortName(match.homeTeam.shortName) : "?"}
-            </div>
+            <ClubCrest club={match.homeTeam} size="h-12 w-12" textSize="text-xs" />
             <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
           </div>
 
@@ -98,9 +96,7 @@ export default function ClubPartidoDetallePage() {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-brand-200 font-heading text-xs font-bold">
-              {match.awayTeam ? displayShortName(match.awayTeam.shortName) : "?"}
-            </div>
+            <ClubCrest club={match.awayTeam} size="h-12 w-12" textSize="text-xs" />
             <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { roundLabel } from "@/_lib/fixture";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
+import { ClubCrest } from "@/_components/club-crest";
 
 /** ¿Un partido decisivo se cerró por penales? (marcador igualado pero con ganador). */
 function decidedByPenalties(m: MatchListItem) {
@@ -16,12 +17,7 @@ function decidedByPenalties(m: MatchListItem) {
 function TeamRow({ team, score, isWinner, showScore }: { team: MatchListItem["homeTeam"]; score: number | null; isWinner: boolean; showScore: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-500 text-[10px] font-bold text-white"
-        aria-hidden="true"
-      >
-        {team ? team.shortName.slice(0, 2).toUpperCase() : "?"}
-      </div>
+      <ClubCrest club={team} size="h-7 w-7" textSize="text-[10px]" />
       <span className={`flex-1 truncate font-body text-sm ${team ? "text-text-primary" : "text-text-secondary italic"} ${isWinner ? "font-bold" : ""}`}>
         {team?.name ?? UNSCHEDULED_LABEL}
       </span>
