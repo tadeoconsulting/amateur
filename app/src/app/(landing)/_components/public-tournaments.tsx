@@ -5,6 +5,7 @@ import { getTournaments, modalityLabel } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { ScrollReveal } from "./scroll-reveal";
+import { tournamentPublicPath } from "@/_lib/slug";
 
 function statusBadge(status: string): { text: string; color: string } | null {
   switch (status) {
@@ -26,8 +27,8 @@ function formatDate(dateStr: string) {
 
 /**
  * Vitrina pública de torneos reales en la landing, para que alguien sin cuenta pueda entrar
- * directo a seguir uno (fixture, tabla, resultados) desde /convocatoria/:id — la única ruta
- * de torneo que no exige sesión (ver proxy.ts, PUBLIC_PATHS).
+ * directo a seguir uno (fixture, tabla, resultados) desde su URL pública (/{organizador}/{torneo}), la
+ * única pantalla de torneo que no exige sesión.
  *
  * Se pidieron los torneos públicos sin importar su estado (incluye finalizados), ordenados por
  * fecha de inicio más reciente primero: así un torneo en curso o por empezar queda arriba, y uno
@@ -70,7 +71,7 @@ export function PublicTournaments() {
             return (
               <ScrollReveal key={t.id} delay={i * 80}>
                 <Link
-                  href={`/convocatoria/${t.id}`}
+                  href={tournamentPublicPath({ id: t.id, slug: t.slug, organizerSlug: t.organizer.organizerSlug })}
                   className="group flex h-full flex-col rounded-2xl border border-brand-200 bg-surface-alt p-6 transition-all hover:border-field-green hover:shadow-lg"
                 >
                   <div className="mb-4 flex items-start justify-between gap-3">

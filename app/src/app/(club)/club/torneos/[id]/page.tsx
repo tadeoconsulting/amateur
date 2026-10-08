@@ -14,6 +14,7 @@ import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
+import { tournamentPublicPath } from "@/_lib/slug";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -54,12 +55,12 @@ export default function ClubTorneoDetallePage() {
 
   async function handleShare() {
     if (!tournament) return;
-    // El link público es la convocatoria (no exige haber iniciado sesión): cualquiera que lo
+    // El link público del torneo (no exige haber iniciado sesión): cualquiera que lo
     // abra ve el fixture, los equipos y ahora los resultados.
     const result = await shareLink({
       title: tournament.name,
       text: `Mira los resultados de ${tournament.name} en Amateur`,
-      url: `${window.location.origin}/convocatoria/${id}`,
+      url: `${window.location.origin}${tournamentPublicPath({ id: id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}`,
     });
     if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
     if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });

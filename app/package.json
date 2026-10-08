@@ -16,6 +16,7 @@
     "db:reset": "prisma migrate reset",
     "db:make-admin": "npx tsx prisma/make-admin.ts",
     "db:remove-admin": "npx tsx prisma/remove-admin.ts",
+    "db:backfill-slugs": "npx tsx prisma/backfill-slugs.ts",
     "test:auth": "node --test tests/*.test.mjs",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:api": "node --test tests/*.test.mjs"

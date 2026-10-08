@@ -9,6 +9,7 @@ import { formatLabel } from "@/_lib/tournament-labels";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { tournamentPublicPath } from "@/_lib/slug";
 
 function PartidosFixtureContent() {
   const params = useParams<{ id: string }>();
@@ -31,12 +32,12 @@ function PartidosFixtureContent() {
 
   async function handleShare() {
     if (!tournament) return;
-    // El link público es la convocatoria (ver decisiones — es la única pantalla del torneo
+    // El link público del torneo (ver decisiones — es la única pantalla del torneo
     // que no exige haber iniciado sesión): cualquiera que lo abra ve el fixture y los equipos.
     const result = await shareLink({
       title: tournament.name,
       text: `Mira el fixture de ${tournament.name} en Amateur`,
-      url: `${window.location.origin}/convocatoria/${params.id}`,
+      url: `${window.location.origin}${tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}`,
     });
     if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
     if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });

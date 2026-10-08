@@ -32,6 +32,10 @@ model User {
   birthDate    DateTime?
   gender       String?
   organization String?
+  // Primer tramo de la URL pública de sus torneos (cupamateur.com/{organizerSlug}/{slug}). Se
+  // asigna al crear su primer torneo, a partir de la organización (o de su nombre), y después no
+  // cambia aunque se edite el perfil: los links ya compartidos no se rompen. Ver _lib/slug.ts.
+  organizerSlug String? @unique
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -269,6 +273,10 @@ model Tournament {
   location    String
   category    String?
   organizerId String
+  // Segundo tramo de la URL pública (cupamateur.com/{organizerSlug}/{slug}): sale del nombre al
+  // crear el torneo, con sufijo -2, -3... si el organizador ya tiene uno igual, y no cambia al
+  // renombrarlo. Null en torneos anteriores hasta correr prisma/backfill-slugs.ts.
+  slug        String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -293,6 +301,8 @@ model Tournament {
   matches     Match[]
   playerStats PlayerStats[]
   sponsors    TournamentSponsor[]
+
+  @@unique([organizerId, slug])
 }
 
 // Un auspiciador (marca/negocio) que patrocina uno o más torneos. Venta gestionada por el

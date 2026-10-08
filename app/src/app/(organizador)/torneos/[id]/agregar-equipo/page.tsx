@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ConvocatoriaLinkCard } from "@/_components/convocatoria-link-card";
 import { getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { tournamentPublicPath } from "@/_lib/slug";
 
 export default function AgregarEquipoPage() {
   const params = useParams<{ id: string }>();
@@ -59,7 +60,7 @@ export default function AgregarEquipoPage() {
         </div>
 
         {/* Card 3 — Invitar por WhatsApp: link real de la convocatoria */}
-        {tournament && <ConvocatoriaLinkCard tournamentId={params.id} />}
+        {tournament && <ConvocatoriaLinkCard path={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })} />}
 
       </div>
     </div>

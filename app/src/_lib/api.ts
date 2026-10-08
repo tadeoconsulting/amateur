@@ -11,6 +11,8 @@ async function fetcher<T>(path: string): Promise<T> {
 export interface TournamentListItem {
   id: string;
   name: string;
+  /** Segundo tramo de la URL pública; null en torneos anteriores a las URLs con nombre. */
+  slug: string | null;
   format: string;
   status: string;
   category: string | null;
@@ -22,7 +24,7 @@ export interface TournamentListItem {
   startDate: string;
   endDate: string | null;
   location: string;
-  organizer: { firstName: string; lastName: string };
+  organizer: { firstName: string; lastName: string; organizerSlug: string | null };
 }
 
 export interface TournamentDetail {
@@ -48,7 +50,9 @@ export interface TournamentDetail {
   // Solo aplican a eliminacion/relampago/copa (especificación 007).
   extraTimeMinutes: number | null;
   groupsAdvancePerGroup: number | null;
-  organizer: { id: string; firstName: string; lastName: string };
+  /** Segundo tramo de la URL pública; null en torneos anteriores a las URLs con nombre. */
+  slug: string | null;
+  organizer: { id: string; firstName: string; lastName: string; organizerSlug: string | null };
   sponsors: SponsorSummary[];
   teams: {
     id: string;
