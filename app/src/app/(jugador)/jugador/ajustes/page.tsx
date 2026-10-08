@@ -63,7 +63,7 @@ export default function JugadorAjustesPage() {
 
       {/* Cerrar sesión */}
       <div className="mt-12 text-center">
-        <button onClick={logout} className="cursor-pointer text-sm font-medium text-text-primary underline">
+        <button onClick={() => logout()} className="cursor-pointer text-sm font-medium text-text-primary underline">
           Cerrar sesión
         </button>
       </div>

@@ -7,7 +7,7 @@ import { SESSION_COOKIE, verifySessionToken } from "@/_lib/session";
 
 // Páginas dentro de estas rutas que siguen siendo públicas: la invitación de un club y la
 // convocatoria de un torneo las abre alguien que todavía no tiene cuenta.
-const PUBLIC_PATHS = ["/jugador/invitacion", "/convocatoria"];
+const PUBLIC_PATHS = ["/jugador/invitacion", "/convocatoria", "/admin/login"];
 
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -20,8 +20,14 @@ export async function proxy(request: NextRequest) {
   if (userId) return NextResponse.next();
 
   const url = request.nextUrl.clone();
-  url.pathname = "/";
   url.search = "";
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    // El panel de administración tiene su propia pantalla de ingreso, no el login público.
+    url.pathname = "/admin/login";
+    if (pathname !== "/admin") url.searchParams.set("next", `${pathname}${search}`);
+    return NextResponse.redirect(url);
+  }
+  url.pathname = "/";
   url.searchParams.set("auth", "login");
   url.searchParams.set("next", `${pathname}${search}`);
   return NextResponse.redirect(url);
