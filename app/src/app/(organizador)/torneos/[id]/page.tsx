@@ -36,7 +36,7 @@ type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
  * verde los primeros N puestos (por eso la posición es la del `rows` recibido, no la global de
  * `row.position`, que en un torneo con grupos mezcla los grupos — ver el comentario en
  * `_lib/standings.ts`); `showDescends` solo tiene sentido en una liga de tabla única. */
-function StandingsTable({ rows, advanceCount, showDescends }: { rows: StandingsRow[]; advanceCount: number; showDescends: boolean }) {
+function StandingsTable({ rows, advanceCount, showDescends, restOut = false }: { rows: StandingsRow[]; advanceCount: number; showDescends: boolean; restOut?: boolean }) {
   return (
     <div className="overflow-hidden rounded-xl border border-brand-200">
       <table className="w-full text-left text-sm">
@@ -56,7 +56,8 @@ function StandingsTable({ rows, advanceCount, showDescends }: { rows: StandingsR
           {rows.map((row, i) => {
             const position = i + 1;
             const isTop = position <= advanceCount;
-            const isBottom = showDescends && position >= 7;
+            // `restOut`: todos los que no clasifican van en rojo (liga con llaves). Si no, el descenso de siempre.
+            const isBottom = restOut ? position > advanceCount : showDescends && position >= 7;
             return (
               <tr key={row.clubId} className="border-b border-brand-200 last:border-0">
                 <td className="py-2.5 pl-3 pr-1">
@@ -542,19 +543,19 @@ export default function TournamentDetailPage() {
               ? [...byGroup.entries()].map(([groupName, rows]) => (
                   <div key={groupName}>
                     <h3 className="mb-2 font-heading text-sm font-bold text-text-primary">{groupName || "Sin grupo"}</h3>
-                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!noDescent} />
+                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} />
                   </div>
                 ))
-              : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} />}
+              : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} />}
             <div className="flex items-center gap-4 px-1">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-verification" />
                 <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : ligaLlaves !== null ? "Clasifica a las llaves" : "Clasifica a liguilla"}</span>
               </div>
-              {!noDescent && (
+              {(!noDescent || ligaLlaves !== null) && (
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-red-500" />
-                  <span className="text-xs text-text-secondary">Desciende</span>
+                  <span className="text-xs text-text-secondary">{ligaLlaves !== null ? "No clasifica" : "Desciende"}</span>
                 </div>
               )}
             </div>
