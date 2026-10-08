@@ -57,6 +57,7 @@ Club ──< PlayerInvitation                (invitaciones personales)
 | `maxTeams` | entero 2–256; `minTeams` opcional, ≤ `maxTeams` |
 | `startDate` / `endDate` | fechas reales; `endDate` ≥ `startDate` |
 | `slug` | Segundo tramo de la URL pública (`/{organizerSlug}/{slug}`): sale del nombre al crearlo, con sufijo `-2`, `-3`… si el organizador ya tiene uno igual (único por `(organizerId, slug)`). No cambia al renombrarlo. `null` en torneos anteriores hasta correr `npm run db:backfill-slugs`; mientras tanto se usa `/convocatoria/{id}`. |
+| `deletedAt` | Borrado lógico: un torneo "eliminado" queda con fecha y se oculta para todos menos el admin, que lo ve en *Eliminados* y lo restaura (`POST /api/tournaments/:id/restore`). `?permanent=1` lo borra de verdad. No se pierde ningún dato asociado. Ver [008](008-observaciones-octubre-2026.md). |
 | `location` | texto libre: la sede ("nombre, dirección"). **No existe una entidad Sede.** |
 | `playoffTeams` | Solo `liga`: cuántos de la tabla pasan a llaves (2, 4, 8 o 16); `null` = la liga termina con la tabla. Se puede cambiar hasta que el cuadro esté armado. Con llaves, la liga no se da por terminada hasta jugarse el cuadro, y la tabla solo cuenta los partidos de la liga (no los `decisive`). |
 | `modality`, `gender`, `minutesPerHalf`, `playersPerTeam`, `assignDelegates`, `registrationFee`, `refereeFee`, `rules` | Datos del asistente. Todos opcionales; los torneos anteriores no los tienen. |
