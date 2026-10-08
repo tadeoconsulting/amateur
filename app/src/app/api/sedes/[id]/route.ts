@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, forbidden, pick, readJson, requireUser } from "@/_lib/auth";
+import { sedeText } from "@/_lib/sede-text";
 
 const EDITABLE = ["name", "city", "address", "reference"] as const;
 
@@ -45,7 +46,18 @@ export async function PATCH(
   }
   if (Object.keys(data).length === 0) return badRequest("No hay campos para actualizar");
 
+  // La sede viaja como texto ("Nombre, dirección") copiado en cada torneo y en sus partidos: al editarla
+  // se actualiza ese texto donde todavía era el de esta sede, para que el cambio se vea en los torneos
+  // y en las pantallas del jugador, el club y el público. Un partido con otra sede puesta a mano no se toca.
+  const before = sedeText(existing);
   const sede = await prisma.sede.update({ where: { id }, data });
+  const after = sedeText(sede);
+  if (after !== before) {
+    await prisma.$transaction([
+      prisma.tournament.updateMany({ where: { organizerId: auth.user.id, location: before }, data: { location: after } }),
+      prisma.match.updateMany({ where: { tournament: { organizerId: auth.user.id }, location: before }, data: { location: after } }),
+    ]);
+  }
   return Response.json(sede);
 }
 

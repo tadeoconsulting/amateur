@@ -62,6 +62,8 @@ Club ──< PlayerInvitation                (invitaciones personales)
 
 Ciclo de vida: `inscripcion` → `en_curso` (al generar el fixture) → `finalizado` (al terminar su último partido). Detalle en [003](003-fixture.md) y [004](004-partido-en-vivo.md).
 
+Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemplaza al viejo en sus torneos y en los partidos que todavía lo usaban (`PATCH /api/sedes/:id`); un partido con una sede puesta a mano no se toca.
+
 ### TournamentTeam
 - Único por `(tournamentId, clubId)`. `groupName` solo aplica a torneos de formato `grupos`.
 

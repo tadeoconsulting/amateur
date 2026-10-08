@@ -8,11 +8,12 @@ import { CondicionModal } from "../_components/condicion-modal";
 import { BasesListModal } from "../_components/bases-list-modal";
 import { useWizard } from "../_components/wizard-context";
 import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
-import { locationFromSede } from "../_components/tournament-to-wizard";
+import { saveWizardTournament } from "../_components/save-tournament";
+import { EditTabs } from "../_components/edit-tabs";
 
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
-  const { state, update, tournamentId, exitHref } = useWizard();
+  const { state, update, tournamentId, basePath, exitHref } = useWizard();
   const editing = tournamentId !== null;
   const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones, tiempoExtra, clasificanPorGrupo } = state;
   const format = formatFromCompetitionLabel(state.tipoCompetencia);
@@ -35,63 +36,17 @@ export default function CrearTorneoPaso3Page() {
 
   async function handleCrearTorneo() {
     if (saving || torneoCreado) return;
-
-    // Lo que faltó completar en los pasos anteriores (por ejemplo si se abrió este paso directo).
-    const missing = [
-      !state.nombre.trim() && "nombre",
-      !state.fecha && "fecha de inicio",
-      !state.sede && "sede",
-      !state.modalidad && "modalidad",
-      !state.tipoCompetencia && "tipo de competencia",
-      state.cantidadEquipos < 2 && "cantidad de equipos (mínimo 2)",
-    ].filter(Boolean);
-    if (missing.length > 0) {
-      setError(`Falta completar: ${missing.join(", ")}. Vuelve a los pasos anteriores.`);
-      return;
-    }
-
     setError("");
     setSaving(true);
-    try {
-      const res = await fetch(editing ? `/api/tournaments/${tournamentId}` : "/api/tournaments", {
-        method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: state.nombre.trim(),
-          startDate: state.fecha,
-          location: locationFromSede(state.sede!),
-          format: formatFromCompetitionLabel(state.tipoCompetencia),
-          maxTeams: state.cantidadEquipos,
-          modality: state.modalidad,
-          gender: state.genero || null,
-          category: state.categoria || null,
-          // 0 en el formulario significa "sin definir".
-          minutesPerHalf: state.minutos > 0 ? state.minutos : null,
-          playersPerTeam: state.jugadores > 0 ? state.jugadores : null,
-          assignDelegates: state.delegado,
-          registrationFee: state.costoInscripcion.trim() || null,
-          refereeFee: state.costoArbitraje.trim() || null,
-          rules: state.condiciones,
-          // Solo tienen efecto en un cuadro de eliminación (eliminacion/relampago/copa).
-          extraTimeMinutes: esEliminatorio && state.tiempoExtra > 0 ? state.tiempoExtra : null,
-          groupsAdvancePerGroup: format === "copa" ? state.clasificanPorGrupo : null,
-          // Un torneo recién creado queda abierto para inscribir equipos. Al editar no se toca el estado.
-          ...(editing ? {} : { status: "inscripcion" }),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error ?? (editing ? "No se pudo guardar el torneo" : "No se pudo crear el torneo"));
-        return;
-      }
-      setCreatedId(editing ? tournamentId : data.id);
-      setTorneoCreado(true);
-      setShowBasesList(true);
-    } catch {
-      setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
-    } finally {
-      setSaving(false);
+    const result = await saveWizardTournament(state, tournamentId);
+    setSaving(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
     }
+    setCreatedId(result.id);
+    setTorneoCreado(true);
+    setShowBasesList(true);
   }
 
   function handleAddCondicion(texto: string) {
@@ -108,23 +63,21 @@ export default function CrearTorneoPaso3Page() {
       {/* Header */}
       <header className="px-4 py-3">
         <button
-          onClick={() => router.back()}
+          onClick={() => (editing ? router.push(exitHref) : router.back())}
           className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Volver al paso anterior
+          {editing ? "Volver al torneo" : "Volver al paso anterior"}
         </button>
       </header>
 
       <div className="flex flex-1 flex-col px-4 pb-6 overflow-y-auto">
-        <StepIndicator current={3} total={3} />
+        {editing ? <EditTabs current="bases" basePath={basePath} /> : <StepIndicator current={3} total={3} />}
 
         {/* Titles */}
-        <p className="font-heading text-sm font-semibold text-text-secondary mb-1">
-          {editing ? "Edita tu torneo" : "Crea tu primer torneo"}
-        </p>
+        {!editing && <p className="font-heading text-sm font-semibold text-text-secondary mb-1">Crea tu primer torneo</p>}
         <h1 className="font-heading text-[22px] font-bold text-text-primary leading-tight mb-6">
           Establece las bases
         </h1>

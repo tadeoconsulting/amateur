@@ -1,11 +1,12 @@
 import { COMPETITION_TYPES } from "@/_lib/tournament-labels";
+import { sedeText } from "@/_lib/sede-text";
 import type { TournamentDetail } from "@/_lib/api";
 import type { Sede } from "./crear-sede-modal";
 import type { WizardState } from "./wizard-context";
 
 // La sede se guarda en el torneo como un solo texto: "Nombre, dirección".
 export function locationFromSede(sede: Sede) {
-  return sede.direccion ? `${sede.nombre}, ${sede.direccion}` : sede.nombre;
+  return sedeText({ name: sede.nombre, address: sede.direccion });
 }
 
 export function sedeFromLocation(location: string): Sede {
