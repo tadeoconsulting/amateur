@@ -88,6 +88,29 @@ export async function PATCH(
     if (newRoles.length === 0) return badRequest("Debe tener al menos un rol");
     const mixed = adminRolesError(newRoles);
     if (mixed) return badRequest(mixed);
+    // Convertir una cuenta en administradora la deja sin otros perfiles: si ya tiene trabajo propio
+    // (torneos, clubes, solicitudes, staff, ficha en un club) quedaría huérfano. Se pide crear una
+    // cuenta aparte (mismo criterio que `npm run db:make-admin`).
+    if (newRoles.includes(Role.ADMIN)) {
+      const target = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          roles: { select: { role: true } },
+          _count: { select: { tournaments: true, ownedClubs: true, staffRoles: true, tournamentRequests: true, sedes: true } },
+        },
+      });
+      if (!target) return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+      if (!target.roles.some((r) => r.role === Role.ADMIN)) {
+        const inClubs = await prisma.playerProfile.count({ where: { userId: id, clubId: { not: null } } });
+        const owned = [target._count.tournaments, target._count.ownedClubs, target._count.staffRoles, target._count.tournamentRequests, target._count.sedes, inClubs];
+        if (owned.some((n) => n > 0)) {
+          return Response.json(
+            { error: "Esta cuenta ya tiene torneos, clubes o equipos: no se convierte en administrador. Crea una cuenta aparte para administrar." },
+            { status: 409 }
+          );
+        }
+      }
+    }
     // Evita que un admin se quite el rol a sí mismo por accidente y se quede sin acceso.
     if (actor.id === id && !newRoles.includes(Role.ADMIN)) {
       return badRequest("No puedes quitarte el rol ADMIN a ti mismo");
@@ -131,6 +154,8 @@ export async function PATCH(
       await prisma.$transaction([
         prisma.userRole.deleteMany({ where: { userId: id } }),
         prisma.userRole.createMany({ data: newRoles.map((role) => ({ userId: id, role })) }),
+        // La ficha "libre" de jugador (sin club) que traen las cuentas nuevas no tiene sentido en un admin.
+        ...(newRoles.includes(Role.ADMIN) ? [prisma.playerProfile.deleteMany({ where: { userId: id, clubId: null } })] : []),
       ]);
     }
 

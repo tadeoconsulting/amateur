@@ -14,8 +14,11 @@ export async function GET(request: NextRequest) {
   if (ownerId) where.ownerId = ownerId;
   if (search) where.name = { contains: search, mode: "insensitive" };
   // Los equipos temporales son de quien los creó: solo él los ve, y no salen en la
-  // búsqueda de equipos de la comunidad.
-  if (!(ownerId && ownerId === auth.user.id)) where.isTemporary = false;
+  // búsqueda de equipos de la comunidad. El panel del admin los pide aparte con
+  // `includeTemporary=1` (solo vale para un admin): sin eso, ve todos los clubes menos los de
+  // los torneos que cargan los organizadores.
+  const includeTemporary = isAdmin(auth.user) && request.nextUrl.searchParams.get("includeTemporary") === "1";
+  if (!includeTemporary && !(ownerId && ownerId === auth.user.id)) where.isTemporary = false;
 
   const clubs = await prisma.club.findMany({
     where,
@@ -39,6 +42,7 @@ export async function GET(request: NextRequest) {
       delegadoTel: c.delegadoTel,
       delegadoEmail: c.delegadoEmail,
       ownerId: c.ownerId,
+      isTemporary: c.isTemporary,
       playerCount: c._count.players,
       categoriesCount: c._count.categories,
       owner: c.owner,

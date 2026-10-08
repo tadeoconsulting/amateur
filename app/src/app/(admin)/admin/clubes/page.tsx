@@ -15,6 +15,8 @@ interface ClubRow {
   delegadoTel: string | null;
   delegadoEmail: string | null;
   ownerId: string;
+  /** Equipo cargado por un organizador para su torneo (sin delegado ni jugadores propios). */
+  isTemporary?: boolean;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string; email?: string };
@@ -411,6 +413,7 @@ function AdminClubesContent() {
   const { data: clubs, loading, refetch } = useApi<ClubRow[]>(() => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
+    params.set("includeTemporary", "1");
     return fetch(`/api/clubs?${params.toString()}`).then((r) => r.json());
   });
 
@@ -504,6 +507,14 @@ function AdminClubesContent() {
                         </svg>
                       </div>
                       <span className="font-heading text-sm font-semibold text-text-primary">{club.name}</span>
+                      {club.isTemporary && (
+                        <span
+                          title="Equipo cargado por un organizador para su torneo"
+                          className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700"
+                        >
+                          Temporal
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3">
