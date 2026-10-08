@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, isAdmin, readJson, requireRole, requireUser } from "@/_lib/auth";
+import { shortNameError } from "@/_lib/short-name";
 
 export async function GET(request: NextRequest) {
   // Requiere sesión: el listado incluye los datos de contacto del delegado.
@@ -64,6 +65,8 @@ export async function POST(request: NextRequest) {
     if (typeof name !== "string" || !name.trim() || typeof shortName !== "string" || !shortName.trim()) {
       return badRequest("name y shortName requeridos");
     }
+    const shortError = shortNameError(shortName);
+    if (shortError) return badRequest(shortError);
 
     // El dueño del club es quien lo crea. Solo un admin puede crearlo a nombre de otro.
     const ownerId = isAdmin(user) && typeof body.ownerId === "string" ? body.ownerId : user.id;

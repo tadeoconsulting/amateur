@@ -8,6 +8,7 @@ import { safeInternalPath } from "@/_lib/safe-next";
 import { ClubAvatar } from "@/_components/club-avatar";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
+import { SHORT_NAME_MAX } from "@/_lib/short-name";
 
 // Colores oscuros: las iniciales blancas del avatar llegan a 4.5:1 sobre todos.
 const COLORS = [
@@ -22,7 +23,7 @@ const COLORS = [
 ] as const;
 
 const NAME_MAX = 80;
-const SHORT_MAX = 12;
+const SHORT_MAX = SHORT_NAME_MAX;
 
 const inputClass =
   "w-full rounded-lg border bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +
@@ -137,7 +138,7 @@ function CreateClubForm({ next }: { next: string }) {
             className={`${inputClass} uppercase ${touched.shortName && shortError ? "border-error" : "border-transparent hover:border-border-primary focus:border-text-primary"}`}
           />
           <p id="club-short-help" className={`mt-1.5 font-body text-xs ${touched.shortName && shortError ? "text-brand-900" : "text-text-secondary"}`}>
-            {touched.shortName && shortError ? shortError : `Hasta ${SHORT_MAX} letras. Aparece en marcadores y tablas.`}
+            {touched.shortName && shortError ? shortError : `Hasta ${SHORT_MAX} caracteres. Aparece en marcadores y tablas.`}
           </p>
         </div>
 

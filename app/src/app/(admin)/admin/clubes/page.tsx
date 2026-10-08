@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { SHORT_NAME_MAX } from "@/_lib/short-name";
 import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
 import { AvatarCropper } from "@/_components/avatar-cropper";
@@ -125,7 +126,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
               <input
                 value={form.shortName}
                 onChange={(e) => setForm((f) => ({ ...f, shortName: e.target.value.toUpperCase() }))}
-                maxLength={4}
+                maxLength={SHORT_NAME_MAX}
                 className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
                 placeholder="DPU"
               />
@@ -438,7 +439,7 @@ function EditClubModal({
               <input
                 value={form.shortName}
                 onChange={(e) => set("shortName", e.target.value.toUpperCase())}
-                maxLength={4}
+                maxLength={SHORT_NAME_MAX}
                 className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
               />
             </div>
