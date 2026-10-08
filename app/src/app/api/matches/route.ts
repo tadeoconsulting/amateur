@@ -15,8 +15,13 @@ export async function GET(request: NextRequest) {
   // todavía, veía el fixture completo de cualquier torneo ajeno.
   const playerId = request.nextUrl.searchParams.get("playerId");
 
+  // Los partidos de los torneos de un organizador: la pestaña "Partidos" de un organizador pedía
+  // TODOS los de la plataforma, así que uno recién registrado veía los de cualquier otro.
+  const organizerId = request.nextUrl.searchParams.get("organizerId");
+
   const where: Record<string, unknown> = {};
   if (tournamentId) where.tournamentId = tournamentId;
+  if (organizerId) where.tournament = { organizerId };
   if (status) where.status = status;
   if (group) where.groupName = group;
   if (matchday) where.matchday = parseInt(matchday);

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { getTournaments, getMatches, type TournamentListItem, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { useAuth } from "@/lib/auth-context";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 function formatShortDate(dateStr: string): string {
@@ -17,9 +18,22 @@ function formatShortDate(dateStr: string): string {
 
 type StatusFilter = "proximos" | "en_curso" | "finalizados";
 
+// Se espera a saber quién es el usuario para pedir solo los partidos de SUS torneos.
 export default function PartidosPage() {
-  const { data: tournaments } = useApi(() => getTournaments());
-  const { data: allMatchesData, loading } = useApi(() => getMatches());
+  const { user, loading } = useAuth();
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      </div>
+    );
+  }
+  return <PartidosContent organizerId={user.id} />;
+}
+
+function PartidosContent({ organizerId }: { organizerId: string }) {
+  const { data: tournaments } = useApi(() => getTournaments({ organizerId }));
+  const { data: allMatchesData, loading } = useApi(() => getMatches({ organizerId }));
 
   if (loading || !allMatchesData || !tournaments) {
     return (
