@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
       startDate: t.startDate,
       endDate: t.endDate,
       location: t.location,
+      organizerId: t.organizerId,
       organizer: t.organizer,
     }))
   );

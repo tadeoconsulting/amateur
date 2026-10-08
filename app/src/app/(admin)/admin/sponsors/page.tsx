@@ -8,6 +8,7 @@ import {
   type TournamentListItem,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { SortTh, useSort } from "../_components/sortable";
 
 interface SponsorDetail {
   id: string;
@@ -295,6 +296,12 @@ function EditSponsorModal({
   );
 }
 
+const sortAccessors = {
+  sponsor: (s: SponsorRow) => s.name,
+  website: (s: SponsorRow) => s.website,
+  tournaments: (s: SponsorRow) => s.tournamentsCount,
+};
+
 export default function AdminSponsorsPage() {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -305,6 +312,8 @@ export default function AdminSponsorsPage() {
     if (search) params.set("search", search);
     return getSponsors(Object.fromEntries(params));
   });
+
+  const { sorted, sort, toggle } = useSort(sponsors, sortAccessors);
 
   const handleCreated = () => {
     setShowCreate(false);
@@ -370,14 +379,14 @@ export default function AdminSponsorsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Sponsor</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Sitio web</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Torneos</th>
+                <SortTh label="Sponsor" sortKey="sponsor" sort={sort} onToggle={toggle} />
+                <SortTh label="Sitio web" sortKey="website" sort={sort} onToggle={toggle} />
+                <SortTh label="Torneos" sortKey="tournaments" sort={sort} onToggle={toggle} align="center" />
                 <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {sponsors.map((s) => (
+              {sorted?.map((s) => (
                 <tr key={s.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">

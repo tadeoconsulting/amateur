@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { TournamentModal } from "./_components/tournament-modal";
+import { MultiSelect } from "../_components/multi-select";
+import { SortTh, useSort } from "../_components/sortable";
 
 interface TournamentRow {
   id: string;
@@ -18,6 +20,7 @@ interface TournamentRow {
   startDate: string;
   endDate: string | null;
   location: string;
+  organizerId: string;
   organizer: { firstName: string; lastName: string };
 }
 
@@ -29,25 +32,63 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   cancelado: { label: "Cancelado", color: "bg-red-100 text-red-700" },
 };
 
+const sortAccessors = {
+  name: (t: TournamentRow) => t.name,
+  format: (t: TournamentRow) => formatLabel(t.format),
+  teams: (t: TournamentRow) => t.teamsCount,
+  matches: (t: TournamentRow) => t.matchesCount,
+  start: (t: TournamentRow) => new Date(t.startDate).getTime(),
+  location: (t: TournamentRow) => t.location,
+  organizer: (t: TournamentRow) => `${t.organizer.firstName} ${t.organizer.lastName}`,
+  status: (t: TournamentRow) => statusLabels[t.status]?.label ?? t.status,
+};
+
+const countBy = <T,>(rows: T[], key: (r: T) => string) => {
+  const counts = new Map<string, number>();
+  for (const r of rows) counts.set(key(r), (counts.get(key(r)) ?? 0) + 1);
+  return counts;
+};
+
 function AdminTorneosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [organizerFilter, setOrganizerFilter] = useState<string[]>([]);
+  const [formatFilter, setFormatFilter] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const { data: tournaments, loading, refetch } = useApi<TournamentRow[]>(() => {
-    const params = new URLSearchParams();
-    if (statusFilter) params.set("status", statusFilter);
-    return fetch(`/api/tournaments?${params.toString()}`).then((r) => r.json());
-  });
+  // Se trae todo y se filtra acá: los filtros son de varias opciones a la vez y se combinan.
+  const { data: tournaments, loading, refetch } = useApi<TournamentRow[]>(() => fetch("/api/tournaments").then((r) => r.json()));
 
   const filtered = tournaments?.filter((t) => {
+    if (statusFilter.length > 0 && !statusFilter.includes(t.status)) return false;
+    if (organizerFilter.length > 0 && !organizerFilter.includes(t.organizerId)) return false;
+    if (formatFilter.length > 0 && !formatFilter.includes(t.format)) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return t.name.toLowerCase().includes(q) || t.location.toLowerCase().includes(q);
   });
+  const { sorted, sort, toggle } = useSort(filtered, sortAccessors);
+
+  const rows = tournaments ?? [];
+  const statusCounts = countBy(rows, (t) => t.status);
+  const formatCounts = countBy(rows, (t) => t.format);
+  const organizerCounts = countBy(rows, (t) => t.organizerId);
+  const statusOptions = Object.entries(statusLabels)
+    .filter(([value]) => statusCounts.has(value))
+    .map(([value, { label }]) => ({ value, label, hint: String(statusCounts.get(value)) }));
+  const formatOptions = [...formatCounts.entries()]
+    .map(([value, n]) => ({ value, label: formatLabel(value), hint: String(n) }))
+    .sort((a, b) => a.label.localeCompare(b.label, "es"));
+  const organizerOptions = [...organizerCounts.entries()]
+    .map(([value, n]) => {
+      const o = rows.find((t) => t.organizerId === value)!.organizer;
+      return { value, label: `${o.firstName} ${o.lastName}`.trim(), hint: String(n) };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, "es"));
+  const hasFilters = statusFilter.length + organizerFilter.length + formatFilter.length > 0 || search !== "";
 
   const handleCreated = () => {
     setShowCreate(false);
@@ -81,8 +122,8 @@ function AdminTorneosContent() {
       </div>
 
       {/* Search and filters */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[200px] max-w-sm flex-1">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -95,27 +136,18 @@ function AdminTorneosContent() {
           />
         </div>
 
-        <div className="flex gap-1.5">
-          {[
-            { value: null, label: "Todos" },
-            { value: "inscripcion", label: "Inscripción" },
-            { value: "en_curso", label: "En curso" },
-            { value: "finalizado", label: "Finalizado" },
-            { value: "draft", label: "Borrador" },
-          ].map((opt) => (
-            <button
-              key={opt.value ?? "all"}
-              onClick={() => { setStatusFilter(opt.value); setTimeout(refetch, 0); }}
-              className={`cursor-pointer rounded-lg px-3 py-1.5 font-heading text-xs font-semibold transition-colors ${
-                statusFilter === opt.value
-                  ? "bg-surface-secondary text-text-invert"
-                  : "border border-border-primary text-text-secondary hover:bg-btn-regular hover:text-text-primary"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <MultiSelect allLabel="Todos los estados" noun="estados" options={statusOptions} selected={statusFilter} onChange={setStatusFilter} />
+        <MultiSelect allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
+        <MultiSelect allLabel="Todos los formatos" noun="formatos" options={formatOptions} selected={formatFilter} onChange={setFormatFilter} />
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => { setSearch(""); setStatusFilter([]); setOrganizerFilter([]); setFormatFilter([]); }}
+            className="cursor-pointer font-heading text-xs font-bold text-text-primary underline"
+          >
+            Quitar filtros
+          </button>
+        )}
 
         <button
           onClick={refetch}
@@ -139,19 +171,19 @@ function AdminTorneosContent() {
           <table className="w-full min-w-[1050px]">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Torneo</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Formato</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Equipos</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Partidos</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Inicio</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Ubicación</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Organizador</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Estado</th>
+                <SortTh label="Torneo" sortKey="name" sort={sort} onToggle={toggle} />
+                <SortTh label="Formato" sortKey="format" sort={sort} onToggle={toggle} />
+                <SortTh label="Equipos" sortKey="teams" sort={sort} onToggle={toggle} align="center" />
+                <SortTh label="Partidos" sortKey="matches" sort={sort} onToggle={toggle} align="center" />
+                <SortTh label="Inicio" sortKey="start" sort={sort} onToggle={toggle} />
+                <SortTh label="Ubicación" sortKey="location" sort={sort} onToggle={toggle} />
+                <SortTh label="Organizador" sortKey="organizer" sort={sort} onToggle={toggle} />
+                <SortTh label="Estado" sortKey="status" sort={sort} onToggle={toggle} align="center" />
                 <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((t) => {
+              {sorted?.map((t) => {
                 const st = statusLabels[t.status] || { label: t.status, color: "bg-gray-100 text-gray-600" };
                 return (
                   <tr key={t.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">

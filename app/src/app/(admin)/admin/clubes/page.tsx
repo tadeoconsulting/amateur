@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { MultiSelect } from "../_components/multi-select";
+import { SortTh, useSort } from "../_components/sortable";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { ClubCrest } from "@/_components/club-crest";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
@@ -610,10 +612,22 @@ function EditClubModal({
   );
 }
 
+const ownerName = (c: ClubRow) => `${c.owner.firstName} ${c.owner.lastName}`.trim();
+
+const sortAccessors = {
+  club: (c: ClubRow) => c.name,
+  short: (c: ClubRow) => c.shortName,
+  owner: ownerName,
+  email: (c: ClubRow) => c.owner.email,
+  players: (c: ClubRow) => c.playerCount,
+  categories: (c: ClubRow) => c.categoriesCount,
+};
+
 function AdminClubesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingClub, setEditingClub] = useState<ClubRow | null>(null);
 
@@ -623,6 +637,27 @@ function AdminClubesContent() {
     params.set("includeTemporary", "1");
     return fetch(`/api/clubs?${params.toString()}`).then((r) => r.json());
   });
+
+  // Organizadores (dueños) que aparecen en la lista, para filtrar de a varios.
+  const filtered = clubs?.filter((c) => ownerFilter.length === 0 || ownerFilter.includes(c.ownerId));
+  const { sorted, sort, toggle } = useSort(filtered, sortAccessors);
+  const ownerOptions = (() => {
+    const counts = new Map<string, { label: string; email?: string; n: number }>();
+    for (const c of clubs ?? []) {
+      counts.set(c.ownerId, { label: ownerName(c), email: c.owner.email, n: (counts.get(c.ownerId)?.n ?? 0) + 1 });
+    }
+    // Dos organizadores pueden llamarse igual: en ese caso se agrega su correo para distinguirlos.
+    const repeated = new Set<string>();
+    const seen = new Set<string>();
+    for (const { label } of counts.values()) (seen.has(label) ? repeated : seen).add(label);
+    return [...counts.entries()]
+      .map(([value, { label, email, n }]) => ({
+        value,
+        label: repeated.has(label) && email ? `${label} · ${email}` : label,
+        hint: String(n),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, "es"));
+  })();
 
   const handleCreated = () => {
     setShowCreate(false);
@@ -656,8 +691,8 @@ function AdminClubesContent() {
       </div>
 
       {/* Search */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[200px] max-w-sm flex-1">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -670,6 +705,12 @@ function AdminClubesContent() {
             placeholder="Buscar club..."
           />
         </div>
+        <MultiSelect allLabel="Todos los organizadores" noun="organizadores" options={ownerOptions} selected={ownerFilter} onChange={setOwnerFilter} searchPlaceholder="Buscar organizador..." />
+        {ownerFilter.length > 0 && (
+          <button type="button" onClick={() => setOwnerFilter([])} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
+            Quitar filtros
+          </button>
+        )}
         <button
           onClick={refetch}
           className="cursor-pointer rounded-lg border border-border-primary p-2.5 text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary"
@@ -691,17 +732,17 @@ function AdminClubesContent() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Club</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Abreviatura</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Dueño</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Email</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Jugadores</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Categorías</th>
+                <SortTh label="Club" sortKey="club" sort={sort} onToggle={toggle} />
+                <SortTh label="Abreviatura" sortKey="short" sort={sort} onToggle={toggle} />
+                <SortTh label="Dueño" sortKey="owner" sort={sort} onToggle={toggle} />
+                <SortTh label="Email" sortKey="email" sort={sort} onToggle={toggle} />
+                <SortTh label="Jugadores" sortKey="players" sort={sort} onToggle={toggle} align="center" />
+                <SortTh label="Categorías" sortKey="categories" sort={sort} onToggle={toggle} align="center" />
                 <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {clubs.map((club, i) => (
+              {sorted?.map((club, i) => (
                 <tr key={club.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -757,7 +798,7 @@ function AdminClubesContent() {
                   </td>
                 </tr>
               ))}
-              {clubs.length === 0 && (
+              {filtered?.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron clubes
