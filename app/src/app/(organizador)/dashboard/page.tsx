@@ -3,17 +3,14 @@
 import Link from "next/link";
 import {
   getTournaments,
-  getMatches,
   getTournamentRequests,
   getScorers,
   type TournamentListItem,
-  type MatchListItem,
   type TournamentRequestItem,
   type ScorerRow,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 
 function IndicadorCard({ value, label, sub }: { value: number; label: string; sub: string }) {
   return (
@@ -49,13 +46,6 @@ function Spinner() {
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
     </div>
   );
-}
-
-function formatShortDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-  const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  return `${days[d.getUTCDay()]} ${d.getUTCDate()} ${months[d.getUTCMonth()]}`;
 }
 
 // Se espera a saber quién es el usuario para contar solo SUS torneos.
@@ -94,7 +84,6 @@ function DashboardContent({ organizerId }: { organizerId: string }) {
       {tournaments.length > 0 && (
         <>
           <SolicitudesPendientes tournaments={tournaments} />
-          <ProximosPartidos tournaments={tournaments} />
           <Goleadores tournaments={tournaments} />
         </>
       )}
@@ -167,63 +156,6 @@ function SolicitudesPendientes({ tournaments }: { tournaments: TournamentListIte
               Ver las {items.length} solicitudes
             </Link>
           )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Próximos partidos programados en cualquiera de mis torneos, sin importar cuál. */
-function ProximosPartidos({ tournaments }: { tournaments: TournamentListItem[] }) {
-  const tournamentIds = new Set(tournaments.map((t) => t.id));
-  const { data: allMatches, loading } = useApi<MatchListItem[]>(() => getMatches());
-
-  const upcoming = (allMatches ?? [])
-    .filter((m) => tournamentIds.has(m.tournamentId) && m.status === "programado")
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-    .slice(0, 3);
-
-  return (
-    <div className="mb-6">
-      <SectionHeader
-        icon={
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-text-primary">
-            <rect x="2.5" y="3.5" width="15" height="13.5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M2.5 7.5h15M7 2v3M13 2v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        }
-        title="Próximos partidos"
-        count={loading ? undefined : upcoming.length}
-      />
-
-      {loading ? (
-        <Spinner />
-      ) : upcoming.length === 0 ? (
-        <EmptyRow>No tienes partidos programados.</EmptyRow>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {upcoming.map((m) => {
-            const tournament = tournaments.find((t) => t.id === m.tournamentId);
-            return (
-              <Link
-                key={m.id}
-                href={`/torneos/${m.tournamentId}/en-vivo/${m.id}`}
-                className="flex items-center justify-between rounded-xl border border-border-primary p-3 transition-colors hover:bg-btn-regular"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-body text-sm text-text-primary">
-                    {m.homeTeam?.name ?? "Por definir"} vs {m.awayTeam?.name ?? "Por definir"}
-                  </p>
-                  {tournament && (
-                    <p className="truncate font-body text-xs text-text-secondary">{tournament.name}</p>
-                  )}
-                </div>
-                <p className="ml-3 shrink-0 text-right font-body text-xs text-text-secondary">
-                  {m.time === "" ? UNSCHEDULED_LABEL : `${formatShortDate(m.date)} · ${m.time}`}
-                </p>
-              </Link>
-            );
-          })}
         </div>
       )}
     </div>
