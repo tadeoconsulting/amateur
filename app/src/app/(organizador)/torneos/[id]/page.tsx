@@ -132,7 +132,10 @@ export default function TournamentDetailPage() {
   const [undoingFixture, setUndoingFixture] = useState(false);
 
   const { data: tournament, loading: loadingTournament, refetch, refetchSilently: refetchTournamentSilently } = useApi(() => getTournament(params.id));
-  const { data: allTournaments } = useApi(() => getTournaments());
+  // Solo los torneos del MISMO organizador (no los de toda la plataforma): alimentan el selector.
+  const { data: allTournaments } = useApi(() =>
+    getTournament(params.id).then((t) => getTournaments({ organizerId: t.organizerId }))
+  );
   const { data: tournamentMatches, refetch: refetchMatches } = useApi(() => getMatches({ tournamentId: params.id }));
   const { data: standings, refetchSilently: refetchStandings } = useApi(() => getStandings(params.id));
   const { data: scorers, refetchSilently: refetchScorers } = useApi(() => getScorers(params.id));
@@ -210,6 +213,8 @@ export default function TournamentDetailPage() {
   const badge = statusLabel(tournament.status);
   const matches = tournamentMatches || [];
   const tournaments = allTournaments || [];
+  // Con un solo torneo no hay nada que elegir: la tarjeta no abre el selector ni muestra la flecha.
+  const canSwitch = tournaments.length > 1;
 
   return (
     <div className="w-full pb-8">
@@ -229,8 +234,8 @@ export default function TournamentDetailPage() {
 
       {/* Tournament card — clickable */}
       <button
-        onClick={() => { setSelectedTournamentId(params.id); setShowSelector(true); }}
-        className="mx-4 mt-2 flex w-[calc(100%-2rem)] cursor-pointer items-center gap-3 rounded-xl bg-surface-secondary px-4 py-3 text-left transition-opacity hover:opacity-90"
+        onClick={() => { if (canSwitch) { setSelectedTournamentId(params.id); setShowSelector(true); } }}
+        className={`mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-xl bg-surface-secondary px-4 py-3 text-left transition-opacity ${canSwitch ? "cursor-pointer hover:opacity-90" : "cursor-default"}`}
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700">
           <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
@@ -262,9 +267,11 @@ export default function TournamentDetailPage() {
             )}
           </p>
         </div>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={`shrink-0 text-brand-500 transition-transform ${showSelector ? "rotate-180" : ""}`}>
-          <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        {canSwitch && (
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={`shrink-0 text-brand-500 transition-transform ${showSelector ? "rotate-180" : ""}`}>
+            <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
       </button>
 
       {/* Tabs */}
@@ -565,7 +572,7 @@ export default function TournamentDetailPage() {
       )}
 
       {/* Tournament Selector Modal */}
-      {showSelector && (
+      {showSelector && canSwitch && (
         <>
           <div
             className="fixed inset-0 z-[100] bg-black/40"
