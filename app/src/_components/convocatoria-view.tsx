@@ -65,6 +65,8 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
   const matches = matchesData ?? [];
   const standings = standingsData ?? [];
+  // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
+  const llaves = tournament?.format === "liga" ? (tournament.playoffTeams ?? null) : null;
   const topScorers = scorersData ?? [];
   // El fan que abre el link ve el seguimiento del torneo — no solo la convocatoria — así que
   // esta pantalla también se suscribe a tiempo real, igual que las de organizador y club (ver
@@ -280,7 +282,10 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
                       <tr key={row.position} className="border-b border-border-primary last:border-0">
                         <td className="px-2 py-2.5">
                           <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                            row.position <= 2 ? "bg-verification text-white" : row.position >= 7 ? "bg-error text-white" : "bg-brand-200 text-text-secondary"
+                            // Liga con llaves: verde los que clasifican, rojo los que no. Sin llaves, la marca de siempre.
+                            llaves !== null
+                              ? row.position <= llaves ? "bg-verification text-white" : "bg-error text-white"
+                              : row.position <= 2 ? "bg-verification text-white" : row.position >= 7 ? "bg-error text-white" : "bg-brand-200 text-text-secondary"
                           }`}>
                             {row.position}
                           </div>
@@ -304,6 +309,19 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
                 {standings.length === 0 && (
                   <p className="px-4 py-8 text-center font-body text-sm text-text-secondary">Todavía no hay partidos jugados.</p>
                 )}
+              </div>
+            )}
+
+            {resultadosTab === "tabla" && llaves !== null && standings.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-body text-xs text-text-secondary">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-verification" aria-hidden="true" />
+                  Clasifica a las llaves (los {llaves} primeros)
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-error" aria-hidden="true" />
+                  No clasifica
+                </span>
               </div>
             )}
 

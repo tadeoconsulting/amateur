@@ -71,7 +71,7 @@ Una liga puede cerrar con un cuadro de eliminación entre los mejores de la tabl
 - Cada partido del cuadro se crea **sin día ni hora** (`time = ""`), como el modo manual, y se programa uno por uno.
 - Los partidos del cuadro son `decisive`: si siguen empatados, tiempo extra y penales ([007](007-fixture-eliminacion-copa-relampago.md)). Por eso, una liga con llaves también pide `extraTimeMinutes` en el asistente.
 - Solo aplica a `liga`. Para grupos + llaves existe `copa`.
-- **Pantallas:** paso *Bases* (selector Sin / 2 / 4 / 8 / 16), pestaña *Llaves* (`liga-bracket-builder.tsx`: Automático | Elegir los cruces, con vista previa), *Tabla* (marca a los clasificados y no muestra descenso).
+- **Pantallas:** paso *Bases* (selector Sin / 2 / 4 / 8 / 16), pestaña *Llaves* (`liga-bracket-builder.tsx`: Automático | Elegir los cruces, con vista previa), *Tabla* del organizador y *Resultados → Tabla* del fan, con la misma regla: los `playoffTeams` primeros en **verde** (clasifican) y el resto en **rojo** (no clasifican), con leyenda; sin descenso. Sin llaves (`playoffTeams` null) se conserva la marca anterior (1.º–2.º verde, 7.º en adelante rojo en el fan).
 - **Pruebas:** `tests/unit/llaves-liga.test.mjs` (cruce mejor-contra-peor, cruces a mano). El armado por API se verificó a mano en auth-dev (automático, manual, `replace`, errores `400`/`409`); no hay prueba de integración todavía.
 
 ### `DELETE /api/tournaments/:id/fixture`

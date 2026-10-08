@@ -59,6 +59,9 @@ ALTER TABLE "Tournament" ADD COLUMN "deletedAt" TIMESTAMP(3);    -- #85
 ALTER TABLE "Tournament" ADD COLUMN "playoffTeams" INTEGER;      -- #86
 ```
 
+## 7 · Tabla del fan con clasificados (seguimiento)
+Pedido posterior (2026-10-08): en una liga con llaves, la tabla que ve el fan (`/{organizador}/{torneo}` → Resultados → Tabla) marca del 1.º al N.º con círculo verde (clasifica) y del N+1 en adelante con rojo (no clasifica), con leyenda "Clasifica a las llaves (los N primeros)" / "No clasifica". La tabla del organizador sigue la misma regla. El N es `playoffTeams`: **si el organizador no lo configuró (Editar torneo → Bases → Equipos que clasifican a las llaves → Guardar cambios), la tabla no puede marcarlo**. Código: `_components/convocatoria-view.tsx`, `(organizador)/torneos/[id]/page.tsx`.
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.
