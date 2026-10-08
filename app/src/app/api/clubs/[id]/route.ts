@@ -1,6 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageClub, forbidden, pick, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, canManageClub, forbidden, isAdmin, pick, readJson, requireUser } from "@/_lib/auth";
 import { omitInviteToken } from "@/_lib/club-public";
 export async function GET(
   _request: NextRequest,
@@ -63,5 +63,45 @@ export async function PATCH(
     return Response.json(omitInviteToken(club));
   } catch {
     return Response.json({ error: "Error al actualizar club" }, { status: 500 });
+  }
+}
+
+/**
+ * Elimina un equipo (solo un admin). Con partidos en algún torneo no se puede: borrarlo dejaría esos
+ * partidos sin equipo y falsearía tablas y resultados; primero hay que eliminar el torneo o los
+ * partidos. Sin partidos, el equipo se va con sus categorías, staff, invitaciones, solicitudes e
+ * inscripciones, y sus jugadores quedan libres (sin equipo, con su ficha y su cuenta).
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+  if (!isAdmin(auth.user)) return forbidden();
+
+  const { id } = await params;
+  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, name: true } });
+  if (!club) return Response.json({ error: "Club no encontrado" }, { status: 404 });
+
+  const matches = await prisma.match.findMany({
+    where: { OR: [{ homeTeamId: id }, { awayTeamId: id }] },
+    select: { tournament: { select: { name: true } } },
+  });
+  if (matches.length > 0) {
+    const tournaments = [...new Set(matches.map((m) => m.tournament.name))];
+    return Response.json(
+      {
+        error: `${club.name} tiene ${matches.length} ${matches.length === 1 ? "partido" : "partidos"} en ${tournaments.join(", ")}: elimina ese torneo o sus partidos antes de eliminar el equipo`,
+      },
+      { status: 409 }
+    );
+  }
+
+  try {
+    await prisma.club.delete({ where: { id } });
+    return Response.json({ success: true });
+  } catch {
+    return Response.json({ error: "No se pudo eliminar el equipo" }, { status: 409 });
   }
 }

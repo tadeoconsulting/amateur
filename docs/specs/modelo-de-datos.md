@@ -26,12 +26,15 @@ Club ──< PlayerInvitation                (invitaciones personales)
 - Un usuario debería tener al menos un rol: lo hace cumplir la API (registro y quitar rol), no la base de datos. `(userId, role)` sí es único en la base.
 - Roles: `ADMIN`, `ORGANIZADOR`, `CLUB_OWNER`, `JUGADOR`, `SPONSOR`, `FAN`. Los dos últimos no tienen funcionalidad todavía.
 - **Un administrador es solo administrador:** `ADMIN` no se combina con ningún otro rol (lo hacen cumplir la API de usuarios y de activar perfiles, `_lib/admin-roles.ts`). Entra por `/admin/login`; el login público lo rechaza. `npm run db:make-admin` deja una cuenta solo con `ADMIN` (y se niega si ya tiene torneos, clubes o equipos); `npm run db:remove-admin` le quita el rol a una cuenta con otros perfiles.
+- **Eliminar una cuenta** (`DELETE /api/users/:id`, un admin o la propia persona; nunca la de un admin ni la propia desde el panel): se lleva sus fichas de jugador (con estadísticas y alineaciones; en las jugadas queda el registro sin jugador), su pertenencia a staff, las invitaciones y solicitudes que creó y sus roles. **No se elimina** si dirige equipos u organiza torneos: hay que resolver eso antes (`_lib/delete-user.ts`).
+- **Cambiar el correo** (`PATCH /api/users/:id` con `email`, solo un admin): es el correo de acceso; se valida el formato y no puede coincidir con otra cuenta (sin distinguir mayúsculas). La contraseña no cambia.
 - `organizerSlug`: primer tramo de la URL pública de sus torneos (`/{organizerSlug}/{slug}`). Único; se asigna al crear su primer torneo, a partir de la organización (o de su nombre si no tiene), con sufijo `-2`, `-3`… si ya existe, y nunca es una pantalla de la app (`_lib/slug.ts › RESERVED_SLUGS`). No cambia aunque se edite la organización.
 
 ### Club
 - `ownerId` es obligatorio: todo club tiene un dueño, incluso un equipo temporal (su dueño es el organizador que lo creó).
 - `isTemporary`: equipo creado por un organizador para su torneo, sin delegado ni métricas. No aparece en la búsqueda de la comunidad y solo lo puede inscribir su creador (o un admin). Al quitarlo del torneo se borra.
 - **Oficializar:** un admin puede pasar un equipo temporal a un delegado con cuenta propia (`POST /api/clubs/:id/oficializar`): cambia el `ownerId`, quita `isTemporary` y da el rol `CLUB_OWNER`. No admite un administrador ni un dueño que ya dirige otro equipo (la app del club trabaja con un equipo por cuenta). El equipo sigue inscrito en sus torneos.
+- **Eliminar un equipo** (`DELETE /api/clubs/:id`, solo un admin): no se puede si tiene partidos en algún torneo (primero hay que eliminar el torneo). Sin partidos se va con sus categorías, staff, invitaciones, solicitudes e inscripciones; sus jugadores quedan sin equipo, con su ficha y su cuenta.
 - `inviteToken`: link para compartir; único; `null` hasta que se genera; secreto; rotarlo revoca el anterior.
 - `delegado*`: datos de contacto del delegado del club (texto libre).
 

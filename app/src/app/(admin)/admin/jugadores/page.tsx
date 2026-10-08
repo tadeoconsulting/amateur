@@ -6,6 +6,10 @@ import { ResetPassword } from "../_components/reset-password";
 import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
 import { displayShortName } from "@/_lib/short-name";
+import { ConfirmDelete } from "../_components/confirm-delete";
+import { AvatarCropper } from "@/_components/avatar-cropper";
+import { PlayerAvatar } from "@/_components/player-avatar";
+import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 
 interface PlayerRow {
   id: string;
@@ -53,13 +57,20 @@ function EditPlayerModal({
   clubs,
   onClose,
   onSaved,
+  onPhotoChanged,
 }: {
   player: PlayerRow;
   clubs: ClubOption[];
   onClose: () => void;
   onSaved: () => void;
+  /** La foto se guarda al momento (sin esperar a "Guardar"): se avisa para refrescar la lista. */
+  onPhotoChanged: () => void;
 }) {
   const [form, setForm] = useState({
+    firstName: player.user.firstName,
+    lastName: player.user.lastName,
+    email: player.user.email,
+    phone: player.user.phone ?? "",
     position: player.position ?? "",
     number: player.number != null ? String(player.number) : "",
     status: player.status,
@@ -71,6 +82,35 @@ function EditPlayerModal({
   const [error, setError] = useState<string | null>(null);
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(player.user.avatarUrl);
+  const [showCropper, setShowCropper] = useState(false);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+
+  // La foto de perfil del jugador se guarda al instante: se sube y se guarda en su cuenta.
+  const savePhoto = async (getUrl: () => Promise<string | null>) => {
+    setSavingPhoto(true);
+    setError(null);
+    try {
+      const url = await getUrl();
+      const res = await fetch(`/api/users/${player.userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: url }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "No se pudo guardar la foto");
+        return;
+      }
+      setAvatarUrl(url);
+      onPhotoChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo conectar. Inténtalo de nuevo.");
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
 
   // Las categorías dependen del club elegido: al cambiar de club hay que volver a pedirlas.
   // Sin club no hay fetch — el select simplemente no muestra opciones (ver más abajo).
@@ -91,8 +131,42 @@ function EditPlayerModal({
   };
 
   const handleSave = async () => {
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      setError("Nombre y apellido son requeridos");
+      return;
+    }
+    if (!form.email.trim()) {
+      setError("El correo es requerido");
+      return;
+    }
     setSaving(true);
     setError(null);
+
+    // Datos de la cuenta (nombre, correo de acceso, teléfono): solo si algo cambió.
+    const accountChanged =
+      form.firstName.trim() !== player.user.firstName ||
+      form.lastName.trim() !== player.user.lastName ||
+      form.email.trim().toLowerCase() !== player.user.email.toLowerCase() ||
+      form.phone.trim() !== (player.user.phone ?? "");
+    if (accountChanged) {
+      const accountRes = await fetch(`/api/users/${player.userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim() || null,
+        }),
+      });
+      if (!accountRes.ok) {
+        const data = await accountRes.json().catch(() => ({}));
+        setError(data.error || "No se pudieron guardar los datos del jugador");
+        setSaving(false);
+        return;
+      }
+    }
+
     const res = await fetch(`/api/players/${player.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -115,6 +189,14 @@ function EditPlayerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <AvatarCropper
+        open={showCropper}
+        onClose={() => setShowCropper(false)}
+        onCropped={(blob) => {
+          setShowCropper(false);
+          void savePhoto(() => uploadAvatarBlob(blob));
+        }}
+      />
       <div className="w-full max-w-md rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-heading text-lg font-bold text-text-primary">
@@ -132,6 +214,83 @@ function EditPlayerModal({
         )}
 
         <div className="flex flex-col gap-4">
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos del jugador</p>
+
+          <div className="flex items-center gap-4">
+            <PlayerAvatar avatarUrl={avatarUrl} size="h-16 w-16" iconSize={30} />
+            <div className="flex flex-col items-start gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowCropper(true)}
+                disabled={savingPhoto}
+                className="cursor-pointer rounded-lg border border-border-primary px-4 py-2 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
+              >
+                {savingPhoto ? "Guardando..." : avatarUrl ? "Cambiar foto" : "Subir foto"}
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={() => void savePhoto(async () => null)}
+                  disabled={savingPhoto}
+                  className="cursor-pointer font-body text-xs text-text-secondary underline disabled:opacity-50"
+                >
+                  Quitar foto
+                </button>
+              )}
+              <p className="font-body text-xs text-text-secondary">JPG, PNG o WebP, hasta 5 MB. Se guarda al elegirla.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="pl-nombre" className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombres *</label>
+              <input
+                id="pl-nombre"
+                value={form.firstName}
+                onChange={(e) => set("firstName", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="pl-apellido" className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellidos *</label>
+              <input
+                id="pl-apellido"
+                value={form.lastName}
+                onChange={(e) => set("lastName", e.target.value)}
+                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="pl-email" className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo (con el que entra a la app) *</label>
+            <input
+              id="pl-email"
+              type="email"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              autoComplete="off"
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+            />
+            {form.email.trim().toLowerCase() !== player.user.email.toLowerCase() && (
+              <p className="mt-1 font-body text-xs text-text-secondary">
+                Si lo cambias, el jugador entrará con el correo nuevo; su contraseña no cambia.
+              </p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="pl-tel" className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono</label>
+            <input
+              id="pl-tel"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              placeholder="999 999 999"
+            />
+          </div>
+
+          <hr className="border-border-primary" />
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">En el equipo</p>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Posición</label>
@@ -243,6 +402,7 @@ export default function AdminJugadoresPage() {
   const [search, setSearch] = useState("");
   const [clubFilter, setClubFilter] = useState<string[]>([]);
   const [editingPlayer, setEditingPlayer] = useState<PlayerRow | null>(null);
+  const [deleting, setDeleting] = useState<PlayerRow | null>(null);
 
   const { data: clubs } = useApi<ClubOption[]>(() =>
     fetch("/api/clubs").then((r) => r.json())
@@ -340,9 +500,13 @@ export default function AdminJugadoresPage() {
                   <tr key={player.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-heading text-xs font-bold text-blue-700">
-                          {player.user.firstName[0]}{player.user.lastName[0]}
-                        </div>
+                        {player.user.avatarUrl ? (
+                          <PlayerAvatar avatarUrl={player.user.avatarUrl} size="h-9 w-9" />
+                        ) : (
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 font-heading text-xs font-bold text-blue-700">
+                            {player.user.firstName[0]}{player.user.lastName[0]}
+                          </div>
+                        )}
                         <div>
                           <p className="font-heading text-sm font-semibold text-text-primary">
                             {player.user.firstName} {player.user.lastName}
@@ -393,12 +557,21 @@ export default function AdminJugadoresPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
+                      <div className="flex justify-end gap-2">
+                        <button
                         onClick={() => setEditingPlayer(player)}
                         className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
                       >
                         Editar
                       </button>
+                        <button
+                          onClick={() => setDeleting(player)}
+                          aria-label={`Eliminar a ${player.user.firstName} ${player.user.lastName}`}
+                          className="cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 font-heading text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -421,7 +594,29 @@ export default function AdminJugadoresPage() {
           clubs={clubs ?? []}
           onClose={() => setEditingPlayer(null)}
           onSaved={handlePlayerSaved}
+          onPhotoChanged={refetch}
         />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title="¿Eliminar a este jugador?"
+          confirmWord={`${deleting.user.firstName} ${deleting.user.lastName}`}
+          confirmLabel="Eliminar jugador"
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            const res = await fetch(`/api/users/${deleting.userId}`, { method: "DELETE" });
+            if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo eliminar al jugador";
+            setDeleting(null);
+            refetch();
+            return null;
+          }}
+        >
+          <p>
+            Se elimina la cuenta de <strong className="text-text-primary">{deleting.user.firstName} {deleting.user.lastName}</strong> ({deleting.user.email}) y todas sus
+            fichas de jugador: sus estadísticas y alineaciones en todos sus equipos. En las jugadas de partidos queda el registro, sin el jugador.
+          </p>
+          <p>Si es dueño de un equipo o organiza torneos, no se elimina hasta resolver eso. No se puede deshacer.</p>
+        </ConfirmDelete>
       )}
     </div>
   );
