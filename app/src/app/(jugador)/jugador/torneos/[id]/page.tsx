@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getMatches, getStandings, getScorers, getTournament } from "@/_lib/api";
+import { getMatches, getStandings, getScorers, getTournament, getTournaments, type TournamentDetail } from "@/_lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { formatLabel } from "@/_lib/tournament-labels";
 import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { roundLabel } from "@/_lib/fixture";
@@ -13,19 +15,124 @@ import { displayShortName } from "@/_lib/short-name";
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
 
-const tournamentOptions = [
-  { id: "t1", name: "Copa Comunidad Futbolera", detail: "10 equipos · Liga · Sub 12 · Activo" },
-  { id: "t2", name: "Copa Verano", detail: "8 equipos · Eliminación · Sub 18 · Activo" },
-];
+function statusBadge(status: string) {
+  switch (status) {
+    case "en_curso":
+      return { text: "Activo", color: "bg-field-green text-white" };
+    case "inscripcion":
+      return { text: "Convocatoria", color: "bg-amber-500 text-white" };
+    case "finalizado":
+      return { text: "Finalizado", color: "bg-brand-500 text-white" };
+    default:
+      return { text: status, color: "bg-brand-500 text-white" };
+  }
+}
+
+/**
+ * Tarjeta del torneo con su selector. La lista son los torneos donde juega la persona (por
+ * cualquiera de sus equipos), siempre con el que está viendo. Con uno solo no hay nada que
+ * elegir: la tarjeta no abre el selector ni muestra la flecha. Elegir otro lleva a ese torneo.
+ */
+function TournamentSwitcher({ userId, currentId, tournament }: { userId: string | null; currentId: string; tournament: TournamentDetail | null | undefined }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const { data: mine } = useApi(() => (userId ? getTournaments({ playerId: userId }) : Promise.resolve([])));
+
+  const options = [...(mine ?? [])];
+  if (tournament && !options.some((t) => t.id === currentId)) {
+    options.push({ ...tournament, teamsCount: tournament._count.teams, matchesCount: tournament._count.matches });
+  }
+  const canSwitch = options.length > 1;
+  const badge = statusBadge(tournament?.status ?? "en_curso");
+
+  const detail = (t: { teamsCount: number; format: string; category: string | null }) =>
+    `${t.teamsCount} ${t.teamsCount === 1 ? "equipo" : "equipos"} | ${formatLabel(t.format)} | ${t.category || "Libre"}`;
+
+  return (
+    <>
+      <div className="mx-4 mt-4 rounded-xl border border-brand-200 px-4 py-3">
+        <button
+          onClick={() => canSwitch && setOpen(true)}
+          className={`flex w-full items-center justify-between ${canSwitch ? "cursor-pointer" : "cursor-default"}`}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3D1952]">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <div className="min-w-0 text-left">
+              <p className="truncate text-sm font-bold text-text-primary">{tournament?.name ?? "Torneo"}</p>
+              {tournament && (
+                <p className="text-xs text-text-secondary">
+                  {detail({ teamsCount: tournament._count.teams, format: tournament.format, category: tournament.category })} |{" "}
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${badge.color}`}>{badge.text}</span>
+                </p>
+              )}
+            </div>
+          </div>
+          {canSwitch && (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0 text-text-secondary">
+              <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {open && canSwitch && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setOpen(false)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Elige un torneo"
+            className="max-h-[80dvh] w-full max-w-[430px] overflow-y-auto rounded-t-2xl bg-white px-4 pb-8 pt-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-heading text-lg font-bold text-text-primary">Elige un torneo</h3>
+            <div className="mt-4 space-y-3">
+              {options.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setOpen(false);
+                    if (t.id !== currentId) router.push(`/jugador/torneos/${t.id}`);
+                  }}
+                  className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+                    t.id === currentId ? "border-field-green bg-field-green/5" : "border-brand-100"
+                  }`}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3D1952]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-text-primary">{t.name}</p>
+                    <p className="text-xs text-text-secondary">{detail(t)}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="mt-4 w-full cursor-pointer rounded-xl bg-brand-900 py-3 font-heading text-sm font-semibold text-text-invert"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function JugadorTorneoDetailPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("Partidos");
   // Ronda del cuadro que se está viendo; null = la última (la final, o la más avanzada).
   const [llavesRound, setLlavesRound] = useState<number | null>(null);
-  const [showTournamentPicker, setShowTournamentPicker] = useState(false);
-  const [selectedTournament, setSelectedTournament] = useState(tournamentOptions[0]);
 
   const { data: matchesData, loading: loadingMatches } = useApi(() => getMatches({ tournamentId: id }));
   const { data: standingsData, loading: loadingStandings } = useApi(() => getStandings(id));
@@ -85,33 +192,8 @@ export default function JugadorTorneoDetailPage() {
         </button>
       </div>
 
-      {/* Tournament info card */}
-      <div className="mx-4 mt-4 rounded-xl border border-brand-200 px-4 py-3">
-        <button
-          onClick={() => setShowTournamentPicker(true)}
-          className="flex w-full cursor-pointer items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3D1952]">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-bold text-text-primary">{tournamentDetail?.name ?? selectedTournament.name}</p>
-              <p className="text-xs text-text-secondary">
-                {tournamentDetail?._count.teams ?? "?"} equipos | {tournamentDetail?.format === "liga" ? "Liga" : tournamentDetail?.format === "grupos" ? "Grupos" : "Eliminación"} | {tournamentDetail?.category || "Libre"} |{" "}
-                <span className="rounded bg-accent-green px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  Activo
-                </span>
-              </p>
-            </div>
-          </div>
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-text-secondary">
-            <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      {/* Tarjeta del torneo y su selector. `key`: si cambia la persona se vuelve a pedir su lista. */}
+      <TournamentSwitcher key={user?.id ?? "anon"} userId={user?.id ?? null} currentId={id} tournament={tournamentDetail} />
 
       {/* Tabs */}
       <div className="mt-6 flex gap-2 overflow-x-auto px-4 scrollbar-none">
@@ -273,7 +355,7 @@ export default function JugadorTorneoDetailPage() {
                     <tr key={row.position} className="border-b border-brand-50">
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
-                          <span className={`font-semibold ${row.position === 1 ? "text-accent-green" : "text-text-primary"}`}>
+                          <span className={`font-semibold ${row.position === 1 ? "text-field-green" : "text-text-primary"}`}>
                             {row.position}
                           </span>
                           <ClubCrest club={row} />
@@ -294,7 +376,7 @@ export default function JugadorTorneoDetailPage() {
               </table>
             </div>
             <div className="flex items-center gap-2 px-3 py-2">
-              <div className="h-2.5 w-2.5 rounded-sm bg-accent-green" />
+              <div className="h-2.5 w-2.5 rounded-sm bg-field-green" />
               <span className="text-xs text-text-secondary">Clasifica</span>
             </div>
           </div>
@@ -323,7 +405,7 @@ export default function JugadorTorneoDetailPage() {
                       {scorer.firstName} {scorer.lastName}
                       {idx === 0 && (
                         <span className="ml-1.5 inline-block">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline text-accent-green">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline text-field-green">
                             <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 12c0 4.29 2.79 8.14 6.84 9.8.55.22 1.17.22 1.72 0A12.024 12.024 0 0021 12c0-.94-.12-1.85-.34-2.72" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </span>
@@ -364,49 +446,6 @@ export default function JugadorTorneoDetailPage() {
       </div>
 
       {/* Tournament Picker Bottom Sheet */}
-      {showTournamentPicker && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
-          onClick={() => setShowTournamentPicker(false)}
-        >
-          <div
-            className="w-full max-w-[430px] rounded-t-2xl bg-white px-4 pb-8 pt-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-heading text-lg font-bold text-text-primary">Elige un torneo</h3>
-            <div className="mt-4 space-y-3">
-              {tournamentOptions.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setSelectedTournament(t);
-                    setShowTournamentPicker(false);
-                  }}
-                  className={`flex w-full cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
-                    selectedTournament.id === t.id ? "border-accent-green bg-accent-green/5" : "border-brand-100"
-                  }`}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3D1952]">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">{t.name}</p>
-                    <p className="text-xs text-text-secondary">{t.detail}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowTournamentPicker(false)}
-              className="mt-4 w-full cursor-pointer rounded-xl bg-brand-900 py-3 font-heading text-sm font-semibold text-text-invert"
-            >
-              Confirmar
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
