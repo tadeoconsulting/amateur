@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
-export type MyClub = { id: string; name: string };
+export type MyClub = { id: string; name: string; shortName: string; logoUrl: string | null; color: string | null };
 
 /**
  * El club de quien tiene la sesión (si gestiona varios, el primero).

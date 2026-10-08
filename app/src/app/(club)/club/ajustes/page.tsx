@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { otherProfiles } from "@/lib/profiles";
+import { useMyClub } from "@/_lib/use-my-club";
+import { MyClubCard } from "../../_components/my-club-card";
 
 const menuItems = [
   { label: "Mi Ajustes", href: "/club/ajustes/perfil" },
@@ -28,6 +30,7 @@ function MenuRow({ label, href }: { label: string; href: string }) {
 export default function ClubAjustesPage() {
   const { user, logout } = useAuth();
   const { mine, missing } = otherProfiles(user?.roles ?? [], "CLUB_OWNER");
+  const { club } = useMyClub();
 
   return (
     <div className="w-full pb-4">
@@ -43,6 +46,12 @@ export default function ClubAjustesPage() {
         </svg>
         <h1 className="font-heading text-xl font-bold text-text-primary">Ajustes</h1>
       </div>
+
+      {club && (
+        <div className="mt-4 px-4">
+          <MyClubCard club={club} />
+        </div>
+      )}
 
       {/* Main menu */}
       <div className="mt-6 px-4">
