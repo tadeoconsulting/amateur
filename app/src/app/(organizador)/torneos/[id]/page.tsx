@@ -223,8 +223,12 @@ export default function TournamentDetailPage() {
   // con la fase de grupos en juego no hay nada que mostrar ahí.
   const hasBracket = matches.some((m) => m.decisive);
   const groupMatches = matches.filter((m) => m.groupName !== null);
+  const leagueMatches = matches.filter((m) => !m.decisive);
+  const hasLigaLlaves = tournament.format === "liga" && tournament.playoffTeams !== null;
   const canBuildBracket =
-    tournament.format === "copa" && !hasBracket && groupMatches.length > 0 && groupMatches.every((m) => m.status === "finalizado");
+    !hasBracket &&
+    ((tournament.format === "copa" && groupMatches.length > 0 && groupMatches.every((m) => m.status === "finalizado")) ||
+      (hasLigaLlaves && leagueMatches.length > 0 && leagueMatches.every((m) => m.status === "finalizado")));
   const showLlaves = hasBracket || canBuildBracket;
   const visibleTabs = competenciaTabs.filter((t) => t.key !== "llaves" || showLlaves);
   // Si la pestaña elegida dejó de existir (por ejemplo al deshacer el fixture), se vuelve a Partidos.
@@ -505,6 +509,7 @@ export default function TournamentDetailPage() {
             tournamentId={params.id}
             tournament={tournament}
             matches={matches}
+            standings={standings ?? []}
             onChanged={() => {
               refetch();
               refetchMatches();
@@ -526,7 +531,10 @@ export default function TournamentDetailPage() {
         const isCopa = tournament.format === "copa";
         // Copa no tiene descenso (los que no clasifican simplemente no siguen jugando);
         // "grupos" (formato legado) conserva el descenso de siempre, ahora por grupo.
-        const advanceCount = isCopa ? (tournament.groupsAdvancePerGroup ?? 2) : 2;
+        // Una liga con llaves marca a los que clasifican y tampoco tiene descenso.
+        const ligaLlaves = tournament.format === "liga" ? tournament.playoffTeams : null;
+        const advanceCount = isCopa ? (tournament.groupsAdvancePerGroup ?? 2) : (ligaLlaves ?? 2);
+        const noDescent = isCopa || ligaLlaves !== null;
 
         return (
           <div className="mt-4 flex flex-col gap-4 px-4">
@@ -534,16 +542,16 @@ export default function TournamentDetailPage() {
               ? [...byGroup.entries()].map(([groupName, rows]) => (
                   <div key={groupName}>
                     <h3 className="mb-2 font-heading text-sm font-bold text-text-primary">{groupName || "Sin grupo"}</h3>
-                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!isCopa} />
+                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!noDescent} />
                   </div>
                 ))
-              : <StandingsTable rows={standings} advanceCount={2} showDescends />}
+              : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} />}
             <div className="flex items-center gap-4 px-1">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-verification" />
-                <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : "Clasifica a liguilla"}</span>
+                <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : ligaLlaves !== null ? "Clasifica a las llaves" : "Clasifica a liguilla"}</span>
               </div>
-              {!isCopa && (
+              {!noDescent && (
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-red-500" />
                   <span className="text-xs text-text-secondary">Desciende</span>

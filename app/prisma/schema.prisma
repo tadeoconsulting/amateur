@@ -297,6 +297,7 @@ model Tournament {
   // Solo relevantes para eliminacion/copa/relampago (ver especificación 007).
   extraTimeMinutes      Int? // minutos de cada tiempo del tiempo extra; null = 15' por omisión
   groupsAdvancePerGroup Int? // solo "copa": cuántos pasan de cada grupo (2, 3 o 4); null = 2
+  playoffTeams          Int? // solo "liga": cuántos de la tabla pasan a llaves (2, 4, 8 o 16); null = sin llaves
 
   organizer   User                @relation("TournamentOrganizer", fields: [organizerId], references: [id])
   teams       TournamentTeam[]

@@ -51,6 +51,8 @@ export interface TournamentDetail {
   // Solo aplican a eliminacion/relampago/copa (especificación 007).
   extraTimeMinutes: number | null;
   groupsAdvancePerGroup: number | null;
+  /** Solo "liga": cuántos de la tabla pasan a llaves (2, 4, 8 o 16); null = la liga no tiene llaves. */
+  playoffTeams: number | null;
   /** Segundo tramo de la URL pública; null en torneos anteriores a las URLs con nombre. */
   slug: string | null;
   organizer: { id: string; firstName: string; lastName: string; organizerSlug: string | null };

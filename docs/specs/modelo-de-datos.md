@@ -58,10 +58,14 @@ Club ──< PlayerInvitation                (invitaciones personales)
 | `startDate` / `endDate` | fechas reales; `endDate` ≥ `startDate` |
 | `deletedAt` | Cuándo se eliminó; `null` = activo. **Eliminar un torneo lo oculta, no lo borra** (`DELETE /api/tournaments/:id`): desaparece de todas las listas y pantallas (organizador, club, jugador, público) y de las estadísticas del panel, y un organizador ya no lo gestiona. Solo un admin lo ve (`GET /api/tournaments?deleted=1`, Admin → Torneos → Eliminados) para **restaurarlo** (`POST /api/tournaments/:id/restore`, con todos sus equipos, partidos y resultados) o **eliminarlo definitivamente** (`DELETE …?permanent=1`, solo si ya estaba eliminado; ahí sí se borra con su cascada). Los torneos eliminados siguen contando para eliminar al organizador o a un equipo con partidos. |
 | `slug` | Segundo tramo de la URL pública (`/{organizerSlug}/{slug}`): sale del nombre al crearlo, con sufijo `-2`, `-3`… si el organizador ya tiene uno igual (único por `(organizerId, slug)`). No cambia al renombrarlo. `null` en torneos anteriores hasta correr `npm run db:backfill-slugs`; mientras tanto se usa `/convocatoria/{id}`. |
+| `deletedAt` | Borrado lógico: un torneo "eliminado" queda con fecha y se oculta para todos menos el admin, que lo ve en *Eliminados* y lo restaura (`POST /api/tournaments/:id/restore`). `?permanent=1` lo borra de verdad. No se pierde ningún dato asociado. Ver [008](008-observaciones-octubre-2026.md). |
 | `location` | texto libre: la sede ("nombre, dirección"). **No existe una entidad Sede.** |
+| `playoffTeams` | Solo `liga`: cuántos de la tabla pasan a llaves (2, 4, 8 o 16); `null` = la liga termina con la tabla. Se puede cambiar hasta que el cuadro esté armado. Con llaves, la liga no se da por terminada hasta jugarse el cuadro, y la tabla solo cuenta los partidos de la liga (no los `decisive`). |
 | `modality`, `gender`, `minutesPerHalf`, `playersPerTeam`, `assignDelegates`, `registrationFee`, `refereeFee`, `rules` | Datos del asistente. Todos opcionales; los torneos anteriores no los tienen. |
 
 Ciclo de vida: `inscripcion` → `en_curso` (al generar el fixture) → `finalizado` (al terminar su último partido). Detalle en [003](003-fixture.md) y [004](004-partido-en-vivo.md).
+
+**Llaves en una liga**: cuando todos los partidos de la liga están finalizados, `POST /api/tournaments/:id/fixture` con `{ mode: "bracket" }` arma el cuadro con los primeros `playoffTeams` de la tabla. Sin más datos, los cruces son automáticos (el mejor contra el peor); con `pairs: [[a, b], …]` los cruces son los que eligió el organizador, entre los clasificados.
 
 Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemplaza al viejo en sus torneos y en los partidos que todavía lo usaban (`PATCH /api/sedes/:id`); un partido con una sede puesta a mano no se toca.
 

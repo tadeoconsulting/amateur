@@ -54,6 +54,8 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 "Crear torneo" envía todo con `status: "inscripcion"`, muestra la confirmación con las bases y lleva al torneo nuevo. Un `0` en minutos o jugadores significa "sin definir" (se envía `null`). La sede se guarda como el texto `"nombre, dirección"` en `location`.
 
 ### Editar un torneo (`/torneos/[id]/editar`)
+**Por pestañas** (octubre 2026, [008](008-observaciones-octubre-2026.md)): al editar no hay indicador de pasos ni insignias; hay tres pestañas **Información · Modalidad · Bases** (`edit-tabs.tsx`) para ir y venir libremente, y **"Guardar cambios"** (en cualquiera) guarda todo de una vez (`saveWizardTournament`, validando lo mismo que al crear) y vuelve al torneo. Al **crear** se mantiene el asistente de 3 pasos.
+
 Reutiliza los tres pasos de `/crear-torneo`, cargados con lo que el torneo ya tiene (`tournament-to-wizard.ts` convierte el torneo al estado del asistente). Cambia solo lo que corresponde: "Edita tu torneo" en vez de "Crea tu primer torneo", "Cancelar" (vuelve al torneo) en vez de "Omitir este paso", y "Guardar cambios", que envía `PATCH /api/tournaments/:id` con los mismos campos que al crear, **sin `status`** (editar no cambia el estado).
 
 - Rigen las mismas obligaciones que al crear. Un torneo antiguo al que le falta la modalidad, o con formato `grupos` (que el asistente ya no ofrece), pide elegirlas antes de guardar.
@@ -87,7 +89,7 @@ Reutiliza los tres pasos de `/crear-torneo`, cargados con lo que el torneo ya ti
 - **Panel de admin (`/admin/torneos`):** cada fila tiene **Editar**, que abre un formulario en ventana con todos los campos menos el organizador (un torneo no cambia de dueño por acá). El mismo formulario crea torneos a nombre de un organizador elegido. Solo aquí se puede cambiar el **estado** a mano (Borrador, Inscripción, En curso, Finalizado).
 
 ## Limitaciones conocidas
-- **Las sedes no se guardan:** hay que recrearlas en cada torneo. La pantalla "Mis sedes" de ajustes no está conectada. No existe una entidad `Sede`.
+- **No existe una entidad `Sede`:** la sede se guarda como texto "Nombre, dirección" copiado en `Tournament.location` y `Match.location`. Si el organizador **renombra una sede** en sus ajustes, `PATCH /api/sedes/:id` reemplaza el texto viejo por el nuevo en **sus** torneos y en los partidos que lo usaban (`_lib/sede-text.ts`), así se refleja también en las vistas de jugador, club y fan; un partido con una sede puesta a mano no se toca.
 - **La búsqueda de dirección no tiene buscador:** se puede usar el texto escrito. El mapa es un marcador de posición y "Usar mi ubicación actual" guarda un texto fijo.
 - **Se guardan pero ninguna pantalla los muestra ni tienen efecto:** `rules`, `registrationFee`, `refereeFee`, `assignDelegates`, `playersPerTeam` y el `gender` del torneo. Solo `modality` (en "Mis torneos") y `minutesPerHalf` (duración del horario y del partido en vivo) se usan.
 - **"Definir edad"** en la categoría no pregunta la edad.

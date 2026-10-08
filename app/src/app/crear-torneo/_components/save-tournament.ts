@@ -29,7 +29,9 @@ export async function saveWizardTournament(state: WizardState, tournamentId: str
 
   const format = formatFromCompetitionLabel(state.tipoCompetencia);
   // El tiempo extra y los penales solo existen en un cuadro de eliminación (especificación 007).
-  const esEliminatorio = format === "eliminacion" || format === "relampago" || format === "copa";
+  // Una liga con llaves también termina en un cuadro de eliminación: ahí también hay tiempo extra.
+  const ligaConLlaves = format === "liga" && state.llaves > 0;
+  const esEliminatorio = format === "eliminacion" || format === "relampago" || format === "copa" || ligaConLlaves;
 
   try {
     const res = await fetch(editing ? `/api/tournaments/${tournamentId}` : "/api/tournaments", {
@@ -54,6 +56,7 @@ export async function saveWizardTournament(state: WizardState, tournamentId: str
         // Solo tienen efecto en un cuadro de eliminación (eliminacion/relampago/copa).
         extraTimeMinutes: esEliminatorio && state.tiempoExtra > 0 ? state.tiempoExtra : null,
         groupsAdvancePerGroup: format === "copa" ? state.clasificanPorGrupo : null,
+        playoffTeams: ligaConLlaves ? state.llaves : null,
         // Un torneo recién creado queda abierto para inscribir equipos. Al editar no se toca el estado.
         ...(editing ? {} : { status: "inscripcion" }),
       }),

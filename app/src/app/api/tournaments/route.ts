@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
     // Su URL pública: /{organizador}/{torneo}. El tramo del organizador se asigna con su primer torneo.
     await ensureOrganizerSlug(organizerId);
     const name = String(parsed.data.name ?? "");
+    // Las llaves solo existen en una liga.
+    if (parsed.data.format !== "liga") parsed.data.playoffTeams = null;
 
     // Si dos torneos con el mismo nombre se crean a la vez, el segundo choca con el índice único
     // (organizerId, slug): se vuelve a calcular el sufijo.

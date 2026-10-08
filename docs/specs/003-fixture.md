@@ -10,7 +10,7 @@ Convertir los equipos inscritos en partidos con fecha, hora y sede, y pasar el t
 ## Formatos soportados
 | Formato | Qué se genera |
 |---|---|
-| `liga` | Todos contra todos entre todos los equipos, una sola vuelta |
+| `liga` | Todos contra todos entre todos los equipos, una sola vuelta. **Opcional: llaves** al terminar (ver "Llaves en una liga"). |
 | `grupos` | Todos contra todos **dentro de cada grupo** (todos los equipos deben tener `groupName`; cada grupo, al menos 2) |
 | `eliminacion`, `copa`, `relampago` | **Sin generación todavía.** La API responde `409` "Este formato todavía no tiene generación de fixture" y la pantalla lo explica. |
 
@@ -55,6 +55,24 @@ Lo hace el organizador del torneo. Cuerpo: `{ mode: "auto" | "manual", matchdays
 - **`manual`:** los cruces se crean **sin programar**: `time = ""`, `location = ""` y `date` provisoriamente la fecha de inicio del torneo.
 - Todo se crea **en una transacción** y el torneo pasa a `en_curso`. Un error no deja nada a medias.
 - `replace: true` vuelve a generar, pero solo si **ningún** partido empezó ni tiene jugadas.
+
+### Llaves en una liga (`playoffTeams`)
+**Estado:** ✅ implementada (observación de octubre 2026, ver [008](008-observaciones-octubre-2026.md)).
+
+Una liga puede cerrar con un cuadro de eliminación entre los mejores de la tabla. El organizador lo configura en el paso *Bases* (campo `playoffTeams`: **2, 4, 8 o 16**; vacío = sin llaves). Siempre es potencia de 2, así el cuadro sale parejo y nadie pasa solo.
+
+- **Cuándo se arma:** cuando **todos** los partidos de la liga (los no `decisive`) están finalizados. Antes, la pestaña *Llaves* explica cuántos partidos faltan. Se arma desde esa pestaña con `POST /api/tournaments/:id/fixture` y `{ mode: "bracket" }`.
+- **Dos formas de cruzar** (decisión del usuario):
+  - **Automática:** el mejor contra el peor — con 8, `1-8, 4-5, 2-7, 3-6`, de modo que los mejores solo se encuentran al final (`standardSeedOrder`, `seedLeagueBracket`).
+  - **Manual:** el cuerpo trae `pairs: [[idA, idB], …]`, con los cruces de la primera ronda. Deben ser exactamente los clasificados, sin repetir equipo (`bracketOrderFromPairs`); si no, `400`.
+- Quién clasifica sale de `computeStandings` sobre los partidos de la liga. **La tabla no cuenta los partidos del cuadro** (`GET .../standings` excluye los `decisive` en una liga): un resultado de semifinal no puede cambiar quién clasificó.
+- **Estado del torneo:** al jugarse el último partido de la liga, el torneo **no** pasa a `finalizado` si tiene llaves y el cuadro aún no existe (misma regla que Copa). Al armar el cuadro vuelve a `en_curso`.
+- **Rehacer:** `replace: true` reemplaza el cuadro mientras ningún partido suyo haya empezado (`409` si no). Con el cuadro armado, `PATCH` no deja cambiar `playoffTeams` (`409`).
+- Cada partido del cuadro se crea **sin día ni hora** (`time = ""`), como el modo manual, y se programa uno por uno.
+- Los partidos del cuadro son `decisive`: si siguen empatados, tiempo extra y penales ([007](007-fixture-eliminacion-copa-relampago.md)). Por eso, una liga con llaves también pide `extraTimeMinutes` en el asistente.
+- Solo aplica a `liga`. Para grupos + llaves existe `copa`.
+- **Pantallas:** paso *Bases* (selector Sin / 2 / 4 / 8 / 16), pestaña *Llaves* (`liga-bracket-builder.tsx`: Automático | Elegir los cruces, con vista previa), *Tabla* (marca a los clasificados y no muestra descenso).
+- **Pruebas:** `tests/unit/llaves-liga.test.mjs` (cruce mejor-contra-peor, cruces a mano). El armado por API se verificó a mano en auth-dev (automático, manual, `replace`, errores `400`/`409`); no hay prueba de integración todavía.
 
 ### `DELETE /api/tournaments/:id/fixture`
 Borra los partidos y el torneo vuelve a `inscripcion` (se pueden agregar equipos otra vez). Mismas condiciones que `replace`; un torneo `finalizado` da `409`.

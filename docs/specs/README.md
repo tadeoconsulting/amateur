@@ -15,6 +15,7 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [005-invitaciones.md](005-invitaciones.md) | Link del club e invitaciones directas a jugadores |
 | [006-solicitudes-de-equipos.md](006-solicitudes-de-equipos.md) | Solicitudes e invitaciones de equipos a un torneo, alta de club y convocatoria pública |
 | [007-fixture-eliminacion-copa-relampago.md](007-fixture-eliminacion-copa-relampago.md) | Cuadro de eliminación, Copa (grupos + cuadro) y Relámpago, con tiempo extra y penales. API y pantallas implementadas |
+| [008-observaciones-octubre-2026.md](008-observaciones-octubre-2026.md) | Seis observaciones del organizador y el admin (octubre 2026): llaves para liga, partidos por torneo y fecha, editar por pestañas, sedes que se propagan, torneos eliminados recuperables |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
 ## Cómo se usa esto
@@ -26,7 +27,7 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 
 ## Estado de estas especificaciones
 
-Las especificaciones `001`–`007` son **as-built**: describen lo que ya está construido y verificado, extraído del código y de las pruebas, no un plan. Cada una termina con sus **limitaciones conocidas**, que es la parte más útil para decidir qué construir después. Todo lo pendiente se concentra en [pendientes-y-decisiones.md](pendientes-y-decisiones.md).
+Las especificaciones `001`–`008` son **as-built**: describen lo que ya está construido y verificado, extraído del código y de las pruebas, no un plan. Cada una termina con sus **limitaciones conocidas**, que es la parte más útil para decidir qué construir después. Todo lo pendiente se concentra en [pendientes-y-decisiones.md](pendientes-y-decisiones.md).
 
 La `006` se **escribió antes de programar** y después se reescribió como as-built; conserva la sección de decisiones adoptadas que aún esperan confirmación.
 
