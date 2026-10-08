@@ -30,16 +30,27 @@ const allRoles = [
   { key: "FAN", label: "Fan" },
 ];
 
+// Administrador va aparte: es exclusivo (una cuenta de administrador no tiene otros perfiles), así
+// que elegirlo desmarca los demás y elegir otro perfil lo desmarca.
+const ADMIN_ROLE = { key: "ADMIN", label: "Administrador" };
+const selectableRoles = [...allRoles, ADMIN_ROLE];
+const toggleExclusive = (current: string[], role: string) => {
+  if (role === "ADMIN") return current.includes("ADMIN") ? [] : ["ADMIN"];
+  const without = current.filter((r) => r !== "ADMIN");
+  return without.includes(role) ? without.filter((r) => r !== role) : [...without, role];
+};
+
 const roleBadgeColors: Record<string, string> = {
   ORGANIZADOR: "bg-purple-100 text-purple-700",
   CLUB_OWNER: "bg-green-100 text-green-700",
   JUGADOR: "bg-blue-100 text-blue-700",
   SPONSOR: "bg-amber-100 text-amber-700",
   FAN: "bg-gray-100 text-gray-700",
+  ADMIN: "bg-red-100 text-red-700",
 };
 
 function RoleBadge({ role }: { role: string }) {
-  const label = allRoles.find((r) => r.key === role)?.label ?? role;
+  const label = selectableRoles.find((r) => r.key === role)?.label ?? role;
   return (
     <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${roleBadgeColors[role] || "bg-gray-100 text-gray-700"}`}>
       {label}
@@ -90,12 +101,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   );
 
   const toggleRole = (role: string) => {
-    setForm((prev) => ({
-      ...prev,
-      roles: prev.roles.includes(role)
-        ? prev.roles.filter((r) => r !== role)
-        : [...prev.roles, role],
-    }));
+    setForm((prev) => ({ ...prev, roles: toggleExclusive(prev.roles, role) }));
   };
 
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
@@ -198,7 +204,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <div>
             <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Tipo de usuario *</label>
             <div className="flex flex-wrap gap-2">
-              {allRoles.map((role) => (
+              {selectableRoles.map((role) => (
                 <button
                   key={role.key}
                   type="button"
@@ -437,7 +443,7 @@ function EditUserModal({
 
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
   const toggleRole = (role: string) => {
-    setRoles((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
+    setRoles((prev) => toggleExclusive(prev, role));
   };
 
   const handleSave = async () => {
@@ -592,7 +598,7 @@ function EditUserModal({
           <div>
             <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Roles</label>
             <div className="flex flex-wrap gap-2">
-              {allRoles.map((role) => (
+              {selectableRoles.map((role) => (
                 <button
                   key={role.key}
                   type="button"
