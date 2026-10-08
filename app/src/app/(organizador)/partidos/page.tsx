@@ -5,6 +5,7 @@ import { getTournaments, getMatches, type TournamentListItem, type MatchListItem
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { ClubCrest } from "@/_components/club-crest";
 
 function formatShortDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -107,9 +108,7 @@ function PartidosContent({ organizerId }: { organizerId: string }) {
                       {/* Teams + scores */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold text-text-primary">
-                            {m.homeTeam?.shortName ?? "?".slice(0, 2)}
-                          </div>
+                          <ClubCrest club={m.homeTeam} size="h-6 w-6" />
                           <span className="flex-1 truncate font-body text-sm text-text-primary">
                             {m.homeTeam?.name ?? "Por definir"}
                           </span>
@@ -118,9 +117,7 @@ function PartidosContent({ organizerId }: { organizerId: string }) {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-300 text-[8px] font-bold text-text-primary">
-                            {m.awayTeam?.shortName ?? "?".slice(0, 2)}
-                          </div>
+                          <ClubCrest club={m.awayTeam} size="h-6 w-6" />
                           <span className="flex-1 truncate font-body text-sm text-text-primary">
                             {m.awayTeam?.name ?? "Por definir"}
                           </span>

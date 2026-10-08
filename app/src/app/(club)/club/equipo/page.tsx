@@ -7,6 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
+import { displayShortName } from "@/_lib/short-name";
 
 const tabs = ["Categorías", "Planilla"] as const;
 type Tab = (typeof tabs)[number];
@@ -78,7 +79,7 @@ function StaffInvitations({ onJoined }: { onJoined: () => void }) {
                 style={{ backgroundColor: (inv.club.color || "#E5E7EB") + "20" }}
               >
                 <span className="font-heading text-xs font-bold" style={{ color: inv.club.color || "#6B7280" }}>
-                  {inv.club.shortName}
+                  {displayShortName(inv.club.shortName)}
                 </span>
               </div>
               <div className="min-w-0 flex-1">

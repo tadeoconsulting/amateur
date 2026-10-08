@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { displayShortName } from "@/_lib/short-name";
 
 interface UserRow {
   id: string;
@@ -386,7 +387,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 >
                   <option value="">Sin club</option>
                   {clubs?.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.shortName})</option>
+                    <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>
                   ))}
                 </select>
               </div>

@@ -5,13 +5,13 @@ import { useRouter, useParams } from "next/navigation";
 import { getMatches, getStandings, getScorers, getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { roundLabel } from "@/_lib/fixture";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
+import { displayShortName } from "@/_lib/short-name";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
-
-const llavesRounds = ["16 avos", "Octavos", "Cuartos", "Semifinal", "Final"] as const;
 
 const tournamentOptions = [
   { id: "t1", name: "Copa Comunidad Futbolera", detail: "10 equipos · Liga · Sub 12 · Activo" },
@@ -22,7 +22,8 @@ export default function JugadorTorneoDetailPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<Tab>("Partidos");
-  const [activeLlavesRound, setActiveLlavesRound] = useState<(typeof llavesRounds)[number]>(llavesRounds[4]);
+  // Ronda del cuadro que se está viendo; null = la última (la final, o la más avanzada).
+  const [llavesRound, setLlavesRound] = useState<number | null>(null);
   const [showTournamentPicker, setShowTournamentPicker] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState(tournamentOptions[0]);
 
@@ -44,12 +45,22 @@ export default function JugadorTorneoDetailPage() {
   const topScorers = scorersData ?? [];
   const clubs = tournamentDetail?.teams.map((t) => t.club) ?? [];
 
+  // "Llaves" solo aparece si el torneo tiene cuadro de eliminación armado (antes mostraba un
+  // cuadro de ejemplo fijo en cualquier torneo).
+  const bracketMatches = allMatches.filter((m) => m.decisive);
+  const hasBracket = bracketMatches.length > 0;
+  const visibleTabs = tabs.filter((t) => t !== "Llaves" || hasBracket);
+  const shownTab: Tab = activeTab === "Llaves" && !hasBracket ? "Partidos" : activeTab;
+  const bracketRounds = [...new Set(bracketMatches.map((m) => m.matchday))].sort((a, b) => a - b);
+  const totalRounds = bracketRounds.length > 0 ? Math.max(...bracketRounds) : 0;
+  const currentRound = llavesRound !== null && bracketRounds.includes(llavesRound) ? llavesRound : (bracketRounds[bracketRounds.length - 1] ?? 0);
+
   const groupedMatches: Record<string, typeof allMatches> = {};
   for (const m of allMatches) {
     const dateLabel =
       m.time === ""
         ? UNSCHEDULED_LABEL
-        : new Date(m.date).toLocaleDateString("es-PE", {
+        : new Date(m.date).toLocaleDateString("es-PE", { timeZone: "UTC",
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -104,12 +115,12 @@ export default function JugadorTorneoDetailPage() {
 
       {/* Tabs */}
       <div className="mt-6 flex gap-2 overflow-x-auto px-4 scrollbar-none">
-        {tabs.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              activeTab === tab
+              shownTab === tab
                 ? "bg-surface-secondary text-text-invert"
                 : "border border-border-primary text-text-primary"
             }`}
@@ -121,7 +132,7 @@ export default function JugadorTorneoDetailPage() {
 
       {/* Tab content */}
       <div className="mt-4 px-4">
-        {activeTab === "Partidos" && (
+        {shownTab === "Partidos" && (
           <div className="space-y-6">
             {Object.entries(groupedMatches).map(([date, dateMatches]) => (
               <div key={date}>
@@ -162,7 +173,7 @@ export default function JugadorTorneoDetailPage() {
                           <p className="text-xs text-text-secondary">
                             {match.time === ""
                               ? UNSCHEDULED_LABEL
-                              : new Date(match.date).toLocaleDateString("es-PE", { weekday: "short", day: "numeric", month: "short" })}
+                              : new Date(match.date).toLocaleDateString("es-PE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" })}
                           </p>
                         </div>
                       </div>
@@ -174,52 +185,72 @@ export default function JugadorTorneoDetailPage() {
           </div>
         )}
 
-        {activeTab === "Llaves" && (
+        {shownTab === "Llaves" && (
           <div>
             <div className="flex gap-2 overflow-x-auto scrollbar-none">
-              {llavesRounds.map((round) => (
+              {bracketRounds.map((round) => (
                 <button
                   key={round}
-                  onClick={() => setActiveLlavesRound(round)}
+                  onClick={() => setLlavesRound(round)}
                   className={`shrink-0 cursor-pointer border-b-2 px-3 pb-2 text-sm font-medium transition-colors ${
-                    activeLlavesRound === round
+                    currentRound === round
                       ? "border-brand-900 text-text-primary"
                       : "border-transparent text-text-secondary"
                   }`}
                 >
-                  {round}
+                  {roundLabel(round, totalRounds)}
                 </button>
               ))}
             </div>
-            <div className="mt-4 rounded-lg border border-brand-100 px-3 py-3">
-              <div className="border-b border-brand-100 pb-2">
-                <span className="text-xs text-text-secondary">16 jul | Final</span>
-              </div>
-              <div className="mt-2 flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
-                      <span className="text-[8px]">⚽</span>
+            <div className="mt-4 space-y-3">
+              {bracketMatches
+                .filter((m) => m.matchday === currentRound)
+                .map((match) => (
+                  <div key={match.id} className="rounded-lg border border-brand-100 px-3 py-3">
+                    <div className="border-b border-brand-100 pb-2">
+                      <span className="text-xs text-text-secondary">
+                        {roundLabel(match.matchday, totalRounds)}
+                        {match.status === "en_curso" ? " | En vivo" : match.status === "finalizado" ? " | Finalizado" : ""}
+                      </span>
                     </div>
-                    <span className="text-sm text-text-primary">Equipo A</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-200">
-                      <span className="text-[8px]">⚽</span>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        {[
+                          { team: match.homeTeam, score: match.homeScore, winner: match.winnerTeamId !== null && match.winnerTeamId === match.homeTeamId },
+                          { team: match.awayTeam, score: match.awayScore, winner: match.winnerTeamId !== null && match.winnerTeamId === match.awayTeamId },
+                        ].map((row, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <ClubCrest club={row.team} />
+                            <span className={`truncate text-sm ${row.team ? "text-text-primary" : "italic text-text-secondary"} ${row.winner ? "font-bold" : ""}`}>
+                              {row.team?.name ?? "Por definir"}
+                            </span>
+                            {(match.status === "en_curso" || match.status === "finalizado") && (
+                              <span className={`ml-auto text-sm text-text-primary ${row.winner ? "font-bold" : ""}`}>{row.score ?? "-"}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="ml-4 shrink-0 text-right">
+                        <p className="text-xs text-text-secondary">
+                          {match.time === ""
+                            ? UNSCHEDULED_LABEL
+                            : new Date(match.date).toLocaleDateString("es-PE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" })}
+                        </p>
+                        {match.time !== "" && <p className="text-xs text-text-secondary">{match.time}</p>}
+                      </div>
                     </div>
-                    <span className="text-sm text-text-primary">Equipo B</span>
+                    {match.status === "finalizado" && match.winnerTeamId !== null && match.homeScore === match.awayScore && (
+                      <p className="mt-2 text-xs text-text-secondary">
+                        Penales {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}
+                      </p>
+                    )}
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-text-secondary">13 Ago</p>
-                  <p className="text-xs text-text-secondary">2:00 pm</p>
-                </div>
-              </div>
+                ))}
             </div>
           </div>
         )}
 
-        {activeTab === "Tabla" && (
+        {shownTab === "Tabla" && (
           <div className="rounded-lg border border-brand-100">
             <div className="border-b border-brand-100 px-3 py-2">
               <span className="text-sm font-semibold text-text-primary">Posiciones</span>
@@ -269,7 +300,7 @@ export default function JugadorTorneoDetailPage() {
           </div>
         )}
 
-        {activeTab === "Goleadores" && (
+        {shownTab === "Goleadores" && (
           <div className="space-y-0">
             {topScorers.map((scorer, idx) => (
               <div
@@ -312,7 +343,7 @@ export default function JugadorTorneoDetailPage() {
           </div>
         )}
 
-        {activeTab === "Equipos" && (
+        {shownTab === "Equipos" && (
           <div className="space-y-2">
             {clubs.slice(0, 4).map((club) => (
               <div key={club.id} className="flex items-center gap-3 rounded-lg border border-brand-100 px-4 py-3">
@@ -324,7 +355,7 @@ export default function JugadorTorneoDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-text-primary">{club.name}</p>
-                  <p className="text-xs text-text-secondary">{club.shortName}</p>
+                  <p className="text-xs text-text-secondary">{displayShortName(club.shortName)}</p>
                 </div>
               </div>
             ))}

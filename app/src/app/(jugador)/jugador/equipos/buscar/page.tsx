@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getClubs, type ClubListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
+import { displayShortName } from "@/_lib/short-name";
 
 interface MyJoinRequest {
   id: string;
@@ -18,7 +19,7 @@ function ClubBadge({ club }: { club: Pick<ClubListItem, "shortName" | "color"> }
       style={{ backgroundColor: (club.color || "#E5E7EB") + "20" }}
     >
       <span className="font-heading text-xs font-bold" style={{ color: club.color || "#6B7280" }}>
-        {club.shortName}
+        {displayShortName(club.shortName)}
       </span>
     </div>
   );
