@@ -7,6 +7,7 @@ import { formatLabel } from "@/_lib/tournament-labels";
 import { TournamentModal } from "./_components/tournament-modal";
 import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
+import { ConfirmDelete } from "../_components/confirm-delete";
 
 interface TournamentRow {
   id: string;
@@ -58,6 +59,7 @@ function AdminTorneosContent() {
   const [formatFilter, setFormatFilter] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<TournamentRow | null>(null);
 
   // Se trae todo y se filtra acá: los filtros son de varias opciones a la vez y se combinan.
   const { data: tournaments, loading, refetch } = useApi<TournamentRow[]>(() => fetch("/api/tournaments").then((r) => r.json()));
@@ -227,13 +229,22 @@ function AdminTorneosContent() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => setEditingId(t.id)}
-                        aria-label={`Editar ${t.name}`}
-                        className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
-                      >
-                        Editar
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setEditingId(t.id)}
+                          aria-label={`Editar ${t.name}`}
+                          className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => setDeleting(t)}
+                          aria-label={`Eliminar ${t.name}`}
+                          className="cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 font-heading text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -255,6 +266,27 @@ function AdminTorneosContent() {
           onClose={() => { setShowCreate(false); router.replace("/admin/torneos"); }}
           onSaved={handleCreated}
         />
+      )}
+      {deleting && (
+        <ConfirmDelete
+          title="¿Eliminar este torneo?"
+          confirmWord={deleting.name}
+          confirmLabel="Eliminar torneo"
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            const res = await fetch(`/api/tournaments/${deleting.id}`, { method: "DELETE" });
+            if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo eliminar el torneo";
+            setDeleting(null);
+            refetch();
+            return null;
+          }}
+        >
+          <p>
+            <strong className="text-text-primary">{deleting.name}</strong> tiene {deleting.teamsCount} {deleting.teamsCount === 1 ? "equipo inscrito" : "equipos inscritos"} y{" "}
+            {deleting.matchesCount} {deleting.matchesCount === 1 ? "partido" : "partidos"}.
+          </p>
+          <p>Se eliminan también sus inscripciones, solicitudes, partidos, resultados y estadísticas. Los equipos y sus jugadores no se tocan. No se puede deshacer.</p>
+        </ConfirmDelete>
       )}
       {editingId && <TournamentModal key={editingId} tournamentId={editingId} onClose={() => setEditingId(null)} onSaved={handleEdited} />}
     </div>

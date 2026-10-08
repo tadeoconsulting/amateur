@@ -10,6 +10,7 @@ import { AvatarCropper } from "@/_components/avatar-cropper";
 import { ClubCrest } from "@/_components/club-crest";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { displayShortName } from "@/_lib/short-name";
+import { ConfirmDelete } from "../_components/confirm-delete";
 
 interface ClubRow {
   id: string;
@@ -630,6 +631,7 @@ function AdminClubesContent() {
   const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingClub, setEditingClub] = useState<ClubRow | null>(null);
+  const [deleting, setDeleting] = useState<ClubRow | null>(null);
 
   const { data: clubs, loading, refetch } = useApi<ClubRow[]>(() => {
     const params = new URLSearchParams();
@@ -789,12 +791,21 @@ function AdminClubesContent() {
                     <span className="font-heading text-sm font-bold text-text-primary">{club.categoriesCount}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
+                    <div className="flex justify-end gap-2">
+                      <button
                       onClick={() => setEditingClub(club)}
                       className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
                     >
                       Editar
                     </button>
+                      <button
+                        onClick={() => setDeleting(club)}
+                        aria-label={`Eliminar ${club.name}`}
+                        className="cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 font-heading text-xs font-semibold text-red-700 transition-colors hover:bg-red-50"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -811,6 +822,32 @@ function AdminClubesContent() {
       )}
 
       {showCreate && <CreateClubModal onClose={() => { setShowCreate(false); router.replace("/admin/clubes"); }} onCreated={handleCreated} />}
+      {deleting && (
+        <ConfirmDelete
+          title="¿Eliminar este equipo?"
+          confirmWord={deleting.name}
+          confirmLabel="Eliminar equipo"
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            const res = await fetch(`/api/clubs/${deleting.id}`, { method: "DELETE" });
+            if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo eliminar el equipo";
+            setDeleting(null);
+            refetch();
+            return null;
+          }}
+        >
+          <p>
+            <strong className="text-text-primary">{deleting.name}</strong>
+            {deleting.isTemporary ? " es un equipo temporal de " : " es de "}
+            {deleting.owner.firstName} {deleting.owner.lastName}
+            {deleting.playerCount > 0 ? ` y tiene ${deleting.playerCount} ${deleting.playerCount === 1 ? "jugador" : "jugadores"}` : ""}.
+          </p>
+          <p>
+            Se eliminan también sus categorías, staff, invitaciones, solicitudes y su inscripción en torneos. Sus jugadores quedan sin equipo (conservan su cuenta).
+            Si ya tiene partidos en algún torneo no se podrá eliminar: primero hay que eliminar ese torneo. No se puede deshacer.
+          </p>
+        </ConfirmDelete>
+      )}
       {editingClub && <EditClubModal club={editingClub} onClose={() => setEditingClub(null)} onSaved={handleClubSaved} onLogoChanged={refetch} />}
     </div>
   );

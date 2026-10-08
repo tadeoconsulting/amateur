@@ -1,9 +1,12 @@
 import { prisma } from "@/_lib/prisma";
 import { adminRolesError } from "@/_lib/admin-roles";
+import { deleteUserAccount, userDeletionBlocker } from "@/_lib/delete-user";
 import { type NextRequest } from "next/server";
 import { Role } from "@prisma/client";
-import { badRequest, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, forbidden, isAdmin, normalizeEmail, readJson, requireUser } from "@/_lib/auth";
 import { resolveActiveClubId } from "@/_lib/player-clubs";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function GET(
   _request: NextRequest,
@@ -76,6 +79,21 @@ export async function PATCH(
 
   const { firstName, lastName, phone, avatarUrl, gender, department, birthDate, organization, position, activeClubId } = body;
 
+  // El correo es con el que la persona entra: solo un admin lo cambia, y no puede coincidir con otra cuenta.
+  let newEmail: string | null = null;
+  if (body.email !== undefined) {
+    if (!admin) return forbidden();
+    const email = normalizeEmail(body.email);
+    if (!email || !EMAIL_RE.test(email)) return badRequest("Escribe un correo válido");
+    const current = await prisma.user.findUnique({ where: { id }, select: { email: true } });
+    if (!current) return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+    if (current.email.toLowerCase() !== email) {
+      const taken = await prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" }, NOT: { id } }, select: { id: true } });
+      if (taken) return Response.json({ error: "Ya existe una cuenta con ese correo" }, { status: 409 });
+      newEmail = email;
+    }
+  }
+
   // Los roles los cambia solo un admin (para uno mismo se usa /api/auth/roles).
   let newRoles: Role[] | null = null;
   if (body.roles !== undefined) {
@@ -121,6 +139,7 @@ export async function PATCH(
     const user = await prisma.user.update({
       where: { id },
       data: {
+        ...(newEmail && { email: newEmail }),
         ...(typeof firstName === "string" && firstName && { firstName }),
         ...(typeof lastName === "string" && lastName && { lastName }),
         ...(phone !== undefined && { phone: phone as string | null }),
@@ -191,9 +210,16 @@ export async function DELETE(
 
   const { id } = await params;
   if (auth.user.id !== id && !isAdmin(auth.user)) return forbidden();
+  // Nadie se elimina a sí mismo desde el panel de administración: quedaría sin acceso a mitad de la acción.
+  if (isAdmin(auth.user) && auth.user.id === id) {
+    return Response.json({ error: "No puedes eliminar tu propia cuenta de administrador" }, { status: 409 });
+  }
+
+  const blocker = await userDeletionBlocker(id);
+  if (blocker) return Response.json({ error: blocker }, { status: blocker === "Usuario no encontrado" ? 404 : 409 });
 
   try {
-    await prisma.user.delete({ where: { id } });
+    await deleteUserAccount(id);
     return Response.json({ success: true });
   } catch {
     return Response.json({ error: "No se pudo eliminar: el usuario tiene datos asociados" }, { status: 409 });
