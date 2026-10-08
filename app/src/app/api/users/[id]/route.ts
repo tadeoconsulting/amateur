@@ -1,4 +1,5 @@
 import { prisma } from "@/_lib/prisma";
+import { adminRolesError } from "@/_lib/admin-roles";
 import { type NextRequest } from "next/server";
 import { Role } from "@prisma/client";
 import { badRequest, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
@@ -85,6 +86,8 @@ export async function PATCH(
     }
     newRoles = body.roles as Role[];
     if (newRoles.length === 0) return badRequest("Debe tener al menos un rol");
+    const mixed = adminRolesError(newRoles);
+    if (mixed) return badRequest(mixed);
     // Evita que un admin se quite el rol a sí mismo por accidente y se quede sin acceso.
     if (actor.id === id && !newRoles.includes(Role.ADMIN)) {
       return badRequest("No puedes quitarte el rol ADMIN a ti mismo");

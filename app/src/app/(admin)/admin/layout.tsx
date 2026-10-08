@@ -74,7 +74,10 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
+
+  // La pantalla de ingreso va sin el panel (ni la verificación de admin: todavía no hay sesión).
+  if (pathname === "/admin/login") return <>{children}</>;
 
   // La API ya rechaza a quien no es admin; esto evita mostrar un panel roto.
   if (loading) {
@@ -89,8 +92,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-brand-50 px-6 text-center">
         <p className="font-heading text-lg font-bold text-text-primary">Sin acceso</p>
         <p className="font-body text-sm text-text-secondary">Esta sección es solo para administradores.</p>
-        <Link href="/seleccion-perfil" className="font-heading text-sm font-semibold text-text-primary underline">
-          Volver
+        <Link href="/admin/login" className="font-heading text-sm font-semibold text-text-primary underline">
+          Ingresar como administrador
         </Link>
       </div>
     );
@@ -140,15 +143,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div className="border-t border-border-primary px-5 py-4">
-          <Link
-            href="/torneos"
-            className="flex items-center gap-2 font-body text-xs text-text-secondary hover:text-text-primary transition-colors"
+          <button
+            type="button"
+            onClick={() => logout("/admin/login")}
+            className="flex cursor-pointer items-center gap-2 font-body text-xs text-text-secondary transition-colors hover:text-text-primary"
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 12L2 8l4-4M2 8h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 2.5H3.5a1 1 0 00-1 1v9a1 1 0 001 1H6M10.5 5.5L13 8l-2.5 2.5M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Volver a la app
-          </Link>
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 

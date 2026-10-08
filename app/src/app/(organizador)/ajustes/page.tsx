@@ -52,7 +52,7 @@ export default function AjustesPage() {
 
       {/* Cerrar sesión */}
       <div className="px-4 pb-6 pt-8 text-center">
-        <button onClick={logout} className="cursor-pointer font-heading text-base font-bold text-text-primary underline underline-offset-2">
+        <button onClick={() => logout()} className="cursor-pointer font-heading text-base font-bold text-text-primary underline underline-offset-2">
           Cerrar sesión
         </button>
       </div>

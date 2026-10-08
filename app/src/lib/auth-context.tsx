@@ -25,7 +25,8 @@ type AuthContextValue = {
   loading: boolean;
   login: (email: string, password: string, next?: string | null) => Promise<Result>;
   register: (input: RegisterInput, next?: string | null) => Promise<Result>;
-  logout: () => Promise<void>;
+  /** Cierra la sesión y va a `to` (por omisión, la portada). */
+  logout: (to?: string) => Promise<void>;
   /** Activa un perfil (ORGANIZADOR, CLUB_OWNER o JUGADOR) en la cuenta actual. */
   addRole: (role: ProfileRole) => Promise<Result>;
   /** Vuelve a consultar la sesión (por ejemplo después de registrarse por otro camino). */
@@ -102,10 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [router]
   );
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (to = "/") => {
     await postJson("/api/auth/logout").catch(() => {});
     setUser(null);
-    router.push("/");
+    router.push(to);
   }, [router]);
 
   const addRole = useCallback(async (role: ProfileRole): Promise<Result> => {

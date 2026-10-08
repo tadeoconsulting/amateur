@@ -1,4 +1,5 @@
 import { prisma } from "@/_lib/prisma";
+import { adminRolesError } from "@/_lib/admin-roles";
 import { type NextRequest } from "next/server";
 import { randomBytes } from "node:crypto";
 import { Role } from "@prisma/client";
@@ -118,6 +119,8 @@ export async function POST(request: NextRequest) {
     const requestedRoles = Array.isArray(roles) ? roles : ["JUGADOR"];
     const userRoles = requestedRoles.filter((r): r is Role => typeof r === "string" && validRoles.includes(r));
     if (userRoles.length === 0) return badRequest("Debe tener al menos un rol válido");
+    const mixed = adminRolesError(userRoles);
+    if (mixed) return badRequest(mixed);
 
     const playerData = player && typeof player === "object" ? (player as Record<string, unknown>) : null;
 

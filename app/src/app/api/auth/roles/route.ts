@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { Role } from "@prisma/client";
 import { badRequest, readJson, requireUser } from "@/_lib/auth";
 import { SELF_ASSIGNABLE_ROLES } from "@/_lib/roles";
+import { adminRolesError } from "@/_lib/admin-roles";
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser();
@@ -13,6 +14,9 @@ export async function POST(request: NextRequest) {
   if (!role || !SELF_ASSIGNABLE_ROLES.includes(role)) {
     return badRequest("Rol no válido");
   }
+  // Un administrador no se suma otros perfiles (ver admin-roles.ts).
+  const mixed = adminRolesError([...auth.user.roles, role]);
+  if (mixed) return badRequest(mixed);
 
   await prisma.userRole.upsert({
     where: { userId_role: { userId: auth.user.id, role } },
