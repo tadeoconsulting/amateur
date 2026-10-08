@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
 
   const where: Record<string, unknown> = {};
   if (tournamentId) where.tournamentId = tournamentId;
-  if (organizerId) where.tournament = { organizerId };
+  // Los partidos de un torneo eliminado no salen en ninguna lista.
+  where.tournament = { deletedAt: null, ...(organizerId ? { organizerId } : {}) };
   if (status) where.status = status;
   if (group) where.groupName = group;
   if (matchday) where.matchday = parseInt(matchday);

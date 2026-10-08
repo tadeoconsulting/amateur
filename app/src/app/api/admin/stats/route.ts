@@ -10,7 +10,7 @@ export async function GET() {
     prisma.user.count(),
     prisma.club.count(),
     prisma.playerProfile.count(),
-    prisma.tournament.count(),
+    prisma.tournament.count({ where: { deletedAt: null } }),
     prisma.match.count(),
   ]);
 
@@ -21,6 +21,7 @@ export async function GET() {
 
   const tournamentsByStatus = await prisma.tournament.groupBy({
     by: ["status"],
+    where: { deletedAt: null },
     _count: { status: true },
   });
 

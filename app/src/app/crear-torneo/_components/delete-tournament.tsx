@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { getMatches } from "@/_lib/api";
 
 /**
- * "Eliminar torneo" de la pantalla de editar. Borra el torneo con sus partidos, equipos inscritos,
- * solicitudes y las estadísticas de jugadores de ese torneo (DELETE /api/tournaments/:id).
- * Si ya se jugó algo hay que escribir el nombre del torneo para confirmar: no se puede deshacer.
+ * "Eliminar torneo" de la pantalla de editar (DELETE /api/tournaments/:id): el torneo se oculta, con todo
+ * lo que tiene, y un administrador puede restaurarlo. Si ya se jugó algo hay que escribir el nombre del
+ * torneo para confirmar.
  */
 export function DeleteTournament({ tournamentId, tournamentName }: { tournamentId: string; tournamentName: string }) {
   const router = useRouter();
@@ -74,7 +74,7 @@ export function DeleteTournament({ tournamentId, tournamentName }: { tournamentI
               ¿Eliminar el torneo?
             </h3>
             <p className="mb-4 text-center font-body text-sm text-text-secondary">
-              Se borran <strong>{tournamentName}</strong> con sus partidos, equipos inscritos, solicitudes y las estadísticas de los jugadores en este torneo. No se puede deshacer.
+              <strong>{tournamentName}</strong> deja de verse, con sus partidos, equipos inscritos, solicitudes y resultados. Si fue un error, el administrador puede restaurarlo.
             </p>
 
             {needsName && (

@@ -12,7 +12,7 @@ type Params = Promise<{ organizador: string; torneo: string }>;
 async function findTournament({ organizador, torneo }: { organizador: string; torneo: string }) {
   return prisma.tournament
     .findFirst({
-      where: { slug: torneo, organizer: { organizerSlug: organizador } },
+      where: { slug: torneo, deletedAt: null, organizer: { organizerSlug: organizador } },
       select: { id: true, name: true, category: true, location: true },
     })
     .catch(() => null);

@@ -3,8 +3,9 @@
 import { useEffect, useId, useState } from "react";
 
 /**
- * Confirmación de una eliminación que no se puede deshacer. Para confirmar hay que escribir
- * `confirmWord` (el nombre de lo que se elimina): así no se borra por un clic de más.
+ * Confirmación de una eliminación. Si no se puede deshacer, hay que escribir `confirmWord` (el nombre de
+ * lo que se elimina) para confirmar: así no se borra por un clic de más. Sin `confirmWord` (una
+ * eliminación reversible) basta con confirmar.
  * `onConfirm` devuelve el mensaje de error si falló, o null si salió bien (quien llama cierra y refresca).
  */
 export function ConfirmDelete({
@@ -16,7 +17,7 @@ export function ConfirmDelete({
   children,
 }: {
   title: string;
-  confirmWord: string;
+  confirmWord?: string;
   confirmLabel?: string;
   onConfirm: () => Promise<string | null>;
   onClose: () => void;
@@ -34,7 +35,7 @@ export function ConfirmDelete({
     return () => document.removeEventListener("keydown", onKey);
   }, [working, onClose]);
 
-  const matches = typed.trim().toLowerCase() === confirmWord.trim().toLowerCase();
+  const matches = !confirmWord || typed.trim().toLowerCase() === confirmWord.trim().toLowerCase();
 
   async function confirm() {
     if (!matches || working) return;
@@ -61,18 +62,22 @@ export function ConfirmDelete({
         </h2>
         <div className="mt-3 flex flex-col gap-2 font-body text-sm text-text-secondary">{children}</div>
 
-        <label htmlFor={inputId} className="mb-1 mt-5 block font-body text-xs font-medium text-text-secondary">
-          Para confirmar, escribe <strong className="text-text-primary">{confirmWord}</strong>
-        </label>
-        <input
-          id={inputId}
-          value={typed}
-          onChange={(e) => setTyped(e.target.value)}
-          disabled={working}
-          autoComplete="off"
-          autoFocus
-          className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-        />
+        {confirmWord && (
+          <>
+            <label htmlFor={inputId} className="mb-1 mt-5 block font-body text-xs font-medium text-text-secondary">
+              Para confirmar, escribe <strong className="text-text-primary">{confirmWord}</strong>
+            </label>
+            <input
+              id={inputId}
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              disabled={working}
+              autoComplete="off"
+              autoFocus
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+            />
+          </>
+        )}
 
         {error && (
           <p role="alert" className="mt-3 rounded-lg bg-red-50 px-3 py-2 font-body text-sm text-red-700">
