@@ -8,6 +8,7 @@ import { TournamentModal } from "./_components/tournament-modal";
 import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
 import { ConfirmDelete } from "../_components/confirm-delete";
+import { TorneosEliminados, type DeletedTournament } from "./_components/eliminados";
 
 interface TournamentRow {
   id: string;
@@ -60,9 +61,13 @@ function AdminTorneosContent() {
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<TournamentRow | null>(null);
+  const [vista, setVista] = useState<"activos" | "eliminados">("activos");
 
   // Se trae todo y se filtra acá: los filtros son de varias opciones a la vez y se combinan.
   const { data: tournaments, loading, refetch } = useApi<TournamentRow[]>(() => fetch("/api/tournaments").then((r) => r.json()));
+
+  // Los eliminados se piden aparte (solo un admin puede): se traen siempre, para mostrar cuántos hay.
+  const { data: eliminados, refetch: refetchEliminados } = useApi<DeletedTournament[]>(() => fetch("/api/tournaments?deleted=1").then((r) => r.json()));
 
   const filtered = tournaments?.filter((t) => {
     if (statusFilter.length > 0 && !statusFilter.includes(t.status)) return false;
@@ -123,6 +128,30 @@ function AdminTorneosContent() {
         </button>
       </div>
 
+      <div role="tablist" aria-label="Vista de torneos" className="mb-5 flex gap-1 rounded-xl bg-btn-regular p-1 w-fit">
+        {([
+          { key: "activos", label: "Activos" },
+          { key: "eliminados", label: `Eliminados${eliminados && eliminados.length > 0 ? ` (${eliminados.length})` : ""}` },
+        ] as const).map((v) => (
+          <button
+            key={v.key}
+            role="tab"
+            type="button"
+            aria-selected={vista === v.key}
+            onClick={() => setVista(v.key)}
+            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
+              vista === v.key ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
+      {vista === "eliminados" ? (
+        <TorneosEliminados rows={eliminados ?? []} onChanged={() => { refetchEliminados(); refetch(); }} />
+      ) : (
+        <>
       {/* Search and filters */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="relative min-w-[200px] max-w-sm flex-1">
@@ -261,6 +290,9 @@ function AdminTorneosContent() {
         </div>
       )}
 
+        </>
+      )}
+
       {showCreate && (
         <TournamentModal
           onClose={() => { setShowCreate(false); router.replace("/admin/torneos"); }}
@@ -270,7 +302,6 @@ function AdminTorneosContent() {
       {deleting && (
         <ConfirmDelete
           title="¿Eliminar este torneo?"
-          confirmWord={deleting.name}
           confirmLabel="Eliminar torneo"
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
@@ -278,6 +309,7 @@ function AdminTorneosContent() {
             if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo eliminar el torneo";
             setDeleting(null);
             refetch();
+            refetchEliminados();
             return null;
           }}
         >
@@ -285,7 +317,10 @@ function AdminTorneosContent() {
             <strong className="text-text-primary">{deleting.name}</strong> tiene {deleting.teamsCount} {deleting.teamsCount === 1 ? "equipo inscrito" : "equipos inscritos"} y{" "}
             {deleting.matchesCount} {deleting.matchesCount === 1 ? "partido" : "partidos"}.
           </p>
-          <p>Se eliminan también sus inscripciones, solicitudes, partidos, resultados y estadísticas. Los equipos y sus jugadores no se tocan. No se puede deshacer.</p>
+          <p>
+            Deja de verse para el organizador, los clubes, los jugadores y el público. No se borra nada: queda en la pestaña <strong className="text-text-primary">Eliminados</strong>,
+            desde donde puedes restaurarlo con todo lo que tenía o eliminarlo definitivamente.
+          </p>
         </ConfirmDelete>
       )}
       {editingId && <TournamentModal key={editingId} tournamentId={editingId} onClose={() => setEditingId(null)} onSaved={handleEdited} />}

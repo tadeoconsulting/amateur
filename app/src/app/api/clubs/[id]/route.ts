@@ -92,10 +92,10 @@ export async function DELETE(
 
   const matches = await prisma.match.findMany({
     where: { OR: [{ homeTeamId: id }, { awayTeamId: id }] },
-    select: { tournament: { select: { name: true } } },
+    select: { tournament: { select: { name: true, deletedAt: true } } },
   });
   if (matches.length > 0) {
-    const tournaments = [...new Set(matches.map((m) => m.tournament.name))];
+    const tournaments = [...new Set(matches.map((m) => (m.tournament.deletedAt ? `${m.tournament.name} (eliminado: bórralo definitivamente en Torneos → Eliminados)` : m.tournament.name)))];
     return Response.json(
       {
         error: `${club.name} tiene ${matches.length} ${matches.length === 1 ? "partido" : "partidos"} en ${tournaments.join(", ")}: elimina ese torneo o sus partidos antes de eliminar el equipo`,

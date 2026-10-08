@@ -23,7 +23,7 @@ export async function userDeletionBlocker(userId: string): Promise<string | null
       ownedClubs > 0 && `dirige ${plural(ownedClubs, "equipo", "equipos")}`,
       tournaments > 0 && `organiza ${plural(tournaments, "torneo", "torneos")}`,
     ].filter(Boolean);
-    return `Esta cuenta ${owns.join(" y ")}: elimínalos primero (o pásalos a otra cuenta) y luego vuelve a intentarlo`;
+    return `Esta cuenta ${owns.join(" y ")} (los torneos eliminados cuentan hasta que se borran del todo): elimínalos primero, o pásalos a otra cuenta, y vuelve a intentarlo`;
   }
   return null;
 }

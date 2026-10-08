@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     where: {
       status: "pending",
       club: { ownerId: auth.user.id },
+      tournament: { deletedAt: null },
       ...(tournamentId ? { tournamentId } : {}),
     },
     orderBy: { createdAt: "desc" },

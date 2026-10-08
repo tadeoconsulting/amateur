@@ -9,7 +9,7 @@ import { ConvocatoriaView } from "@/_components/convocatoria-view";
 // Solo los torneos sin ella (anteriores a las URLs con nombre) se muestran desde acá.
 async function findTournament(id: string) {
   return prisma.tournament
-    .findUnique({ where: { id }, select: { id: true, name: true, category: true, location: true, slug: true, organizer: { select: { organizerSlug: true } } } })
+    .findFirst({ where: { id, deletedAt: null }, select: { id: true, name: true, category: true, location: true, slug: true, organizer: { select: { organizerSlug: true } } } })
     .catch(() => null);
 }
 

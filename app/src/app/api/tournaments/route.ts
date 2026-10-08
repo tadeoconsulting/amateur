@@ -1,7 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import type { Prisma } from "@prisma/client";
-import { badRequest, isAdmin, readJson, requireRole } from "@/_lib/auth";
+import { badRequest, getCurrentUser, isAdmin, readJson, requireRole } from "@/_lib/auth";
 import { parseTournamentFields } from "@/_lib/tournament-input";
 import { ensureOrganizerSlug, newTournamentSlug } from "@/_lib/tournament-slug";
 
@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
   const clubId = searchParams.get("clubId");
   const playerId = searchParams.get("playerId");
 
-  const where: Record<string, unknown> = {};
+  // Los torneos eliminados no salen en ninguna lista; solo un admin los pide aparte (?deleted=1).
+  const viewer = await getCurrentUser();
+  const onlyDeleted = searchParams.get("deleted") === "1" && viewer !== null && isAdmin(viewer);
+  const where: Record<string, unknown> = { deletedAt: onlyDeleted ? { not: null } : null };
   if (organizerId) where.organizerId = organizerId;
   if (status) where.status = status;
   if (clubId) where.teams = { some: { clubId } };
@@ -51,6 +54,7 @@ export async function GET(request: NextRequest) {
       endDate: t.endDate,
       location: t.location,
       organizerId: t.organizerId,
+      deletedAt: t.deletedAt,
       organizer: t.organizer,
     }))
   );
