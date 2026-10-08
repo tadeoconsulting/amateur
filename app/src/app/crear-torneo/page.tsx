@@ -7,11 +7,14 @@ import { StepIndicator } from "./_components/step-indicator";
 import { CrearSedeModal, type Sede } from "./_components/crear-sede-modal";
 import { useWizard } from "./_components/wizard-context";
 import { DeleteTournament } from "./_components/delete-tournament";
+import { EditTabs } from "./_components/edit-tabs";
+import { useEditSave } from "./_components/use-edit-save";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
   const { state, update, tournamentId, basePath, exitHref } = useWizard();
   const editing = tournamentId !== null;
+  const { saving, message, save } = useEditSave();
   const { nombre, fecha, sede, sedes } = state;
   const [showSedeList, setShowSedeList] = useState(false);
   const [showCrearSede, setShowCrearSede] = useState(false);
@@ -58,12 +61,10 @@ export default function CrearTorneoPage() {
       </header>
 
       <div className="flex flex-1 flex-col px-4 pb-6">
-        <StepIndicator current={1} total={3} />
+        {editing ? <EditTabs current="info" basePath={basePath} /> : <StepIndicator current={1} total={3} />}
 
         {/* Titles */}
-        <p className="font-heading text-sm font-semibold text-text-secondary mb-1">
-          {editing ? "Edita tu torneo" : "Crea tu primer torneo"}
-        </p>
+        {!editing && <p className="font-heading text-sm font-semibold text-text-secondary mb-1">Crea tu primer torneo</p>}
         <h1 className="font-heading text-[22px] font-bold text-text-primary leading-tight mb-8">
           Información del torneo
         </h1>
@@ -150,13 +151,30 @@ export default function CrearTorneoPage() {
 
         {/* Bottom actions */}
         <div className="mt-auto pt-8 flex flex-col gap-3">
-          <button
-            onClick={handleContinuar}
-            disabled={!canContinue}
-            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
-          >
-            Continuar
-          </button>
+          {editing ? (
+            <>
+              {message && (
+                <p role={message.ok ? "status" : "alert"} className={`font-body text-sm ${message.ok ? "font-semibold text-text-primary" : "text-red-600"}`}>
+                  {message.text}
+                </p>
+              )}
+              <button
+                onClick={save}
+                disabled={saving}
+                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                {saving ? "Guardando..." : "Guardar cambios"}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleContinuar}
+              disabled={!canContinue}
+              className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+            >
+              Continuar
+            </button>
+          )}
           <button
             onClick={() => router.push(exitHref)}
             className="w-full py-3 font-heading text-sm font-semibold text-text-primary cursor-pointer"
