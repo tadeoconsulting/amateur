@@ -11,6 +11,7 @@ import {
   getScorers,
   getTournamentRequests,
   type TournamentListItem,
+  type MatchListItem,
   type StandingsRow,
   type ScorerRow,
 } from "@/_lib/api";
@@ -22,6 +23,7 @@ import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { RequestsPanel } from "./_components/requests-panel";
+import { MatchEditor } from "./_components/match-editor";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
 
@@ -125,9 +127,11 @@ export default function TournamentDetailPage() {
   const [teamError, setTeamError] = useState("");
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const [confirmUndoFixture, setConfirmUndoFixture] = useState(false);
+  // Hoja para agregar un partido al fixture ({ match: null }) o editar uno pendiente.
+  const [editor, setEditor] = useState<{ match: MatchListItem | null } | null>(null);
   const [undoingFixture, setUndoingFixture] = useState(false);
 
-  const { data: tournament, loading: loadingTournament, refetch } = useApi(() => getTournament(params.id));
+  const { data: tournament, loading: loadingTournament, refetch, refetchSilently: refetchTournamentSilently } = useApi(() => getTournament(params.id));
   // Solo los torneos del MISMO organizador (no los de toda la plataforma): alimentan el selector.
   const { data: allTournaments } = useApi(() =>
     getTournament(params.id).then((t) => getTournaments({ organizerId: t.organizerId }))
@@ -449,19 +453,33 @@ export default function TournamentDetailPage() {
           esta pestaña era una lista plana sin tabs, distinta de como se armó el torneo. */}
       {!isConvocatoria && activeTab === "partidos" && (
         <div className="mt-4">
-          {matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0) && (
+          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan y
+              editar el torneo o un partido pendiente (el lápiz de cada fila). */}
+          <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 px-4">
             <button
-              onClick={() => setConfirmUndoFixture(true)}
-              className="mb-4 px-4 cursor-pointer font-heading text-xs font-bold text-text-secondary underline"
+              onClick={() => setEditor({ match: null })}
+              className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
-              Deshacer fixture
+              Agregar partido
             </button>
-          )}
+            <Link href={`/torneos/${params.id}/editar`} className="font-heading text-xs font-bold text-text-primary underline">
+              Editar torneo
+            </Link>
+            {matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0) && (
+              <button
+                onClick={() => setConfirmUndoFixture(true)}
+                className="cursor-pointer font-heading text-xs font-bold text-text-secondary underline"
+              >
+                Deshacer fixture
+              </button>
+            )}
+          </div>
           {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
           <FixtureTabs
             matches={matches}
             hrefFor={(m) => `/torneos/${params.id}/${m.status === "finalizado" ? "resultado" : "en-vivo"}/${m.id}`}
+            onEdit={(m) => setEditor({ match: m })}
           />
         </div>
       )}
@@ -629,6 +647,24 @@ export default function TournamentDetailPage() {
             </div>
           </div>
         </>
+      )}
+
+      {editor && (
+        <MatchEditor
+          key={editor.match?.id ?? "nuevo"}
+          tournamentId={params.id}
+          teams={tournament.teams.map((t) => ({ id: t.club.id, name: t.club.name, groupName: t.groupName }))}
+          matches={matches}
+          defaultLocation={tournament.location}
+          match={editor.match}
+          onClose={() => setEditor(null)}
+          onSaved={(message, close = true) => {
+            if (close) setEditor(null);
+            setToast({ message, tone: "success" });
+            refetchMatches();
+            refetchTournamentSilently(); // sin spinner: "guardar y agregar otro" deja la hoja abierta
+          }}
+        />
       )}
 
       {/* Deshacer fixture: confirmación */}

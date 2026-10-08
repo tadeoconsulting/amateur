@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
+import { CLASH_MESSAGE, hasScheduleClash } from "@/_lib/match-schedule";
 import { canTransition, canTransitionPhase, isMatchPhase, isMatchStatus, MATCH_PHASES, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { CLUB_REF_SELECT } from "@/_lib/club-public";
@@ -29,14 +30,16 @@ export async function GET(
   return Response.json(match);
 }
 
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+// "" = hora por definir (el partido todavía no tiene día y hora).
+const TIME_RE = /^(([01]\d|2[0-3]):[0-5]\d)?$/;
 
 const isScore = (value: unknown) => value === null || (Number.isInteger(value) && (value as number) >= 0);
 
 const conflict = (error: string) => Response.json({ error }, { status: 409 });
 
 /**
- * Edita un partido: marcador, estado, fase y programación (día, hora y sede).
+ * Edita un partido: marcador, estado, fase, programación (día, hora y sede) y, mientras no
+ * empezó, los equipos.
  *
  * El estado sigue el ciclo programado → en_curso → finalizado (ver canTransition):
  * - Al empezar se guarda `startedAt` (el cronómetro sale de ahí) y el marcador arranca 0-0.
@@ -62,7 +65,7 @@ export async function PATCH(
 
   const body = await readJson(request);
   if (!body) return badRequest();
-  const { homeScore, awayScore, status, phase, date, time, location } = body;
+  const { homeScore, awayScore, status, phase, date, time, location, homeTeamId, awayTeamId } = body;
 
   if ((homeScore !== undefined && !isScore(homeScore)) || (awayScore !== undefined && !isScore(awayScore))) {
     return badRequest("El marcador debe ser un entero mayor o igual a 0");
@@ -81,11 +84,17 @@ export async function PATCH(
       return badRequest("date debe tener el formato YYYY-MM-DD");
     }
     if (time !== undefined && (typeof time !== "string" || !TIME_RE.test(time))) {
-      return badRequest("time debe tener el formato HH:MM (24 horas)");
+      return badRequest("time debe tener el formato HH:MM (24 horas), o vacío si está por definir");
     }
     if (location !== undefined && (typeof location !== "string" || location.trim().length > 200)) {
       return badRequest("location debe ser un texto de hasta 200 caracteres");
     }
+  }
+
+  // Cambiar los equipos de un partido que todavía no empezó (corregir un cruce mal cargado).
+  const changingTeams = homeTeamId !== undefined || awayTeamId !== undefined;
+  if (changingTeams && (typeof homeTeamId !== "string" || typeof awayTeamId !== "string")) {
+    return badRequest("homeTeamId y awayTeamId deben venir juntos");
   }
 
   const current = await prisma.match.findUnique({
@@ -116,8 +125,23 @@ export async function PATCH(
 
   const data: Record<string, unknown> = {};
 
+  // ─── Equipos ───
+  if (changingTeams) {
+    if (current.status !== "programado" || current._count.events > 0) {
+      return conflict("Solo se pueden cambiar los equipos de un partido que todavía no empezó");
+    }
+    if (current.decisive) return conflict("Los cruces de un cuadro de eliminación no se editan a mano");
+    if (homeTeamId === awayTeamId) return badRequest("El equipo local y el visitante deben ser distintos");
+    const enrolled = await prisma.tournamentTeam.count({
+      where: { tournamentId: current.tournamentId, clubId: { in: [homeTeamId as string, awayTeamId as string] } },
+    });
+    if (enrolled !== 2) return badRequest("Los dos equipos deben estar inscritos en el torneo");
+    data.homeTeamId = homeTeamId;
+    data.awayTeamId = awayTeamId;
+  }
+
   // ─── Programación ───
-  if (scheduling) {
+  if (scheduling || changingTeams) {
     if (current.status !== "programado") {
       return conflict("Solo se puede reprogramar un partido que todavía no empezó");
     }
@@ -127,24 +151,16 @@ export async function PATCH(
       location: typeof location === "string" ? location.trim() : current.location,
     };
     // No puede haber otro partido del torneo a la misma hora con un mismo equipo o en la misma sede.
-    // Un partido "por definir" (sin equipos todavía, en un cuadro de eliminación) no choca por equipo.
-    const teamIds = [current.homeTeamId, current.awayTeamId].filter((teamId): teamId is string => teamId !== null);
-    const clashConditions = [
-      ...(teamIds.length ? [{ homeTeamId: { in: teamIds } }, { awayTeamId: { in: teamIds } }] : []),
-      ...(next.location ? [{ location: next.location }] : []),
-    ];
-    if (next.time !== "" && clashConditions.length > 0) {
-      const clash = await prisma.match.findFirst({
-        where: {
-          tournamentId: current.tournamentId,
-          id: { not: id },
-          date: next.date,
-          time: next.time,
-          OR: clashConditions,
-        },
-        select: { id: true },
-      });
-      if (clash) return conflict("Ese horario choca con otro partido del torneo (mismo equipo o misma sede)");
+    if (
+      await hasScheduleClash({
+        tournamentId: current.tournamentId,
+        excludeId: id,
+        ...next,
+        homeTeamId: changingTeams ? (homeTeamId as string) : current.homeTeamId,
+        awayTeamId: changingTeams ? (awayTeamId as string) : current.awayTeamId,
+      })
+    ) {
+      return conflict(CLASH_MESSAGE);
     }
     if (date !== undefined) data.date = next.date;
     if (time !== undefined) data.time = next.time;
@@ -246,6 +262,8 @@ export async function PATCH(
 
   try {
     const match = await prisma.$transaction(async (tx) => {
+      // Las alineaciones cargadas eran de los equipos anteriores.
+      if (changingTeams) await tx.matchLineup.deleteMany({ where: { matchId: id } });
       const updated = await tx.match.update({
         where: { id },
         data,
@@ -289,5 +307,41 @@ export async function PATCH(
     return Response.json(match);
   } catch {
     return Response.json({ error: "Error al actualizar partido" }, { status: 500 });
+  }
+}
+
+/**
+ * Quita un partido que todavía no se jugó (uno agregado de más, o un cruce que ya no va).
+ * Solo si está programado, sin jugadas, y no es parte de un cuadro de eliminación (ahí cada
+ * partido alimenta al siguiente). Si era el último pendiente de un torneo "en_curso" no hace
+ * falta tocar nada: el torneo se cierra al terminar un partido, no al borrar uno.
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+
+  const { id } = await params;
+  if (!(await canManageMatch(auth.user, id))) return forbidden();
+
+  const match = await prisma.match.findUnique({
+    where: { id },
+    select: { status: true, decisive: true, nextMatchId: true, _count: { select: { events: true, feedsInto: true } } },
+  });
+  if (!match) return Response.json({ error: "Partido no encontrado" }, { status: 404 });
+  if (match.status !== "programado" || match._count.events > 0) {
+    return conflict("Solo se puede quitar un partido que todavía no empezó");
+  }
+  if (match.decisive || match.nextMatchId || match._count.feedsInto > 0) {
+    return conflict("Los partidos de un cuadro de eliminación no se quitan a mano");
+  }
+
+  try {
+    await prisma.match.delete({ where: { id } });
+    return Response.json({ success: true });
+  } catch {
+    return Response.json({ error: "Error al quitar el partido" }, { status: 500 });
   }
 }
