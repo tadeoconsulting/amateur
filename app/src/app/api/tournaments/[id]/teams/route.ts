@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { EnrollmentError, isUniqueViolation, withOpenTournament } from "@/_lib/enrollment";
 import { CLUB_ENROLLED_SELECT } from "@/_lib/club-public";
+import { shortNameError } from "@/_lib/short-name";
 
 export async function GET(
   _request: NextRequest,
@@ -74,7 +75,8 @@ export async function POST(
     const color = input?.color;
     const logoUrl = input?.logoUrl;
     if (!name || name.length > 80) return badRequest("El nombre del equipo debe tener entre 1 y 80 caracteres");
-    if (!shortName || shortName.length > 12) return badRequest("El nombre corto debe tener entre 1 y 12 caracteres");
+    const shortError = shortNameError(shortName);
+    if (shortError) return badRequest(shortError);
     if (color !== undefined && color !== null && (typeof color !== "string" || !/^#[0-9a-fA-F]{6}$/.test(color))) {
       return badRequest("color debe tener formato #RRGGBB");
     }

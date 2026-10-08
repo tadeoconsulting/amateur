@@ -7,6 +7,7 @@ import { useMyClub } from "@/_lib/use-my-club";
 import { getClub } from "@/_lib/api";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
+import { SHORT_NAME_MAX } from "@/_lib/short-name";
 
 export default function ClubPerfilPage() {
   const { club, loading: loadingClub } = useMyClub();
@@ -176,6 +177,7 @@ export default function ClubPerfilPage() {
             type="text"
             value={nombreCorto}
             onChange={(e) => setNombreCorto(e.target.value)}
+            maxLength={SHORT_NAME_MAX}
             className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
           />
         </div>

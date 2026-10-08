@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, pick, readJson, requireUser } from "@/_lib/auth";
 import { omitInviteToken } from "@/_lib/club-public";
+import { shortNameError } from "@/_lib/short-name";
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -57,6 +58,11 @@ export async function PATCH(
     data[key] = value as string | null;
   }
   if (Object.keys(data).length === 0) return badRequest("No hay campos para actualizar");
+  if (data.shortName !== undefined) {
+    const shortError = shortNameError(data.shortName);
+    if (shortError) return badRequest(shortError);
+    data.shortName = (data.shortName as string).trim();
+  }
 
   try {
     const club = await prisma.club.update({ where: { id }, data });

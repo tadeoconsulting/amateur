@@ -23,3 +23,14 @@ test("los espacios cuentan y no queda un espacio antes de los puntos", () => {
 test("ignora espacios sobrantes en los extremos", () => {
   assert.equal(displayShortName("  UDE  "), "UDE");
 });
+
+test("la regla de entrada es la misma que la de pantalla: de 1 a 10 caracteres", async () => {
+  const { shortNameError } = await import("../../src/_lib/short-name.ts");
+  assert.equal(shortNameError("UDE"), null);
+  assert.equal(shortNameError("1234567890"), null);
+  assert.equal(shortNameError("  UDE  "), null);
+  assert.match(shortNameError("12345678901") ?? "", /entre 1 y 10 caracteres/);
+  assert.match(shortNameError("") ?? "", /entre 1 y 10 caracteres/);
+  assert.match(shortNameError("   ") ?? "", /entre 1 y 10 caracteres/);
+  assert.match(shortNameError(undefined) ?? "", /entre 1 y 10 caracteres/);
+});

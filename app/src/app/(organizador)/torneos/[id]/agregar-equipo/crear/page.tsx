@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { SHORT_NAME_MAX } from "@/_lib/short-name";
 
 const presetColors = [
   "#FF6363", "#FF9F43", "#FFD039", "#00CA81",
@@ -225,6 +226,7 @@ export default function CrearEquipoPage() {
             type="text"
             value={nombreCorto}
             onChange={(e) => setNombreCorto(e.target.value)}
+            maxLength={SHORT_NAME_MAX}
             placeholder="Ciudad"
             className="w-full rounded-lg border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
           />
