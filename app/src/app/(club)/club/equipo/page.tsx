@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { getClubCategories, getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
-import { useMyClub } from "@/_lib/use-my-club";
+import { useMyClub, type MyClub } from "@/_lib/use-my-club";
+import { MyClubCard } from "../../_components/my-club-card";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
 import { ClubCrest } from "@/_components/club-crest";
@@ -207,18 +208,19 @@ export default function ClubEquipoPage() {
 
   // `key` fuerza a remontar si alguna vez cambia de club (por ejemplo al elegir "Otro club"),
   // así el useApi de abajo no se queda pegado al id anterior.
-  return <ClubEquipoContent key={club.id} clubId={club.id} activeTab={activeTab} setActiveTab={setActiveTab} />;
+  return <ClubEquipoContent key={club.id} club={club} activeTab={activeTab} setActiveTab={setActiveTab} />;
 }
 
 function ClubEquipoContent({
-  clubId,
+  club,
   activeTab,
   setActiveTab,
 }: {
-  clubId: string;
+  club: MyClub;
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
 }) {
+  const clubId = club.id;
   // Se monta solo cuando ya se conoce el club: el useApi de acá abajo pide una sola vez, al
   // montar, así que necesita el id correcto desde el primer render (ver "use-api.ts").
   const { data: teamCategories, loading: loadingCategories, refetch: refetchCategories } = useApi(() => getClubCategories(clubId));
@@ -278,6 +280,10 @@ function ClubEquipoContent({
             </svg>
           </Link>
         </div>
+      </div>
+
+      <div className="mt-3 px-4">
+        <MyClubCard club={club} />
       </div>
 
       <StaffInvitations onJoined={refetchStaff} />
