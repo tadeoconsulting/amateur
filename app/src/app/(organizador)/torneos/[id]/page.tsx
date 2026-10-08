@@ -24,11 +24,12 @@ import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { RequestsPanel } from "./_components/requests-panel";
 import { MatchEditor } from "./_components/match-editor";
+import { TeamsList } from "./_components/teams-list";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { tournamentPublicPath } from "@/_lib/slug";
 
-type Tab = "partidos" | "llaves" | "tabla" | "goleadores";
+type Tab = "partidos" | "llaves" | "tabla" | "goleadores" | "equipos";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
 
 /** Una tabla de posiciones (de todo el torneo, o de un solo grupo). `advanceCount` marca en
@@ -96,6 +97,7 @@ const competenciaTabs: { key: Tab; label: string }[] = [
   { key: "llaves", label: "Llaves" },
   { key: "tabla", label: "Tabla" },
   { key: "goleadores", label: "Goleadores" },
+  { key: "equipos", label: "Equipos" },
 ];
 
 const convocatoriaTabs: { key: ConvocatoriaTab; label: string }[] = [
@@ -303,7 +305,11 @@ export default function TournamentDetailPage() {
           : competenciaTabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={(e) => {
+                  setActiveTab(tab.key);
+                  // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
+                  e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+                }}
                 className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
                   activeTab === tab.key
                     ? "bg-surface-secondary text-text-invert"
@@ -540,6 +546,8 @@ export default function TournamentDetailPage() {
           </div>
         );
       })()}
+
+      {!isConvocatoria && activeTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} />}
 
       {!isConvocatoria && activeTab === "goleadores" && scorers && (
         <div className="mt-4 px-4">
