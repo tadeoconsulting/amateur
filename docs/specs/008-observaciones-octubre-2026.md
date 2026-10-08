@@ -59,6 +59,13 @@ ALTER TABLE "Tournament" ADD COLUMN "deletedAt" TIMESTAMP(3);    -- #85
 ALTER TABLE "Tournament" ADD COLUMN "playoffTeams" INTEGER;      -- #86
 ```
 
+## Verificación en producción (2026-10-08)
+Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
+- Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.
+- Los tres torneos reales (Segunda División FPF Chiclayo, Clausura 2026, Copa Comunidad): página pública, detalle y tabla de posiciones en 200, con `deletedAt` y `playoffTeams` vacíos (no cambió su comportamiento).
+- Incidente: entre el despliegue de #85 (21:20 UTC) y la creación de `deletedAt` (~21:33 UTC) la API de torneos respondió 500 (ver "Despliegue").
+- **No se probó en producción** el armado de llaves ni la restauración de torneos eliminados: harían falta datos de prueba en la base real. Se probaron en la base de desarrollo.
+
 ## Limitaciones conocidas
 - Las llaves de una liga **no tienen vista pública** para el fan (solo la pestaña del organizador).
 - No hay prueba de integración del armado de llaves de liga (verificado a mano y con pruebas unitarias de la lógica).
