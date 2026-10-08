@@ -8,6 +8,7 @@ import { CondicionModal } from "../_components/condicion-modal";
 import { BasesListModal } from "../_components/bases-list-modal";
 import { useWizard } from "../_components/wizard-context";
 import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
+import { playoffLabel } from "@/_lib/fixture";
 import { saveWizardTournament } from "../_components/save-tournament";
 import { EditTabs } from "../_components/edit-tabs";
 
@@ -15,10 +16,11 @@ export default function CrearTorneoPaso3Page() {
   const router = useRouter();
   const { state, update, tournamentId, basePath, exitHref } = useWizard();
   const editing = tournamentId !== null;
-  const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones, tiempoExtra, clasificanPorGrupo } = state;
+  const { minutos, jugadores, delegado, costoInscripcion, costoArbitraje, condiciones, tiempoExtra, clasificanPorGrupo, llaves } = state;
   const format = formatFromCompetitionLabel(state.tipoCompetencia);
   // El tiempo extra y los penales solo existen en un cuadro de eliminación (especificación 007).
-  const esEliminatorio = format === "eliminacion" || format === "relampago" || format === "copa";
+  const ligaConLlaves = format === "liga" && llaves > 0;
+  const esEliminatorio = format === "eliminacion" || format === "relampago" || format === "copa" || ligaConLlaves;
   const [showCondicionModal, setShowCondicionModal] = useState(false);
   const [showBasesList, setShowBasesList] = useState(false);
   const [torneoCreado, setTorneoCreado] = useState(false);
@@ -33,6 +35,7 @@ export default function CrearTorneoPaso3Page() {
   const setCostoArbitraje = (value: string) => update({ costoArbitraje: value });
   const setTiempoExtra = (value: number) => update({ tiempoExtra: value });
   const setClasificanPorGrupo = (value: number) => update({ clasificanPorGrupo: value });
+  const setLlaves = (value: number) => update({ llaves: value });
 
   async function handleCrearTorneo() {
     if (saving || torneoCreado) return;
@@ -166,6 +169,42 @@ export default function CrearTorneoPaso3Page() {
             </div>
             <p className="mt-2 font-body text-xs text-text-secondary">
               Cuando termine la fase de grupos, arman el cuadro con los mejores de cada grupo.
+            </p>
+          </div>
+        )}
+
+        {format === "liga" && (
+          <div className="mb-6">
+            <h2 className="font-heading text-base font-bold text-text-primary mb-4">
+              Llaves
+            </h2>
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-body text-sm text-text-primary leading-snug max-w-[45%]">
+                Equipos que clasifican a las llaves
+              </span>
+              <div className="flex flex-wrap justify-end gap-2" role="radiogroup" aria-label="Equipos que clasifican a las llaves">
+                {[0, 2, 4, 8, 16].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={llaves === n}
+                    onClick={() => setLlaves(n)}
+                    className={`h-11 min-w-11 cursor-pointer rounded-lg border px-2 font-heading text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
+                      llaves === n
+                        ? "border-border-primary bg-surface-secondary text-text-invert"
+                        : "border-border-primary text-text-primary hover:bg-btn-regular"
+                    }`}
+                  >
+                    {n === 0 ? "Sin" : n}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="mt-2 font-body text-xs text-text-secondary">
+              {llaves === 0
+                ? "La liga termina con la tabla de posiciones. Elige cuántos clasifican si quieres cerrarla con llaves."
+                : `Cuando termine la liga, los ${llaves} primeros de la tabla juegan ${playoffLabel(llaves).toLowerCase()}. Los cruces los puedes armar automáticos (el mejor contra el peor) o elegirlos tú.`}
             </p>
           </div>
         )}

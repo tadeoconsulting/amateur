@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { MatchListItem, TournamentDetail } from "@/_lib/api";
+import type { MatchListItem, StandingsRow, TournamentDetail } from "@/_lib/api";
 import { roundLabel } from "@/_lib/fixture";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { ClubCrest } from "@/_components/club-crest";
+import { LigaBracketBuilder } from "./liga-bracket-builder";
 
 /** ¿Un partido decisivo se cerró por penales? (marcador igualado pero con ganador). */
 function decidedByPenalties(m: MatchListItem) {
@@ -74,11 +75,13 @@ export function BracketView({
   tournamentId,
   tournament,
   matches,
+  standings,
   onChanged,
 }: {
   tournamentId: string;
   tournament: TournamentDetail;
   matches: MatchListItem[];
+  standings: StandingsRow[];
   onChanged: () => void;
 }) {
   const [building, setBuilding] = useState(false);
@@ -87,6 +90,21 @@ export function BracketView({
   const bracketMatches = matches.filter((m) => m.decisive);
 
   if (bracketMatches.length === 0) {
+    // Una liga con llaves: cuando la tabla termina, se arma el cuadro con los mejores.
+    if (tournament.format === "liga" && tournament.playoffTeams !== null) {
+      const leagueMatches = matches.filter((m) => !m.decisive);
+      const leaguePending = leagueMatches.filter((m) => m.status !== "finalizado").length;
+      if (leagueMatches.length > 0 && leaguePending === 0) {
+        return <LigaBracketBuilder tournamentId={tournamentId} size={tournament.playoffTeams} standings={standings} onBuilt={onChanged} />;
+      }
+      return (
+        <p className="px-4 py-10 text-center font-body text-sm text-text-secondary">
+          {leagueMatches.length === 0
+            ? "Primero arma el fixture de la liga, en la pestaña Partidos."
+            : `Faltan ${leaguePending} ${leaguePending === 1 ? "partido" : "partidos"} de la liga para armar las llaves.`}
+        </p>
+      );
+    }
     if (tournament.format !== "copa") {
       // No debería pasar (el cuadro se arma junto con el fixture), pero por si acaso.
       return <p className="px-4 py-10 text-center font-body text-sm text-text-secondary">El cuadro todavía no se armó.</p>;

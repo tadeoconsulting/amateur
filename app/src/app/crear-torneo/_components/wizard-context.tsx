@@ -28,6 +28,7 @@ export type WizardState = {
   // Solo aplican a eliminación directa, relámpago y copa (ver especificación 007).
   tiempoExtra: number; // minutos de cada tiempo del tiempo extra; 0 = sin definir
   clasificanPorGrupo: number; // solo Copa: 2, 3 o 4
+  llaves: number; // solo Liga: cuántos clasifican a llaves (2, 4, 8 o 16); 0 = sin llaves
 };
 
 const INITIAL: WizardState = {
@@ -48,6 +49,7 @@ const INITIAL: WizardState = {
   condiciones: [],
   tiempoExtra: 0,
   clasificanPorGrupo: 2,
+  llaves: 0,
 };
 
 type WizardContextValue = {

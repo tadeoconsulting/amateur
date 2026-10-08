@@ -37,5 +37,6 @@ export function wizardStateFromTournament(t: TournamentDetail): WizardState {
     condiciones: t.rules,
     tiempoExtra: t.extraTimeMinutes ?? 0,
     clasificanPorGrupo: t.groupsAdvancePerGroup ?? 2,
+    llaves: t.playoffTeams ?? 0,
   };
 }

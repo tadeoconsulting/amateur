@@ -58,9 +58,12 @@ Club ──< PlayerInvitation                (invitaciones personales)
 | `startDate` / `endDate` | fechas reales; `endDate` ≥ `startDate` |
 | `slug` | Segundo tramo de la URL pública (`/{organizerSlug}/{slug}`): sale del nombre al crearlo, con sufijo `-2`, `-3`… si el organizador ya tiene uno igual (único por `(organizerId, slug)`). No cambia al renombrarlo. `null` en torneos anteriores hasta correr `npm run db:backfill-slugs`; mientras tanto se usa `/convocatoria/{id}`. |
 | `location` | texto libre: la sede ("nombre, dirección"). **No existe una entidad Sede.** |
+| `playoffTeams` | Solo `liga`: cuántos de la tabla pasan a llaves (2, 4, 8 o 16); `null` = la liga termina con la tabla. Se puede cambiar hasta que el cuadro esté armado. Con llaves, la liga no se da por terminada hasta jugarse el cuadro, y la tabla solo cuenta los partidos de la liga (no los `decisive`). |
 | `modality`, `gender`, `minutesPerHalf`, `playersPerTeam`, `assignDelegates`, `registrationFee`, `refereeFee`, `rules` | Datos del asistente. Todos opcionales; los torneos anteriores no los tienen. |
 
 Ciclo de vida: `inscripcion` → `en_curso` (al generar el fixture) → `finalizado` (al terminar su último partido). Detalle en [003](003-fixture.md) y [004](004-partido-en-vivo.md).
+
+**Llaves en una liga**: cuando todos los partidos de la liga están finalizados, `POST /api/tournaments/:id/fixture` con `{ mode: "bracket" }` arma el cuadro con los primeros `playoffTeams` de la tabla. Sin más datos, los cruces son automáticos (el mejor contra el peor); con `pairs: [[a, b], …]` los cruces son los que eligió el organizador, entre los clasificados.
 
 Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemplaza al viejo en sus torneos y en los partidos que todavía lo usaban (`PATCH /api/sedes/:id`); un partido con una sede puesta a mano no se toca.
 

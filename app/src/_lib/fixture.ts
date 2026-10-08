@@ -425,3 +425,61 @@ export function seedCopaBracket(groups: string[][]): string[] {
   }
   return order;
 }
+
+// ─── Llaves en una liga ─────────────────────────────────────────────────────
+// Una liga puede terminar en un cuadro de eliminación entre los mejores de la tabla. La cantidad que
+// clasifica es una potencia de 2 (final directa, semifinales, cuartos u octavos): el cuadro sale
+// parejo, sin equipos que pasan solos.
+
+/** Cuántos equipos pueden clasificar a las llaves de una liga. */
+export const PLAYOFF_SIZES = [2, 4, 8, 16] as const;
+
+export function isPlayoffSize(n: unknown): n is (typeof PLAYOFF_SIZES)[number] {
+  return typeof n === "number" && (PLAYOFF_SIZES as readonly number[]).includes(n);
+}
+
+/** Etiqueta de la fase con que arrancan las llaves: 2 → "Final directa", 4 → "Semifinales"... */
+export function playoffLabel(n: number): string {
+  return n === 2 ? "Final directa" : n === 4 ? "Semifinales" : n === 8 ? "Cuartos de final" : n === 16 ? "Octavos de final" : `${n} equipos`;
+}
+
+/**
+ * Orden de las semillas en el cuadro para que el mejor se cruce con el peor y los mejores solo se
+ * encuentren al final: 4 → [1,4,2,3]; 8 → [1,8,4,5,2,7,3,6]. Cada par seguido es un cruce de la
+ * primera ronda, y los ganadores de dos cruces seguidos se enfrentan en la siguiente.
+ */
+export function standardSeedOrder(n: number): number[] {
+  let order = [1];
+  while (order.length < n) {
+    const size = order.length * 2;
+    order = order.flatMap((seed) => [seed, size + 1 - seed]);
+  }
+  return order;
+}
+
+/** Los clasificados (del 1.º al último de la tabla) puestos en el orden que pide `planBracket`: mejor contra peor. */
+export function seedLeagueBracket(rankedTeamIds: string[]): string[] {
+  return standardSeedOrder(rankedTeamIds.length).map((seed) => rankedTeamIds[seed - 1]);
+}
+
+/**
+ * Cruces de la primera ronda elegidos a mano, en el orden en que el organizador los dejó: cada
+ * cruce trae dos equipos, todos distintos, y son exactamente los clasificados. Devuelve el orden
+ * para `planBracket`, o el motivo por el que no vale.
+ */
+export function bracketOrderFromPairs(pairs: unknown, qualified: string[]): { ok: true; order: string[] } | { ok: false; error: string } {
+  if (!Array.isArray(pairs) || pairs.length !== qualified.length / 2) {
+    return { ok: false, error: `Hacen falta ${qualified.length / 2} cruces` };
+  }
+  const order: string[] = [];
+  for (const pair of pairs) {
+    if (!Array.isArray(pair) || pair.length !== 2 || pair.some((id) => typeof id !== "string")) {
+      return { ok: false, error: "Cada cruce necesita dos equipos" };
+    }
+    order.push(pair[0], pair[1]);
+  }
+  if (new Set(order).size !== order.length) return { ok: false, error: "Un equipo no puede estar en dos cruces ni jugar contra sí mismo" };
+  const allowed = new Set(qualified);
+  if (order.some((id) => !allowed.has(id))) return { ok: false, error: "Hay equipos que no clasificaron a las llaves" };
+  return { ok: true, order };
+}

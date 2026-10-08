@@ -1,5 +1,6 @@
 import { FORMATS, GENDERS, MODALITIES, TOURNAMENT_STATUSES } from "./tournament-labels";
 import { isRealDate } from "./fixture";
+import { isPlayoffSize } from "@/_lib/fixture";
 
 type Fields = Record<string, unknown>;
 export type TournamentInput = { data: Fields } | { error: string };
@@ -135,6 +136,12 @@ export function parseTournamentFields(body: Fields, mode: "create" | "update"): 
       return { error: "groupsAdvancePerGroup debe ser 2, 3 o 4" };
     }
     data.groupsAdvancePerGroup = body.groupsAdvancePerGroup;
+  }
+  if (has("playoffTeams")) {
+    if (body.playoffTeams !== null && !isPlayoffSize(body.playoffTeams)) {
+      return { error: "playoffTeams debe ser 2, 4, 8 o 16" };
+    }
+    data.playoffTeams = body.playoffTeams;
   }
   if (has("rules")) {
     const rules = body.rules;

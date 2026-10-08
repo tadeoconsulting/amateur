@@ -118,7 +118,7 @@ export async function PATCH(
       penaltyHomeScore: true,
       penaltyAwayScore: true,
       _count: { select: { events: true } },
-      tournament: { select: { format: true } },
+      tournament: { select: { format: true, playoffTeams: true } },
     },
   });
   if (!current) return Response.json({ error: "Partido no encontrado" }, { status: 404 });
@@ -288,10 +288,14 @@ export async function PATCH(
       // ese momento, cero partidos pendientes (el cuadro todavía no existe), así que el
       // torneo se daba por terminado antes de jugarse el cuadro. Hace falta además que el
       // cuadro ya se haya armado (algún partido `decisive`) para dar el torneo por terminado.
+      // Una liga con llaves es igual: al cerrarse la tabla todavía falta el cuadro.
       if (data.status === "finalizado") {
         const pending = await tx.match.count({ where: { tournamentId: current.tournamentId, status: { not: "finalizado" } } });
+        const needsBracket =
+          current.tournament?.format === "copa" ||
+          (current.tournament?.format === "liga" && current.tournament.playoffTeams !== null);
         const bracketReady =
-          current.tournament?.format !== "copa" ||
+          !needsBracket ||
           (await tx.match.count({ where: { tournamentId: current.tournamentId, decisive: true } })) > 0;
         if (pending === 0 && bracketReady) await tx.tournament.update({ where: { id: current.tournamentId }, data: { status: "finalizado" } });
       } else if (data.status === "en_curso" || data.status === "programado") {

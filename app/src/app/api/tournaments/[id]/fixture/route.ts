@@ -3,11 +3,13 @@ import { type NextRequest } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { badRequest, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import {
+  bracketOrderFromPairs,
   planBracket,
   planFixture,
   scheduleBracketOneDay,
   scheduleFixture,
   seedCopaBracket,
+  seedLeagueBracket,
   slotMinutesFor,
   type MatchdayConfig,
   type OneDayConfig,
@@ -25,6 +27,7 @@ const TOURNAMENT_FIXTURE_SELECT = {
   minutesPerHalf: true,
   minTeams: true,
   groupsAdvancePerGroup: true,
+  playoffTeams: true,
   organizerId: true,
   // Orden de inscripción: de acá sale la semilla 1 del cuadro de eliminación (y, ya de paso,
   // hace explícito lo que "liga" siempre asumió sin garantizarlo).
@@ -85,7 +88,8 @@ export async function POST(
 
   const body = await readJson(request);
   if (!body) return badRequest();
-  const validModes = tournament.format === "copa" ? ["auto", "manual", "bracket"] : ["auto", "manual"];
+  const hasBracketMode = tournament.format === "copa" || (tournament.format === "liga" && tournament.playoffTeams !== null);
+  const validModes = hasBracketMode ? ["auto", "manual", "bracket"] : ["auto", "manual"];
   if (!validModes.includes(body.mode as string)) {
     return badRequest(`mode debe ser ${validModes.map((m) => `"${m}"`).join(" o ")}`);
   }
@@ -97,6 +101,12 @@ export async function POST(
   // tener partidos de grupos ya creados es justamente lo esperado, no un conflicto.
   if (tournament.format === "copa") {
     return handleCopaFixture(tournament, id, body, replace);
+  }
+
+  // Una liga con llaves: la tabla primero, el cuadro después (igual que "copa", pero con los
+  // mejores de la tabla general en vez de los de cada grupo).
+  if (tournament.format === "liga" && body.mode === "bracket") {
+    return handleLigaBracket(tournament, id, body, replace);
   }
 
   const existing = await prisma.match.findMany({
@@ -211,6 +221,91 @@ export async function POST(
   return Response.json({ mode: body.mode, matchdays: plan.matchdays, matches: rows.length }, { status: 201 });
 }
 
+type BracketPlanMatch = { homeTeamId: string | null; awayTeamId: string | null; round: number; nextMatchIndex: number | null; nextMatchSlot: "home" | "away" | null };
+
+/** Crea los partidos de un cuadro (sin día ni hora) y conecta cada uno con el que sigue. Devuelve sus ids. */
+async function createBracketMatches(tx: Prisma.TransactionClient, tournamentId: string, matches: BracketPlanMatch[], date: Date) {
+  const ids: string[] = [];
+  for (const m of matches) {
+    const created = await tx.match.create({
+      data: {
+        tournamentId,
+        homeTeamId: m.homeTeamId,
+        awayTeamId: m.awayTeamId,
+        date,
+        time: "",
+        location: "",
+        matchday: m.round,
+        decisive: true,
+      },
+      select: { id: true },
+    });
+    ids.push(created.id);
+  }
+  // Segunda pasada: recién acá se conocen los ids reales.
+  for (let i = 0; i < matches.length; i++) {
+    const next = matches[i].nextMatchIndex;
+    if (next === null) continue;
+    await tx.match.update({ where: { id: ids[i] }, data: { nextMatchId: ids[next], nextMatchSlot: matches[i].nextMatchSlot } });
+  }
+  return ids;
+}
+
+/**
+ * Liga con llaves: cuando la tabla terminó, arma el cuadro con los primeros `playoffTeams`.
+ *
+ *   { mode: "bracket" }                  cruces automáticos: el mejor contra el peor.
+ *   { mode: "bracket", pairs: [[a,b]] }  cruces elegidos a mano entre los clasificados.
+ */
+async function handleLigaBracket(tournament: TournamentForFixture, id: string, body: Record<string, unknown>, replace: boolean) {
+  const size = tournament.playoffTeams;
+  if (size === null) return conflict("Este torneo no tiene llaves");
+
+  const existing = await prisma.match.findMany({
+    where: { tournamentId: id },
+    select: { id: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, decisive: true, status: true, _count: { select: { events: true } } },
+  });
+  const leagueMatches = existing.filter((m) => !m.decisive);
+  const bracketMatches = existing.filter((m) => m.decisive);
+
+  if (leagueMatches.length === 0) return conflict("Primero arma el fixture de la liga");
+  if (leagueMatches.some((m) => m.status !== "finalizado")) return conflict("La liga todavía no terminó");
+  if (tournament.teams.length < size) return conflict(`Hacen falta al menos ${size} equipos para las llaves`);
+  if (bracketMatches.length > 0) {
+    if (!replace) return conflict("Las llaves ya existen. Para volver a generarlas hay que reemplazarlas.");
+    if (bracketMatches.some((m) => m.status !== "programado" || m._count.events > 0)) {
+      return conflict("Ya hay partidos de las llaves jugados o en juego: no se pueden reemplazar");
+    }
+  }
+
+  const standings = computeStandings(
+    tournament.teams.map((t) => ({ clubId: t.clubId, groupName: null })),
+    leagueMatches.map((m) => ({ ...m, groupName: null }))
+  );
+  const qualified = standings.slice(0, size).map((r) => r.clubId);
+
+  let order: string[];
+  if (body.pairs === undefined) {
+    order = seedLeagueBracket(qualified);
+  } else {
+    const picked = bracketOrderFromPairs(body.pairs, qualified);
+    if (!picked.ok) return badRequest(picked.error);
+    order = picked.order;
+  }
+
+  const bracket = planBracket(order);
+  if (!bracket.ok) return conflict(bracket.error);
+
+  const matchIds = await prisma.$transaction(async (tx) => {
+    if (bracketMatches.length > 0) await tx.match.deleteMany({ where: { id: { in: bracketMatches.map((m) => m.id) } } });
+    // La liga se dio por terminada al jugarse su último partido; con el cuadro armado vuelve a estar en juego.
+    await tx.tournament.update({ where: { id }, data: { status: "en_curso" } });
+    return createBracketMatches(tx, id, bracket.matches, tournament.startDate);
+  });
+
+  return Response.json({ mode: "bracket", qualified, totalRounds: bracket.totalRounds, matches: matchIds.length }, { status: 201 });
+}
+
 /**
  * "copa": grupos primero, cuadro después.
  *
@@ -268,33 +363,7 @@ async function handleCopaFixture(tournament: TournamentForFixture, id: string, b
 
     const matchIds = await prisma.$transaction(async (tx) => {
       if (bracketMatches.length > 0) await tx.match.deleteMany({ where: { id: { in: bracketMatches.map((m) => m.id) } } });
-
-      const ids: string[] = [];
-      for (const m of bracket.matches) {
-        const created = await tx.match.create({
-          data: {
-            tournamentId: id,
-            homeTeamId: m.homeTeamId,
-            awayTeamId: m.awayTeamId,
-            date: tournament.startDate,
-            time: "",
-            location: "",
-            matchday: m.round,
-            decisive: true,
-          },
-          select: { id: true },
-        });
-        ids.push(created.id);
-      }
-      for (let i = 0; i < bracket.matches.length; i++) {
-        const next = bracket.matches[i].nextMatchIndex;
-        if (next === null) continue;
-        await tx.match.update({
-          where: { id: ids[i] },
-          data: { nextMatchId: ids[next], nextMatchSlot: bracket.matches[i].nextMatchSlot },
-        });
-      }
-      return ids;
+      return createBracketMatches(tx, id, bracket.matches, tournament.startDate);
     });
 
     return Response.json({ mode: "bracket", totalRounds: bracket.totalRounds, matches: matchIds.length }, { status: 201 });

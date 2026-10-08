@@ -73,6 +73,22 @@ export async function PATCH(
     }
   }
 
+  // Las llaves solo existen en una liga, y con el cuadro ya armado no se cambian.
+  if (parsed.data.playoffTeams !== undefined || typeof parsed.data.format === "string") {
+    const current = await prisma.tournament.findUnique({
+      where: { id },
+      select: { format: true, playoffTeams: true, matches: { where: { decisive: true }, select: { id: true }, take: 1 } },
+    });
+    if (current) {
+      const format = typeof parsed.data.format === "string" ? parsed.data.format : current.format;
+      const next = format === "liga" ? (parsed.data.playoffTeams !== undefined ? parsed.data.playoffTeams : current.playoffTeams) : null;
+      if (next !== current.playoffTeams && current.matches.length > 0) {
+        return Response.json({ error: "Las llaves ya están armadas: no se puede cambiar cuántos clasifican" }, { status: 409 });
+      }
+      (data as Record<string, unknown>).playoffTeams = next;
+    }
+  }
+
   // No se puede bajar el cupo por debajo de los equipos que ya están inscritos.
   if (typeof parsed.data.maxTeams === "number") {
     const enrolled = await prisma.tournamentTeam.count({ where: { tournamentId: id } });

@@ -14,8 +14,16 @@ export async function GET(
     include: { club: true },
   });
 
+  // En una liga con llaves, los partidos del cuadro no cuentan para la tabla: la tabla es la de
+  // la fase de liga, la que decidió quién clasificó.
+  const tournament = await prisma.tournament.findUnique({ where: { id }, select: { format: true } });
   const matches = await prisma.match.findMany({
-    where: { tournamentId: id, status: "finalizado", ...(group ? { groupName: group } : {}) },
+    where: {
+      tournamentId: id,
+      status: "finalizado",
+      ...(tournament?.format === "liga" ? { decisive: false } : {}),
+      ...(group ? { groupName: group } : {}),
+    },
   });
 
   const rows = computeStandings(
