@@ -5,23 +5,16 @@ import Link from "next/link";
 import { getClubs, type ClubListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { displayShortName } from "@/_lib/short-name";
+import { ClubCrest } from "@/_components/club-crest";
 
 interface MyJoinRequest {
   id: string;
   club: { id: string; name: string };
 }
 
-function ClubBadge({ club }: { club: Pick<ClubListItem, "shortName" | "color"> }) {
+function ClubBadge({ club }: { club: Pick<ClubListItem, "shortName" | "color" | "logoUrl"> }) {
   return (
-    <div
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-      style={{ backgroundColor: (club.color || "#E5E7EB") + "20" }}
-    >
-      <span className="font-heading text-xs font-bold" style={{ color: club.color || "#6B7280" }}>
-        {displayShortName(club.shortName)}
-      </span>
-    </div>
+    <ClubCrest club={club} size="h-10 w-10" textSize="text-xs" />
   );
 }
 

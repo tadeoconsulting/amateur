@@ -6,7 +6,7 @@ import { BackHeader } from "@/_components/back-header";
 import { getUser, type UserDetail } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { displayShortName } from "@/_lib/short-name";
+import { ClubCrest } from "@/_components/club-crest";
 
 /** Años cumplidos a partir de la fecha de nacimiento (UTC, sin horas: coincide con cómo se
  * guarda — ver ajustes/perfil/editar). null si todavía no la cargó. */
@@ -55,14 +55,7 @@ function StatTile({ label, value, accent, card }: { label: string; value: number
 
 function ClubBadge({ club }: { club: { name: string; shortName: string; color: string | null; logoUrl: string | null } }) {
   return (
-    <div
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-      style={{ backgroundColor: (club.color || "#E5E7EB") + "20" }}
-    >
-      <span className="font-heading text-[11px] font-bold" style={{ color: club.color || "#6B7280" }}>
-        {displayShortName(club.shortName)}
-      </span>
-    </div>
+    <ClubCrest club={club} size="h-9 w-9" textSize="text-[11px]" />
   );
 }
 

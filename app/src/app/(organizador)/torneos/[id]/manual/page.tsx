@@ -7,8 +7,8 @@ import { useApi } from "@/_lib/use-api";
 import { formatMatchDate, formatTime12 } from "@/_lib/match-format";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { isUnscheduled } from "@/_lib/fixture";
+import { ClubCrest } from "@/_components/club-crest";
 
-const clubColors = ["#E53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#F4511E", "#7B1FA2"];
 
 export default function ManualFixturePage() {
   const params = useParams<{ id: string }>();
@@ -122,7 +122,7 @@ export default function ManualFixturePage() {
         {Object.entries(grouped).length > 0 ? (
           Object.entries(grouped).map(([group, groupMatches]) => (
             <div key={group} className="contents">
-              {groupMatches.map((match, mi) => {
+              {groupMatches.map((match) => {
                 const scheduled = !isUnscheduled(match);
                 return (
                   <div
@@ -148,25 +148,11 @@ export default function ManualFixturePage() {
                       {/* Teams */}
                       <div className="flex-1">
                         <div className="flex items-center gap-2.5 mb-2">
-                          <div
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                            style={{ backgroundColor: clubColors[mi % clubColors.length] + "20" }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[mi % clubColors.length]} strokeWidth="1" />
-                            </svg>
-                          </div>
+                          <ClubCrest club={match.homeTeam} size="h-7 w-7" textSize="text-[9px]" />
                           <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
                         </div>
                         <div className="flex items-center gap-2.5">
-                          <div
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                            style={{ backgroundColor: clubColors[(mi + 1) % clubColors.length] + "20" }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M3 1h6v3a3 3 0 01-6 0V1z" stroke={clubColors[(mi + 1) % clubColors.length]} strokeWidth="1" />
-                            </svg>
-                          </div>
+                          <ClubCrest club={match.awayTeam} size="h-7 w-7" textSize="text-[9px]" />
                           <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
                         </div>
                       </div>

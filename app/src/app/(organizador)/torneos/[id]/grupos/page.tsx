@@ -9,6 +9,7 @@ import { Spinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
 import { getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { ClubCrest } from "@/_components/club-crest";
 
 /**
  * Asigna el grupo de cada equipo inscrito — lo pide el formato "grupos" (y la fase de grupos
@@ -80,12 +81,7 @@ export default function AsignarGruposPage() {
         <div className="mt-5 flex flex-col">
           {tournament.teams.map((team) => (
             <div key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-heading text-xs font-bold text-white"
-                style={{ backgroundColor: team.club.color ?? "var(--color-brand-500)" }}
-              >
-                {team.club.shortName.slice(0, 3).toUpperCase()}
-              </div>
+              <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
               <p className="min-w-0 flex-1 truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
               <input
                 value={valueFor(team.club.id, team.groupName)}

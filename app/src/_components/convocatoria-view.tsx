@@ -27,9 +27,10 @@ import { FixtureTabs } from "@/_components/fixture-tabs";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { displayShortName } from "@/_lib/short-name";
+import { TeamsList } from "@/_components/teams-list";
 
 type Notify = (message: string, tone: "success" | "error") => void;
-type MainTab = "fixture" | "resultados" | "detalles";
+type MainTab = "fixture" | "resultados" | "equipos" | "detalles";
 type ResultadosSubTab = "tabla" | "goleadores";
 
 const longDate = (iso: string) =>
@@ -152,10 +153,11 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {/* Un fan que abre este link no solo viene a inscribir un equipo: quiere seguir el
          * torneo — fixture, tabla, goleadores — igual que lo ve un organizador o un club. */}
-        <div className="mt-4 flex gap-2">
+        <div className="no-scrollbar mt-4 flex gap-1.5 overflow-x-auto">
           {([
             { key: "fixture", label: "Fixture" },
             { key: "resultados", label: "Resultados" },
+            { key: "equipos", label: "Equipos" },
             // Para el fan esta pestaña se llama "Detalles" (no "Torneo", como en organizador y
             // club) y va al final: lo primero que busca es el seguimiento.
             { key: "detalles", label: "Detalles" },
@@ -163,7 +165,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             <button
               key={t.key}
               onClick={() => setPickedTab(t.key)}
-              className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-sm font-medium transition-colors ${
+              className={`shrink-0 cursor-pointer rounded-lg px-3 py-2 font-heading text-[13px] font-medium transition-colors ${
                 mainTab === t.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
               }`}
             >
@@ -228,6 +230,12 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
               </section>
             )}
           </>
+        )}
+
+        {mainTab === "equipos" && (
+          <div className="-mx-4">
+            <TeamsList teams={tournament.teams} standings={standings} />
+          </div>
         )}
 
         {mainTab === "fixture" && (

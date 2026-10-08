@@ -10,7 +10,7 @@ import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { roundLabel } from "@/_lib/fixture";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
-import { displayShortName } from "@/_lib/short-name";
+import { TeamsList } from "@/_components/teams-list";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
@@ -150,7 +150,6 @@ export default function JugadorTorneoDetailPage() {
   const allMatches = matchesData ?? [];
   const standings = standingsData ?? [];
   const topScorers = scorersData ?? [];
-  const clubs = tournamentDetail?.teams.map((t) => t.club) ?? [];
 
   // "Llaves" solo aparece si el torneo tiene cuadro de eliminación armado (antes mostraba un
   // cuadro de ejemplo fijo en cualquier torneo).
@@ -200,7 +199,11 @@ export default function JugadorTorneoDetailPage() {
         {visibleTabs.map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={(e) => {
+              setActiveTab(tab);
+              // La barra se desplaza: la pestaña elegida queda a la vista.
+              e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+            }}
             className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
               shownTab === tab
                 ? "bg-surface-secondary text-text-invert"
@@ -426,26 +429,12 @@ export default function JugadorTorneoDetailPage() {
         )}
 
         {shownTab === "Equipos" && (
-          <div className="space-y-2">
-            {clubs.slice(0, 4).map((club) => (
-              <div key={club.id} className="flex items-center gap-3 rounded-lg border border-brand-100 px-4 py-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-200">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M12 8v4l3 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary">{club.name}</p>
-                  <p className="text-xs text-text-secondary">{displayShortName(club.shortName)}</p>
-                </div>
-              </div>
-            ))}
+          <div className="-mx-4">
+            <TeamsList teams={tournamentDetail?.teams ?? []} standings={standings} />
           </div>
         )}
       </div>
 
-      {/* Tournament Picker Bottom Sheet */}
     </div>
   );
 }

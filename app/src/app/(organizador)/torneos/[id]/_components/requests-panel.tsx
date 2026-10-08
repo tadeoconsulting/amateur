@@ -106,7 +106,7 @@ export function RequestsPanel({ tournamentId, kind, requests, teamsCount, maxTea
           return (
             <li key={item.id} className="flex flex-col gap-3 border-b border-brand-200 py-4 last:border-0">
               <div className="flex items-center gap-3">
-                <ClubAvatar shortName={item.club.shortName} color={item.club.color} />
+                <ClubAvatar shortName={item.club.shortName} color={item.club.color} logoUrl={item.club.logoUrl} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-heading text-sm font-bold text-text-primary">{item.club.name}</p>
                   <p className="mt-0.5 truncate font-body text-xs text-text-secondary">{meta}</p>

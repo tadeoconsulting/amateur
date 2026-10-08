@@ -229,7 +229,7 @@ export default function BuscarEquipoPage() {
           <ul className="flex flex-col">
             {filtered.map((club) => (
               <li key={club.id} className="flex items-center gap-3 border-b border-brand-200 py-3 last:border-0">
-                <ClubAvatar shortName={club.shortName} color={club.color} />
+                <ClubAvatar shortName={club.shortName} color={club.color} logoUrl={club.logoUrl} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-heading text-sm font-bold text-text-primary">{club.name}</p>
                   <p className="mt-0.5 truncate font-body text-xs text-text-secondary">

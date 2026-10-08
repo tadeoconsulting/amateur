@@ -16,6 +16,7 @@ import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { tournamentPublicPath } from "@/_lib/slug";
 import { displayShortName } from "@/_lib/short-name";
+import { TeamsList } from "@/_components/teams-list";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
@@ -187,11 +188,12 @@ export default function ClubTorneoDetallePage() {
           )}
 
           {torneoSubTab === "inscritos" && (
-            <div className="mt-4 px-4">
-              <p className="font-body text-sm text-text-secondary">
+            <>
+              <p className="mt-4 px-4 font-body text-sm text-text-secondary">
                 {tournament._count.teams} equipos inscritos de {tournament.maxTeams} cupos.
               </p>
-            </div>
+              <TeamsList teams={tournament.teams} standings={standings} />
+            </>
           )}
         </>
       )}
