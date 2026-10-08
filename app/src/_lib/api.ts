@@ -24,6 +24,7 @@ export interface TournamentListItem {
   startDate: string;
   endDate: string | null;
   location: string;
+  organizerId: string;
   organizer: { firstName: string; lastName: string; organizerSlug: string | null };
 }
 

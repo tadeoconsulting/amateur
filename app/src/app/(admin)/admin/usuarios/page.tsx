@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { SortTh, useSort } from "../_components/sortable";
 import { displayShortName } from "@/_lib/short-name";
 
 interface UserRow {
@@ -641,6 +642,14 @@ function EditUserModal({
   );
 }
 
+const sortAccessors = {
+  user: (u: UserRow) => `${u.firstName} ${u.lastName}`,
+  email: (u: UserRow) => u.email,
+  roles: (u: UserRow) => u.roles.map((r) => selectableRoles.find((x) => x.key === r)?.label ?? r).join(", "),
+  clubs: (u: UserRow) => u.ownedClubs[0]?.name ?? u.playerProfiles.find((p) => p.club)?.club?.name,
+  created: (u: UserRow) => new Date(u.createdAt).getTime(),
+};
+
 function AdminUsuariosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -659,6 +668,8 @@ function AdminUsuariosContent() {
   const { data: users, loading, refetch } = useApi<UserRow[]>(() =>
     fetch(buildUrl()).then((r) => r.json())
   );
+
+  const { sorted, sort, toggle } = useSort(users, sortAccessors);
 
   const handleCreated = () => {
     setShowCreate(false);
@@ -750,28 +761,18 @@ function AdminUsuariosContent() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                  Usuario
-                </th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                  Email
-                </th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                  Roles
-                </th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                  Club / Torneos
-                </th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                  Creado
-                </th>
+                <SortTh label="Usuario" sortKey="user" sort={sort} onToggle={toggle} />
+                <SortTh label="Email" sortKey="email" sort={sort} onToggle={toggle} />
+                <SortTh label="Roles" sortKey="roles" sort={sort} onToggle={toggle} />
+                <SortTh label="Club / Torneos" sortKey="clubs" sort={sort} onToggle={toggle} />
+                <SortTh label="Creado" sortKey="created" sort={sort} onToggle={toggle} />
                 <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
                   Acciones
                 </th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {sorted?.map((user) => (
                 <tr key={user.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">

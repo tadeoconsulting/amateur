@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { MultiSelect } from "../_components/multi-select";
+import { SortTh, useSort } from "../_components/sortable";
 import { displayShortName } from "@/_lib/short-name";
 
 interface PlayerRow {
@@ -225,21 +227,44 @@ function EditPlayerModal({
   );
 }
 
+const NO_CLUB = "__sin_club__";
+
+const sortAccessors = {
+  player: (p: PlayerRow) => `${p.user.firstName} ${p.user.lastName}`,
+  email: (p: PlayerRow) => p.user.email,
+  club: (p: PlayerRow) => p.club?.name,
+  category: (p: PlayerRow) => p.category?.name,
+  position: (p: PlayerRow) => p.position,
+  number: (p: PlayerRow) => p.number,
+  status: (p: PlayerRow) => statusLabels[p.status]?.label ?? p.status,
+};
+
 export default function AdminJugadoresPage() {
   const [search, setSearch] = useState("");
-  const [clubFilter, setClubFilter] = useState<string | null>(null);
+  const [clubFilter, setClubFilter] = useState<string[]>([]);
   const [editingPlayer, setEditingPlayer] = useState<PlayerRow | null>(null);
 
   const { data: clubs } = useApi<ClubOption[]>(() =>
     fetch("/api/clubs").then((r) => r.json())
   );
 
+  // La búsqueda por nombre se hace en el servidor; los equipos se filtran acá, de a varios.
   const { data: players, loading, refetch } = useApi<PlayerRow[]>(() => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
-    if (clubFilter) params.set("clubId", clubFilter);
     return fetch(`/api/players?${params.toString()}`).then((r) => r.json());
   });
+
+  const filtered = players?.filter((p) => clubFilter.length === 0 || clubFilter.includes(p.club?.id ?? NO_CLUB));
+  const { sorted, sort, toggle } = useSort(filtered, sortAccessors);
+  const clubOptions = (() => {
+    const counts = new Map<string, number>();
+    for (const p of players ?? []) counts.set(p.club?.id ?? NO_CLUB, (counts.get(p.club?.id ?? NO_CLUB) ?? 0) + 1);
+    return [
+      { value: NO_CLUB, label: "Sin equipo", hint: String(counts.get(NO_CLUB) ?? 0) },
+      ...(clubs ?? []).map((c) => ({ value: c.id, label: c.name, hint: String(counts.get(c.id) ?? 0) })),
+    ];
+  })();
 
   const handlePlayerSaved = () => {
     setEditingPlayer(null);
@@ -256,8 +281,8 @@ export default function AdminJugadoresPage() {
       </div>
 
       {/* Search and filters */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-[200px] max-w-sm flex-1">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -271,17 +296,12 @@ export default function AdminJugadoresPage() {
           />
         </div>
 
-        <select
-          value={clubFilter || ""}
-          onChange={(e) => { setClubFilter(e.target.value || null); setTimeout(refetch, 0); }}
-          className="cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-        >
-          <option value="">Todos los clubes</option>
-          {clubs?.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-
+        <MultiSelect allLabel="Todos los equipos" noun="equipos" options={clubOptions} selected={clubFilter} onChange={setClubFilter} searchPlaceholder="Buscar equipo..." />
+        {clubFilter.length > 0 && (
+          <button type="button" onClick={() => setClubFilter([])} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
+            Quitar filtros
+          </button>
+        )}
         <button
           onClick={refetch}
           className="cursor-pointer rounded-lg border border-border-primary p-2.5 text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary"
@@ -303,18 +323,18 @@ export default function AdminJugadoresPage() {
           <table className="w-full min-w-[900px]">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Jugador</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Email</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Club</th>
-                <th className="px-4 py-3 text-left font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Categoría</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Posición</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">#</th>
-                <th className="px-4 py-3 text-center font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Estado</th>
+                <SortTh label="Jugador" sortKey="player" sort={sort} onToggle={toggle} />
+                <SortTh label="Email" sortKey="email" sort={sort} onToggle={toggle} />
+                <SortTh label="Club" sortKey="club" sort={sort} onToggle={toggle} />
+                <SortTh label="Categoría" sortKey="category" sort={sort} onToggle={toggle} />
+                <SortTh label="Posición" sortKey="position" sort={sort} onToggle={toggle} align="center" />
+                <SortTh label="#" sortKey="number" sort={sort} onToggle={toggle} align="center" />
+                <SortTh label="Estado" sortKey="status" sort={sort} onToggle={toggle} align="center" />
                 <th className="px-4 py-3 text-right font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {players.map((player) => {
+              {sorted?.map((player) => {
                 const st = statusLabels[player.status] || { label: player.status, color: "bg-gray-100 text-gray-600" };
                 return (
                   <tr key={player.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
@@ -383,7 +403,7 @@ export default function AdminJugadoresPage() {
                   </tr>
                 );
               })}
-              {players.length === 0 && (
+              {filtered?.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron jugadores
