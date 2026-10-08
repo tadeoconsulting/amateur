@@ -267,6 +267,50 @@ function EditClubModal({
   const [showCropper, setShowCropper] = useState(false);
   const [savingLogo, setSavingLogo] = useState(false);
 
+  // Oficializar (solo equipos temporales): elegir al delegado que pasa a ser su dueño.
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerResults, setOwnerResults] = useState<UserOption[]>([]);
+  const [newOwner, setNewOwner] = useState<UserOption | null>(null);
+  const [confirmOfficial, setConfirmOfficial] = useState(false);
+  const [makingOfficial, setMakingOfficial] = useState(false);
+
+  useEffect(() => {
+    // Sin búsqueda no se pide nada; los resultados viejos no se muestran (ver `ownerSearch.length >= 2` abajo).
+    if (!club.isTemporary || ownerSearch.length < 2) return;
+    const timer = setTimeout(() => {
+      fetch(`/api/users?search=${encodeURIComponent(ownerSearch)}`)
+        .then((r) => r.json())
+        .then((users: UserOption[]) => setOwnerResults(Array.isArray(users) ? users.filter((u) => !u.roles.includes("ADMIN")) : []))
+        .catch(() => setOwnerResults([]));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [club.isTemporary, ownerSearch]);
+
+  const makeOfficial = async () => {
+    if (!newOwner || makingOfficial) return;
+    setMakingOfficial(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/clubs/${club.id}/oficializar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: newOwner.id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "No se pudo oficializar el equipo");
+        setConfirmOfficial(false);
+        return;
+      }
+      onSaved();
+    } catch {
+      setError("No se pudo conectar. Inténtalo de nuevo.");
+      setConfirmOfficial(false);
+    } finally {
+      setMakingOfficial(false);
+    }
+  };
+
   const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   // La imagen de perfil del equipo se guarda al instante, igual que en los ajustes del club.
@@ -447,10 +491,103 @@ function EditClubModal({
           </div>
         </div>
 
-        <div className="mt-6">
-          {/* La contraseña es de quien dirige el club, no del club. */}
-          <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (dueño de ${club.name})`} />
-        </div>
+        {club.isTemporary ? (
+          <div className="mt-6 flex flex-col gap-3 border-t border-border-primary pt-4">
+            <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Oficializar equipo</p>
+            <p className="font-body text-sm text-text-secondary">
+              Hoy es un equipo temporal de {club.owner.firstName} {club.owner.lastName}: sirve para su torneo, pero no sale en la búsqueda de
+              equipos ni tiene dueño propio. Al oficializarlo pasa a ser de su delegado, que lo maneja con su propia cuenta, y aparece en
+              la búsqueda. Sigue inscrito en sus torneos.
+            </p>
+            {newOwner ? (
+              <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2.5">
+                <span className="font-body text-sm text-text-primary">
+                  {newOwner.firstName} {newOwner.lastName} ({newOwner.email})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => { setNewOwner(null); setConfirmOfficial(false); }}
+                  disabled={makingOfficial}
+                  aria-label="Elegir otro delegado"
+                  className="cursor-pointer text-text-secondary hover:text-text-primary"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  value={ownerSearch}
+                  onChange={(e) => setOwnerSearch(e.target.value)}
+                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+                  placeholder="Buscar al delegado por nombre o correo..."
+                  aria-label="Buscar al delegado"
+                />
+                {ownerResults.length > 0 && ownerSearch.length >= 2 && (
+                  <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-primary bg-surface-primary shadow-lg">
+                    {ownerResults.map((u) => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => { setNewOwner(u); setOwnerSearch(""); }}
+                        className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-brand-50"
+                      >
+                        <span className="font-body text-sm text-text-primary">{u.firstName} {u.lastName}</span>
+                        <span className="font-body text-xs text-text-secondary">{u.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-1 font-body text-xs text-text-secondary">
+                  ¿El delegado no tiene cuenta? Créala primero en Usuarios (tipo Dueño de club) y vuelve aquí.
+                </p>
+              </div>
+            )}
+            {newOwner &&
+              (confirmOfficial ? (
+                <div className="rounded-lg bg-btn-regular p-3">
+                  <p className="font-body text-sm text-text-primary">
+                    ¿Pasar <strong>{club.name}</strong> a {newOwner.firstName} {newOwner.lastName}? El organizador ya no podrá gestionarlo como
+                    equipo suyo.
+                  </p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={makeOfficial}
+                      disabled={makingOfficial}
+                      className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+                    >
+                      {makingOfficial ? "Oficializando..." : "Sí, oficializar"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmOfficial(false)}
+                      disabled={makingOfficial}
+                      className="cursor-pointer rounded-lg border border-border-primary px-4 py-2 font-heading text-sm font-bold text-text-primary disabled:opacity-50"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmOfficial(true)}
+                  className="w-fit cursor-pointer rounded-lg border border-border-primary px-4 py-2 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"
+                >
+                  Oficializar equipo
+                </button>
+              ))}
+          </div>
+        ) : (
+          <div className="mt-6">
+            {/* La contraseña es de quien dirige el club, no del club. En un equipo temporal el "dueño" es el
+                organizador que lo cargó: su contraseña no se restablece desde acá. */}
+            <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (dueño de ${club.name})`} />
+          </div>
+        )}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
