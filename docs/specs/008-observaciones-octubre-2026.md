@@ -51,6 +51,8 @@ Ver [002 · Editar un torneo](002-crear-torneo-y-equipos.md). Tres pestañas nav
 - Borrar definitivamente un club o un usuario con torneos eliminados los tiene en cuenta (`_lib/delete-user.ts`, `DELETE /api/clubs/:id`).
 
 ## Despliegue
+**Regla:** una columna nueva se agrega a la base de producción **antes** de mergear el PR que la usa. Prisma pide todas las columnas del modelo en cada consulta: si el código llega primero, falla toda consulta de ese modelo. Pasó el 2026-10-08: #85 se desplegó a las 21:20 UTC sin `deletedAt` y `/api/tournaments` respondió 500 hasta ~21:33 UTC, cuando se agregó la columna (ver `P2022` en los logs de Vercel).
+
 Dos columnas nuevas, ambas opcionales (no tocan datos existentes). Hay que aplicarlas en **producción antes** de desplegar #85 y #86; las pruebas se hicieron en la base de desarrollo (auth-dev).
 ```sql
 ALTER TABLE "Tournament" ADD COLUMN "deletedAt" TIMESTAMP(3);    -- #85

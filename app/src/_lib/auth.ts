@@ -136,9 +136,10 @@ export async function canManageTournament(user: CurrentUser, tournamentId: strin
   if (isAdmin(user)) return true;
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
-    select: { organizerId: true },
+    select: { organizerId: true, deletedAt: true },
   });
-  return tournament?.organizerId === user.id;
+  // Un torneo eliminado no se toca: solo un admin puede (para restaurarlo o eliminarlo del todo).
+  return tournament !== null && tournament.deletedAt === null && tournament.organizerId === user.id;
 }
 
 /** ¿Es el dueño del club (o admin)? Falso si el club no existe. */

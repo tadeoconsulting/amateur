@@ -277,6 +277,9 @@ model Tournament {
   // crear el torneo, con sufijo -2, -3... si el organizador ya tiene uno igual, y no cambia al
   // renombrarlo. Null en torneos anteriores hasta correr prisma/backfill-slugs.ts.
   slug        String?
+  // Cuándo se eliminó. Un torneo eliminado se oculta en todas las pantallas y solo un admin lo ve
+  // (en Admin → Torneos → Eliminados) para restaurarlo o eliminarlo definitivamente. Null = activo.
+  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

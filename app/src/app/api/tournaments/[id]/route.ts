@@ -1,7 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import type { Prisma } from "@prisma/client";
-import { badRequest, canManageTournament, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, canManageTournament, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { parseTournamentFields } from "@/_lib/tournament-input";
 
 export async function GET(
@@ -27,7 +27,9 @@ export async function GET(
     },
   });
 
-  if (!tournament) {
+  // Un torneo eliminado es como si no existiera, salvo para un admin (que lo restaura o lo elimina del todo).
+  const viewer = tournament?.deletedAt ? await getCurrentUser() : null;
+  if (!tournament || (tournament.deletedAt && !(viewer && isAdmin(viewer)))) {
     return Response.json({ error: "Torneo no encontrado" }, { status: 404 });
   }
 
@@ -105,18 +107,40 @@ export async function PATCH(
   }
 }
 
+/**
+ * Elimina un torneo. Por omisión **se oculta** (`deletedAt`): desaparece para organizador, clubes,
+ * jugadores y público, y un admin puede restaurarlo con todo (equipos, partidos, resultados) desde
+ * Admin → Torneos → Eliminados. Con `?permanent=1` (solo un admin, y solo de uno ya eliminado) se
+ * borra de verdad, con sus inscripciones, solicitudes, partidos, resultados y estadísticas.
+ */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireUser();
   if ("response" in auth) return auth.response;
 
   const { id } = await params;
-  if (!(await canManageTournament(auth.user, id))) return forbidden();
+  const permanent = request.nextUrl.searchParams.get("permanent") === "1";
 
+  if (permanent) {
+    if (!isAdmin(auth.user)) return forbidden();
+    const current = await prisma.tournament.findUnique({ where: { id }, select: { deletedAt: true } });
+    if (!current) return Response.json({ error: "Torneo no encontrado" }, { status: 404 });
+    if (!current.deletedAt) {
+      return Response.json({ error: "Primero hay que eliminar el torneo: solo se elimina definitivamente uno que ya está en Eliminados" }, { status: 409 });
+    }
+    try {
+      await prisma.tournament.delete({ where: { id } });
+      return Response.json({ success: true });
+    } catch {
+      return Response.json({ error: "Error al eliminar el torneo" }, { status: 500 });
+    }
+  }
+
+  if (!(await canManageTournament(auth.user, id))) return forbidden();
   try {
-    await prisma.tournament.delete({ where: { id } });
+    await prisma.tournament.update({ where: { id }, data: { deletedAt: new Date() } });
     return Response.json({ success: true });
   } catch {
     return Response.json({ error: "Error al eliminar torneo" }, { status: 500 });
