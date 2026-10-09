@@ -27,8 +27,8 @@ export function CondicionModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-end justify-center bg-black/40">
-      <div className="w-full max-w-[430px] bg-surface-primary rounded-t-2xl flex flex-col">
+    <div className="fixed inset-0 z-[110] flex items-end justify-center bg-black/40 md:items-center">
+      <div className="w-full max-w-[430px] bg-surface-primary rounded-t-2xl md:rounded-2xl flex flex-col">
         <div className="flex justify-end px-5 pt-5">
           <button
             onClick={handleClose}

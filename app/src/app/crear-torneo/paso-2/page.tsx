@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MobileShell } from "@/_components/mobile-shell";
+import { WizardShell } from "../_components/wizard-shell";
 import { StepIndicator } from "../_components/step-indicator";
 import { ModalidadModal } from "../_components/modalidad-modal";
 import { CompetenciaModal } from "../_components/competencia-modal";
@@ -33,7 +33,7 @@ export default function CrearTorneoPaso2Page() {
   }
 
   return (
-    <MobileShell>
+    <WizardShell current="modalidad">
       {/* Header */}
       <header className="px-4 py-3">
         <button
@@ -207,6 +207,6 @@ export default function CrearTorneoPaso2Page() {
         onClose={() => setShowCompetencia(false)}
         onSave={(t) => { setTipoCompetencia(t); setShowCompetencia(false); }}
       />
-    </MobileShell>
+    </WizardShell>
   );
 }

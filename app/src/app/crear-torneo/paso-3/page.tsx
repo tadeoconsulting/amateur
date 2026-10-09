@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MobileShell } from "@/_components/mobile-shell";
+import { WizardShell } from "../_components/wizard-shell";
 import { StepIndicator } from "../_components/step-indicator";
 import { CondicionModal } from "../_components/condicion-modal";
 import { BasesListModal } from "../_components/bases-list-modal";
@@ -62,7 +62,7 @@ export default function CrearTorneoPaso3Page() {
   }
 
   return (
-    <MobileShell>
+    <WizardShell current="bases">
       {/* Header */}
       <header className="px-4 py-3">
         <button
@@ -333,6 +333,6 @@ export default function CrearTorneoPaso3Page() {
         }}
         onEdit={handleEditCondicion}
       />
-    </MobileShell>
+    </WizardShell>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MobileShell } from "@/_components/mobile-shell";
+import { WizardShell } from "./_components/wizard-shell";
 import { StepIndicator } from "./_components/step-indicator";
 import { CrearSedeModal, type Sede } from "./_components/crear-sede-modal";
 import { useWizard } from "./_components/wizard-context";
@@ -47,7 +47,7 @@ export default function CrearTorneoPage() {
   }
 
   return (
-    <MobileShell>
+    <WizardShell current="info">
       {/* Header */}
       <header className="px-4 py-3">
         <button
@@ -194,6 +194,6 @@ export default function CrearTorneoPage() {
         onClose={() => setShowCrearSede(false)}
         onCreated={handleCreatedSede}
       />
-    </MobileShell>
+    </WizardShell>
   );
 }

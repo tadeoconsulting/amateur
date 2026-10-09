@@ -45,8 +45,8 @@ export function DireccionModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/40">
-        <div className="w-full max-w-[430px] bg-surface-primary rounded-t-2xl max-h-[75vh] flex flex-col">
+      <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/40 md:items-center">
+        <div className="w-full max-w-[430px] bg-surface-primary rounded-t-2xl md:rounded-2xl max-h-[75vh] flex flex-col">
           {/* Header */}
           <div className="px-5 pt-5 pb-4">
             <button
