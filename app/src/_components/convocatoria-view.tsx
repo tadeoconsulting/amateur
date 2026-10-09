@@ -24,7 +24,7 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
-import { FixtureTabs } from "@/_components/fixture-tabs";
+import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
@@ -251,24 +251,8 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         )}
 
         {mainTab === "fixture" && (
-          // Escritorio ancho: el fixture a la izquierda y, a la derecha, la tabla siempre a la vista (sticky).
-          <div className="mt-4 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
-            <div className="-mx-4">
-              <FixtureTabs matches={matches} />
-            </div>
-            {standings.length > 0 && (
-              <aside aria-label="Posiciones" className="hidden @4xl:sticky @4xl:top-4 @4xl:block">
-                <h2 className="mb-3 font-heading text-sm font-bold text-text-primary">Posiciones</h2>
-                <StandingsTable standings={standings} qualifyCount={llaves} compact />
-                <button
-                  type="button"
-                  onClick={() => setPickedTab("resultados")}
-                  className="mt-3 min-h-11 w-full cursor-pointer rounded-lg border border-border-primary px-3 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
-                >
-                  Ver tabla completa y goleadores
-                </button>
-              </aside>
-            )}
+          <div className="mt-4">
+            <FixtureWithStandings bleed matches={matches} standings={standings} qualifyCount={llaves} onViewFullTable={() => setPickedTab("resultados")} />
           </div>
         )}
 
