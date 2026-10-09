@@ -14,7 +14,7 @@ export default function ClubLayout({
   const isDetailView = pathname === "/club" || /^\/club\/torneos\/.+/.test(pathname) || /^\/club\/jugadores\/.+/.test(pathname) || /^\/club\/equipo\/.+/.test(pathname) || /^\/club\/ajustes\/.+/.test(pathname);
   // Escritorio: la pantalla de un torneo es ancha (fixture con la tabla al lado); el resto, una columna
   // cómoda de lectura. En el celular todo sigue en 430 px.
-  const wide = /^\/club\/torneos\/[^/]+$/.test(pathname);
+  const wide = /^\/club\/torneos\/[^/]+(\/partido\/[^/]+)?$/.test(pathname);
 
   const items = clubNavItems.map((item) => ({
     href: item.href,

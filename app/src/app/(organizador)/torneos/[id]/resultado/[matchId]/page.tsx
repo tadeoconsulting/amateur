@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem } from "@/_lib/api";
 import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, MATCH_PHASES, isEventType, isMatchPhase, type MatchPhase } from "@/_lib/match-live";
+import { MatchSheet, useWideSheet } from "@/_components/match-sheet";
 import { ClubCrest } from "@/_components/club-crest";
 
 
@@ -122,6 +123,7 @@ export default function ResultadoPage() {
   const params = useParams<{ id: string; matchId: string }>();
   const router = useRouter();
 
+  const wide = useWideSheet();
   const { data: match, loading } = useApi<MatchDetail>(() =>
     fetch(`/api/matches/${params.matchId}`).then((r) => r.json())
   );
@@ -194,53 +196,9 @@ export default function ResultadoPage() {
       : []),
   ];
 
-  return (
-    <div className="flex min-h-dvh flex-col pb-20">
-      {/* Header */}
-      <header className="px-4 py-3">
-        <button
-          onClick={() => router.back()}
-          className="flex cursor-pointer items-center gap-1 font-heading text-sm font-semibold text-text-primary"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
-            <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Volver
-        </button>
-      </header>
-
-      {/* Match card */}
-      <div className="mx-4 mb-4 rounded-xl border border-border-primary overflow-hidden">
-        <div className="bg-btn-regular px-4 py-2">
-          <span className="font-heading text-xs font-bold text-text-primary">
-            {match.groupName || "General"}
-          </span>
-        </div>
-        <div className="flex items-center px-4 py-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2.5 mb-2">
-              <ClubCrest club={match.homeTeam} size="h-7 w-7" textSize="text-[9px]" />
-              <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
-              {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.homeScore ?? 0}</span>}
-            </div>
-            <div className="flex items-center gap-2.5">
-              <ClubCrest club={match.awayTeam} size="h-7 w-7" textSize="text-[9px]" />
-              <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
-              {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.awayScore ?? 0}</span>}
-            </div>
-          </div>
-          <div className="mx-3 h-12 w-px bg-border-primary" />
-          <div className="text-right">
-            <p className="font-heading text-sm font-bold text-text-primary">
-              Fecha {match.matchday}
-            </p>
-            <p className="font-body text-xs text-text-secondary">
-              {formatMatchDate(match.date)}
-            </p>
-          </div>
-        </div>
-      </div>
-
+  // Lo propio de esta pantalla (cronología y el botón para editar): igual en celular y en escritorio.
+  const body = (
+    <>
       {/* Timeline events */}
       <div className="flex flex-col gap-3 px-4">
         {timeline.length === 0 && (
@@ -326,6 +284,66 @@ export default function ResultadoPage() {
           Editar el resultado
         </button>
       </div>
+    </>
+  );
+
+  // Pantalla ancha: la ficha con la cabecera por colores de los clubes y el contexto al lado.
+  if (wide) {
+    return (
+      <MatchSheet match={match} tournamentId={params.id} backHref={`/torneos/${params.id}`} backLabel="Volver al torneo">
+        <div className="-mx-4">{body}</div>
+      </MatchSheet>
+    );
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col pb-20">
+      {/* Header */}
+      <header className="px-4 py-3">
+        <button
+          onClick={() => router.back()}
+          className="flex cursor-pointer items-center gap-1 font-heading text-sm font-semibold text-text-primary"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
+            <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Volver
+        </button>
+      </header>
+
+      {/* Match card */}
+      <div className="mx-4 mb-4 rounded-xl border border-border-primary overflow-hidden">
+        <div className="bg-btn-regular px-4 py-2">
+          <span className="font-heading text-xs font-bold text-text-primary">
+            {match.groupName || "General"}
+          </span>
+        </div>
+        <div className="flex items-center px-4 py-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2.5 mb-2">
+              <ClubCrest club={match.homeTeam} size="h-7 w-7" textSize="text-[9px]" />
+              <span className="font-body text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
+              {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.homeScore ?? 0}</span>}
+            </div>
+            <div className="flex items-center gap-2.5">
+              <ClubCrest club={match.awayTeam} size="h-7 w-7" textSize="text-[9px]" />
+              <span className="font-body text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
+              {showScore && <span className="ml-auto font-heading text-base font-bold text-text-primary">{match.awayScore ?? 0}</span>}
+            </div>
+          </div>
+          <div className="mx-3 h-12 w-px bg-border-primary" />
+          <div className="text-right">
+            <p className="font-heading text-sm font-bold text-text-primary">
+              Fecha {match.matchday}
+            </p>
+            <p className="font-body text-xs text-text-secondary">
+              {formatMatchDate(match.date)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {body}
     </div>
   );
 }

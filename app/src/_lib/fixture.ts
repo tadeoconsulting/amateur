@@ -545,3 +545,62 @@ export function groupByDay<T extends FixtureMatch>(matches: T[]): DaySection<T>[
   if (pending.length > 0) sections.push({ key: "por-definir", date: null, matches: pending });
   return sections;
 }
+
+// ─── Forma de un equipo (ficha del partido) ────────────────────────────────
+
+export type FormResult = "G" | "E" | "P";
+
+/** Lo mínimo de un partido que necesita `teamForm`; un `MatchListItem` lo cumple. */
+export type FormMatch = {
+  id: string;
+  status: string;
+  date: string;
+  time: string;
+  decisive: boolean;
+  winnerTeamId: string | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: { id: string; name: string; shortName: string } | null;
+  awayTeam: { id: string; name: string; shortName: string } | null;
+};
+
+export type FormEntry = {
+  matchId: string;
+  result: FormResult;
+  goalsFor: number;
+  goalsAgainst: number;
+  opponent: { id: string; name: string; shortName: string } | null;
+  home: boolean;
+};
+
+/**
+ * Los últimos `limit` resultados de un club antes de `current`, del más antiguo al más reciente (así se
+ * lee "cómo viene": de izquierda a derecha, el último a la derecha). Cuentan solo los partidos
+ * finalizados con marcador, sin el partido de la ficha. Si `current` ya tiene día y hora, solo entran
+ * los anteriores a él; si no (por programar), todos los jugados. Un partido decisivo empatado se
+ * resuelve por quien avanzó (penales).
+ */
+export function teamForm(matches: FormMatch[], clubId: string, current: { id: string; date: string; time: string }, limit = 5): FormEntry[] {
+  const stamp = (m: { date: string; time: string }) => `${m.date.slice(0, 10)} ${m.time || "00:00"}`;
+  const cutoff = current.time !== "" ? stamp(current) : null;
+  return matches
+    .filter(
+      (m) =>
+        m.id !== current.id &&
+        m.status === "finalizado" &&
+        m.homeScore !== null &&
+        m.awayScore !== null &&
+        (m.homeTeam?.id === clubId || m.awayTeam?.id === clubId) &&
+        (cutoff === null || m.time === "" || stamp(m) < cutoff)
+    )
+    .sort((a, b) => stamp(a).localeCompare(stamp(b)))
+    .slice(-limit)
+    .map((m) => {
+      const home = m.homeTeam?.id === clubId;
+      const goalsFor = (home ? m.homeScore : m.awayScore) as number;
+      const goalsAgainst = (home ? m.awayScore : m.homeScore) as number;
+      const result: FormResult =
+        goalsFor === goalsAgainst && m.decisive && m.winnerTeamId ? (m.winnerTeamId === clubId ? "G" : "P") : goalsFor > goalsAgainst ? "G" : goalsFor < goalsAgainst ? "P" : "E";
+      return { matchId: m.id, result, goalsFor, goalsAgainst, opponent: home ? m.awayTeam : m.homeTeam, home };
+    });
+}

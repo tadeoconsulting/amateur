@@ -123,6 +123,15 @@ El panel ya era de escritorio (menú lateral y contenido), así que se revisó y
 
 **Pendiente:** Fase 2 (ficha del partido con cabecera por colores del club y "forma del equipo", últimos 5) y Fase 3 (agregar al calendario y URL por fecha). La barra de filtros de `/partidos` del organizador se alinea con este patrón en la Fase 1b.
 
+### Fase 2 · Ficha del partido en escritorio
+Tomando la ficha del partido de la Premier League como referencia. **Solo escritorio** (desde 900 px de ancho): en el celular cada pantalla sigue como siempre y no hace ninguna consulta nueva.
+- **`MatchSheet`** (`_components/match-sheet.tsx`), usado por la ficha del partido del club (`/club/torneos/[id]/partido/[matchId]`) y por el resultado del organizador (`/torneos/[id]/resultado/[matchId]`); el contenido propio de cada pantalla (titulares, cronología, "Editar el resultado") va en la columna principal.
+  - **Cabecera** con los colores de cada club (local a la izquierda, visitante a la derecha, con una capa oscura para que el texto blanco se lea sobre cualquier color), escudos, y al centro el marcador (o la hora, o "vs" si no tiene día y hora) con "Final", "En vivo" o "Por jugar"; "Penales x-y" si lo definieron así; la fecha o la ronda arriba.
+  - **Al lado, fijo al desplazarse:** *Forma de los equipos* (últimos 5 partidos de cada uno en el torneo, de izquierda a derecha, con G / E / P, marcador y rival; la letra acompaña al color y cada resultado tiene su descripción para lectores de pantalla), *Posiciones* (tabla compacta con los dos clubes resaltados; solo en una liga) e *Información del partido* (día y hora, sede, fecha o ronda, grupo).
+- **`teamForm`** (`_lib/fixture.ts`, con pruebas en `tests/unit/team-form.test.mjs`): solo partidos finalizados con marcador, sin el de la ficha; si el partido ya tiene día y hora, solo los anteriores; un partido decisivo empatado cuenta por quien avanzó. Sale de los partidos del torneo ya existentes: sin API nueva.
+- `useWideSheet` (`useMediaQuery`) monta la ficha solo en pantallas anchas; los *layouts* del club y del organizador usan la columna ancha en estas dos rutas.
+- **Pendiente:** una ficha pública para el fan y el jugador (hoy sus filas de partido no llevan a ninguna pantalla) y la ficha en celular.
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.
