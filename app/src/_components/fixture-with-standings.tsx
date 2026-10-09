@@ -16,6 +16,7 @@ export function FixtureWithStandings({
   qualifyCount,
   hrefFor,
   highlightClubId,
+  onEdit,
   onViewFullTable,
   stickyTop = "@4xl:top-4",
   bleed = false,
@@ -25,6 +26,8 @@ export function FixtureWithStandings({
   qualifyCount: number | null;
   hrefFor?: (match: MatchListItem) => string;
   highlightClubId?: string;
+  /** Si se pasa (el organizador), los partidos por jugar traen un botón para editarlos. */
+  onEdit?: (match: MatchListItem) => void;
   /** Lleva a la tabla completa (y goleadores) de la pantalla. */
   onViewFullTable: () => void;
   stickyTop?: string;
@@ -34,7 +37,7 @@ export function FixtureWithStandings({
   return (
     <div className="@4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
       <div className={bleed ? "-mx-4" : undefined}>
-        <FixtureTabs matches={matches} hrefFor={hrefFor} highlightClubId={highlightClubId} />
+        <FixtureTabs matches={matches} hrefFor={hrefFor} highlightClubId={highlightClubId} onEdit={onEdit} />
       </div>
       {standings.length > 0 && (
         <aside aria-label="Posiciones" className={`hidden @4xl:sticky @4xl:block ${stickyTop} ${bleed ? "" : "@4xl:mr-4"}`}>
