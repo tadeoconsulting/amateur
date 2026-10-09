@@ -28,7 +28,7 @@ export function TeamsList({
       <p className="mb-2 font-heading text-xs font-bold uppercase tracking-wider text-text-secondary">
         {rows.length} {rows.length === 1 ? "equipo" : "equipos"}
       </p>
-      <ul className="flex flex-col @2xl:grid @2xl:grid-cols-2 @2xl:gap-x-10">
+      <ul className="flex flex-col @2xl:grid @2xl:grid-cols-2 @2xl:gap-x-10 @4xl:grid-cols-3">
         {rows.map((team) => {
           const s = byClub.get(team.club.id);
           const who = !showDelegate

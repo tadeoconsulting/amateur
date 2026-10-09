@@ -10,11 +10,13 @@ import { PlayerAvatar } from "@/_components/player-avatar";
  */
 
 /**
+ * `compact`: sin las columnas G, E y P (queda #, equipo, PJ, DG y Pts), para el panel lateral de escritorio.
+ *
  * `qualifyCount`: cuántos de la tabla pasan a llaves (`playoffTeams`, solo en una liga). Con
  * llaves, del 1.º al N.º va en verde y del N+1 en adelante en rojo; sin ellas, la marca de siempre
  * (1.º–2.º verde, 7.º en adelante rojo).
  */
-export function StandingsTable({ standings, qualifyCount }: { standings: StandingsRow[]; qualifyCount: number | null }) {
+export function StandingsTable({ standings, qualifyCount, compact = false }: { standings: StandingsRow[]; qualifyCount: number | null; compact?: boolean }) {
   const dot = (position: number) =>
     qualifyCount !== null
       ? position <= qualifyCount ? "bg-verification text-white" : "bg-error text-white"
@@ -29,9 +31,9 @@ export function StandingsTable({ standings, qualifyCount }: { standings: Standin
               <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">#</th>
               <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">Equipo</th>
               <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">PJ</th>
-              <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">G</th>
-              <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">E</th>
-              <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">P</th>
+              {!compact && <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">G</th>}
+              {!compact && <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">E</th>}
+              {!compact && <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">P</th>}
               <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">DG</th>
               <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">Pts</th>
             </tr>
@@ -49,9 +51,9 @@ export function StandingsTable({ standings, qualifyCount }: { standings: Standin
                   </div>
                 </td>
                 <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>
-                <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>
-                <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>
-                <td className="px-2 py-2.5 text-center text-text-secondary">{row.lost}</td>
+                {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>}
+                {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>}
+                {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.lost}</td>}
                 <td className="px-2 py-2.5 text-center text-text-secondary">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
                 <td className="px-2 py-2.5 text-center font-heading font-bold text-text-primary">{row.points}</td>
               </tr>

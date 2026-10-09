@@ -106,7 +106,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   const format = [formatLabel(tournament.format), modalityLabel(tournament.modality)].filter(Boolean).join(" · ");
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-primary md:max-w-4xl">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-primary md:max-w-4xl lg:max-w-6xl">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
 
       <header className="flex items-center justify-between px-4 py-3">
@@ -122,7 +122,8 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
       {/* `@container`: lo de adentro se adapta al ancho de esta columna (una sola en el celular; más anchas en escritorio). */}
       <main className="@container flex-1 px-4 pb-6">
-        <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert @2xl:p-8">
+        <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert @2xl:flex @2xl:items-end @2xl:justify-between @2xl:gap-10 @2xl:p-8">
+          <div>
           <div className="flex items-center gap-3">
             {tournament.logoUrl && <TournamentLogo logoUrl={tournament.logoUrl} size="h-14 w-14" />}
             <div className="min-w-0">
@@ -133,8 +134,9 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
           <p className="mt-2 font-body text-sm text-brand-200">
             {[tournament.category || "Libre", format].join(" · ")}
           </p>
+          </div>
 
-          <div className="mt-5">
+          <div className="mt-5 @2xl:mt-0 @2xl:w-80 @2xl:shrink-0">
             <div className="flex items-baseline justify-between font-body text-sm">
               <span>
                 <strong className="font-heading text-lg">{teams}</strong>
@@ -247,8 +249,24 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         )}
 
         {mainTab === "fixture" && (
-          <div className="mt-4 -mx-4">
-            <FixtureTabs matches={matches} />
+          // Escritorio ancho: el fixture a la izquierda y, a la derecha, la tabla siempre a la vista (sticky).
+          <div className="mt-4 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
+            <div className="-mx-4">
+              <FixtureTabs matches={matches} />
+            </div>
+            {standings.length > 0 && (
+              <aside aria-label="Posiciones" className="hidden @4xl:sticky @4xl:top-4 @4xl:block">
+                <h2 className="mb-3 font-heading text-sm font-bold text-text-primary">Posiciones</h2>
+                <StandingsTable standings={standings} qualifyCount={llaves} compact />
+                <button
+                  type="button"
+                  onClick={() => setPickedTab("resultados")}
+                  className="mt-3 min-h-11 w-full cursor-pointer rounded-lg border border-border-primary px-3 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+                >
+                  Ver tabla completa y goleadores
+                </button>
+              </aside>
+            )}
           </div>
         )}
 
