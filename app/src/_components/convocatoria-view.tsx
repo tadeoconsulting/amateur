@@ -25,6 +25,7 @@ import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { PillTabs } from "@/_components/pill-tabs";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
 
@@ -252,19 +253,16 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {mainTab === "resultados" && (
           <div className="mt-4">
-            <div className="flex gap-4 border-b border-border-primary">
-              {(["tabla", "goleadores"] as ResultadosSubTab[]).map((sub) => (
-                <button
-                  key={sub}
-                  onClick={() => setResultadosTab(sub)}
-                  className={`cursor-pointer pb-2 font-body text-sm capitalize transition-colors ${
-                    resultadosTab === sub ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
+            <PillTabs
+              label="Resultados"
+              className="pb-1"
+              value={resultadosTab}
+              onChange={setResultadosTab}
+              tabs={[
+                { key: "tabla", label: "Tabla" },
+                { key: "goleadores", label: "Goleadores" },
+              ]}
+            />
 
             {resultadosTab === "tabla" && (
               <div className="mt-4">

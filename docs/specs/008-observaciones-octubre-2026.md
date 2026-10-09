@@ -90,6 +90,7 @@ Pedido posterior (2026-10-09): usar la página de partidos de la Premier League 
 - **Pestañas de fecha como siempre** (ahora `role="tablist"`, de al menos 44 px de alto). Con muchas fechas la barra se desplaza y la elegida —al abrir, la actual— queda centrada. Se probó un navegador con flechas desde 5 fechas y se descartó por decisión del usuario: se prefieren las pestañas.
 - **Se abre en la fecha actual:** la primera con partidos sin terminar (o la última si ya terminó todo). Con el cuadro armado y la liga terminada, cae en el cuadro.
 - **`MatchRow`** (`_components/match-row.tsx`): la fila única del partido — hora, "En vivo", "Final" (antes "Finalizado") o "Por definir" — con el nombre del grupo cuando lo hay. Mantiene el enlace, el resaltado del club y el botón de editar del organizador.
+- **Pestañas secundarias con un solo estilo** (`_components/pill-tabs.tsx`, `PillTabs`): las fechas del fixture, *Tabla / Goleadores* de Resultados (fan y club) y *Partidos / Amonestados / Inscritos* y *Tabla / Goleadores / Compartir* del torneo del club usan la misma píldora. Antes eran pestañas subrayadas distintas. Pendiente de unificar en otras pantallas del club (`/club/torneos`, `/club/equipo`, `/club/jugadores`).
 - Lógica pura y probada en `_lib/fixture.ts` (`buildFixtureTabs`, `currentTabKey`, `groupByDay`); `tests/unit/fixture-view.test.mjs`.
 - **Accesibilidad:** objetivos táctiles de al menos 44 px, foco visible, anuncio del cambio de fecha (`aria-live`) y la animación de "En vivo" respeta `prefers-reduced-motion`.
 

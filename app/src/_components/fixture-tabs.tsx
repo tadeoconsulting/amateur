@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { MatchListItem } from "@/_lib/api";
 import { formatMatchDate, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab } from "@/_lib/fixture";
 import { MatchRow } from "@/_components/match-row";
+import { PillTabs } from "@/_components/pill-tabs";
 
 /**
  * Lista de partidos de un torneo, organizada por fecha — como se armó el fixture — y, dentro de
@@ -12,7 +13,7 @@ import { MatchRow } from "@/_components/match-row";
  * fan, el jugador, el club y el organizador, para que las cuatro vistas muestren la misma
  * estructura en vez de cada una su propia lista.
  *
- * - Las fechas se eligen con pestañas (con muchas, la barra se desplaza y la elegida queda a la vista).
+ * - Las fechas se eligen con pestañas (`PillTabs`; con muchas, la barra se desplaza y la elegida queda a la vista).
  * - Los partidos de un cuadro de eliminación van en sus propias rondas (Octavos, Cuartos,
  *   Semifinal, Final), después de las fechas.
  * - Se abre en la fecha "actual": la primera que todavía tiene partidos por jugar.
@@ -33,18 +34,9 @@ export function FixtureTabs({
 }) {
   const tabs = buildFixtureTabs(matches);
   const [pickedKey, setPickedKey] = useState<string | null>(null);
-  const barRef = useRef<HTMLDivElement>(null);
 
   const activeKey = tabs.some((t) => t.key === pickedKey) ? pickedKey : currentTabKey(tabs, matches);
   const active = tabs.find((t) => t.key === activeKey) ?? tabs[0];
-
-  // Con muchas fechas la barra se desplaza: la elegida (al abrir, la actual) queda centrada a la vista.
-  useEffect(() => {
-    const el = barRef.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ inline: "center", block: "nearest", behavior: reduce ? "auto" : "smooth" });
-  }, [active?.key]);
 
   if (matches.length === 0) {
     return <p className="px-4 py-8 text-center font-body text-sm text-text-secondary">Todavía no hay partidos programados.</p>;
@@ -54,23 +46,7 @@ export function FixtureTabs({
 
   return (
     <div>
-      {tabs.length > 1 && (
-        <div ref={barRef} role="tablist" aria-label="Fechas del torneo" className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              role="tab"
-              aria-selected={active.key === tab.key}
-              onClick={() => setPickedKey(tab.key)}
-              className={`min-h-11 shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
-                active.key === tab.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={setPickedKey} label="Fechas del torneo" />}
 
       <div className="flex flex-col gap-4 px-4">
         {sections.map((section) => (
