@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { usePendingInvitations } from "@/_lib/use-pending-invitations";
 
 function NavBadge({ count }: { count: number }) {
   if (count === 0) return null;
@@ -41,25 +40,27 @@ function NavIcon({ src }: { src: string }) {
 
 // `match` son las rutas donde la pestaña se ve activa. "Perfil" lleva al hub de ajustes, que
 // también es de donde se llega a Mis equipos, por eso cubre /jugador/equipos.
-const navItems = [
+export const jugadorNavItems = [
   { href: "/jugador/torneos", label: "Actividad", icon: "/icons/jugador-nav/actividad.svg", match: ["/jugador/torneos"], exact: true },
   { href: "/jugador/mis-torneos", label: "Torneos", icon: "/icons/jugador-nav/torneos.svg", match: ["/jugador/mis-torneos"] },
   { href: "/jugador/ajustes", label: "Perfil", icon: "/icons/jugador-nav/perfil.svg", match: ["/jugador/ajustes", "/jugador/equipos"] },
 ];
 
-export function JugadorBottomNav() {
+/** ¿La pestaña se ve activa en esta ruta? Lo usan la barra inferior (celular) y la superior (escritorio). */
+export function isJugadorNavActive(item: (typeof jugadorNavItems)[number], pathname: string) {
+  return item.exact ? pathname === item.href : item.match.some((m) => pathname === m || pathname.startsWith(m + "/"));
+}
+
+/** `invitesPending`: una invitación pendiente vive bajo Perfil (Ajustes › Mis equipos). */
+export function JugadorBottomNav({ invitesPending }: { invitesPending: number }) {
   const pathname = usePathname();
-  // Una invitación pendiente vive bajo Perfil (Ajustes › Mis equipos).
-  const invitesPending = usePendingInvitations();
   const badgeByHref: Record<string, number> = { "/jugador/ajustes": invitesPending };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface-secondary">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface-secondary md:hidden">
       <div className="mx-auto flex max-w-[430px] items-center justify-between px-4 pb-4 pt-2">
-        {navItems.map((item) => {
-          const active = item.exact
-            ? pathname === item.href
-            : item.match.some((m) => pathname === m || pathname.startsWith(m + "/"));
+        {jugadorNavItems.map((item) => {
+          const active = isJugadorNavActive(item, pathname);
           return (
             <Link
               key={item.href}

@@ -12,7 +12,7 @@ import { formatLabel } from "@/_lib/tournament-labels";
 import { formatWhen } from "@/_lib/match-format";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
-import { FixtureTabs } from "@/_components/fixture-tabs";
+import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { tournamentPublicPath } from "@/_lib/slug";
@@ -90,7 +90,8 @@ export default function ClubTorneoDetallePage() {
   ];
 
   return (
-    <div className="flex min-h-dvh flex-col pb-4">
+    // `@container`: lo de adentro se adapta al ancho de la pantalla (una columna en el celular; el fixture con la tabla al lado en escritorio).
+    <div className="@container flex min-h-dvh flex-col pb-4">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
@@ -174,10 +175,17 @@ export default function ClubTorneoDetallePage() {
 
           {torneoSubTab === "partidos" && (
             <div className="mt-4">
-              <FixtureTabs
+              <FixtureWithStandings
                 matches={tournamentMatches}
+                standings={standings}
+                qualifyCount={llaves}
                 hrefFor={(m) => `/club/torneos/${id}/partido/${m.id}`}
                 highlightClubId={club?.id}
+                onViewFullTable={() => {
+                  setDetailTab("resultados");
+                  setResultadosSubTab("tabla");
+                }}
+                stickyTop="@4xl:top-20"
               />
             </div>
           )}
@@ -239,10 +247,17 @@ export default function ClubTorneoDetallePage() {
           <div className="mt-4">
             <h3 className="px-4 font-heading text-sm font-bold text-text-primary">Todos los partidos</h3>
             <div className="mt-2">
-              <FixtureTabs
+              <FixtureWithStandings
                 matches={tournamentMatches}
+                standings={standings}
+                qualifyCount={llaves}
                 hrefFor={(m) => `/club/torneos/${id}/partido/${m.id}`}
                 highlightClubId={club?.id}
+                onViewFullTable={() => {
+                  setDetailTab("resultados");
+                  setResultadosSubTab("tabla");
+                }}
+                stickyTop="@4xl:top-20"
               />
             </div>
           </div>
@@ -266,13 +281,13 @@ export default function ClubTorneoDetallePage() {
           />
 
           {resultadosSubTab === "tabla" && (
-            <div className="mt-4 px-4">
+            <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-4xl">
               <StandingsTable standings={standings} qualifyCount={llaves} />
             </div>
           )}
 
           {resultadosSubTab === "goleadores" && (
-            <div className="mt-4 px-4">
+            <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
               <ScorersList scorers={topScorers} />
             </div>
           )}

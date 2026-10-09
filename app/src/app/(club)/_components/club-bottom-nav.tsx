@@ -10,7 +10,7 @@ interface StaffInvitationRow {
   token: string;
 }
 
-const navItems = [
+export const clubNavItems = [
   {
     href: "/club/torneos",
     label: "Torneos",
@@ -88,8 +88,13 @@ function NavBadge({ count }: { count: number }) {
   );
 }
 
-export function ClubBottomNav() {
-  const pathname = usePathname();
+/** ¿La pestaña se ve activa en esta ruta? Lo usan la barra inferior (celular) y la superior (escritorio). */
+export function isClubNavActive(href: string, pathname: string) {
+  return pathname === href || pathname.startsWith(href + "/");
+}
+
+/** Los pendientes de cada pestaña, por ruta: invitaciones de torneos y de staff. */
+export function useClubNavBadges(): Record<string, number> {
   // Invitaciones de un organizador a un torneo (pestaña "Solicitudes" de /club/torneos).
   const { data: requests, refetch: refetchRequests } = useApi(() => getMyRequests());
   useRefetchOnChange(refetchRequests);
@@ -101,16 +106,21 @@ export function ClubBottomNav() {
   useRefetchOnChange(refetchStaffInvitations);
   const staffInvitesPending = staffInvitations?.length ?? 0;
 
-  const badgeByHref: Record<string, number> = {
+  return {
     "/club/torneos": invitesPending,
     "/club/equipo": staffInvitesPending,
   };
+}
+
+export function ClubBottomNav({ badges }: { badges: Record<string, number> }) {
+  const pathname = usePathname();
+  const badgeByHref = badges;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-200 bg-surface-primary">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-200 bg-surface-primary md:hidden">
       <div className="mx-auto flex max-w-[430px] items-center justify-around py-2">
-        {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+        {clubNavItems.map((item) => {
+          const active = isClubNavActive(item.href, pathname);
           return (
             <Link
               key={item.href}

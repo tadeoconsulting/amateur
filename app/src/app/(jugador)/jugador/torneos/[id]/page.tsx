@@ -10,7 +10,7 @@ import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { roundLabel } from "@/_lib/fixture";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { ClubCrest } from "@/_components/club-crest";
-import { FixtureTabs } from "@/_components/fixture-tabs";
+import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { TeamsList } from "@/_components/teams-list";
 
@@ -158,7 +158,8 @@ export default function JugadorTorneoDetailPage() {
   const currentRound = llavesRound !== null && bracketRounds.includes(llavesRound) ? llavesRound : (bracketRounds[bracketRounds.length - 1] ?? 0);
 
   return (
-    <div className="w-full pb-8">
+    // `@container`: lo de adentro se adapta al ancho de la pantalla (una columna en el celular; el fixture con la tabla al lado en escritorio).
+    <div className="@container w-full pb-8">
       {/* Header */}
       <div className="px-4 pt-4">
         <button
@@ -199,13 +200,18 @@ export default function JugadorTorneoDetailPage() {
       {/* Tab content */}
       <div className="mt-4 px-4">
         {shownTab === "Partidos" && (
-          <div className="-mx-4">
-            <FixtureTabs matches={allMatches} />
-          </div>
+          <FixtureWithStandings
+            bleed
+            matches={allMatches}
+            standings={standings}
+            qualifyCount={llaves}
+            onViewFullTable={() => setActiveTab("Tabla")}
+            stickyTop="@4xl:top-20"
+          />
         )}
 
         {shownTab === "Llaves" && (
-          <div>
+          <div className="@4xl:mx-auto @4xl:max-w-3xl">
             <div className="flex gap-2 overflow-x-auto scrollbar-none">
               {bracketRounds.map((round) => (
                 <button
@@ -269,9 +275,17 @@ export default function JugadorTorneoDetailPage() {
           </div>
         )}
 
-        {shownTab === "Tabla" && <StandingsTable standings={standings} qualifyCount={llaves} />}
+        {shownTab === "Tabla" && (
+          <div className="@4xl:mx-auto @4xl:max-w-4xl">
+            <StandingsTable standings={standings} qualifyCount={llaves} />
+          </div>
+        )}
 
-        {shownTab === "Goleadores" && <ScorersList scorers={topScorers} />}
+        {shownTab === "Goleadores" && (
+          <div className="@4xl:mx-auto @4xl:max-w-3xl">
+            <ScorersList scorers={topScorers} />
+          </div>
+        )}
 
         {shownTab === "Equipos" && (
           <div className="-mx-4">
