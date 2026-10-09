@@ -25,11 +25,11 @@ export function TeamsList({
 
   return (
     // Columna ancha (escritorio): la lista se centra y ocupa el 70 % de la pantalla (sin pasar del contenedor).
-    <div className="mt-4 px-4 @4xl:mx-auto @4xl:w-[70vw] @4xl:max-w-full">
+    <div className="mt-4 px-4 @4xl:mx-auto @4xl:w-[70vw] @4xl:max-w-full @4xl:px-0">
       <p className="mb-2 font-heading text-xs font-bold uppercase tracking-wider text-text-secondary">
         {rows.length} {rows.length === 1 ? "equipo" : "equipos"}
       </p>
-      <ul className="flex flex-col @2xl:grid @2xl:grid-cols-2 @2xl:gap-x-10 @4xl:grid-cols-3">
+      <ul className="flex flex-col">
         {rows.map((team) => {
           const s = byClub.get(team.club.id);
           const who = !showDelegate
