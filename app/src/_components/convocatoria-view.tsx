@@ -106,9 +106,11 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   const format = [formatLabel(tournament.format), modalityLabel(tournament.modality)].filter(Boolean).join(" · ");
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-primary md:max-w-4xl lg:max-w-6xl">
+    <div className="flex min-h-dvh w-full flex-col bg-surface-primary">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
 
+      {/* La columna (430 px en el celular, más ancha en escritorio) es solo del contenido: la barra de acción de abajo ocupa todo el ancho. */}
+      <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col md:max-w-4xl lg:max-w-6xl">
       <header className="flex items-center justify-between px-4 py-3">
         <Link href="/" className="font-heading text-lg font-bold text-text-primary">
           Amateur
@@ -298,8 +300,11 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         )}
       </main>
 
-      {/* Acción: fija abajo, respetando el área segura del celular */}
-      <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      </div>
+
+      {/* Acción: fija abajo, a todo el ancho de la pantalla, respetando el área segura del celular. Su contenido sigue la columna. */}
+      <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-[430px] px-4 md:max-w-4xl lg:max-w-6xl">
         <div className="md:ml-auto md:max-w-sm">
         {!user ? (
           <div className="flex flex-col gap-2">
@@ -316,6 +321,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         ) : (
           <JoinPanel user={user} tournament={tournament} isOpen={isOpen} nextPath={nextPath} onChanged={refetch} notify={notify} />
         )}
+        </div>
         </div>
       </footer>
     </div>
