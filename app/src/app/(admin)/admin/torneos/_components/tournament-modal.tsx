@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { COMPETITION_TYPES, GENDERS, MODALITIES, TOURNAMENT_STATUSES } from "@/_lib/tournament-labels";
+import { TournamentPhotoField } from "@/_components/tournament-photo-field";
 
 interface UserOption {
   id: string;
@@ -12,6 +13,7 @@ interface UserOption {
 
 interface Form {
   name: string;
+  logoUrl: string;
   format: string;
   status: string;
   maxTeams: string;
@@ -34,6 +36,7 @@ interface Form {
 
 const EMPTY_FORM: Form = {
   name: "",
+  logoUrl: "",
   format: "liga",
   status: "inscripcion",
   maxTeams: "8",
@@ -85,6 +88,7 @@ const toNumber = (v: string) => (v.trim() === "" ? null : Number(v));
 function toPayload(form: Form) {
   return {
     name: form.name.trim(),
+    logoUrl: form.logoUrl || null,
     format: form.format,
     maxTeams: Number(form.maxTeams),
     minTeams: toNumber(form.minTeams),
@@ -108,6 +112,7 @@ function toPayload(form: Form) {
 
 interface TournamentDetail {
   name: string;
+  logoUrl: string | null;
   format: string;
   status: string;
   maxTeams: number;
@@ -135,6 +140,7 @@ const str = (v: number | string | null) => (v === null ? "" : String(v));
 function formFromDetail(t: TournamentDetail): Form {
   return {
     name: t.name,
+    logoUrl: t.logoUrl ?? "",
     format: t.format,
     status: t.status,
     maxTeams: str(t.maxTeams),
@@ -281,6 +287,8 @@ export function TournamentModal({
             <Field label="Nombre del torneo *">
               <input value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} placeholder="Copa Comunidad 2026" />
             </Field>
+
+            <TournamentPhotoField value={form.logoUrl} onChange={(url) => set("logoUrl", url)} />
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Formato *">

@@ -39,6 +39,7 @@ export async function saveWizardTournament(state: WizardState, tournamentId: str
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: state.nombre.trim(),
+        logoUrl: state.fotoUrl || null,
         startDate: state.fecha,
         location: locationFromSede(state.sede!),
         format,

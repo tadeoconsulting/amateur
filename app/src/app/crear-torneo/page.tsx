@@ -8,6 +8,7 @@ import { CrearSedeModal, type Sede } from "./_components/crear-sede-modal";
 import { useWizard } from "./_components/wizard-context";
 import { DeleteTournament } from "./_components/delete-tournament";
 import { EditTabs } from "./_components/edit-tabs";
+import { TournamentPhotoField } from "@/_components/tournament-photo-field";
 import { useEditSave } from "./_components/use-edit-save";
 
 export default function CrearTorneoPage() {
@@ -84,6 +85,9 @@ export default function CrearTorneoPage() {
               className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
             />
           </div>
+
+          {/* Foto del torneo */}
+          <TournamentPhotoField value={state.fotoUrl} onChange={(url) => update({ fotoUrl: url })} />
 
           {/* Fecha de inicio */}
           <div>

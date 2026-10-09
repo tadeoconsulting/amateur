@@ -137,6 +137,13 @@ export function parseTournamentFields(body: Fields, mode: "create" | "update"): 
     }
     data.groupsAdvancePerGroup = body.groupsAdvancePerGroup;
   }
+  if (has("logoUrl")) {
+    // La URL la devuelve /api/upload (Vercel Blob, https); null quita la foto.
+    if (body.logoUrl !== null && !(typeof body.logoUrl === "string" && body.logoUrl.length <= 500 && /^https:\/\//.test(body.logoUrl))) {
+      return { error: "logoUrl debe ser una URL https de hasta 500 caracteres" };
+    }
+    data.logoUrl = body.logoUrl;
+  }
   if (has("playoffTeams")) {
     if (body.playoffTeams !== null && !isPlayoffSize(body.playoffTeams)) {
       return { error: "playoffTeams debe ser 2, 4, 8 o 16" };

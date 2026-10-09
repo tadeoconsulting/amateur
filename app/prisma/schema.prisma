@@ -272,6 +272,8 @@ model Tournament {
   endDate     DateTime?
   location    String
   category    String?
+  // Foto del torneo (URL pública en Vercel Blob); la sube el organizador o el admin. null = sin foto.
+  logoUrl     String?
   organizerId String
   // Segundo tramo de la URL pública (cupamateur.com/{organizerSlug}/{slug}): sale del nombre al
   // crear el torneo, con sufijo -2, -3... si el organizador ya tiene uno igual, y no cambia al

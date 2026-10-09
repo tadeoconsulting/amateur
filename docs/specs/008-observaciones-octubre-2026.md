@@ -71,6 +71,17 @@ Pedido posterior (2026-10-08, `/jugador/torneos/{id}`): la vista del jugador ten
 - **Tabla y Goleadores:** `_components/tournament-results.tsx` (`StandingsTable`, `ScorersList`), con la regla de clasificados en verde y no clasificados en rojo (ver [003](003-fixture.md)). El club tenía una copia con la marca fija anterior y ahora también respeta las llaves.
 - Se mantiene la pestaña **Llaves** del jugador.
 
+## 10 · Foto del torneo (organizador y admin)
+Pedido posterior (2026-10-08): el organizador debe poder subir la foto del torneo que creó, como se hace desde el panel de admin con las imágenes de equipos y jugadores.
+- **Modelo:** `Tournament.logoUrl String?`. Validación: `null` o URL `https` de hasta 500 caracteres (`parseTournamentFields`).
+- **Subida:** `TournamentPhotoField` (recorte circular + `/api/upload`) en el paso *Información* del asistente (crear y editar) y en el formulario del torneo del admin.
+- **Dónde se ve:** cabecera del fan (`/{organizador}/{torneo}`), cabecera y lista de torneos del organizador, selector del jugador. Sin foto, el trofeo de siempre.
+- **Pendiente:** mostrarla también en las listas del club y del jugador (`/club/torneos`, `/jugador/torneos`).
+- **Despliegue:** columna nueva; agregarla a producción **antes** de mergear:
+```sql
+ALTER TABLE "Tournament" ADD COLUMN IF NOT EXISTS "logoUrl" TEXT;
+```
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.
