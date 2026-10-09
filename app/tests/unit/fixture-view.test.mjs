@@ -1,8 +1,7 @@
-// Pruebas de la lógica de presentación del fixture (src/_lib/fixture.ts y match-format.ts, sin React ni servidor).
+// Pruebas de la lógica de presentación del fixture (src/_lib/fixture.ts, sin React ni servidor).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { STEPPER_FROM, buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab } from "../../src/_lib/fixture.ts";
-import { dayRangeLabel } from "../../src/_lib/match-format.ts";
+import { buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab } from "../../src/_lib/fixture.ts";
 
 const m = (matchday, over = {}) => ({ matchday, decisive: false, status: "programado", date: "2026-10-10T00:00:00.000Z", time: "10:00", ...over });
 
@@ -45,14 +44,4 @@ test("los partidos se agrupan por día y hora; los sin programar van al final", 
   assert.deepEqual(sections.map((s) => s.key), ["2026-10-10", "2026-10-11", "por-definir"]);
   assert.deepEqual(sections[0].matches.map((x) => x.id), ["a", "b"]);
   assert.equal(sections[2].date, null);
-});
-
-test("el rango de días de una fecha", () => {
-  assert.equal(dayRangeLabel([m(1, { time: "" })]), null);
-  assert.equal(dayRangeLabel([m(1)]), "Sáb 10 Oct");
-  assert.equal(dayRangeLabel([m(1), m(1, { date: "2026-10-12T00:00:00.000Z" })]), "Sáb 10 Oct – Lun 12 Oct");
-});
-
-test("desde 5 fechas se usa el navegador con flechas", () => {
-  assert.equal(STEPPER_FROM, 5);
 });

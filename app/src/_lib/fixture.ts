@@ -493,9 +493,6 @@ export type FixtureMatch = { matchday: number; decisive: boolean; status: string
 /** Una "fecha" de liga/grupos, o una ronda del cuadro de eliminación. */
 export type FixtureTab = { key: string; label: string; decisive: boolean; n: number };
 
-/** Desde cuántas fechas/rondas se pasa de pestañas a un navegador con flechas. */
-export const STEPPER_FROM = 5;
-
 const sorted = (xs: number[]) => [...new Set(xs)].sort((a, b) => a - b);
 
 /**

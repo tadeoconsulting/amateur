@@ -87,10 +87,10 @@ Pedido posterior (2026-10-09): usar la página de partidos de la Premier League 
 
 **Fase 1 (`FixtureTabs`, usado por fan, jugador, club y organizador):**
 - **Secciones por día** ("Sáb 10 Oct") dentro de cada fecha, con los partidos del día por hora; los que no tienen día y hora van al final en "Por definir". Antes: una caja por grupo y el día repetido en cada fila.
-- **Navegador de fecha** desde 5 fechas/rondas (`STEPPER_FROM`): flechas anterior/siguiente de 44 px, selector para saltar a cualquiera y los días que abarca la fecha. Con menos, las pestañas de siempre (ahora `role="tablist"`).
+- **Pestañas de fecha como siempre** (ahora `role="tablist"`, de al menos 44 px de alto). Con muchas fechas la barra se desplaza y la elegida —al abrir, la actual— queda centrada. Se probó un navegador con flechas desde 5 fechas y se descartó por decisión del usuario: se prefieren las pestañas.
 - **Se abre en la fecha actual:** la primera con partidos sin terminar (o la última si ya terminó todo). Con el cuadro armado y la liga terminada, cae en el cuadro.
 - **`MatchRow`** (`_components/match-row.tsx`): la fila única del partido — hora, "En vivo", "Final" (antes "Finalizado") o "Por definir" — con el nombre del grupo cuando lo hay. Mantiene el enlace, el resaltado del club y el botón de editar del organizador.
-- Lógica pura y probada en `_lib/fixture.ts` (`buildFixtureTabs`, `currentTabKey`, `groupByDay`) y `_lib/match-format.ts` (`dayRangeLabel`); `tests/unit/fixture-view.test.mjs`.
+- Lógica pura y probada en `_lib/fixture.ts` (`buildFixtureTabs`, `currentTabKey`, `groupByDay`); `tests/unit/fixture-view.test.mjs`.
 - **Accesibilidad:** objetivos táctiles de al menos 44 px, foco visible, anuncio del cambio de fecha (`aria-live`) y la animación de "En vivo" respeta `prefers-reduced-motion`.
 
 **Pendiente:** Fase 2 (ficha del partido con cabecera por colores del club y "forma del equipo", últimos 5) y Fase 3 (agregar al calendario y URL por fecha). La barra de filtros de `/partidos` del organizador se alinea con este patrón en la Fase 1b.

@@ -71,13 +71,3 @@ export function fromYmd(ymd: string) {
 export function addDays(d: Date, days: number) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days, 12);
 }
-
-/** "Sáb 10 Oct – Lun 12 Oct" (o un solo día), o null si ninguno tiene día todavía. */
-export function dayRangeLabel(matches: { date: string; time: string }[]): string | null {
-  const days = matches.filter((m) => m.time !== "").map((m) => m.date.slice(0, 10)).sort();
-  if (days.length === 0) return null;
-  const first = days[0];
-  const last = days[days.length - 1];
-  const label = (day: string) => formatMatchDate(`${day}T00:00:00.000Z`);
-  return first === last ? label(first) : `${label(first)} – ${label(last)}`;
-}
