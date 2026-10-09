@@ -82,6 +82,19 @@ Pedido posterior (2026-10-08): el organizador debe poder subir la foto del torne
 ALTER TABLE "Tournament" ADD COLUMN IF NOT EXISTS "logoUrl" TEXT;
 ```
 
+## 11 · Referencia Premier League: fixture (Fase 1)
+Pedido posterior (2026-10-09): usar la página de partidos de la Premier League como **referencia** (no copiar su estética ni crear componentes paralelos) para adaptar nuestro fixture, siguiendo las reglas de UI Pro Max. Análisis: una fecha a la vez con navegador y rango de días, secciones por día, una sola fila de partido con tres estados, filtros en una barra, URL por fecha, ficha del partido con forma de los equipos. Se entrega por fases, cada una con su aprobación.
+
+**Fase 1 (`FixtureTabs`, usado por fan, jugador, club y organizador):**
+- **Secciones por día** ("Sáb 10 Oct") dentro de cada fecha, con los partidos del día por hora; los que no tienen día y hora van al final en "Por definir". Antes: una caja por grupo y el día repetido en cada fila.
+- **Navegador de fecha** desde 5 fechas/rondas (`STEPPER_FROM`): flechas anterior/siguiente de 44 px, selector para saltar a cualquiera y los días que abarca la fecha. Con menos, las pestañas de siempre (ahora `role="tablist"`).
+- **Se abre en la fecha actual:** la primera con partidos sin terminar (o la última si ya terminó todo). Con el cuadro armado y la liga terminada, cae en el cuadro.
+- **`MatchRow`** (`_components/match-row.tsx`): la fila única del partido — hora, "En vivo", "Final" (antes "Finalizado") o "Por definir" — con el nombre del grupo cuando lo hay. Mantiene el enlace, el resaltado del club y el botón de editar del organizador.
+- Lógica pura y probada en `_lib/fixture.ts` (`buildFixtureTabs`, `currentTabKey`, `groupByDay`) y `_lib/match-format.ts` (`dayRangeLabel`); `tests/unit/fixture-view.test.mjs`.
+- **Accesibilidad:** objetivos táctiles de al menos 44 px, foco visible, anuncio del cambio de fecha (`aria-live`) y la animación de "En vivo" respeta `prefers-reduced-motion`.
+
+**Pendiente:** Fase 2 (ficha del partido con cabecera por colores del club y "forma del equipo", últimos 5) y Fase 3 (agregar al calendario y URL por fecha). La barra de filtros de `/partidos` del organizador se alinea con este patrón en la Fase 1b.
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.

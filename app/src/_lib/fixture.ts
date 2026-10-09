@@ -483,3 +483,68 @@ export function bracketOrderFromPairs(pairs: unknown, qualified: string[]): { ok
   if (order.some((id) => !allowed.has(id))) return { ok: false, error: "Hay equipos que no clasificaron a las llaves" };
   return { ok: true, order };
 }
+
+// ─── Presentación del fixture (la usa `FixtureTabs`) ───────────────────────
+// Qué fechas/rondas hay, cuál es la "actual" y cómo se agrupan los partidos por día. Pura (sin React).
+
+/** Mínimo de un partido que esta lógica necesita; un `MatchListItem` lo cumple. */
+export type FixtureMatch = { matchday: number; decisive: boolean; status: string; date: string; time: string };
+
+/** Una "fecha" de liga/grupos, o una ronda del cuadro de eliminación. */
+export type FixtureTab = { key: string; label: string; decisive: boolean; n: number };
+
+/** Desde cuántas fechas/rondas se pasa de pestañas a un navegador con flechas. */
+export const STEPPER_FROM = 5;
+
+const sorted = (xs: number[]) => [...new Set(xs)].sort((a, b) => a - b);
+
+/**
+ * Las fechas ("Fecha N") primero y después las rondas del cuadro. En un partido del cuadro
+ * (`decisive`) `matchday` es la ronda, así que no se mezcla con la "Fecha 1" de la liga o los grupos.
+ */
+export function buildFixtureTabs(matches: FixtureMatch[]): FixtureTab[] {
+  const fechas = sorted(matches.filter((m) => !m.decisive).map((m) => m.matchday));
+  const rondas = sorted(matches.filter((m) => m.decisive).map((m) => m.matchday));
+  const totalRounds = rondas.length > 0 ? Math.max(...rondas) : 0;
+  return [
+    ...fechas.map((n) => ({ key: `f${n}`, label: `Fecha ${n}`, decisive: false, n })),
+    ...rondas.map((n) => ({ key: `r${n}`, label: roundLabel(n, totalRounds), decisive: true, n })),
+  ];
+}
+
+/** Los partidos de una fecha o ronda. */
+export function matchesOfTab<T extends FixtureMatch>(matches: T[], tab: FixtureTab): T[] {
+  return matches.filter((m) => m.decisive === tab.decisive && m.matchday === tab.n);
+}
+
+/**
+ * La fecha "actual": la primera que todavía tiene algún partido sin terminar; si ya terminó todo,
+ * la última. Así quien entra a un torneo de 11 fechas cae donde se está jugando, no en la fecha 1.
+ */
+export function currentTabKey(tabs: FixtureTab[], matches: FixtureMatch[]): string | null {
+  if (tabs.length === 0) return null;
+  const open = tabs.find((t) => matchesOfTab(matches, t).some((m) => m.status !== "finalizado"));
+  return (open ?? tabs[tabs.length - 1]).key;
+}
+
+export type DaySection<T> = { key: string; date: string | null; matches: T[] };
+
+const dayKey = (iso: string) => iso.slice(0, 10);
+
+/**
+ * Agrupa por día (en orden), y por hora dentro de cada día. Los que todavía no tienen día y hora
+ * (`time === ""`) van juntos al final, en su propia sección "Por definir".
+ */
+export function groupByDay<T extends FixtureMatch>(matches: T[]): DaySection<T>[] {
+  const scheduled = matches.filter((m) => m.time !== "").sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const sections: DaySection<T>[] = [];
+  for (const m of scheduled) {
+    const key = dayKey(m.date);
+    const last = sections[sections.length - 1];
+    if (last && last.key === key) last.matches.push(m);
+    else sections.push({ key, date: m.date, matches: [m] });
+  }
+  const pending = matches.filter((m) => m.time === "");
+  if (pending.length > 0) sections.push({ key: "por-definir", date: null, matches: pending });
+  return sections;
+}
