@@ -110,7 +110,14 @@ Solo escritorio (variantes `md:`); el celular no cambia. Las tres pantallas (`/c
 - **Formulario en una tarjeta** de 576 px a la derecha; el conjunto va centrado y el riel queda fijo al desplazarse.
 - **Ventanas emergentes** (modalidad, competencia, sede, dirección, mapa, condición) centradas con las cuatro esquinas redondeadas, en vez de pegadas abajo.
 - Al editar, el *layout* del organizador usa la columna ancha (`/torneos/[id]/editar…`) para que quepan el riel y la tarjeta. Al crear no hay barra superior (la ruta está fuera del panel).
-- **Pendiente (escritorio):** el panel de admin, y las pestañas subrayadas antiguas de otras pantallas del club.
+### Escritorio del panel de admin
+El panel ya era de escritorio (menú lateral y contenido), así que se revisó y se corrigió lo que fallaba a 1440 px y en pantallas más chicas o más grandes:
+- **Tablas que se cortaban:** *Clubes*, *Usuarios* y *Sponsors* no tenían contenedor con desplazamiento y la columna de acciones quedaba tapada. Ahora todas las tablas (también *Torneos*, *Eliminados* y *Jugadores*) tienen desplazamiento horizontal como último recurso y un espaciado de celda un poco más ajustado, de modo que a 1440 px caben completas sin desplazarse.
+- **Foto del torneo** en las listas *Torneos* y *Eliminados* (la que sube el admin o el organizador); sin foto, el trofeo de siempre.
+- **Menú lateral:** completo (240 px) desde 1280 px; por debajo, solo íconos (64 px, con su nombre como `title` y para lectores de pantalla) para no quitarle ancho a las tablas. Zonas táctiles de 44 px y foco visible.
+- **Ancho máximo:** el contenido se centra con un tope de 1600 px en monitores muy anchos.
+- Sin cambios de datos ni de API. El panel no tiene versión de celular (el menú lateral sigue fijo); no se tocó.
+- **Pendiente (escritorio):** las pestañas subrayadas antiguas de otras pantallas del club.
 - Lógica pura y probada en `_lib/fixture.ts` (`buildFixtureTabs`, `currentTabKey`, `groupByDay`); `tests/unit/fixture-view.test.mjs`.
 - **Accesibilidad:** objetivos táctiles de al menos 44 px, foco visible, anuncio del cambio de fecha (`aria-live`) y la animación de "En vivo" respeta `prefers-reduced-motion`.
 

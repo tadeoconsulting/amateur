@@ -757,8 +757,8 @@ function AdminUsuariosContent() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border-primary bg-surface-primary">
-          <table className="w-full">
+        <div className="overflow-x-auto rounded-xl border border-border-primary bg-surface-primary">
+          <table className="w-full min-w-[900px] [&_td]:px-3 [&_th]:px-3">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
                 <SortTh label="Usuario" sortKey="user" sort={sort} onToggle={toggle} />

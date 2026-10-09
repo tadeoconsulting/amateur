@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentLogo } from "@/_components/tournament-logo";
 import { useState } from "react";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { ConfirmDelete } from "../../_components/confirm-delete";
@@ -8,6 +9,7 @@ import { SortTh, useSort } from "../../_components/sortable";
 export interface DeletedTournament {
   id: string;
   name: string;
+  logoUrl: string | null;
   format: string;
   teamsCount: number;
   matchesCount: number;
@@ -69,7 +71,7 @@ export function TorneosEliminados({ rows, onChanged }: { rows: DeletedTournament
       )}
 
       <div className="overflow-x-auto rounded-xl border border-border-primary bg-surface-primary">
-        <table className="w-full min-w-[820px]">
+        <table className="w-full min-w-[820px] [&_td]:px-2.5 [&_th]:px-2.5">
           <thead>
             <tr className="border-b border-border-primary bg-brand-50">
               <SortTh label="Torneo" sortKey="name" sort={sort} onToggle={toggle} />
@@ -83,9 +85,14 @@ export function TorneosEliminados({ rows, onChanged }: { rows: DeletedTournament
           <tbody>
             {sorted?.map((t) => (
               <tr key={t.id} className="border-b border-border-primary last:border-0">
-                <td className="px-4 py-3">
-                  <p className="font-heading text-sm font-semibold text-text-primary">{t.name}</p>
-                  <p className="font-body text-xs text-text-secondary">{formatLabel(t.format)}</p>
+                <td className="min-w-56 px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <TournamentLogo logoUrl={t.logoUrl} size="h-9 w-9" />
+                    <div className="min-w-0">
+                      <p className="font-heading text-sm font-semibold text-text-primary">{t.name}</p>
+                      <p className="font-body text-xs text-text-secondary">{formatLabel(t.format)}</p>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-4 py-3 font-body text-sm text-text-secondary">
                   {t.organizer.firstName} {t.organizer.lastName}

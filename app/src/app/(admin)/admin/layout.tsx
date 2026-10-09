@@ -101,16 +101,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-dvh bg-brand-50">
-      {/* Sidebar */}
-      <aside className="sticky top-0 flex h-dvh w-60 shrink-0 flex-col border-r border-border-primary bg-surface-primary">
-        <div className="flex items-center gap-2.5 px-5 py-5">
+      {/* Menú lateral: completo desde 1280 px; en pantallas más chicas queda solo con los íconos, para no quitarle ancho a las tablas. */}
+      <aside className="sticky top-0 flex h-dvh w-16 shrink-0 flex-col border-r border-border-primary bg-surface-primary xl:w-60">
+        <div className="flex items-center justify-center gap-2.5 px-3 py-5 xl:justify-start xl:px-5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-secondary">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M4 2h8v4a4 4 0 01-8 0V2z" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M6 10v2M10 10v2M5 12h6a1 1 0 011 1v1H4v-1a1 1 0 011-1z" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <div>
+          <div className="hidden xl:block">
             <p className="font-heading text-sm font-bold text-text-primary">Amateur</p>
             <p className="font-body text-[11px] text-text-secondary">Panel de admin</p>
           </div>
@@ -127,7 +127,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 font-heading text-sm font-medium transition-colors ${
+                title={item.label}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex min-h-11 items-center justify-center gap-3 rounded-lg px-3 py-2.5 font-heading text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary xl:justify-start ${
                   isActive
                     ? "bg-surface-secondary text-text-invert"
                     : "text-text-secondary hover:bg-brand-100 hover:text-text-primary"
@@ -136,29 +138,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span className={isActive ? "text-text-invert" : "text-text-secondary"}>
                   {item.icon}
                 </span>
-                {item.label}
+                <span className="sr-only xl:not-sr-only">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-border-primary px-5 py-4">
+        <div className="flex justify-center border-t border-border-primary px-3 py-4 xl:justify-start xl:px-5">
           <button
             type="button"
             onClick={() => logout("/admin/login")}
-            className="flex cursor-pointer items-center gap-2 font-body text-xs text-text-secondary transition-colors hover:text-text-primary"
+            title="Cerrar sesión"
+            className="flex min-h-11 cursor-pointer items-center gap-2 font-body text-xs text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M6 2.5H3.5a1 1 0 00-1 1v9a1 1 0 001 1H6M10.5 5.5L13 8l-2.5 2.5M13 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Cerrar sesión
+            <span className="sr-only xl:not-sr-only">Cerrar sesión</span>
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
+      <main className="min-w-0 flex-1 overflow-y-auto">
+        {/* En monitores muy anchos el contenido no se estira sin fin: se centra con un tope. */}
+        <div className="mx-auto w-full max-w-[1600px]">{children}</div>
       </main>
     </div>
   );

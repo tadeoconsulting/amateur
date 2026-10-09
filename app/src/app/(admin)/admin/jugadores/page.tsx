@@ -480,7 +480,7 @@ export default function AdminJugadoresPage() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border-primary bg-surface-primary">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full min-w-[900px] [&_td]:px-2.5 [&_th]:px-2.5">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
                 <SortTh label="Jugador" sortKey="player" sort={sort} onToggle={toggle} />
