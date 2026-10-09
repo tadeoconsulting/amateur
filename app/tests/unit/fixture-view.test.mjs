@@ -45,3 +45,14 @@ test("los partidos se agrupan por día y hora; los sin programar van al final", 
   assert.deepEqual(sections[0].matches.map((x) => x.id), ["a", "b"]);
   assert.equal(sections[2].date, null);
 });
+
+test("un historial de resultados va con lo más reciente primero", () => {
+  const matches = [
+    m(1, { date: "2026-10-10T00:00:00.000Z", time: "09:00", id: "a" }),
+    m(1, { date: "2026-10-10T00:00:00.000Z", time: "11:00", id: "b" }),
+    m(1, { date: "2026-10-12T00:00:00.000Z", time: "08:00", id: "c" }),
+  ];
+  const sections = groupByDay(matches, true);
+  assert.deepEqual(sections.map((s) => s.key), ["2026-10-12", "2026-10-10"]);
+  assert.deepEqual(sections[1].matches.map((x) => x.id), ["b", "a"]);
+});

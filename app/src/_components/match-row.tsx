@@ -18,6 +18,8 @@ export function MatchRow({
   href,
   mine = false,
   first = false,
+  caption,
+  hint,
   onEdit,
 }: {
   match: MatchListItem;
@@ -28,6 +30,10 @@ export function MatchRow({
   mine?: boolean;
   /** Es la primera fila de su sección: sin línea arriba. */
   first?: boolean;
+  /** Una línea chica arriba de la fila, por ejemplo el torneo cuando se mezclan varios. */
+  caption?: string;
+  /** Una acción sugerida abajo del estado, por ejemplo "Iniciar" para el organizador. */
+  hint?: string;
   /** Si se pasa (el organizador) y el partido todavía no empezó, se ofrece un botón para editarlo. */
   onEdit?: (match: MatchListItem) => void;
 }) {
@@ -54,6 +60,7 @@ export function MatchRow({
       {/* Tarjeta angosta (celular): los equipos en dos líneas y el estado a la derecha. */}
       <div className="flex items-center gap-3 @xl:hidden">
         <div className="min-w-0 flex-1">
+          {caption && <p className="mb-1 truncate font-body text-[11px] text-text-secondary">{caption}</p>}
           <div className="mb-1 flex items-center gap-2">
             <ClubCrest club={match.homeTeam} />
             <span className="truncate font-body text-sm text-text-primary">{match.homeTeam?.name ?? UNSCHEDULED_LABEL}</span>
@@ -68,10 +75,12 @@ export function MatchRow({
         <div className="w-20 shrink-0 text-right">
           {statusLabel}
           {match.groupName && <p className="mt-0.5 truncate font-body text-[11px] text-text-secondary">{match.groupName}</p>}
+          {hint && <p className="mt-0.5 font-heading text-[11px] font-bold text-brand-500">{hint}</p>}
         </div>
       </div>
 
       {/* Tarjeta ancha (escritorio): simétrica — local, escudo, marcador u hora, escudo, visitante. */}
+      {caption && <p className="mx-auto mb-1.5 hidden max-w-2xl truncate text-center font-body text-[11px] text-text-secondary @xl:block">{caption}</p>}
       <div className="mx-auto hidden max-w-2xl grid-cols-[1fr_auto_1fr] items-center gap-4 @xl:grid">
         <div className="flex min-w-0 items-center justify-end gap-3">
           <span className="truncate text-right font-body text-sm text-text-primary">{match.homeTeam?.name ?? UNSCHEDULED_LABEL}</span>
@@ -87,6 +96,7 @@ export function MatchRow({
           </span>
           {(played || isUnscheduled(match)) && statusLabel}
           {match.groupName && <span className="font-body text-[11px] text-text-secondary">{match.groupName}</span>}
+          {hint && <span className="font-heading text-[11px] font-bold text-brand-500">{hint}</span>}
         </div>
         <div className="flex min-w-0 items-center gap-3">
           <ClubCrest club={match.awayTeam} size="h-7 w-7" textSize="text-[9px]" />

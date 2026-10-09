@@ -530,10 +530,12 @@ const dayKey = (iso: string) => iso.slice(0, 10);
 
 /**
  * Agrupa por día (en orden), y por hora dentro de cada día. Los que todavía no tienen día y hora
- * (`time === ""`) van juntos al final, en su propia sección "Por definir".
+ * (`time === ""`) van juntos al final, en su propia sección "Por definir". Con `descending`, lo más
+ * reciente primero (para un historial de resultados).
  */
-export function groupByDay<T extends FixtureMatch>(matches: T[]): DaySection<T>[] {
-  const scheduled = matches.filter((m) => m.time !== "").sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+export function groupByDay<T extends FixtureMatch>(matches: T[], descending = false): DaySection<T>[] {
+  const direction = descending ? -1 : 1;
+  const scheduled = matches.filter((m) => m.time !== "").sort((a, b) => direction * (a.date + a.time).localeCompare(b.date + b.time));
   const sections: DaySection<T>[] = [];
   for (const m of scheduled) {
     const key = dayKey(m.date);

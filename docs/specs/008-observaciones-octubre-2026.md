@@ -103,6 +103,14 @@ Pedido posterior (2026-10-09): usar la página de partidos de la Premier League 
 
 **Pendiente:** Fase 2 (ficha del partido con cabecera por colores del club y "forma del equipo", últimos 5) y Fase 3 (agregar al calendario y URL por fecha). La barra de filtros de `/partidos` del organizador se alinea con este patrón en la Fase 1b.
 
+### Fase 1b · `/partidos` del organizador
+Mismo patrón que el fixture de las demás pantallas, en el hub de partidos del organizador (reemplaza las fechas plegables del punto 2):
+- **Filtros arriba:** *Torneo* (chips, con un punto verde si tiene partidos en vivo), *Equipo* (selector con los equipos de lo elegido; solo si hay más de uno) y **Restablecer** (aparece cuando hay algún filtro). Debajo, *Estado*: Próximos / En vivo / Finalizados, con contadores que respetan torneo y equipo. Todo vive en la URL (`?torneo=&estado=&equipo=`): se comparte y sobrevive a recargar. Al cambiar de torneo, el equipo se descarta.
+- **Un torneo:** su fixture con `FixtureTabs` (pestañas por fecha, abre en la actual, secciones por día).
+- **"Todos" los torneos:** una **agenda por día** que mezcla torneos (`DaySections`); cada fila lleva el nombre del torneo arriba. Los finalizados van del más reciente al más antiguo (`groupByDay(partidos, true)`).
+- Es la misma fila (`MatchRow`) de todas las pantallas, con la pista "Iniciar" en los partidos por jugar y el enlace al en vivo o al resultado. Zonas táctiles de 44 px y foco visible.
+- Código: `(organizador)/partidos/page.tsx`; `DaySections` se extrajo de `fixture-tabs.tsx`; `MatchRow` ganó `caption` y `hint`.
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.
