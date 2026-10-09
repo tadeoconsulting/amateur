@@ -48,7 +48,8 @@ export function FixtureTabs({
     <div>
       {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={setPickedKey} label="Fechas del torneo" />}
 
-      <div className="flex flex-col gap-4 px-4">
+      {/* En una columna ancha (escritorio) los días van de a dos; en el celular, uno bajo otro. */}
+      <div className="flex flex-col gap-4 px-4 @2xl:grid @2xl:grid-cols-2 @2xl:items-start">
         {sections.map((section) => (
           <section key={section.key} aria-label={section.date ? formatMatchDate(section.date) : UNSCHEDULED_LABEL} className="overflow-hidden rounded-xl border border-border-primary">
             <h3 className="bg-btn-regular px-4 py-2 font-heading text-xs font-bold text-text-primary">

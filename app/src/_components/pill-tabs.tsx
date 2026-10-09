@@ -34,7 +34,7 @@ export function PillTabs<K extends string>({
   }, [value]);
 
   return (
-    <div ref={barRef} role="tablist" aria-label={label} className={`no-scrollbar flex gap-2 overflow-x-auto ${className}`}>
+    <div ref={barRef} role="tablist" aria-label={label} className={`no-scrollbar flex gap-2 overflow-x-auto @2xl:flex-wrap @2xl:overflow-visible ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.key}

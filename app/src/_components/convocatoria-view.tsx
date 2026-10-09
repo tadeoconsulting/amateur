@@ -106,7 +106,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   const format = [formatLabel(tournament.format), modalityLabel(tournament.modality)].filter(Boolean).join(" · ");
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-primary">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-primary md:max-w-4xl">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
 
       <header className="flex items-center justify-between px-4 py-3">
@@ -120,13 +120,14 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         </span>
       </header>
 
-      <main className="flex-1 px-4 pb-6">
-        <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert">
+      {/* `@container`: lo de adentro se adapta al ancho de esta columna (una sola en el celular; más anchas en escritorio). */}
+      <main className="@container flex-1 px-4 pb-6">
+        <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert @2xl:p-8">
           <div className="flex items-center gap-3">
             {tournament.logoUrl && <TournamentLogo logoUrl={tournament.logoUrl} size="h-14 w-14" />}
             <div className="min-w-0">
               <p className="font-body text-xs text-brand-200">Convocatoria</p>
-              <h1 className="mt-1 font-heading text-2xl font-bold leading-tight">{tournament.name}</h1>
+              <h1 className="mt-1 font-heading text-2xl font-bold leading-tight @2xl:text-3xl">{tournament.name}</h1>
             </div>
           </div>
           <p className="mt-2 font-body text-sm text-brand-200">
@@ -182,7 +183,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         </div>
 
         {mainTab === "detalles" && (
-          <>
+          <div className="@2xl:grid @2xl:grid-cols-2 @2xl:items-start @2xl:gap-x-10">
             <dl className="mt-4">
               <Detail label="Inicio">{longDate(tournament.startDate)}</Detail>
               <Detail label="Sede">{tournament.location}</Detail>
@@ -194,7 +195,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             </dl>
 
             {(tournament.registrationFee || tournament.refereeFee || tournament.rules.length > 0) && (
-              <section className="mt-6">
+              <section className="mt-6 @2xl:mt-4">
                 <h2 className="font-heading text-lg font-bold text-text-primary">Bases del torneo</h2>
                 {(tournament.registrationFee || tournament.refereeFee) && (
                   <dl className="mt-2">
@@ -213,7 +214,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             )}
 
             {tournament.sponsors.length > 0 && (
-              <section className="mt-6">
+              <section className="mt-6 @2xl:col-span-2">
                 <h2 className="font-heading text-lg font-bold text-text-primary">Con el auspicio de</h2>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {tournament.sponsors.map((s) => {
@@ -236,7 +237,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
                 </div>
               </section>
             )}
-          </>
+          </div>
         )}
 
         {mainTab === "equipos" && (
@@ -255,7 +256,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
           <div className="mt-4">
             <PillTabs
               label="Resultados"
-              className="pb-1"
+              className="pb-1 @2xl:hidden"
               value={resultadosTab}
               onChange={setResultadosTab}
               tabs={[
@@ -264,23 +265,24 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
               ]}
             />
 
-            {resultadosTab === "tabla" && (
-              <div className="mt-4">
+            {/* Celular: una pestaña a la vez. Escritorio: la tabla y los goleadores, uno junto al otro. */}
+            <div className="@2xl:grid @2xl:grid-cols-5 @2xl:items-start @2xl:gap-8">
+              <div className={`mt-4 @2xl:col-span-3 ${resultadosTab === "tabla" ? "" : "hidden @2xl:block"}`}>
+                <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Posiciones</h2>
                 <StandingsTable standings={standings} qualifyCount={llaves} />
               </div>
-            )}
-
-            {resultadosTab === "goleadores" && (
-              <div className="mt-4">
+              <div className={`mt-4 @2xl:col-span-2 ${resultadosTab === "goleadores" ? "" : "hidden @2xl:block"}`}>
+                <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Goleadores</h2>
                 <ScorersList scorers={topScorers} />
               </div>
-            )}
+            </div>
           </div>
         )}
       </main>
 
       {/* Acción: fija abajo, respetando el área segura del celular */}
       <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="md:ml-auto md:max-w-sm">
         {!user ? (
           <div className="flex flex-col gap-2">
             <p className="font-body text-xs text-text-secondary">Para pedir unirte, entra con la cuenta de tu equipo o crea una: al terminar, tu solicitud se envía sola.</p>
@@ -296,6 +298,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         ) : (
           <JoinPanel user={user} tournament={tournament} isOpen={isOpen} nextPath={nextPath} onChanged={refetch} notify={notify} />
         )}
+        </div>
       </footer>
     </div>
   );
