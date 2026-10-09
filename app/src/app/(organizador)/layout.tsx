@@ -14,7 +14,7 @@ export default function OrganizadorLayout({
   const isDetailView = !isFixtureView && (/^\/torneos\/.+/.test(pathname) || /^\/jugadores/.test(pathname) || /^\/ajustes\/.+/.test(pathname));
   // Escritorio: la pantalla de un torneo es ancha (fixture con la tabla al lado); el resto, una columna
   // cómoda de lectura. En el celular todo sigue en 430 px.
-  const wide = /^\/torneos\/[^/]+$/.test(pathname);
+  const wide = /^\/torneos\/[^/]+(\/editar(\/paso-[23])?)?$/.test(pathname);
 
   const items = organizadorNavItems.map((item) => ({
     href: item.href,

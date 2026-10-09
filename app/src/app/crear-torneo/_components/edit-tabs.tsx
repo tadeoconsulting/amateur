@@ -15,7 +15,7 @@ export type EditTab = (typeof TABS)[number]["key"];
  */
 export function EditTabs({ current, basePath }: { current: EditTab; basePath: string }) {
   return (
-    <nav aria-label="Secciones del torneo" className="mb-6 flex gap-1 rounded-xl bg-btn-regular p-1">
+    <nav aria-label="Secciones del torneo" className="mb-6 flex gap-1 rounded-xl bg-btn-regular p-1 md:hidden">
       {TABS.map((t) => (
         <Link
           key={t.key}

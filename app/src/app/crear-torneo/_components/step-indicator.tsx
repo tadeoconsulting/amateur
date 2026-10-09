@@ -1,6 +1,6 @@
 export function StepIndicator({ current, total }: { current: number; total: number }) {
   return (
-    <div className="flex items-center gap-3 mb-8">
+    <div className="flex items-center gap-3 mb-8 md:hidden">
       <span className="font-heading text-sm font-semibold text-text-primary">
         {current} de {total}
       </span>
