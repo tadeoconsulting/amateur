@@ -24,7 +24,8 @@ export function TeamsList({
   }
 
   return (
-    <div className="mt-4 px-4">
+    // Columna ancha (escritorio): la lista se centra y ocupa el 70 % de la pantalla (sin pasar del contenedor).
+    <div className="mt-4 px-4 @4xl:mx-auto @4xl:w-[70vw] @4xl:max-w-full @4xl:px-0">
       <p className="mb-2 font-heading text-xs font-bold uppercase tracking-wider text-text-secondary">
         {rows.length} {rows.length === 1 ? "equipo" : "equipos"}
       </p>

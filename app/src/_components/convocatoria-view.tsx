@@ -25,6 +25,7 @@ import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { PillTabs } from "@/_components/pill-tabs";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
 
@@ -105,9 +106,11 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   const format = [formatLabel(tournament.format), modalityLabel(tournament.modality)].filter(Boolean).join(" · ");
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-surface-primary">
+    <div className="flex min-h-dvh w-full flex-col bg-surface-primary">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
 
+      {/* La columna (430 px en el celular, más ancha en escritorio) es solo del contenido: la barra de acción de abajo ocupa todo el ancho. */}
+      <div className="mx-auto flex w-full max-w-[430px] flex-1 flex-col md:max-w-4xl lg:max-w-6xl">
       <header className="flex items-center justify-between px-4 py-3">
         <Link href="/" className="font-heading text-lg font-bold text-text-primary">
           Amateur
@@ -119,20 +122,23 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         </span>
       </header>
 
-      <main className="flex-1 px-4 pb-6">
-        <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert">
+      {/* `@container`: lo de adentro se adapta al ancho de esta columna (una sola en el celular; más anchas en escritorio). */}
+      <main className="@container flex-1 px-4 pb-6">
+        <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert @2xl:flex @2xl:items-end @2xl:justify-between @2xl:gap-10 @2xl:p-8">
+          <div>
           <div className="flex items-center gap-3">
             {tournament.logoUrl && <TournamentLogo logoUrl={tournament.logoUrl} size="h-14 w-14" />}
             <div className="min-w-0">
               <p className="font-body text-xs text-brand-200">Convocatoria</p>
-              <h1 className="mt-1 font-heading text-2xl font-bold leading-tight">{tournament.name}</h1>
+              <h1 className="mt-1 font-heading text-2xl font-bold leading-tight @2xl:text-3xl">{tournament.name}</h1>
             </div>
           </div>
           <p className="mt-2 font-body text-sm text-brand-200">
             {[tournament.category || "Libre", format].join(" · ")}
           </p>
+          </div>
 
-          <div className="mt-5">
+          <div className="mt-5 @2xl:mt-0 @2xl:w-80 @2xl:shrink-0">
             <div className="flex items-baseline justify-between font-body text-sm">
               <span>
                 <strong className="font-heading text-lg">{teams}</strong>
@@ -181,7 +187,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         </div>
 
         {mainTab === "detalles" && (
-          <>
+          <div className="@2xl:grid @2xl:grid-cols-2 @2xl:items-start @2xl:gap-x-10">
             <dl className="mt-4">
               <Detail label="Inicio">{longDate(tournament.startDate)}</Detail>
               <Detail label="Sede">{tournament.location}</Detail>
@@ -193,7 +199,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             </dl>
 
             {(tournament.registrationFee || tournament.refereeFee || tournament.rules.length > 0) && (
-              <section className="mt-6">
+              <section className="mt-6 @2xl:mt-4">
                 <h2 className="font-heading text-lg font-bold text-text-primary">Bases del torneo</h2>
                 {(tournament.registrationFee || tournament.refereeFee) && (
                   <dl className="mt-2">
@@ -212,7 +218,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             )}
 
             {tournament.sponsors.length > 0 && (
-              <section className="mt-6">
+              <section className="mt-6 @2xl:col-span-2">
                 <h2 className="font-heading text-lg font-bold text-text-primary">Con el auspicio de</h2>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   {tournament.sponsors.map((s) => {
@@ -235,7 +241,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
                 </div>
               </section>
             )}
-          </>
+          </div>
         )}
 
         {mainTab === "equipos" && (
@@ -245,44 +251,73 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         )}
 
         {mainTab === "fixture" && (
-          <div className="mt-4 -mx-4">
-            <FixtureTabs matches={matches} />
+          // Escritorio ancho: el fixture a la izquierda y, a la derecha, la tabla siempre a la vista (sticky).
+          <div className="mt-4 @4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
+            <div className="-mx-4">
+              <FixtureTabs matches={matches} />
+            </div>
+            {standings.length > 0 && (
+              <aside aria-label="Posiciones" className="hidden @4xl:sticky @4xl:top-4 @4xl:block">
+                <h2 className="mb-3 font-heading text-sm font-bold text-text-primary">Posiciones</h2>
+                <StandingsTable standings={standings} qualifyCount={llaves} compact />
+                <button
+                  type="button"
+                  onClick={() => setPickedTab("resultados")}
+                  className="mt-3 min-h-11 w-full cursor-pointer rounded-lg border border-border-primary px-3 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+                >
+                  Ver tabla completa y goleadores
+                </button>
+              </aside>
+            )}
           </div>
         )}
 
         {mainTab === "resultados" && (
           <div className="mt-4">
-            <div className="flex gap-4 border-b border-border-primary">
-              {(["tabla", "goleadores"] as ResultadosSubTab[]).map((sub) => (
-                <button
-                  key={sub}
-                  onClick={() => setResultadosTab(sub)}
-                  className={`cursor-pointer pb-2 font-body text-sm capitalize transition-colors ${
-                    resultadosTab === sub ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
+            <PillTabs
+              label="Resultados"
+              className="pb-1 @2xl:hidden"
+              value={resultadosTab}
+              onChange={setResultadosTab}
+              tabs={[
+                { key: "tabla", label: "Tabla" },
+                { key: "goleadores", label: "Goleadores" },
+              ]}
+            />
 
-            {resultadosTab === "tabla" && (
-              <div className="mt-4">
+            {/* Celular: una pestaña a la vez. Escritorio: la tabla y los goleadores, uno junto al otro. */}
+            <div className="@2xl:grid @2xl:grid-cols-5 @2xl:items-start @2xl:gap-8">
+              <div className={`mt-4 @2xl:col-span-3 ${resultadosTab === "tabla" ? "" : "hidden @2xl:block"}`}>
+                <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Posiciones</h2>
                 <StandingsTable standings={standings} qualifyCount={llaves} />
               </div>
-            )}
-
-            {resultadosTab === "goleadores" && (
-              <div className="mt-4">
+              <div className={`mt-4 @2xl:col-span-2 ${resultadosTab === "goleadores" ? "" : "hidden @2xl:block"}`}>
+                <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Goleadores</h2>
                 <ScorersList scorers={topScorers} />
               </div>
-            )}
+            </div>
           </div>
         )}
       </main>
 
-      {/* Acción: fija abajo, respetando el área segura del celular */}
-      <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      </div>
+
+      {/* Acción: fija abajo, a todo el ancho de la pantalla, respetando el área segura del celular. Su contenido sigue la columna. */}
+      <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* Celular: las acciones a todo lo ancho. Escritorio: la barra se reparte — a la izquierda el contexto (torneo y cupos), a la derecha las acciones. */}
+        <div className="mx-auto w-full max-w-[430px] px-4 md:flex md:max-w-none md:items-center md:justify-between md:gap-8 md:px-8">
+        <div className="hidden min-w-0 items-center gap-3 md:flex">
+          {tournament.logoUrl && <TournamentLogo logoUrl={tournament.logoUrl} size="h-10 w-10" />}
+          <div className="min-w-0">
+            <p className="truncate font-heading text-sm font-bold text-text-primary">{tournament.name}</p>
+            <p className="truncate font-body text-xs text-text-secondary">
+              {teams}
+              {max !== null && ` de ${max}`} equipos
+              {free !== null && ` · ${free === 0 ? "Sin cupos" : `${free} ${free === 1 ? "cupo libre" : "cupos libres"}`}`}
+            </p>
+          </div>
+        </div>
+        <div className="md:w-96 md:shrink-0">
         {!user ? (
           <div className="flex flex-col gap-2">
             <p className="font-body text-xs text-text-secondary">Para pedir unirte, entra con la cuenta de tu equipo o crea una: al terminar, tu solicitud se envía sola.</p>
@@ -298,6 +333,8 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
         ) : (
           <JoinPanel user={user} tournament={tournament} isOpen={isOpen} nextPath={nextPath} onChanged={refetch} notify={notify} />
         )}
+        </div>
+        </div>
       </footer>
     </div>
   );

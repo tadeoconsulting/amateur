@@ -13,6 +13,7 @@ import { formatWhen } from "@/_lib/match-format";
 import { shareLink } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { PillTabs } from "@/_components/pill-tabs";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { tournamentPublicPath } from "@/_lib/slug";
 import { displayShortName } from "@/_lib/short-name";
@@ -159,21 +160,17 @@ export default function ClubTorneoDetallePage() {
       {detailTab === "torneo" && (
         <>
           {/* Sub-tabs */}
-          <div className="mt-4 flex gap-4 border-b border-border-primary px-4">
-            {(["partidos", "amonestados", "inscritos"] as TorneoSubTab[]).map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setTorneoSubTab(sub)}
-                className={`cursor-pointer pb-2 font-body text-sm capitalize transition-colors ${
-                  torneoSubTab === sub
-                    ? "border-b-2 border-text-primary font-semibold text-text-primary"
-                    : "text-text-secondary"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            label="Torneo"
+            className="mt-4 px-4 pb-1"
+            value={torneoSubTab}
+            onChange={setTorneoSubTab}
+            tabs={[
+              { key: "partidos", label: "Partidos" },
+              { key: "amonestados", label: "Amonestados" },
+              { key: "inscritos", label: "Inscritos" },
+            ]}
+          />
 
           {torneoSubTab === "partidos" && (
             <div className="mt-4">
@@ -256,21 +253,17 @@ export default function ClubTorneoDetallePage() {
       {detailTab === "resultados" && (
         <>
           {/* Sub-tabs */}
-          <div className="mt-4 flex gap-4 border-b border-border-primary px-4">
-            {(["tabla", "goleadores", "compartir"] as ResultadosSubTab[]).map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setResultadosSubTab(sub)}
-                className={`cursor-pointer pb-2 font-body text-sm capitalize transition-colors ${
-                  resultadosSubTab === sub
-                    ? "border-b-2 border-text-primary font-semibold text-text-primary"
-                    : "text-text-secondary"
-                }`}
-              >
-                {sub}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            label="Resultados"
+            className="mt-4 px-4 pb-1"
+            value={resultadosSubTab}
+            onChange={setResultadosSubTab}
+            tabs={[
+              { key: "tabla", label: "Tabla" },
+              { key: "goleadores", label: "Goleadores" },
+              { key: "compartir", label: "Compartir" },
+            ]}
+          />
 
           {resultadosSubTab === "tabla" && (
             <div className="mt-4 px-4">
