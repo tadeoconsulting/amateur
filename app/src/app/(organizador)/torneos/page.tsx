@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TournamentLogo } from "@/_components/tournament-logo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getTournaments, type TournamentListItem } from "@/_lib/api";
@@ -32,17 +33,21 @@ function TournamentCard({ tournament, colorIndex }: { tournament: TournamentList
       className="block rounded-xl border border-border-primary p-4 transition-colors hover:bg-btn-regular"
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full mt-0.5" style={{ backgroundColor: color + "20" }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M4.5 2h9v4a4.5 4.5 0 01-9 0V2zM3.5 3H2a.5.5 0 00-.5.5v1A2.5 2.5 0 004 7h.5M14.5 3H16a.5.5 0 01.5.5v1A2.5 2.5 0 0114 7h-.5M7 11v2M11 11v2M6 13h6a1 1 0 011 1v1H5v-1a1 1 0 011-1z"
-              stroke={color}
-              strokeWidth="1.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+        {tournament.logoUrl ? (
+          <TournamentLogo logoUrl={tournament.logoUrl} className="mt-0.5" />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full mt-0.5" style={{ backgroundColor: color + "20" }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path
+                d="M4.5 2h9v4a4.5 4.5 0 01-9 0V2zM3.5 3H2a.5.5 0 00-.5.5v1A2.5 2.5 0 004 7h.5M14.5 3H16a.5.5 0 01.5.5v1A2.5 2.5 0 0114 7h-.5M7 11v2M11 11v2M6 13h6a1 1 0 011 1v1H5v-1a1 1 0 011-1z"
+                stroke={color}
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate font-heading text-sm font-bold text-text-primary">{tournament.name}</p>
           <p className="mt-0.5 font-body text-xs text-text-secondary">
@@ -226,20 +231,24 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
             return activeTab === "convocatoria" ? (
               <div key={t.id} className="rounded-xl border border-border-primary p-4">
                 <Link href={`/torneos/${t.id}`} className="flex items-start gap-3">
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full mt-0.5"
-                    style={{ backgroundColor: clubColors[i % clubColors.length] + "20" }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <path
-                        d="M4.5 2h9v4a4.5 4.5 0 01-9 0V2zM3.5 3H2a.5.5 0 00-.5.5v1A2.5 2.5 0 004 7h.5M14.5 3H16a.5.5 0 01.5.5v1A2.5 2.5 0 0114 7h-.5M7 11v2M11 11v2M6 13h6a1 1 0 011 1v1H5v-1a1 1 0 011-1z"
-                        stroke={clubColors[i % clubColors.length]}
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
+                  {t.logoUrl ? (
+                    <TournamentLogo logoUrl={t.logoUrl} className="mt-0.5" />
+                  ) : (
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full mt-0.5"
+                      style={{ backgroundColor: clubColors[i % clubColors.length] + "20" }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path
+                          d="M4.5 2h9v4a4.5 4.5 0 01-9 0V2zM3.5 3H2a.5.5 0 00-.5.5v1A2.5 2.5 0 004 7h.5M14.5 3H16a.5.5 0 01.5.5v1A2.5 2.5 0 0114 7h-.5M7 11v2M11 11v2M6 13h6a1 1 0 011 1v1H5v-1a1 1 0 011-1z"
+                          stroke={clubColors[i % clubColors.length]}
+                          strokeWidth="1.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-heading text-sm font-bold text-text-primary">{t.name}</p>

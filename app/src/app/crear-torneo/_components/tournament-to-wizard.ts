@@ -20,6 +20,7 @@ export function wizardStateFromTournament(t: TournamentDetail): WizardState {
   const sede = sedeFromLocation(t.location);
   return {
     nombre: t.name,
+    fotoUrl: t.logoUrl ?? "",
     fecha: t.startDate.slice(0, 10),
     sede,
     sedes: [sede],

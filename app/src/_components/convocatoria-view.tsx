@@ -24,6 +24,7 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
+import { TournamentLogo } from "@/_components/tournament-logo";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { displayShortName } from "@/_lib/short-name";
@@ -122,8 +123,13 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
       <main className="flex-1 px-4 pb-6">
         <section className="rounded-2xl bg-surface-secondary p-5 text-text-invert">
-          <p className="font-body text-xs text-brand-200">Convocatoria</p>
-          <h1 className="mt-1 font-heading text-2xl font-bold leading-tight">{tournament.name}</h1>
+          <div className="flex items-center gap-3">
+            {tournament.logoUrl && <TournamentLogo logoUrl={tournament.logoUrl} size="h-14 w-14" />}
+            <div className="min-w-0">
+              <p className="font-body text-xs text-brand-200">Convocatoria</p>
+              <h1 className="mt-1 font-heading text-2xl font-bold leading-tight">{tournament.name}</h1>
+            </div>
+          </div>
           <p className="mt-2 font-body text-sm text-brand-200">
             {[tournament.category || "Libre", format].join(" · ")}
           </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { TournamentLogo } from "@/_components/tournament-logo";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -258,18 +259,22 @@ export default function TournamentDetailPage() {
         onClick={() => { if (canSwitch) { setSelectedTournamentId(params.id); setShowSelector(true); } }}
         className={`mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-xl bg-surface-secondary px-4 py-3 text-left transition-opacity ${canSwitch ? "cursor-pointer hover:opacity-90" : "cursor-default"}`}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700">
-          <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M4 2h8v4a4 4 0 01-8 0V2zM3 3H1.5a.5.5 0 00-.5.5v1a2 2 0 002 2H3M13 3h1.5a.5.5 0 01.5.5v1a2 2 0 01-2 2h-.5M6 10v2M10 10v2M5 12h6a1 1 0 011 1v1H4v-1a1 1 0 011-1z"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-brand-500"
-            />
-          </svg>
-        </div>
+        {tournament.logoUrl ? (
+          <TournamentLogo logoUrl={tournament.logoUrl} />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4 2h8v4a4 4 0 01-8 0V2zM3 3H1.5a.5.5 0 00-.5.5v1a2 2 0 002 2H3M13 3h1.5a.5.5 0 01.5.5v1a2 2 0 01-2 2h-.5M6 10v2M10 10v2M5 12h6a1 1 0 011 1v1H4v-1a1 1 0 011-1z"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-brand-500"
+              />
+            </svg>
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate font-heading text-sm font-bold text-text-invert">
             {tournament.name}

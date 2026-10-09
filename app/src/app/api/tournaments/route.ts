@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       startDate: t.startDate,
       endDate: t.endDate,
       location: t.location,
+      logoUrl: t.logoUrl,
       organizerId: t.organizerId,
       deletedAt: t.deletedAt,
       organizer: t.organizer,

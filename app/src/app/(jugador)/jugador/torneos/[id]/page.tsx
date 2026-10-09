@@ -8,6 +8,7 @@ import { formatLabel } from "@/_lib/tournament-labels";
 import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { roundLabel } from "@/_lib/fixture";
+import { TournamentLogo } from "@/_components/tournament-logo";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { TeamsList } from "@/_components/teams-list";
@@ -56,11 +57,7 @@ function TournamentSwitcher({ userId, currentId, tournament }: { userId: string 
           className={`flex w-full items-center justify-between ${canSwitch ? "cursor-pointer" : "cursor-default"}`}
         >
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3D1952]">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </div>
+            <TournamentLogo logoUrl={tournament?.logoUrl} />
             <div className="min-w-0 text-left">
               <p className="truncate text-sm font-bold text-text-primary">{tournament?.name ?? "Torneo"}</p>
               {tournament && (
@@ -101,11 +98,7 @@ function TournamentSwitcher({ userId, currentId, tournament }: { userId: string 
                     t.id === currentId ? "border-field-green bg-field-green/5" : "border-brand-100"
                   }`}
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#3D1952]">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
-                    </svg>
-                  </div>
+                  <TournamentLogo logoUrl={t.logoUrl} />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-text-primary">{t.name}</p>
                     <p className="text-xs text-text-secondary">{detail(t)}</p>

@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 export type WizardState = {
   // Paso 1
   nombre: string;
+  fotoUrl: string; // foto del torneo (URL); "" = sin foto
   fecha: string;
   sede: Sede | null;
   sedes: Sede[];
@@ -33,6 +34,7 @@ export type WizardState = {
 
 const INITIAL: WizardState = {
   nombre: "",
+  fotoUrl: "",
   fecha: "",
   sede: null,
   sedes: [],
