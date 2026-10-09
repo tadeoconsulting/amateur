@@ -9,7 +9,8 @@ import { useApi } from "@/_lib/use-api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { roundLabel } from "@/_lib/fixture";
 import { ClubCrest } from "@/_components/club-crest";
-import { PlayerAvatar } from "@/_components/player-avatar";
+import { FixtureTabs } from "@/_components/fixture-tabs";
+import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { TeamsList } from "@/_components/teams-list";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
@@ -150,6 +151,8 @@ export default function JugadorTorneoDetailPage() {
   const allMatches = matchesData ?? [];
   const standings = standingsData ?? [];
   const topScorers = scorersData ?? [];
+  // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
+  const llaves = tournamentDetail?.format === "liga" ? (tournamentDetail.playoffTeams ?? null) : null;
 
   // "Llaves" solo aparece si el torneo tiene cuadro de eliminación armado (antes mostraba un
   // cuadro de ejemplo fijo en cualquier torneo).
@@ -160,21 +163,6 @@ export default function JugadorTorneoDetailPage() {
   const bracketRounds = [...new Set(bracketMatches.map((m) => m.matchday))].sort((a, b) => a - b);
   const totalRounds = bracketRounds.length > 0 ? Math.max(...bracketRounds) : 0;
   const currentRound = llavesRound !== null && bracketRounds.includes(llavesRound) ? llavesRound : (bracketRounds[bracketRounds.length - 1] ?? 0);
-
-  const groupedMatches: Record<string, typeof allMatches> = {};
-  for (const m of allMatches) {
-    const dateLabel =
-      m.time === ""
-        ? UNSCHEDULED_LABEL
-        : new Date(m.date).toLocaleDateString("es-PE", { timeZone: "UTC",
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          });
-    const key = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
-    if (!groupedMatches[key]) groupedMatches[key] = [];
-    groupedMatches[key].push(m);
-  }
 
   return (
     <div className="w-full pb-8">
@@ -218,55 +206,8 @@ export default function JugadorTorneoDetailPage() {
       {/* Tab content */}
       <div className="mt-4 px-4">
         {shownTab === "Partidos" && (
-          <div className="space-y-6">
-            {Object.entries(groupedMatches).map(([date, dateMatches]) => (
-              <div key={date}>
-                <p className="mb-3 text-sm font-semibold italic text-text-primary">{date}</p>
-                {/* Group matches by group */}
-                {Object.entries(
-                  dateMatches.reduce<Record<string, typeof dateMatches>>((acc, m) => {
-                    const g = m.groupName || "Sin grupo";
-                    if (!acc[g]) acc[g] = [];
-                    acc[g].push(m);
-                    return acc;
-                  }, {})
-                ).map(([group, gMatches]) => (
-                  <div key={group} className="mb-3 rounded-lg border border-brand-100">
-                    <div className="border-b border-brand-100 px-3 py-2">
-                      <span className="text-xs font-semibold text-text-primary">{group}</span>
-                    </div>
-                    {gMatches.map((match) => (
-                      <div key={match.id} className="flex items-center justify-between px-3 py-3">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <ClubCrest club={match.homeTeam} />
-                            <span className="text-sm text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
-                            <span className="ml-auto text-sm font-bold text-text-primary">
-                              {match.homeScore ?? "-"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <ClubCrest club={match.awayTeam} />
-                            <span className="text-sm text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
-                            <span className="ml-auto text-sm font-bold text-text-primary">
-                              {match.awayScore ?? "-"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4 text-right">
-                          <p className="text-xs text-text-secondary">Fecha {match.matchday}</p>
-                          <p className="text-xs text-text-secondary">
-                            {match.time === ""
-                              ? UNSCHEDULED_LABEL
-                              : new Date(match.date).toLocaleDateString("es-PE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ))}
+          <div className="-mx-4">
+            <FixtureTabs matches={allMatches} />
           </div>
         )}
 
@@ -335,98 +276,9 @@ export default function JugadorTorneoDetailPage() {
           </div>
         )}
 
-        {shownTab === "Tabla" && (
-          <div className="rounded-lg border border-brand-100">
-            <div className="border-b border-brand-100 px-3 py-2">
-              <span className="text-sm font-semibold text-text-primary">Posiciones</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-brand-100 text-text-secondary">
-                    <th className="px-3 py-2 text-left font-medium">Equipo</th>
-                    <th className="px-1.5 py-2 text-center font-medium">PTS</th>
-                    <th className="px-1.5 py-2 text-center font-medium">PJ</th>
-                    <th className="px-1.5 py-2 text-center font-medium">PG</th>
-                    <th className="px-1.5 py-2 text-center font-medium">PE</th>
-                    <th className="px-1.5 py-2 text-center font-medium">PP</th>
-                    <th className="px-1.5 py-2 text-center font-medium">DG</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {standings.map((row) => (
-                    <tr key={row.position} className="border-b border-brand-50">
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <span className={`font-semibold ${row.position === 1 ? "text-field-green" : "text-text-primary"}`}>
-                            {row.position}
-                          </span>
-                          <ClubCrest club={row} />
-                          <span className="text-text-primary">{row.clubName}</span>
-                        </div>
-                      </td>
-                      <td className="px-1.5 py-2 text-center font-semibold text-text-primary">{row.points}</td>
-                      <td className="px-1.5 py-2 text-center text-text-secondary">{row.played}</td>
-                      <td className="px-1.5 py-2 text-center text-text-secondary">{row.won}</td>
-                      <td className="px-1.5 py-2 text-center text-text-secondary">{row.drawn}</td>
-                      <td className="px-1.5 py-2 text-center text-text-secondary">{row.lost}</td>
-                      <td className="px-1.5 py-2 text-center text-text-secondary">
-                        {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-2">
-              <div className="h-2.5 w-2.5 rounded-sm bg-field-green" />
-              <span className="text-xs text-text-secondary">Clasifica</span>
-            </div>
-          </div>
-        )}
+        {shownTab === "Tabla" && <StandingsTable standings={standings} qualifyCount={llaves} />}
 
-        {shownTab === "Goleadores" && (
-          <div className="space-y-0">
-            {topScorers.map((scorer, idx) => (
-              <div
-                key={scorer.playerId}
-                className={`flex items-center justify-between py-3 ${idx === 0 ? "border-b border-brand-100 pb-4" : ""} ${idx > 0 ? "border-b border-brand-50" : ""}`}
-              >
-                <div className="flex items-center gap-3">
-                  {idx > 0 && (
-                    <span className="w-4 text-sm font-semibold text-text-secondary">{idx + 1}</span>
-                  )}
-                  <PlayerAvatar
-                    avatarUrl={scorer.avatarUrl}
-                    size={idx === 0 ? "h-12 w-12" : "h-8 w-8"}
-                    iconSize={idx === 0 ? 24 : 16}
-                    background="bg-brand-200"
-                    iconClass="text-text-secondary"
-                  />
-                  <div>
-                    <p className={`font-semibold text-text-primary ${idx === 0 ? "text-sm" : "text-sm"}`}>
-                      {scorer.firstName} {scorer.lastName}
-                      {idx === 0 && (
-                        <span className="ml-1.5 inline-block">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="inline text-field-green">
-                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 12c0 4.29 2.79 8.14 6.84 9.8.55.22 1.17.22 1.72 0A12.024 12.024 0 0021 12c0-.94-.12-1.85-.34-2.72" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-text-secondary">{scorer.clubName}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-text-primary">
-                    {String(scorer.goals).padStart(2, "0")}
-                  </p>
-                  <p className="text-[10px] text-text-secondary">Goles</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {shownTab === "Goleadores" && <ScorersList scorers={topScorers} />}
 
         {shownTab === "Equipos" && (
           <div className="-mx-4">

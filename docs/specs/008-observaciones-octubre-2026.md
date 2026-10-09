@@ -65,6 +65,12 @@ Pedido posterior (2026-10-08): en una liga con llaves, la tabla que ve el fan (`
 ## 8 · Dashboard del organizador sin "Próximos partidos"
 Pedido posterior (2026-10-08): el dashboard (`/dashboard`) ya no muestra la sección *Próximos partidos*, porque esa información vive en **Partidos** ([punto 2](#2--partidos-por-torneo-y-por-fecha-partidos)). Quedan *Indicadores*, *Solicitudes pendientes* y *Goleadores*. Código: `(organizador)/dashboard/page.tsx`.
 
+## 9 · Vista del jugador igual a la del fan y el club
+Pedido posterior (2026-10-08, `/jugador/torneos/{id}`): la vista del jugador tenía su propia lista de partidos (por día, sin fechas ni rondas), tabla y goleadores con otro formato. Ahora las tres vistas (fan, jugador y club) usan los mismos componentes:
+- **Partidos:** `FixtureTabs` — tabs `Fecha N` (con sub-grupos por grupo) y, después, una tab por **ronda del cuadro** (Octavos, Cuartos, Semifinales, Final). Antes los partidos del cuadro compartían la tab "Fecha 1" con los de la liga o los grupos porque en ellos `matchday` es la ronda; esto afectaba también al organizador y al club en Copa y en liga con llaves.
+- **Tabla y Goleadores:** `_components/tournament-results.tsx` (`StandingsTable`, `ScorersList`), con la regla de clasificados en verde y no clasificados en rojo (ver [003](003-fixture.md)). El club tenía una copia con la marca fija anterior y ahora también respeta las llaves.
+- Se mantiene la pestaña **Llaves** del jugador.
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.

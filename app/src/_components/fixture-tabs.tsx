@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import type { MatchListItem } from "@/_lib/api";
 import { formatMatchDate, formatTime12, UNSCHEDULED_LABEL } from "@/_lib/match-format";
-import { isUnscheduled } from "@/_lib/fixture";
+import { isUnscheduled, roundLabel } from "@/_lib/fixture";
 import { ClubCrest } from "@/_components/club-crest";
 
 /**
  * Lista de partidos de un torneo, organizada en tabs "Fecha N" — como se armó el fixture —
- * y, dentro de cada fecha, sub-agrupada por grupo cuando el torneo los tiene. La usan tanto
+ * y, dentro de cada fecha, sub-agrupada por grupo cuando el torneo los tiene. Los partidos de un
+ * cuadro de eliminación (`decisive`) van en sus propias tabs por ronda (Octavos, Cuartos,
+ * Semifinales, Final), después de las fechas: en ellos `matchday` es la ronda, y no se mezclan con
+ * la "Fecha 1" de la liga o de los grupos. La usan tanto
  * el organizador como el club, para que las dos vistas muestren la misma estructura en vez
  * de cada una su propia lista plana.
  *
@@ -31,9 +34,16 @@ export function FixtureTabs({
   /** Si se pasa (el organizador), los partidos que todavía no empezaron muestran un botón para editarlos. */
   onEdit?: (match: MatchListItem) => void;
 }) {
-  const matchdays = [...new Set(matches.map((m) => m.matchday))].sort((a, b) => a - b);
-  const [activeMatchday, setActiveMatchday] = useState<number | null>(null);
-  const activeMatchdayIndex = activeMatchday ?? matchdays[0];
+  const sorted = (xs: number[]) => [...new Set(xs)].sort((a, b) => a - b);
+  const fechas = sorted(matches.filter((m) => !m.decisive).map((m) => m.matchday));
+  const rondas = sorted(matches.filter((m) => m.decisive).map((m) => m.matchday));
+  const totalRounds = rondas.length > 0 ? Math.max(...rondas) : 0;
+  const tabs = [
+    ...fechas.map((n) => ({ key: `f${n}`, label: `Fecha ${n}`, decisive: false, n })),
+    ...rondas.map((n) => ({ key: `r${n}`, label: roundLabel(n, totalRounds), decisive: true, n })),
+  ];
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const activeTab = tabs.find((t) => t.key === activeKey) ?? tabs[0];
 
   if (matches.length === 0) {
     return (
@@ -43,28 +53,28 @@ export function FixtureTabs({
     );
   }
 
-  const dayMatches = matches.filter((m) => m.matchday === activeMatchdayIndex);
+  const dayMatches = matches.filter((m) => m.decisive === activeTab.decisive && m.matchday === activeTab.n);
   const grouped = dayMatches.reduce<Record<string, MatchListItem[]>>((acc, m) => {
-    const g = m.groupName || "General";
+    const g = m.decisive ? activeTab.label : m.groupName || "General";
     (acc[g] ??= []).push(m);
     return acc;
   }, {});
 
   return (
     <div>
-      {matchdays.length > 1 && (
+      {tabs.length > 1 && (
         <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3">
-          {matchdays.map((day) => (
+          {tabs.map((tab) => (
             <button
-              key={day}
-              onClick={() => setActiveMatchday(day)}
+              key={tab.key}
+              onClick={() => setActiveKey(tab.key)}
               className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
-                activeMatchdayIndex === day
+                activeTab.key === tab.key
                   ? "bg-surface-secondary text-text-invert"
                   : "border border-border-primary text-text-primary"
               }`}
             >
-              Fecha {day}
+              {tab.label}
             </button>
           ))}
         </div>

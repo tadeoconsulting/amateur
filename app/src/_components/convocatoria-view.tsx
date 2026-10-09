@@ -23,10 +23,8 @@ import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
+import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { FixtureTabs } from "@/_components/fixture-tabs";
-import { ClubCrest } from "@/_components/club-crest";
-import { PlayerAvatar } from "@/_components/player-avatar";
-import { displayShortName } from "@/_lib/short-name";
 import { TeamsList } from "@/_components/teams-list";
 
 type Notify = (message: string, tone: "success" | "error") => void;
@@ -263,99 +261,14 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             </div>
 
             {resultadosTab === "tabla" && (
-              <div className="mt-4 overflow-x-auto rounded-xl border border-border-primary">
-                <table className="w-full text-left font-body text-xs">
-                  <thead>
-                    <tr className="border-b border-border-primary bg-brand-100">
-                      <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">#</th>
-                      <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">Equipo</th>
-                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">PJ</th>
-                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">G</th>
-                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">E</th>
-                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">P</th>
-                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">DG</th>
-                      <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">Pts</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {standings.map((row) => (
-                      <tr key={row.position} className="border-b border-border-primary last:border-0">
-                        <td className="px-2 py-2.5">
-                          <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                            // Liga con llaves: verde los que clasifican, rojo los que no. Sin llaves, la marca de siempre.
-                            llaves !== null
-                              ? row.position <= llaves ? "bg-verification text-white" : "bg-error text-white"
-                              : row.position <= 2 ? "bg-verification text-white" : row.position >= 7 ? "bg-error text-white" : "bg-brand-200 text-text-secondary"
-                          }`}>
-                            {row.position}
-                          </div>
-                        </td>
-                        <td className="px-2 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <ClubCrest club={row} />
-                            <span className="truncate font-heading text-xs font-semibold text-text-primary">{displayShortName(row.shortName)}</span>
-                          </div>
-                        </td>
-                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>
-                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>
-                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>
-                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.lost}</td>
-                        <td className="px-2 py-2.5 text-center text-text-secondary">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
-                        <td className="px-2 py-2.5 text-center font-heading font-bold text-text-primary">{row.points}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {standings.length === 0 && (
-                  <p className="px-4 py-8 text-center font-body text-sm text-text-secondary">Todavía no hay partidos jugados.</p>
-                )}
-              </div>
-            )}
-
-            {resultadosTab === "tabla" && llaves !== null && standings.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-body text-xs text-text-secondary">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-verification" aria-hidden="true" />
-                  Clasifica a las llaves (los {llaves} primeros)
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-error" aria-hidden="true" />
-                  No clasifica
-                </span>
+              <div className="mt-4">
+                <StandingsTable standings={standings} qualifyCount={llaves} />
               </div>
             )}
 
             {resultadosTab === "goleadores" && (
-              <div className="mt-4 flex flex-col gap-2">
-                {topScorers.map((p, i) => (
-                  <div
-                    key={p.playerId}
-                    className={`flex items-center gap-3 rounded-xl p-3 ${i === 0 ? "border-2 border-yellow bg-yellow/5" : "border border-border-primary"}`}
-                  >
-                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      i === 0 ? "bg-yellow text-white" : "bg-brand-200 text-text-secondary"
-                    }`}>
-                      {i + 1}
-                    </div>
-                    <PlayerAvatar avatarUrl={p.avatarUrl} size="h-8 w-8" iconSize={14} iconClass="text-text-secondary" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-heading text-sm font-bold text-text-primary">
-                        {p.firstName} {p.lastName}
-                      </p>
-                      <p className="font-body text-xs text-text-secondary">{p.clubName}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary">
-                        <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1" />
-                        <path d="M7 1.75l1 2h-2l1-2zM3.5 5l2 1-1 2-2-1 1-2zM10.5 5l-2 1 1 2 2-1-1-2zM5 10.5l2-1 2 1-1 2H6l-1-2z" fill="currentColor" opacity="0.3" />
-                      </svg>
-                      <span className="font-heading text-sm font-bold text-text-primary">{p.goals}</span>
-                    </div>
-                  </div>
-                ))}
-                {topScorers.length === 0 && (
-                  <p className="py-8 text-center font-body text-sm text-text-secondary">Todavía no hay goles registrados.</p>
-                )}
+              <div className="mt-4">
+                <ScorersList scorers={topScorers} />
               </div>
             )}
           </div>
