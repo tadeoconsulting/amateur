@@ -28,6 +28,8 @@ import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
+import { shareLink } from "@/_lib/share";
+import { parseView, shareSearch, withView } from "@/_lib/share-view";
 
 type Notify = (message: string, tone: "success" | "error") => void;
 type MainTab = "fixture" | "resultados" | "equipos" | "detalles";
@@ -59,8 +61,9 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   // null = todavía no eligió: abre en el fixture, o en los detalles si el torneo aún no tiene partidos
   // (una convocatoria abierta no tiene nada que seguir todavía, sí tiene bases y cupos).
-  const [pickedTab, setPickedTab] = useState<MainTab | null>(null);
-  const [resultadosTab, setResultadosTab] = useState<ResultadosSubTab>("tabla");
+  // La sección y la pestaña de resultados salen de la URL si la trae (un enlace compartido abre donde estaba quien lo compartió).
+  const [pickedTab, setPickedTab] = useState<MainTab | null>(() => (typeof window !== "undefined" ? parseView(window.location.search).vista : null));
+  const [resultadosTab, setResultadosTab] = useState<ResultadosSubTab>(() => (typeof window !== "undefined" ? (parseView(window.location.search).sub ?? "tabla") : "tabla"));
   const notify: Notify = (message, tone) => setToast({ message, tone });
 
   const matches = matchesData ?? [];
@@ -94,6 +97,29 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   }
   if (!tournament || loadingAuth || loadingMatches) return <PageSpinner />;
   const mainTab: MainTab = pickedTab ?? (matches.length > 0 ? "fixture" : "detalles");
+
+  // Elegir una sección o una pestaña la deja también en la URL (los demás parámetros se conservan).
+  function writeView(vista: MainTab, sub: ResultadosSubTab) {
+    const query = withView(window.location.search.slice(1), { vista, sub });
+    window.history.replaceState(null, "", `${window.location.pathname}?${query}${window.location.hash}`);
+  }
+  function pickTab(tab: MainTab) {
+    setPickedTab(tab);
+    writeView(tab, resultadosTab);
+  }
+  function pickResultados(sub: ResultadosSubTab) {
+    setResultadosTab(sub);
+    writeView("resultados", sub);
+  }
+
+  // El enlace que se comparte lleva solo la vista actual: la sección, la fecha del fixture o la pestaña de resultados.
+  async function shareView() {
+    const search = shareSearch(window.location.search, { vista: mainTab, sub: resultadosTab });
+    const name = tournament?.name ?? "este torneo";
+    const result = await shareLink({ title: name, text: `Mira ${name} en Amateur`, url: `${window.location.origin}${publicPath}?${search}` });
+    if (result === "copied") notify("Enlace copiado. Pégalo donde quieras compartirlo.", "success");
+    if (result === "failed") notify("No se pudo copiar el enlace. Cópialo de la barra de direcciones.", "error");
+  }
 
   const isOpen = OPEN_STATUSES.includes(tournament.status);
   const teams = tournament._count.teams;
@@ -165,7 +191,8 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {/* Un fan que abre este link no solo viene a inscribir un equipo: quiere seguir el
          * torneo — fixture, tabla, goleadores — igual que lo ve un organizador o un club. */}
-        <div className="no-scrollbar mt-4 flex gap-1.5 overflow-x-auto">
+        <div className="mt-4 flex items-center gap-1.5">
+        <div className="no-scrollbar flex min-w-0 gap-1 overflow-x-auto sm:gap-1.5">
           {([
             { key: "fixture", label: "Fixture" },
             { key: "resultados", label: "Resultados" },
@@ -176,14 +203,27 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
           ] as { key: MainTab; label: string }[]).map((t) => (
             <button
               key={t.key}
-              onClick={() => setPickedTab(t.key)}
-              className={`shrink-0 cursor-pointer rounded-lg px-3 py-2 font-heading text-[13px] font-medium transition-colors ${
+              onClick={() => pickTab(t.key)}
+              className={`shrink-0 cursor-pointer rounded-lg px-[7px] py-2 font-heading text-[13px] font-medium transition-colors sm:px-3 ${
                 mainTab === t.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
               }`}
             >
               {t.label}
             </button>
           ))}
+        </div>
+          {/* Fuera de la fila que se desplaza: en el celular queda siempre a la vista (solo el ícono); donde hay espacio, con texto y pegado a "Detalles". */}
+          <button
+            type="button"
+            onClick={shareView}
+            aria-label="Compartir esta vista"
+            className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 font-heading text-[13px] font-medium text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M10 12.5V3m0 0L6.5 6.5M10 3l3.5 3.5M4.5 10.5v5a1.5 1.5 0 001.5 1.5h8a1.5 1.5 0 001.5-1.5v-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="hidden sm:inline">Compartir</span>
+          </button>
         </div>
 
         {mainTab === "detalles" && (
@@ -252,7 +292,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {mainTab === "fixture" && (
           <div className="mt-4">
-            <FixtureWithStandings bleed syncUrl calendar={{ tournamentId, title: tournament.name, publicPath }} matches={matches} standings={standings} qualifyCount={llaves} onViewFullTable={() => setPickedTab("resultados")} />
+            <FixtureWithStandings bleed syncUrl matches={matches} standings={standings} qualifyCount={llaves} onViewFullTable={() => pickTab("resultados")} />
           </div>
         )}
 
@@ -262,7 +302,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
               label="Resultados"
               className="pb-1 @2xl:hidden"
               value={resultadosTab}
-              onChange={setResultadosTab}
+              onChange={pickResultados}
               tabs={[
                 { key: "tabla", label: "Tabla" },
                 { key: "goleadores", label: "Goleadores" },
