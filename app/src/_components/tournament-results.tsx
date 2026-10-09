@@ -10,13 +10,14 @@ import { PlayerAvatar } from "@/_components/player-avatar";
  */
 
 /**
+ * `highlightClubIds`: resalta las filas de esos clubes (por ejemplo los dos del partido de la ficha).
  * `compact`: sin las columnas G, E y P (queda #, equipo, PJ, DG y Pts), para el panel lateral de escritorio.
  *
  * `qualifyCount`: cuántos de la tabla pasan a llaves (`playoffTeams`, solo en una liga). Con
  * llaves, del 1.º al N.º va en verde y del N+1 en adelante en rojo; sin ellas, la marca de siempre
  * (1.º–2.º verde, 7.º en adelante rojo).
  */
-export function StandingsTable({ standings, qualifyCount, compact = false }: { standings: StandingsRow[]; qualifyCount: number | null; compact?: boolean }) {
+export function StandingsTable({ standings, qualifyCount, compact = false, highlightClubIds = [] }: { standings: StandingsRow[]; qualifyCount: number | null; compact?: boolean; highlightClubIds?: string[] }) {
   const dot = (position: number) =>
     qualifyCount !== null
       ? position <= qualifyCount ? "bg-verification text-white" : "bg-error text-white"
@@ -40,7 +41,7 @@ export function StandingsTable({ standings, qualifyCount, compact = false }: { s
           </thead>
           <tbody>
             {standings.map((row) => (
-              <tr key={row.clubId} className="border-b border-border-primary last:border-0">
+              <tr key={row.clubId} className={`border-b border-border-primary last:border-0 ${highlightClubIds.includes(row.clubId) ? "bg-field-light" : ""}`}>
                 <td className="px-2 py-2.5">
                   <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${dot(row.position)}`}>{row.position}</div>
                 </td>

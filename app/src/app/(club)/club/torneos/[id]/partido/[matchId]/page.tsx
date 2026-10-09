@@ -6,6 +6,7 @@ import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
 import { ClubCrest } from "@/_components/club-crest";
+import { MatchSheet, useWideSheet } from "@/_components/match-sheet";
 
 interface MatchEventItem {
   id: string;
@@ -19,6 +20,7 @@ interface MatchEventItem {
 export default function ClubPartidoDetallePage() {
   const { id, matchId } = useParams<{ id: string; matchId: string }>();
 
+  const wide = useWideSheet();
   const { data: matchData, loading } = useApi(async () => {
     const res = await fetch(`/api/matches/${matchId}`);
     if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -43,69 +45,9 @@ export default function ClubPartidoDetallePage() {
   const awayEvents = events.filter((e) => e.teamId === match.awayTeam?.id);
   const allMinutes = [...new Set(events.map((e) => e.minute))].sort((a, b) => a - b);
 
-  return (
-    <div className="flex min-h-dvh flex-col pb-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-        <Link href={`/club/torneos/${id}`} className="shrink-0 p-1 text-text-primary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
-        <h1 className="font-heading text-lg font-bold text-text-primary">
-          {isLive ? "En vivo" : isFinished ? "Resultado" : "Partido"}
-        </h1>
-      </div>
-
-      {/* Match card */}
-      <div className="mx-4 mt-2 rounded-xl border border-border-primary p-4">
-        {/* Status badge */}
-        <div className="flex justify-center">
-          {isLive && (
-            <span className="rounded-full bg-verification px-3 py-1 font-heading text-xs font-bold text-white">
-              75&apos; En vivo
-            </span>
-          )}
-          {isFinished && (
-            <span className="rounded-full bg-brand-200 px-3 py-1 font-heading text-xs font-bold text-text-secondary">
-              FT · Finalizado
-            </span>
-          )}
-          {isScheduled && (
-            <span className="rounded-full bg-brand-100 px-3 py-1 font-heading text-xs font-bold text-text-secondary">
-              {formatWhen(match)}
-            </span>
-          )}
-        </div>
-
-        {/* Teams and score */}
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex flex-col items-center gap-2">
-            <ClubCrest club={match.homeTeam} size="h-12 w-12" textSize="text-xs" />
-            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="font-heading text-3xl font-bold text-text-primary">
-              {match.homeScore ?? 0}
-            </span>
-            <span className="font-heading text-lg text-text-secondary">-</span>
-            <span className="font-heading text-3xl font-bold text-text-primary">
-              {match.awayScore ?? 0}
-            </span>
-          </div>
-
-          <div className="flex flex-col items-center gap-2">
-            <ClubCrest club={match.awayTeam} size="h-12 w-12" textSize="text-xs" />
-            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
-          </div>
-        </div>
-
-        <p className="mt-3 text-center font-body text-xs text-text-secondary">
-          {match.location} · {match.groupName}
-        </p>
-      </div>
-
+  // Lo propio de esta pantalla (titulares, cronología, aviso): igual en celular y en escritorio.
+  const body = (
+    <>
       {/* Titulares link (for club) */}
       {(isLive || isScheduled) && (
         <div className="mx-4 mt-3">
@@ -203,6 +145,82 @@ export default function ClubPartidoDetallePage() {
           </p>
         </div>
       )}
+    </>
+  );
+
+  // Pantalla ancha: la ficha con la cabecera por colores de los clubes y el contexto al lado.
+  if (wide) {
+    return (
+      <MatchSheet match={match} tournamentId={id} backHref={`/club/torneos/${id}`} backLabel="Volver al torneo">
+        <div className="-mx-4">{body}</div>
+      </MatchSheet>
+    );
+  }
+
+  return (
+    <div className="flex min-h-dvh flex-col pb-4">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+        <Link href={`/club/torneos/${id}`} className="shrink-0 p-1 text-text-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+        <h1 className="font-heading text-lg font-bold text-text-primary">
+          {isLive ? "En vivo" : isFinished ? "Resultado" : "Partido"}
+        </h1>
+      </div>
+
+      {/* Match card */}
+      <div className="mx-4 mt-2 rounded-xl border border-border-primary p-4">
+        {/* Status badge */}
+        <div className="flex justify-center">
+          {isLive && (
+            <span className="rounded-full bg-verification px-3 py-1 font-heading text-xs font-bold text-white">
+              75&apos; En vivo
+            </span>
+          )}
+          {isFinished && (
+            <span className="rounded-full bg-brand-200 px-3 py-1 font-heading text-xs font-bold text-text-secondary">
+              FT · Finalizado
+            </span>
+          )}
+          {isScheduled && (
+            <span className="rounded-full bg-brand-100 px-3 py-1 font-heading text-xs font-bold text-text-secondary">
+              {formatWhen(match)}
+            </span>
+          )}
+        </div>
+
+        {/* Teams and score */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="flex flex-col items-center gap-2">
+            <ClubCrest club={match.homeTeam} size="h-12 w-12" textSize="text-xs" />
+            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="font-heading text-3xl font-bold text-text-primary">
+              {match.homeScore ?? 0}
+            </span>
+            <span className="font-heading text-lg text-text-secondary">-</span>
+            <span className="font-heading text-3xl font-bold text-text-primary">
+              {match.awayScore ?? 0}
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <ClubCrest club={match.awayTeam} size="h-12 w-12" textSize="text-xs" />
+            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
+          </div>
+        </div>
+
+        <p className="mt-3 text-center font-body text-xs text-text-secondary">
+          {match.location} · {match.groupName}
+        </p>
+      </div>
+
+      {body}
     </div>
   );
 }
