@@ -304,8 +304,20 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
       {/* Acción: fija abajo, a todo el ancho de la pantalla, respetando el área segura del celular. Su contenido sigue la columna. */}
       <footer className="sticky bottom-0 border-t border-brand-200 bg-surface-primary pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-[430px] px-4 md:max-w-4xl lg:max-w-6xl">
-        <div className="md:ml-auto md:max-w-sm">
+        {/* Celular: las acciones a todo lo ancho. Escritorio: la barra se reparte — a la izquierda el contexto (torneo y cupos), a la derecha las acciones. */}
+        <div className="mx-auto w-full max-w-[430px] px-4 md:flex md:max-w-none md:items-center md:justify-between md:gap-8 md:px-8">
+        <div className="hidden min-w-0 items-center gap-3 md:flex">
+          {tournament.logoUrl && <TournamentLogo logoUrl={tournament.logoUrl} size="h-10 w-10" />}
+          <div className="min-w-0">
+            <p className="truncate font-heading text-sm font-bold text-text-primary">{tournament.name}</p>
+            <p className="truncate font-body text-xs text-text-secondary">
+              {teams}
+              {max !== null && ` de ${max}`} equipos
+              {free !== null && ` · ${free === 0 ? "Sin cupos" : `${free} ${free === 1 ? "cupo libre" : "cupos libres"}`}`}
+            </p>
+          </div>
+        </div>
+        <div className="md:w-96 md:shrink-0">
         {!user ? (
           <div className="flex flex-col gap-2">
             <p className="font-body text-xs text-text-secondary">Para pedir unirte, entra con la cuenta de tu equipo o crea una: al terminar, tu solicitud se envía sola.</p>
