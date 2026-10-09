@@ -252,7 +252,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {mainTab === "fixture" && (
           <div className="mt-4">
-            <FixtureWithStandings bleed matches={matches} standings={standings} qualifyCount={llaves} onViewFullTable={() => setPickedTab("resultados")} />
+            <FixtureWithStandings bleed syncUrl calendar={{ tournamentId, title: tournament.name, publicPath }} matches={matches} standings={standings} qualifyCount={llaves} onViewFullTable={() => setPickedTab("resultados")} />
           </div>
         )}
 

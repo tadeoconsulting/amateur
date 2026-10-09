@@ -132,6 +132,13 @@ Tomando la ficha del partido de la Premier League como referencia. **Solo escrit
 - `useWideSheet` (`useMediaQuery`) monta la ficha solo en pantallas anchas; los *layouts* del club y del organizador usan la columna ancha en estas dos rutas.
 - **Pendiente:** una ficha pública para el fan y el jugador (hoy sus filas de partido no llevan a ninguna pantalla) y la ficha en celular.
 
+### Fase 3 · Agregar al calendario y URL por fecha
+Referencia: "Agregar partidos al calendario" y la URL por fecha de la Premier League. Disponible en la vista pública del fan (`/{organizador}/{torneo}`), en celular y en escritorio; en el celular es una fila nueva con el botón sobre las fechas.
+- **URL por fecha:** la fecha elegida va en la URL (`?fecha=5` para la fecha 5 de la liga o los grupos, `?ronda=2` para la ronda 2 del cuadro; conserva los demás parámetros). Se puede compartir y sobrevive a recargar; sin elegir nada, la URL queda limpia y el fixture abre en la fecha actual. Una fecha que no existe se ignora. Lógica pura en `_lib/fixture.ts` (`tabKeyFromSearch`, `withTabParam`) con pruebas.
+- **Calendario `.ics`:** `GET /api/tournaments/:id/calendar` (pública; 404 si el torneo no existe o está eliminado). Filtros `?fecha=`, `?ronda=`, `?equipo=<clubId>` (los partidos de un club) y `?descargar=1` (como archivo). Solo incluye partidos **con día y hora que todavía no terminaron**. Los eventos van con hora flotante (sin zona), porque la hora de un partido es de reloj de cancha; duración = `slotMinutesFor(minutesPerHalf)`; llevan sede, "Torneo · Fecha N" y el enlace a esa fecha. Caché pública de 5 minutos. Generador en `_lib/ics.ts` (RFC 5545: escape de `\ ; ,` y saltos de línea, líneas de 75 bytes, fin de línea CRLF), con pruebas.
+- **Menú "Agregar al calendario"** (`CalendarMenu`, un `<details>`): *Descargar {fecha} (.ics)* (o un aviso si esa fecha no tiene partidos con horario por jugar), *Suscribirme a todo el torneo* (`webcal://`, se actualiza solo cuando cambian los horarios) y *Copiar el enlace de {fecha}*.
+- **No incluido:** el menú en las pantallas con sesión de jugador, club y organizador (la API ya acepta `?equipo=` para un calendario personal de un club).
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.

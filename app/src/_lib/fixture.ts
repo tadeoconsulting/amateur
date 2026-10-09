@@ -604,3 +604,26 @@ export function teamForm(matches: FormMatch[], clubId: string, current: { id: st
       return { matchId: m.id, result, goalsFor, goalsAgainst, opponent: home ? m.awayTeam : m.homeTeam, home };
     });
 }
+
+// ─── La fecha elegida en la URL ────────────────────────────────────────────
+// `?fecha=5` para la fecha 5 de la liga o los grupos, `?ronda=2` para la ronda 2 del cuadro. Así se
+// comparte el link de una fecha concreta del fixture.
+
+/** La pestaña ("f5", "r2") que pide una URL, o null si no pide ninguna válida. */
+export function tabKeyFromSearch(search: string): string | null {
+  const params = new URLSearchParams(search);
+  const fecha = params.get("fecha");
+  const ronda = params.get("ronda");
+  if (fecha && /^\d+$/.test(fecha)) return `f${fecha}`;
+  if (ronda && /^\d+$/.test(ronda)) return `r${ronda}`;
+  return null;
+}
+
+/** El mismo query con la pestaña elegida puesta (o sin ninguna si `key` es null); conserva los demás parámetros. */
+export function withTabParam(search: string, key: string | null): string {
+  const params = new URLSearchParams(search);
+  params.delete("fecha");
+  params.delete("ronda");
+  if (key && /^[fr]\d+$/.test(key)) params.set(key[0] === "f" ? "fecha" : "ronda", key.slice(1));
+  return params.toString();
+}

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import type { MatchListItem } from "@/_lib/api";
 import { formatMatchDate, UNSCHEDULED_LABEL } from "@/_lib/match-format";
-import { buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab } from "@/_lib/fixture";
+import { buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab, tabKeyFromSearch, withTabParam } from "@/_lib/fixture";
 import { MatchRow } from "@/_components/match-row";
 import { PillTabs } from "@/_components/pill-tabs";
+import { CalendarMenu } from "@/_components/calendar-menu";
 
 /**
  * Lista de partidos de un torneo, organizada por fecha — como se armó el fixture — y, dentro de
@@ -23,6 +24,8 @@ export function FixtureTabs({
   hrefFor,
   highlightClubId,
   onEdit,
+  syncUrl = false,
+  calendar,
 }: {
   matches: MatchListItem[];
   /** Si no se pasa (vista pública de un fan), la fila se muestra igual pero sin link. */
@@ -31,9 +34,21 @@ export function FixtureTabs({
   highlightClubId?: string;
   /** Si se pasa (el organizador), los partidos que todavía no empezaron muestran un botón para editarlos. */
   onEdit?: (match: MatchListItem) => void;
+  /** La fecha elegida va en la URL (`?fecha=5`, `?ronda=2`): se puede compartir y sobrevive a recargar. */
+  syncUrl?: boolean;
+  /** Si se pasa, muestra "Agregar al calendario" (descargar la fecha, suscribirse, copiar el enlace). */
+  calendar?: { tournamentId: string; title: string; publicPath: string };
 }) {
   const tabs = buildFixtureTabs(matches);
-  const [pickedKey, setPickedKey] = useState<string | null>(null);
+  const [pickedKey, setPickedKey] = useState<string | null>(() => (syncUrl && typeof window !== "undefined" ? tabKeyFromSearch(window.location.search) : null));
+
+  function pick(key: string) {
+    setPickedKey(key);
+    if (syncUrl) {
+      const query = withTabParam(window.location.search.slice(1), key);
+      window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    }
+  }
 
   const activeKey = tabs.some((t) => t.key === pickedKey) ? pickedKey : currentTabKey(tabs, matches);
   const active = tabs.find((t) => t.key === activeKey) ?? tabs[0];
@@ -46,7 +61,18 @@ export function FixtureTabs({
 
   return (
     <div>
-      {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={setPickedKey} label="Fechas del torneo" />}
+      {calendar && (
+        <div className="flex justify-end px-4 pb-2">
+          <CalendarMenu
+            tournamentId={calendar.tournamentId}
+            title={calendar.title}
+            publicPath={calendar.publicPath}
+            tab={{ key: active.key, label: active.label }}
+            hasUpcoming={matchesOfTab(matches, active).some((m) => m.time !== "" && m.status !== "finalizado")}
+          />
+        </div>
+      )}
+      {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" />}
 
       <div className="flex flex-col gap-4 px-4">
         {sections.map((section) => (
