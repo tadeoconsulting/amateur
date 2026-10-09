@@ -45,3 +45,14 @@ test("los partidos se agrupan por día y hora; los sin programar van al final", 
   assert.deepEqual(sections[0].matches.map((x) => x.id), ["a", "b"]);
   assert.equal(sections[2].date, null);
 });
+
+test("la fecha elegida se lee de la URL y se escribe conservando los demás parámetros", async () => {
+  const { tabKeyFromSearch, withTabParam } = await import("../../src/_lib/fixture.ts");
+  assert.equal(tabKeyFromSearch("?fecha=5"), "f5");
+  assert.equal(tabKeyFromSearch("?ronda=2"), "r2");
+  assert.equal(tabKeyFromSearch("?fecha=abc"), null);
+  assert.equal(tabKeyFromSearch("?otro=1"), null);
+  assert.equal(withTabParam("unirme=1", "f7"), "unirme=1&fecha=7");
+  assert.equal(withTabParam("fecha=3&unirme=1", "r1"), "unirme=1&ronda=1");
+  assert.equal(withTabParam("fecha=3", null), "");
+});

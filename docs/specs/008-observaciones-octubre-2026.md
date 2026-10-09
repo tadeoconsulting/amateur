@@ -132,6 +132,13 @@ Tomando la ficha del partido de la Premier League como referencia. **Solo escrit
 - `useWideSheet` (`useMediaQuery`) monta la ficha solo en pantallas anchas; los *layouts* del club y del organizador usan la columna ancha en estas dos rutas.
 - **Pendiente:** una ficha pública para el fan y el jugador (hoy sus filas de partido no llevan a ninguna pantalla) y la ficha en celular.
 
+### Fase 3 · Compartir una vista por enlace
+Referencia: la URL por fecha de la Premier League. Disponible en la vista pública del fan (`/{organizador}/{torneo}`), en celular y en escritorio. **El calendario (agregar partidos a Google/Apple Calendar) se evaluó y se dejó fuera por ahora**, por decisión del usuario.
+- **El enlace abre exactamente donde estaba quien lo compartió.** La vista actual va en la URL: `?vista=fixture|resultados|equipos|detalles`; en el fixture, `&fecha=5` (fecha de la liga o los grupos) o `&ronda=2` (ronda del cuadro); en resultados, `&sub=tabla|goleadores`. Elegir una sección, una fecha o una pestaña actualiza la URL (se conservan los demás parámetros, por ejemplo `unirme`), así que también se puede copiar de la barra de direcciones y sobrevive a recargar. Lo inválido o inexistente se ignora y se abre en lo de siempre (el fixture, en la fecha actual). Lógica pura en `_lib/share-view.ts` (`parseView`, `withView`, `shareSearch`) y `_lib/fixture.ts` (`tabKeyFromSearch`, `withTabParam`), con pruebas.
+- **Botón "Compartir"** justo después de *Detalles*: comparte (en el celular, el menú de compartir del sistema; en escritorio, copia el enlace con el aviso "Enlace copiado"). El enlace lleva **solo la vista** —sección, fecha o ronda, pestaña de resultados—, sin `unirme` ni nada de iniciar sesión, para que sirva a cualquiera. Está fuera de la fila de secciones que se desplaza, así que en el celular siempre se ve (solo el ícono) y en pantallas con espacio lleva el texto.
+- En pantallas de 375 px las pestañas de sección usan un espaciado un poco menor (7 px en vez de 12) para que las cuatro sigan completas junto al ícono.
+- **No incluido:** compartir desde las pantallas con sesión de jugador, club y organizador (la fecha elegida allí no está en la URL).
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.

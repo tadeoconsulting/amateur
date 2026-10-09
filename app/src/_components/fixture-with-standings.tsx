@@ -20,6 +20,7 @@ export function FixtureWithStandings({
   onViewFullTable,
   stickyTop = "@4xl:top-4",
   bleed = false,
+  syncUrl,
 }: {
   matches: MatchListItem[];
   standings: StandingsRow[];
@@ -33,11 +34,13 @@ export function FixtureWithStandings({
   stickyTop?: string;
   /** El contenedor ya tiene margen lateral: el fixture (que trae el suyo) lo compensa para no quedar doble. */
   bleed?: boolean;
+  /** Ver `FixtureTabs`: la fecha elegida en la URL. */
+  syncUrl?: boolean;
 }) {
   return (
     <div className="@4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
       <div className={bleed ? "-mx-4" : undefined}>
-        <FixtureTabs matches={matches} hrefFor={hrefFor} highlightClubId={highlightClubId} onEdit={onEdit} />
+        <FixtureTabs matches={matches} hrefFor={hrefFor} highlightClubId={highlightClubId} onEdit={onEdit} syncUrl={syncUrl} />
       </div>
       {standings.length > 0 && (
         <aside aria-label="Posiciones" className={`hidden @4xl:sticky @4xl:block ${stickyTop} ${bleed ? "" : "@4xl:mr-4"}`}>
