@@ -65,6 +65,17 @@ Pedido posterior (2026-10-08): en una liga con llaves, la tabla que ve el fan (`
 ## 8 · Dashboard del organizador sin "Próximos partidos"
 Pedido posterior (2026-10-08): el dashboard (`/dashboard`) ya no muestra la sección *Próximos partidos*, porque esa información vive en **Partidos** ([punto 2](#2--partidos-por-torneo-y-por-fecha-partidos)). Quedan *Indicadores*, *Solicitudes pendientes* y *Goleadores*. Código: `(organizador)/dashboard/page.tsx`.
 
+## 10 · Foto del torneo (organizador y admin)
+Pedido posterior (2026-10-08): el organizador debe poder subir la foto del torneo que creó, como se hace desde el panel de admin con las imágenes de equipos y jugadores.
+- **Modelo:** `Tournament.logoUrl String?`. Validación: `null` o URL `https` de hasta 500 caracteres (`parseTournamentFields`).
+- **Subida:** `TournamentPhotoField` (recorte circular + `/api/upload`) en el paso *Información* del asistente (crear y editar) y en el formulario del torneo del admin.
+- **Dónde se ve:** cabecera del fan (`/{organizador}/{torneo}`), cabecera y lista de torneos del organizador, selector del jugador. Sin foto, el trofeo de siempre.
+- **Pendiente:** mostrarla también en las listas del club y del jugador (`/club/torneos`, `/jugador/torneos`).
+- **Despliegue:** columna nueva; agregarla a producción **antes** de mergear:
+```sql
+ALTER TABLE "Tournament" ADD COLUMN IF NOT EXISTS "logoUrl" TEXT;
+```
+
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
 - Inicio, `/admin/login` y `/api/tournaments`: 200. Sin errores nuevos en los logs de Vercel.

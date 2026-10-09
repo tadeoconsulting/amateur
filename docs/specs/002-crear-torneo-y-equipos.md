@@ -53,6 +53,9 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 
 "Crear torneo" envía todo con `status: "inscripcion"`, muestra la confirmación con las bases y lleva al torneo nuevo. Un `0` en minutos o jugadores significa "sin definir" (se envía `null`). La sede se guarda como el texto `"nombre, dirección"` en `location`.
 
+### Foto del torneo
+En el paso *Información* (al crear y al editar) el organizador puede **subir una foto del torneo** (opcional): se encuadra en un círculo, se sube con `/api/upload` y se guarda como `logoUrl` junto con el resto. "Quitar" la deja sin foto. El admin la sube o cambia desde el formulario del torneo en `/admin/torneos`. La foto se ve en la cabecera del torneo del fan, en la del organizador, en sus listas y en el selector de torneos del jugador; sin foto, el círculo con el trofeo de siempre. Código: `_components/tournament-photo-field.tsx`, `_components/tournament-logo.tsx`.
+
 ### Editar un torneo (`/torneos/[id]/editar`)
 **Por pestañas** (octubre 2026, [008](008-observaciones-octubre-2026.md)): al editar no hay indicador de pasos ni insignias; hay tres pestañas **Información · Modalidad · Bases** (`edit-tabs.tsx`) para ir y venir libremente, y **"Guardar cambios"** (en cualquiera) guarda todo de una vez (`saveWizardTournament`, validando lo mismo que al crear) y vuelve al torneo. Al **crear** se mantiene el asistente de 3 pasos.
 
