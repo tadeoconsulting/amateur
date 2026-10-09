@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           name: true,
+          logoUrl: true,
           category: true,
           startDate: true,
           location: true,
@@ -50,6 +51,7 @@ export async function GET(request: NextRequest) {
       tournament: {
         id: tournament.id,
         name: tournament.name,
+        logoUrl: tournament.logoUrl,
         category: tournament.category,
         startDate: tournament.startDate,
         location: tournament.location,

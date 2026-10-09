@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentLogo } from "@/_components/tournament-logo";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMatches, getUser, type MatchListItem } from "@/_lib/api";
@@ -14,6 +15,7 @@ import { ClubSwitcher, type PlayerClub } from "../../_components/club-switcher";
 type TournamentActivity = {
   id: string;
   name: string;
+  logoUrl: string | null;
   /** El partido que mejor cuenta cómo va el torneo para este jugador. */
   match: MatchListItem;
 };
@@ -41,7 +43,7 @@ function activityByTournament(matches: MatchListItem[]): TournamentActivity[] {
       const upcoming = list.filter((m) => m.status === "programado").sort(byDateTime);
       const finished = list.filter((m) => m.status === "finalizado").sort(byDateTime);
       const match = live[0] ?? upcoming[0] ?? finished[finished.length - 1];
-      return { id: match.tournament!.id, name: match.tournament!.name, match };
+      return { id: match.tournament!.id, name: match.tournament!.name, logoUrl: match.tournament!.logoUrl ?? null, match };
     })
     .sort((a, b) => rank(a.match) - rank(b.match) || byDateTime(a.match, b.match));
 }
@@ -185,17 +187,21 @@ function JugadorTorneosContent({
           {activity.map((t) => (
             <section key={t.id} className="flex flex-col gap-3">
               <div className="flex items-center gap-2 px-1">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-surface-secondary text-text-invert">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M6 3h12v5a6 6 0 01-12 0V3zM5 4H3a1 1 0 00-1 1v1.5a3 3 0 003 3h.5M19 4h2a1 1 0 011 1v1.5a3 3 0 01-3 3h-.5M8 14v3M16 14v3M7 17h10a1 1 0 011 1v2H6v-2a1 1 0 011-1z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
+                {t.logoUrl ? (
+                  <TournamentLogo logoUrl={t.logoUrl} size="h-8 w-8" />
+                ) : (
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-surface-secondary text-text-invert">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M6 3h12v5a6 6 0 01-12 0V3zM5 4H3a1 1 0 00-1 1v1.5a3 3 0 003 3h.5M19 4h2a1 1 0 011 1v1.5a3 3 0 01-3 3h-.5M8 14v3M16 14v3M7 17h10a1 1 0 011 1v2H6v-2a1 1 0 011-1z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                )}
                 <h2 className="min-w-0 flex-1 truncate font-heading text-sm font-bold text-text-primary">{t.name}</h2>
                 <Link
                   href={`/jugador/torneos/${t.id}`}

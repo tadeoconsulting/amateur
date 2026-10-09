@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentLogo } from "@/_components/tournament-logo";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -190,10 +191,15 @@ function BuscarTorneos({ club }: { club: MyClub | null }) {
           const format = [formatLabel(t.format), modalityLabel(t.modality)].filter(Boolean).join(" · ");
           return (
             <article key={t.id} className="rounded-xl border border-border-primary p-4">
-              <h2 className="font-heading text-sm font-bold text-text-primary">{t.name}</h2>
-              <p className="mt-0.5 font-body text-xs text-text-secondary">
-                {t.category || "Libre"} | {new Date(t.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
-              </p>
+              <div className="flex items-start gap-3">
+                {t.logoUrl && <TournamentLogo logoUrl={t.logoUrl} />}
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-heading text-sm font-bold text-text-primary">{t.name}</h2>
+                  <p className="mt-0.5 font-body text-xs text-text-secondary">
+                    {t.category || "Libre"} | {new Date(t.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
+                  </p>
+                </div>
+              </div>
               <dl className="mt-2 flex flex-col gap-1 font-body text-xs text-text-secondary">
                 <div><dt className="sr-only">Sede</dt><dd>{t.location}</dd></div>
                 <div><dt className="sr-only">Formato</dt><dd>{format}</dd></div>
