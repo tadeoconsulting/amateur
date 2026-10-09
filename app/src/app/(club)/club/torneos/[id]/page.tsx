@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentLogo } from "@/_components/tournament-logo";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -103,11 +104,15 @@ export default function ClubTorneoDetallePage() {
       {/* Tournament card */}
       <div className="mx-4 mt-2 rounded-xl border border-border-primary p-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-300">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M4 2h8v4a4 4 0 01-8 0V2z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+          {tournament.logoUrl ? (
+            <TournamentLogo logoUrl={tournament.logoUrl} />
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-300">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 2h8v4a4 4 0 01-8 0V2z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <h3 className="font-heading text-sm font-bold text-text-primary">{tournament.name}</h3>
             <p className="mt-0.5 font-body text-xs text-text-secondary">
