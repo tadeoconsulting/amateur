@@ -20,7 +20,7 @@ import { useApi } from "@/_lib/use-api";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { copyText } from "@/_lib/share";
 import { Toast } from "@/_components/toast";
-import { FixtureTabs } from "@/_components/fixture-tabs";
+import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { RequestsPanel } from "./_components/requests-panel";
@@ -239,7 +239,8 @@ export default function TournamentDetailPage() {
   const canSwitch = tournaments.length > 1;
 
   return (
-    <div className="w-full pb-8">
+    // `@container`: lo de adentro se adapta al ancho de la pantalla (una columna en el celular; el fixture con la tabla al lado en escritorio).
+    <div className="@container w-full pb-8">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
       {/* Header */}
       <header className="px-4 py-3">
@@ -345,7 +346,7 @@ export default function TournamentDetailPage() {
 
       {/* === Convocatoria: equipos inscritos === */}
       {isConvocatoria && activeConvTab === "inscritos" && tournament.teams.length > 0 && (
-        <div className="mt-4 px-4">
+        <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
           <div className="flex flex-col">
             {tournament.teams.map((team) => (
               <div key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
@@ -405,6 +406,7 @@ export default function TournamentDetailPage() {
       )}
 
       {isConvocatoria && activeConvTab !== "inscritos" && (
+        <div className="@4xl:mx-auto @4xl:max-w-3xl">
         <RequestsPanel
           tournamentId={params.id}
           kind={activeConvTab === "solicitudes" ? "request" : "invite"}
@@ -415,11 +417,12 @@ export default function TournamentDetailPage() {
           onNotify={(message, tone) => setToast({ message, tone })}
           onShare={shareConvocatoria}
         />
+        </div>
       )}
 
       {/* === Convocatoria Content (sin equipos todavía) === */}
       {isConvocatoria && activeConvTab === "inscritos" && tournament.teams.length === 0 && (
-        <div className="mt-4 flex flex-1 flex-col px-4">
+        <div className="mt-4 flex flex-1 flex-col px-4 @4xl:mx-auto @4xl:w-full @4xl:max-w-3xl">
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mb-6 flex items-center justify-center">
               <svg width="220" height="160" viewBox="0 0 220 160" fill="none">
@@ -501,16 +504,21 @@ export default function TournamentDetailPage() {
           </div>
           {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
-          <FixtureTabs
+          {/* La tabla al lado solo si es una sola tabla: con grupos (copa) una lista mezclada no dice quién clasifica. */}
+          <FixtureWithStandings
             matches={matches}
+            standings={(standings ?? []).some((r) => r.groupName) ? [] : (standings ?? [])}
+            qualifyCount={tournament.format === "liga" ? tournament.playoffTeams : null}
             hrefFor={(m) => `/torneos/${params.id}/${m.status === "finalizado" ? "resultado" : "en-vivo"}/${m.id}`}
             onEdit={(m) => setEditor({ match: m })}
+            onViewFullTable={() => setActiveTab("tabla")}
+            stickyTop="@4xl:top-20"
           />
         </div>
       )}
 
       {!isConvocatoria && shownTab === "llaves" && (
-        <div className="mt-4">
+        <div className="mt-4 @4xl:mx-auto @4xl:max-w-3xl">
           <BracketView
             tournamentId={params.id}
             tournament={tournament}
@@ -543,7 +551,7 @@ export default function TournamentDetailPage() {
         const noDescent = isCopa || ligaLlaves !== null;
 
         return (
-          <div className="mt-4 flex flex-col gap-4 px-4">
+          <div className="mt-4 flex flex-col gap-4 px-4 @4xl:mx-auto @4xl:max-w-4xl">
             {hasGroups
               ? [...byGroup.entries()].map(([groupName, rows]) => (
                   <div key={groupName}>
@@ -571,7 +579,7 @@ export default function TournamentDetailPage() {
       {!isConvocatoria && shownTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} showDelegate />}
 
       {!isConvocatoria && shownTab === "goleadores" && scorers && (
-        <div className="mt-4 px-4">
+        <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
           <div className="overflow-hidden rounded-xl border border-brand-200">
             <table className="w-full text-left text-sm">
               <thead>

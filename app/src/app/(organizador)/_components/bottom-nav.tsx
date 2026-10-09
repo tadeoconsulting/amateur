@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
+export const organizadorNavItems = [
   {
     href: "/torneos",
     label: "Torneos",
@@ -58,17 +58,23 @@ const navItems = [
   },
 ];
 
+/**
+ * ¿La pestaña se ve activa en esta ruta? Las pantallas de fixture de un torneo (iniciar, fixture,
+ * partidos, manual) cuentan como "Partidos". Lo usan la barra inferior (celular) y la superior (escritorio).
+ */
+export function isOrganizadorNavActive(href: string, pathname: string) {
+  const isFixtureRoute = /^\/torneos\/[^/]+\/(iniciar|fixture|partidos|manual)/.test(pathname);
+  return isFixtureRoute ? href === "/partidos" : pathname === href || pathname.startsWith(href + "/");
+}
+
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-200 bg-surface-primary">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-200 bg-surface-primary md:hidden">
       <div className="mx-auto flex max-w-[430px] items-center justify-around py-2">
-        {navItems.map((item) => {
-          const isFixtureRoute = /^\/torneos\/[^/]+\/(iniciar|fixture|partidos|manual)/.test(pathname);
-          const active = isFixtureRoute
-            ? item.href === "/partidos"
-            : pathname === item.href || pathname.startsWith(item.href + "/");
+        {organizadorNavItems.map((item) => {
+          const active = isOrganizadorNavActive(item.href, pathname);
           return (
             <Link
               key={item.href}
