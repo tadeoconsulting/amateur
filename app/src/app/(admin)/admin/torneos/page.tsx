@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentLogo } from "@/_components/tournament-logo";
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
@@ -13,6 +14,7 @@ import { TorneosEliminados, type DeletedTournament } from "./_components/elimina
 interface TournamentRow {
   id: string;
   name: string;
+  logoUrl: string | null;
   format: string;
   status: string;
   category: string | null;
@@ -199,7 +201,7 @@ function AdminTorneosContent() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border-primary bg-surface-primary">
-          <table className="w-full min-w-[1050px]">
+          <table className="w-full min-w-[1050px] [&_td]:px-2.5 [&_th]:px-2.5">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
                 <SortTh label="Torneo" sortKey="name" sort={sort} onToggle={toggle} />
@@ -218,12 +220,15 @@ function AdminTorneosContent() {
                 const st = statusLabels[t.status] || { label: t.status, color: "bg-gray-100 text-gray-600" };
                 return (
                   <tr key={t.id} className="border-b border-border-primary last:border-0 hover:bg-brand-50/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-heading text-sm font-semibold text-text-primary">{t.name}</p>
-                        {t.category && (
-                          <p className="font-body text-xs text-text-secondary">{t.category}</p>
-                        )}
+                    <td className="min-w-56 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <TournamentLogo logoUrl={t.logoUrl} size="h-9 w-9" />
+                        <div className="min-w-0">
+                          <p className="font-heading text-sm font-semibold text-text-primary">{t.name}</p>
+                          {t.category && (
+                            <p className="font-body text-xs text-text-secondary">{t.category}</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
