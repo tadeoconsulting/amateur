@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
-import { PrismaClient } from "@prisma/client";
-import { parseTable, planImport, type RawRow } from "../src/_lib/provisional-import";
+import { prisma } from "../src/_lib/prisma";
+import { parseInput } from "../src/_lib/provisional-import";
+import { planForTournament, saveProvisionals } from "../src/_lib/provisional-import-server";
 
 // Carga jugadores provisionales (sin cuenta) de un equipo — especificación 009.
 //
@@ -28,8 +29,6 @@ import { parseTable, planImport, type RawRow } from "../src/_lib/provisional-imp
 // apuntar a Neon hay que cargarlo antes:
 //
 //   set -a; . ./.env.local; set +a; pbpaste | npm run db:cargar-jugadores -- --torneo ... --archivo -
-
-const prisma = new PrismaClient();
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -63,62 +62,33 @@ async function main() {
   }
 
   // JSON ({ equipo, jugadores } o una lista) o filas de una hoja de cálculo.
-  let rows: RawRow[];
-  let equipo: string | undefined;
-  const trimmed = text.trim();
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(trimmed);
-    } catch (e) {
-      console.error(`El JSON no es válido: ${(e as Error).message}`);
-      process.exit(1);
-    }
-    const obj = parsed as { equipo?: unknown; jugadores?: unknown };
-    rows = (Array.isArray(parsed) ? parsed : (obj?.jugadores as RawRow[])) ?? [];
-    equipo = typeof obj?.equipo === "string" ? obj.equipo : undefined;
-  } else {
-    rows = parseTable(text);
-  }
-  if (!Array.isArray(rows) || rows.length === 0) {
-    console.error("No se encontró ningún jugador: pega las filas (nombres, apellidos, club, DNI, fecha de nacimiento) o usa el JSON.");
+  const parsed = parseInput(text);
+  if ("error" in parsed) {
+    console.error(parsed.error);
     process.exit(1);
   }
+  const { rows, equipo } = parsed;
   const dayFirst = rows.filter((r) => typeof r.fechaNacimiento === "string" && r.fechaNacimiento.includes("/")).length;
 
   // A qué base se apunta, sin la contraseña: así se ve de un vistazo si es la de pruebas o la de producción.
   const host = (process.env.DATABASE_URL ?? "").match(/@([^/?]+)/)?.[1] ?? "(sin DATABASE_URL)";
   console.log(`Base de datos: ${host}`);
 
-  const tournament = await prisma.tournament.findFirst({
-    where: { slug, deletedAt: null, organizer: { organizerSlug: organizador } },
-    select: { id: true, name: true, teams: { select: { club: { select: { id: true, name: true, shortName: true, isTemporary: true } } } } },
-  });
-  if (!tournament) {
-    console.error(`No existe el torneo "${torneo}".`);
+  const planned = await planForTournament({ organizerSlug: organizador, slug }, rows, equipo);
+  if (!planned.ok) {
+    console.error(`${planned.error}: "${torneo}".`);
     process.exit(1);
   }
-  const clubs = tournament.teams.map((t) => t.club);
-  console.log(`Torneo: ${tournament.name} · ${clubs.length} equipos`);
-
-  const dnis = rows.map((r) => String(r.dni ?? "").trim()).filter(Boolean);
-  const existing = await prisma.playerProfile.findMany({ where: { dni: { in: dnis } }, select: { dni: true, clubId: true } });
-  const accounts = await prisma.user.findMany({ where: { dni: { in: dnis } }, select: { dni: true } });
-
-  const plan = planImport({
-    rows,
-    defaultClub: equipo,
-    clubs,
-    existingProvisional: new Map(existing.filter((p) => p.dni && p.clubId).map((p) => [p.dni as string, p.clubId as string])),
-    accountDnis: new Set(accounts.map((a) => a.dni as string)),
-    today: new Date().toISOString().slice(0, 10),
-  });
+  const { plan } = planned;
+  console.log(`Torneo: ${planned.tournament.name} · ${planned.teamsCount} equipos`);
 
   const byClub = new Map<string, number>();
   for (const p of plan.create) byClub.set(p.clubName, (byClub.get(p.clubName) ?? 0) + 1);
   console.log(`Filas leídas: ${rows.length}${dayFirst ? ` · ${dayFirst} con fecha DD/MM/AAAA (se leen como día/mes/año)` : ""}`);
   console.log(`\nSe crearían: ${plan.create.length}${[...byClub].map(([c, n]) => `  (${c}: ${n})`).join("")}`);
   for (const p of plan.create) console.log(`  + ${p.lastName}, ${p.firstName}`);
+  const minors = plan.create.filter((p) => p.minor).length;
+  if (minors > 0) console.log(`Menores de 18 entre los que se crearían: ${minors}`);
   console.log(`Ya cargados (se omiten): ${plan.alreadyLoaded.length}`);
   console.log(`Problemas: ${plan.problems.length}`);
   for (const p of plan.problems) console.log(`  ! Fila ${p.row} · ${p.name}: ${p.reason}`);
@@ -137,16 +107,8 @@ async function main() {
   }
 
   // Todo o nada: un equipo no queda a medias.
-  const result = await prisma.playerProfile.createMany({
-    data: plan.create.map((p) => ({
-      clubId: p.clubId,
-      firstName: p.firstName,
-      lastName: p.lastName,
-      dni: p.dni,
-      birthDate: new Date(`${p.birthDate}T00:00:00Z`),
-    })),
-  });
-  console.log(`\nGuardados: ${result.count} jugadores provisionales.`);
+  const saved = await saveProvisionals(plan);
+  console.log(`\nGuardados: ${saved} jugadores provisionales.`);
 }
 
 main()

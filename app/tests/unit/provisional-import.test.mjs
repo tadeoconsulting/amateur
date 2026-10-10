@@ -52,7 +52,7 @@ test("una fila correcta se crea con el nombre limpio y el club del torneo", () =
   const plan = run([row({ nombres: "  Ana   María " })]);
   assert.equal(plan.problems.length, 0);
   assert.deepEqual(plan.create, [
-    { row: 1, firstName: "Ana María", lastName: "Núñez Peña", dni: "10000001", birthDate: "1990-02-05", clubId: "c-lgk", clubName: "LGK" },
+    { row: 1, firstName: "Ana María", lastName: "Núñez Peña", dni: "10000001", birthDate: "1990-02-05", clubId: "c-lgk", clubName: "LGK", minor: false },
   ]);
 });
 
@@ -158,4 +158,33 @@ test("el admin corrige datos de un provisional: solo se valida lo que viene", as
   assert.match(parseProvisionalEdit({ birthDate: "2999-01-01" }, TODAY).error, /fecha/);
   // la posición y demás no son de esta función: se ignoran
   assert.deepEqual(parseProvisionalEdit({ position: "Portero" }, TODAY), { data: {} });
+});
+
+test("menor de 18: el día que cumple 18 años ya no lo es", async () => {
+  const { ageOn, isMinor } = await import("../../src/_lib/provisional-import.ts");
+  assert.equal(ageOn("2008-10-10", "2026-10-10"), 18);
+  assert.equal(isMinor("2008-10-10", "2026-10-10"), false); // cumple 18 hoy
+  assert.equal(isMinor("2008-10-11", "2026-10-10"), true); // los cumple mañana
+  assert.equal(isMinor("2000-02-29", "2026-10-10"), false);
+  assert.equal(ageOn("2000-12-31", "2026-01-01"), 25);
+});
+
+test("cada fila a crear dice si es menor de 18", () => {
+  const plan = run([row({ fechaNacimiento: "2010-05-01" }), row({ dni: "10000002", fechaNacimiento: "1990-02-05" })]);
+  assert.deepEqual(plan.create.map((p) => p.minor), [true, false]);
+});
+
+test("lo pegado se lee como JSON o como filas, y lo vacío o roto avisa", async () => {
+  const { parseInput } = await import("../../src/_lib/provisional-import.ts");
+  const json = parseInput('{"equipo":"LGK","jugadores":[{"nombres":"Ana","apellidos":"Núñez","dni":"10000001","fechaNacimiento":"1990-02-05"}]}');
+  assert.equal(json.rows.length, 1);
+  assert.equal(json.equipo, "LGK");
+  assert.equal(parseInput('[{"nombres":"Ana"}]').rows.length, 1);
+  const T = "\t";
+  const tabla = parseInput(["Nombres", "Apellidos", "Club", "DNI", "F.N."].join(T) + "\n" + ["Ana", "Núñez", "LGK", "10000001", "05/02/1990"].join(T));
+  assert.equal(tabla.rows.length, 1);
+  assert.equal(tabla.rows[0].club, "LGK");
+  assert.match(parseInput("   ").error, /No se encontró/);
+  assert.match(parseInput("{no es json").error, /JSON no es válido/);
+  assert.match(parseInput('{"jugadores": []}').error, /lista de jugadores/);
 });

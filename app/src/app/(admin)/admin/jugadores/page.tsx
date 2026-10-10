@@ -11,6 +11,7 @@ import { AvatarCropper } from "@/_components/avatar-cropper";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { LinkAccountModal } from "../_components/link-account-modal";
+import { ImportPlayersModal } from "../_components/import-players-modal";
 import type { InvitationSummary } from "../_components/invite-player-panel";
 
 interface PlayerRow {
@@ -592,6 +593,7 @@ export default function AdminJugadoresPage() {
   const [deleting, setDeleting] = useState<PlayerRow | null>(null);
   // Solo el id: la invitación del jugador se lee de la lista, así se actualiza sola al volver a pedirla.
   const [linkingId, setLinkingId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
   // Con cuenta o provisional (sin cuenta, cargado por un admin: especificación 009).
   const [kind, setKind] = useState<"all" | "account" | "provisional">("all");
 
@@ -632,12 +634,23 @@ export default function AdminJugadoresPage() {
 
   return (
     <div className="px-8 py-6">
-      <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold text-text-primary">Jugadores</h1>
-        <p className="mt-1 font-body text-sm text-text-secondary">
-          Todos los jugadores registrados en la plataforma
-          {provisionalCount > 0 && ` · ${provisionalCount} ${provisionalCount === 1 ? "provisional (sin cuenta)" : "provisionales (sin cuenta)"}`}
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-bold text-text-primary">Jugadores</h1>
+          <p className="mt-1 font-body text-sm text-text-secondary">
+            Todos los jugadores registrados en la plataforma
+            {provisionalCount > 0 && ` · ${provisionalCount} ${provisionalCount === 1 ? "provisional (sin cuenta)" : "provisionales (sin cuenta)"}`}
+          </p>
+        </div>
+        <button
+          onClick={() => setImporting(true)}
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+        >
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M4 12v3.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Importar jugadores
+        </button>
       </div>
 
       {/* Search and filters */}
@@ -830,6 +843,7 @@ export default function AdminJugadoresPage() {
       {editingPlayer?.provisional && (
         <EditProvisionalModal player={editingPlayer} clubs={clubs ?? []} onClose={() => setEditingPlayer(null)} onSaved={handlePlayerSaved} />
       )}
+      {importing && <ImportPlayersModal onClose={() => setImporting(false)} onImported={refetch} />}
       {linking && (
         <LinkAccountModal
           player={{ id: linking.id, firstName: linking.user.firstName, lastName: linking.user.lastName, dni: linking.dni ?? null, clubName: linking.club?.name ?? null }}

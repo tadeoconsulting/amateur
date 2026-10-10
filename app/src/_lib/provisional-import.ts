@@ -18,6 +18,8 @@ export type NewProvisional = {
   birthDate: string;
   clubId: string;
   clubName: string;
+  /** Menor de 18 años a la fecha de la carga: el panel lo marca para revisarlo. */
+  minor: boolean;
 };
 
 export type Problem = { row: number; name: string; dni: string | null; reason: string };
@@ -65,6 +67,16 @@ export function parseBirthDate(value: unknown, today: string): string | null {
   if (iso < "1900-01-01" || iso > today) return null;
   return iso;
 }
+
+/** Años cumplidos de alguien nacido el `birthDate` (YYYY-MM-DD) a la fecha `today` (YYYY-MM-DD). */
+export function ageOn(birthDate: string, today: string): number {
+  const [by, bm, bd] = birthDate.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  return ty - by - (tm < bm || (tm === bm && td < bd) ? 1 : 0);
+}
+
+/** Menor de 18: el día que cumple 18 ya no lo es. */
+export const isMinor = (birthDate: string, today: string) => ageOn(birthDate, today) < 18;
 
 /** El club de una fila entre los del torneo, por nombre o abreviatura. */
 export function matchClub(value: unknown, clubs: ClubRef[]): { club: ClubRef } | { error: "falta" | "no_coincide" | "ambiguo" } {
@@ -146,6 +158,32 @@ export function parseTable(text: string): RawRow[] {
   });
 }
 
+/**
+ * Lo que se pega o se sube —JSON (`{ equipo, jugadores }` o una lista) o filas de una hoja de cálculo— como filas
+ * listas para validar. Lo usan el panel del admin y el script de la terminal.
+ */
+export function parseInput(text: string): { rows: RawRow[]; equipo?: string } | { error: string } {
+  const trimmed = text.trim();
+  if (!trimmed) return { error: "No se encontró ningún jugador: pega las filas (nombres, apellidos, club, DNI, fecha de nacimiento)." };
+
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (e) {
+      return { error: `El JSON no es válido: ${(e as Error).message}` };
+    }
+    const obj = parsed as { equipo?: unknown; jugadores?: unknown } | null;
+    const rows = Array.isArray(parsed) ? parsed : obj?.jugadores;
+    if (!Array.isArray(rows) || rows.length === 0) return { error: 'El JSON debe ser una lista de jugadores, o { "equipo": "...", "jugadores": [...] }.' };
+    return { rows: rows as RawRow[], equipo: typeof obj?.equipo === "string" ? obj.equipo : undefined };
+  }
+
+  const rows = parseTable(text);
+  if (rows.length === 0) return { error: "No se encontró ningún jugador: revisa que las filas lleven nombres, apellidos, club, DNI y fecha de nacimiento." };
+  return { rows };
+}
+
 export function planImport(input: {
   rows: RawRow[];
   /** Club para las filas que no traen el suyo (el `equipo` del archivo). */
@@ -199,7 +237,7 @@ export function planImport(input: {
     if ((counts.get(dni) ?? 0) > 1) return fail("DNI repetido en el archivo");
     if (accountDnis.has(dni)) return fail("Ya existe una cuenta con este DNI: vincúlala en vez de cargarlo como provisional");
 
-    const item: NewProvisional = { row, firstName, lastName, dni, birthDate, clubId: matched.club.id, clubName: matched.club.name };
+    const item: NewProvisional = { row, firstName, lastName, dni, birthDate, clubId: matched.club.id, clubName: matched.club.name, minor: isMinor(birthDate, today) };
     const loadedIn = existingProvisional.get(dni);
     if (loadedIn === undefined) plan.create.push(item);
     else if (loadedIn === matched.club.id) plan.alreadyLoaded.push(item);
