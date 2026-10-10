@@ -134,3 +134,14 @@ test("las filas pegadas pasan por la misma validación que el JSON", async () =>
   assert.equal(plan.problems.length, 1);
   assert.match(plan.problems[0].reason, /7 dígitos.*0 al inicio/); // Excel suele quitar el cero inicial
 });
+
+test("un encabezado con columna # y la fecha como F.N. se entiende (la columna # se ignora)", async () => {
+  const { parseTable } = await import("../../src/_lib/provisional-import.ts");
+  const T = "\t";
+  const text = ["#", "Nombres", "Apellidos", "Club", "DNI", "F.N."].join(T) + "\n" + ["1", "Ana María", "Núñez Peña", "LGK", "10000001", "05/02/1990"].join(T) + "\n" + ["2", "Luis", "Prueba Dos", "LGK", "10000002", "15/02/1995"].join(T);
+  const rows = parseTable(text);
+  assert.deepEqual(rows[0], { nombres: "Ana María", apellidos: "Núñez Peña", club: "LGK", dni: "10000001", fechaNacimiento: "05/02/1990" });
+  const plan = run(rows);
+  assert.equal(plan.problems.length, 0);
+  assert.deepEqual(plan.create.map((p) => p.birthDate), ["1990-02-05", "1995-02-15"]);
+});

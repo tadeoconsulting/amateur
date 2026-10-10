@@ -82,7 +82,7 @@ const COLUMN_ALIASES: Record<keyof RawRow, string[]> = {
   apellidos: ["apellidos", "apellido"],
   club: ["club", "equipo"],
   dni: ["dni", "documento"],
-  fechaNacimiento: ["fechanacimiento", "fechadenacimiento", "nacimiento", "fecha"],
+  fechaNacimiento: ["fechanacimiento", "fechadenacimiento", "fechanac", "nacimiento", "fn", "fnac", "fecha"],
 };
 const POSITIONAL: (keyof RawRow)[] = ["nombres", "apellidos", "club", "dni", "fechaNacimiento"];
 
