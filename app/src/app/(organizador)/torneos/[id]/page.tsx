@@ -19,6 +19,8 @@ import {
 import { useApi } from "@/_lib/use-api";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { copyText } from "@/_lib/share";
+import { ShareViewButton } from "@/_components/share-view-button";
+import { competitionView } from "@/_lib/share-view";
 import { Toast } from "@/_components/toast";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { ClubCrest } from "@/_components/club-crest";
@@ -301,47 +303,56 @@ export default function TournamentDetailPage() {
         )}
       </button>
 
-      {/* Tabs */}
-      <div className="mt-4 flex gap-2 overflow-x-auto px-4 no-scrollbar">
-        {isConvocatoria
-          ? convocatoriaTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveConvTab(tab.key)}
-                className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
-                  activeConvTab === tab.key
-                    ? "bg-surface-secondary text-text-invert"
-                    : "border border-border-primary text-text-primary"
-                }`}
-              >
-                {tab.label}
-                {tab.key === "solicitudes" && pendingRequests > 0 && (
-                  <>
-                    <span aria-hidden="true" className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-text-primary">
-                      {pendingRequests}
-                    </span>
-                    <span className="sr-only"> ({pendingRequests} pendientes)</span>
-                  </>
-                )}
-              </button>
-            ))
-          : visibleTabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={(e) => {
-                  setActiveTab(tab.key);
-                  // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
-                  e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-                }}
-                className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
-                  shownTab === tab.key
-                    ? "bg-surface-secondary text-text-invert"
-                    : "border border-border-primary text-text-primary"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+      {/* Tabs. "Compartir" (solo con el torneo en marcha) va fuera de la fila que se desplaza, para que siempre se vea. */}
+      <div className="mt-4 flex items-center gap-1.5 px-4">
+        <div className="no-scrollbar flex min-w-0 gap-2 overflow-x-auto">
+          {isConvocatoria
+            ? convocatoriaTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveConvTab(tab.key)}
+                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                    activeConvTab === tab.key
+                      ? "bg-surface-secondary text-text-invert"
+                      : "border border-border-primary text-text-primary"
+                  }`}
+                >
+                  {tab.label}
+                  {tab.key === "solicitudes" && pendingRequests > 0 && (
+                    <>
+                      <span aria-hidden="true" className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-text-primary">
+                        {pendingRequests}
+                      </span>
+                      <span className="sr-only"> ({pendingRequests} pendientes)</span>
+                    </>
+                  )}
+                </button>
+              ))
+            : visibleTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={(e) => {
+                    setActiveTab(tab.key);
+                    // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
+                    e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+                  }}
+                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                    shownTab === tab.key
+                      ? "bg-surface-secondary text-text-invert"
+                      : "border border-border-primary text-text-primary"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+        </div>
+        {!isConvocatoria && (
+          <ShareViewButton
+            title={tournament.name}
+            publicPath={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
+            view={competitionView(shownTab)}
+          />
+        )}
       </div>
 
       {/* === Convocatoria: equipos inscritos === */}
@@ -506,6 +517,7 @@ export default function TournamentDetailPage() {
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
           {/* La tabla al lado solo si es una sola tabla: con grupos (copa) una lista mezclada no dice quién clasifica. */}
           <FixtureWithStandings
+            syncUrl
             matches={matches}
             standings={(standings ?? []).some((r) => r.groupName) ? [] : (standings ?? [])}
             qualifyCount={tournament.format === "liga" ? tournament.playoffTeams : null}

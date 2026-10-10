@@ -26,3 +26,34 @@ test("el enlace para compartir lleva solo la vista: sección, fecha o ronda, o p
   assert.equal(shareSearch("?fecha=abc", { vista: "fixture" }), "vista=fixture");
   assert.equal(shareSearch("", { vista: "detalles" }), "vista=detalles");
 });
+
+test("cada pestaña de jugador y organizador abre la vista pública que le corresponde", async () => {
+  const { competitionView } = await import("../../src/_lib/share-view.ts");
+  assert.deepEqual(competitionView("partidos"), { vista: "fixture" });
+  assert.deepEqual(competitionView("llaves"), { vista: "fixture" });
+  assert.deepEqual(competitionView("tabla"), { vista: "resultados", sub: "tabla" });
+  assert.deepEqual(competitionView("goleadores"), { vista: "resultados", sub: "goleadores" });
+  assert.deepEqual(competitionView("equipos"), { vista: "equipos" });
+  assert.deepEqual(competitionView("otra"), { vista: "fixture" });
+});
+
+test("las pestañas del club: lo que no es público comparte los detalles", async () => {
+  const { clubView } = await import("../../src/_lib/share-view.ts");
+  assert.deepEqual(clubView("fixture", "partidos", "tabla"), { vista: "fixture" });
+  assert.deepEqual(clubView("resultados", "partidos", "goleadores"), { vista: "resultados", sub: "goleadores" });
+  assert.deepEqual(clubView("resultados", "partidos", "tabla"), { vista: "resultados", sub: "tabla" });
+  assert.deepEqual(clubView("torneo", "partidos", "tabla"), { vista: "fixture" });
+  assert.deepEqual(clubView("torneo", "inscritos", "tabla"), { vista: "equipos" });
+  assert.deepEqual(clubView("torneo", "amonestados", "tabla"), { vista: "detalles" });
+});
+
+test("el enlace compartido desde una pantalla con sesión lleva la vista y la fecha, y nada más", async () => {
+  const { shareUrl, competitionView } = await import("../../src/_lib/share-view.ts");
+  const base = "https://cupamateur.com";
+  const path = "/liga-1-la-ensenada/clausura-2026";
+  assert.equal(shareUrl(base, path, "?fecha=5&saved=true", competitionView("partidos")), `${base}${path}?vista=fixture&fecha=5`);
+  assert.equal(shareUrl(base, path, "?fecha=5", competitionView("goleadores")), `${base}${path}?vista=resultados&sub=goleadores`);
+  assert.equal(shareUrl(base, path, "", competitionView("equipos")), `${base}${path}?vista=equipos`);
+  // la ronda de las llaves se puede pasar como si viniera de la URL
+  assert.equal(shareUrl(base, path, "ronda=2", competitionView("llaves")), `${base}${path}?vista=fixture&ronda=2`);
+});
