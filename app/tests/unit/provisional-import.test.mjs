@@ -145,3 +145,17 @@ test("un encabezado con columna # y la fecha como F.N. se entiende (la columna #
   assert.equal(plan.problems.length, 0);
   assert.deepEqual(plan.create.map((p) => p.birthDate), ["1990-02-05", "1995-02-15"]);
 });
+
+test("el admin corrige datos de un provisional: solo se valida lo que viene", async () => {
+  const { parseProvisionalEdit } = await import("../../src/_lib/provisional-import.ts");
+  assert.deepEqual(parseProvisionalEdit({}, TODAY), { data: {} });
+  assert.deepEqual(parseProvisionalEdit({ firstName: "  Ana   María ", dni: "10000001", birthDate: "1990-02-05" }, TODAY), {
+    data: { firstName: "Ana María", dni: "10000001", birthDate: "1990-02-05" },
+  });
+  assert.match(parseProvisionalEdit({ firstName: "  " }, TODAY).error, /nombres/);
+  assert.match(parseProvisionalEdit({ lastName: "" }, TODAY).error, /apellidos/);
+  assert.match(parseProvisionalEdit({ dni: "123" }, TODAY).error, /8 dígitos/);
+  assert.match(parseProvisionalEdit({ birthDate: "2999-01-01" }, TODAY).error, /fecha/);
+  // la posición y demás no son de esta función: se ignoran
+  assert.deepEqual(parseProvisionalEdit({ position: "Portero" }, TODAY), { data: {} });
+});

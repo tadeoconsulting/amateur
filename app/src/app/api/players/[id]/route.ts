@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { playerIdentity } from "@/_lib/player-identity";
+import { parseProvisionalEdit } from "@/_lib/provisional-import";
 
 export async function GET(
   _request: NextRequest,
@@ -82,6 +83,22 @@ export async function PATCH(
   if (!body) return badRequest();
   const { position, number, categoryId, status, clubId } = body;
 
+  // Los datos propios de un provisional (nombres, DNI, fecha de nacimiento): solo un admin, y solo mientras no tenga cuenta.
+  const editsOwnData = ["firstName", "lastName", "dni", "birthDate"].some((k) => body[k] !== undefined);
+  let ownData: { firstName?: string; lastName?: string; dni?: string; birthDate?: string } = {};
+  if (editsOwnData) {
+    if (profile.userId !== null) return badRequest("Este jugador tiene cuenta: sus datos se editan desde su cuenta");
+    const parsed = parseProvisionalEdit(body, new Date().toISOString().slice(0, 10));
+    if ("error" in parsed) return badRequest(parsed.error);
+    ownData = parsed.data;
+    if (ownData.dni) {
+      const taken = await prisma.playerProfile.findFirst({ where: { dni: ownData.dni, NOT: { id } }, select: { id: true } });
+      if (taken) return Response.json({ error: "Ya hay otro jugador provisional con ese DNI" }, { status: 409 });
+    }
+  }
+  // Un provisional siempre pertenece a un equipo: sin equipo no hay a quién mostrarlo.
+  if (profile.userId === null && clubId === null) return badRequest("Un jugador provisional no puede quedar sin equipo");
+
   // Posición y dorsal los puede editar el propio jugador. Club, categoría y estado,
   // solo quien gestiona el club del jugador (o el club al que se lo suma si no tiene uno).
   const isSelf = profile.userId === user.id;
@@ -112,10 +129,46 @@ export async function PATCH(
         ...(categoryId !== undefined && { categoryId: categoryId as string | null }),
         ...(typeof status === "string" && status && { status }),
         ...(clubId !== undefined && { clubId: clubId as string | null }),
+        ...(ownData.firstName !== undefined && { firstName: ownData.firstName }),
+        ...(ownData.lastName !== undefined && { lastName: ownData.lastName }),
+        ...(ownData.dni !== undefined && { dni: ownData.dni }),
+        ...(ownData.birthDate !== undefined && { birthDate: new Date(`${ownData.birthDate}T00:00:00Z`) }),
       },
     });
-    return Response.json(updated);
+    // El DNI y la fecha de nacimiento de un provisional no vuelven en la respuesta.
+    const { dni: _dni, birthDate: _birthDate, ...safe } = updated;
+    void _dni;
+    void _birthDate;
+    return Response.json(safe);
   } catch {
     return Response.json({ error: "Error al actualizar jugador" }, { status: 500 });
+  }
+}
+
+/**
+ * Elimina a un jugador provisional cargado por error (solo un admin). Un jugador con cuenta no se elimina por
+ * acá: se elimina su cuenta desde Usuarios. Sus estadísticas y alineaciones se van con él; en las jugadas de
+ * los partidos queda el registro, sin el jugador.
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireUser();
+  if ("response" in auth) return auth.response;
+  if (!isAdmin(auth.user)) return forbidden();
+
+  const { id } = await params;
+  const profile = await prisma.playerProfile.findUnique({ where: { id }, select: { userId: true } });
+  if (!profile) return Response.json({ error: "Jugador no encontrado" }, { status: 404 });
+  if (profile.userId !== null) {
+    return Response.json({ error: "Este jugador tiene cuenta: elimínalo desde Usuarios" }, { status: 409 });
+  }
+
+  try {
+    await prisma.playerProfile.delete({ where: { id } });
+    return Response.json({ success: true });
+  } catch {
+    return Response.json({ error: "Error al eliminar al jugador" }, { status: 500 });
   }
 }
