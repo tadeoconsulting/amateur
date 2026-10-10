@@ -1,6 +1,6 @@
 # 009 · Jugadores provisionales
 
-**Estado:** ✅ **Entregas 1, 2 y 3 implementadas** (as-built, abajo). Falta la entrega 4: invitar al delegado de un equipo temporal.
+**Estado:** ✅ **Entregas 1, 2 y 3 implementadas**, más el **importador del panel** (as-built, abajo). Falta la entrega 4: invitar al delegado de un equipo temporal.
 **Origen:** el torneo Clausura 2026 de La Ensenada tiene 11 equipos temporales y su lista de jugadores. Se necesita **la tabla de goleadores** con nombres, sin esperar a que cada jugador cree una cuenta, y sin perder esos datos cuando después la creen.
 **Toca:** [modelo-de-datos.md](modelo-de-datos.md) (`PlayerProfile`), [004](004-partido-en-vivo.md) (jugadas y goleadores), [001](001-autenticacion-y-permisos.md) (permisos de admin).
 
@@ -22,6 +22,14 @@ Un `PlayerProfile` **sin cuenta**: `userId` vacío, con sus propios `firstName`,
 ## Entrega 1 · Cargar y ver goleadores (implementada)
 
 ### Cómo se carga
+
+**La vía principal es el importador del panel** (**Admin → Jugadores → Importar jugadores**, solo admin; `_components/import-players-modal.tsx`, ruta `POST /api/admin/import-players`):
+1. Se elige el **torneo**; la ventana muestra cómo se llama cada equipo, que es lo que hay que escribir en la columna *Club*.
+2. Se **pegan las filas** de Excel o Google Sheets, o se **sube un CSV** (se lee en UTF-8 o, si no es válido, en Windows-1252, como lo guarda Excel en español; separado por tabulación, `;` o `,`). Un `.xlsx` no se sube directo: se pide guardarlo como *CSV UTF-8* o pegar las filas.
+3. **Revisar** (no guarda nada): una tabla con **cada fila** y su estado —*Crear*, *Ya cargado* o *Problema* con el motivo—, el resumen (para crear, ya cargados, con problemas, menores de 18) y cuántos jugadores se crearían por equipo. Los **menores de 18** se marcan *Menor* y un aviso recuerda que solo se publican su nombre y su posición. Hay un filtro "solo las filas con problemas".
+4. **Confirmar y cargar N jugadores**: solo se habilita si **no hay ningún problema** (todo o nada). Al confirmar, el servidor **vuelve a validar** todo: lo que se vio en pantalla no es lo que se da por bueno. Repetir una carga no duplica (queda "No hay jugadores nuevos").
+
+Las mismas reglas (y el mismo código: `planForTournament` en `_lib/provisional-import-server.ts`) sirven para el script de la terminal, que sigue disponible:
 **Lo más simple: pegar las filas de la hoja de cálculo**, sin crear ningún archivo (así tampoco queda un archivo con DNIs en el disco). Se copian las filas de Excel o Google Sheets y se corre (`prisma/cargar-jugadores.ts`):
 
 `pbpaste | npm run db:cargar-jugadores -- --torneo organizador/torneo --archivo - [--aplicar]`
@@ -31,6 +39,7 @@ También acepta un archivo (`--archivo ruta.csv` o `.json`).
 - **Sin `--aplicar` solo simula**: muestra la base a la que apunta (el servidor, sin contraseña), cuántas filas leyó, cuántos jugadores crearía por equipo, los ya cargados y los problemas, y no escribe nada.
 - **Con `--aplicar` guarda, pero solo si no hay ningún problema** (todo o nada); si hay, hay que corregir las filas y volver a correr. **Correrlo dos veces no duplica** (lo ya cargado en ese mismo equipo se omite).
 - El *club* de cada fila (o el `equipo` del JSON si falta) se busca **entre los equipos inscritos en ese torneo**, por nombre o abreviatura, sin distinguir mayúsculas ni tildes.
+- **Menores de 18** (`isMinor`, `_lib/provisional-import.ts`): el día que cumple 18 ya no lo es; solo es una marca de revisión, no bloquea.
 - **Validaciones** (cada una avisa la fila, sin contar el encabezado): nombres y apellidos no vacíos; DNI de 8 dígitos (con 7 avisa que la hoja pudo quitar un 0 inicial: en la hoja, la columna del DNI debe tener formato *Texto*); fecha `AAAA-MM-DD` o `DD/MM/AAAA` (**día primero**; el resumen avisa cuántas filas usan esa forma) de un día que existe, pasado y posterior a 1900; club que coincide con un solo equipo del torneo; **DNI repetido en lo pegado** (se marcan todas sus filas); **DNI que ya tiene cuenta** (se avisa para vincularlo, no se duplica); **DNI ya cargado como provisional en otro equipo**.
 - **Lógica pura** en `src/_lib/provisional-import.ts` (`parseTable`, `planImport`; con `tests/unit/provisional-import.test.mjs`); el script solo lee la entrada y la base.
 - **Datos personales:** los DNIs y fechas de nacimiento (posiblemente de menores) **nunca van al repositorio** —ni en archivos, ni en pruebas, ni en la documentación—: las pruebas usan datos inventados. Si se usa un archivo, va fuera del repo o en `datos-privados/` (git lo ignora).
