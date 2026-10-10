@@ -40,6 +40,7 @@ Club ──< PlayerInvitation                (invitaciones personales)
 - `delegado*`: datos de contacto del delegado del club (texto libre).
 
 ### PlayerProfile
+- **Jugador provisional** (especificación [009](009-jugadores-provisionales.md)): una ficha **sin cuenta** (`userId` null) cargada por un admin, con `firstName`, `lastName`, `dni` (único, y solo entre provisionales: una ficha con cuenta lo deja en null y lo guarda en `User`) y `birthDate`, siempre en un club. Sus jugadas y estadísticas cuelgan de la ficha, así que al asignarle una cuenta (entrega 2) no se pierde nada. Un provisional solo está en un equipo. El DNI y la fecha de nacimiento nunca son públicos. El nombre de un jugador, con o sin cuenta, sale de `_lib/player-identity.ts`.
 - **Un usuario puede jugar en varios clubes: tiene una ficha (`PlayerProfile`) por club.** `(userId, clubId)` es único. Además puede tener una ficha "libre" (`clubId` null: solo la posición, todavía sin equipo, p. ej. la del registro); al sumarse a un club se usa esa ficha en vez de crear otra. Que haya una sola libre lo cuida el código (`_lib/invite.ts › joinClub`), no la base: en Postgres los `NULL` no chocan en un índice único.
 - `categoryId`, `number` y las estadísticas son **de cada ficha** (de cada club). La posición es de la persona: se aplica a todas sus fichas.
 - `User.activeClubId`: con qué equipo "sale a la cancha" hoy (el que muestra Actividad). Sin relación a propósito: si ya no es uno de sus equipos, se ignora y se usa el más antiguo (`_lib/player-clubs.ts › resolveActiveClubId`).

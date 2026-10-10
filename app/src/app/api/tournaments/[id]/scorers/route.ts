@@ -1,5 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
+import { playerIdentity } from "@/_lib/player-identity";
 
 export async function GET(
   _request: NextRequest,
@@ -21,15 +22,20 @@ export async function GET(
   });
 
   return Response.json(
-    stats.map((s, i) => ({
-      position: i + 1,
-      playerId: s.playerId,
-      firstName: s.player.user.firstName,
-      lastName: s.player.user.lastName,
-      avatarUrl: s.player.user.avatarUrl,
-      clubName: s.player.club?.name ?? "Sin equipo",
-      goals: s.goals,
-      matchesPlayed: s.matchesPlayed,
-    }))
+    stats.map((s, i) => {
+      const who = playerIdentity(s.player);
+      return {
+        position: i + 1,
+        playerId: s.playerId,
+        firstName: who.firstName,
+        lastName: who.lastName,
+        avatarUrl: who.avatarUrl,
+        // Su puesto en la cancha, si lo tiene (no se muestra si está vacío). `position` ya es el lugar en la tabla.
+        playerPosition: s.player.position,
+        clubName: s.player.club?.name ?? "Sin equipo",
+        goals: s.goals,
+        matchesPlayed: s.matchesPlayed,
+      };
+    })
   );
 }

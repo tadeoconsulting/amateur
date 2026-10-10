@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { compareByLastName, playerIdentity } from "@/_lib/player-identity";
 
 export async function GET(
   request: NextRequest,
@@ -21,7 +22,6 @@ export async function GET(
       user: { select: { firstName: true, lastName: true, avatarUrl: true, birthDate: true } },
       category: { select: { id: true, name: true } },
     },
-    orderBy: { user: { lastName: "asc" } },
   });
 
   // La fecha de nacimiento es dato personal (puede ser de menores): solo la ve quien gestiona el club.
@@ -30,19 +30,25 @@ export async function GET(
   return Response.json(
     // Misma forma que PlayerListItem (nombre dentro de `user`): así la esperan las pantallas.
     // Antes devolvía el nombre plano y la lista de jugadores de la pantalla en vivo se rompía.
-    players.map((p) => ({
-      id: p.id,
-      number: p.number,
-      position: p.position,
-      status: p.status,
-      user: {
-        firstName: p.user.firstName,
-        lastName: p.user.lastName,
-        avatarUrl: p.user.avatarUrl,
-        birthDate: canSeeBirthDate ? p.user.birthDate : null,
-      },
-      category: p.category,
-    }))
+    // Un jugador provisional (sin cuenta, ver especificación 009) trae su nombre del perfil; el DNI
+    // nunca sale de acá.
+    players
+      .map((p) => ({ p, who: playerIdentity(p) }))
+      .sort((a, b) => compareByLastName(a.who, b.who))
+      .map(({ p, who }) => ({
+        id: p.id,
+        number: p.number,
+        position: p.position,
+        status: p.status,
+        provisional: who.provisional,
+        user: {
+          firstName: who.firstName,
+          lastName: who.lastName,
+          avatarUrl: who.avatarUrl,
+          birthDate: canSeeBirthDate ? who.birthDate : null,
+        },
+        category: p.category,
+      }))
   );
 }
 

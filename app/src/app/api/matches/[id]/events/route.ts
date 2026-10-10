@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { changesScore, EVENT_TYPES, isEventType, statFor } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
+import { fullName, playerIdentity } from "@/_lib/player-identity";
 
 export async function GET(
   _request: NextRequest,
@@ -26,7 +27,7 @@ export async function GET(
       type: e.type,
       minute: e.minute,
       playerId: e.playerId,
-      playerName: e.player ? `${e.player.user.firstName} ${e.player.user.lastName}` : null,
+      playerName: e.player ? fullName(playerIdentity(e.player)) : null,
       teamId: e.teamId,
       detail: e.detail,
       phase: e.phase,

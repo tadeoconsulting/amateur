@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   const clubId = request.nextUrl.searchParams.get("clubId");
   const status = request.nextUrl.searchParams.get("status");
 
-  const where: Record<string, unknown> = {};
+  // Los jugadores provisionales (sin cuenta) no se buscan ni se invitan: no hay a quién.
+  const where: Record<string, unknown> = { userId: { not: null } };
 
   if (search) {
     where.user = {

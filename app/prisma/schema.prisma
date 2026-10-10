@@ -171,14 +171,24 @@ model PlayerProfile {
   id         String   @id @default(cuid())
   position   String?
   number     Int?
-  userId     String
+  // null = jugador provisional: cargado por un admin sin cuenta (especificación 009). Sus goles y
+  // tarjetas cuelgan de este perfil, así que al asignarle una cuenta (se le pone el userId) no se
+  // pierde nada. Un provisional solo está en un equipo; para estar en dos necesita cuenta.
+  userId     String?
   clubId     String?
   categoryId String?
   status     String   @default("activo")
+  // Datos propios del provisional (con cuenta, el nombre, DNI y fecha de nacimiento salen de User y
+  // acá quedan en null). Nunca son públicos: solo el nombre y la posición se muestran. El DNI es
+  // único entre provisionales: una misma persona no es dos provisionales.
+  firstName  String?
+  lastName   String?
+  dni        String?  @unique
+  birthDate  DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  user        User          @relation(fields: [userId], references: [id])
+  user        User?         @relation(fields: [userId], references: [id])
   club        Club?         @relation(fields: [clubId], references: [id])
   category    TeamCategory? @relation(fields: [categoryId], references: [id])
   stats       PlayerStats[]
