@@ -627,3 +627,8 @@ export function withTabParam(search: string, key: string | null): string {
   if (key && /^[fr]\d+$/.test(key)) params.set(key[0] === "f" ? "fecha" : "ronda", key.slice(1));
   return params.toString();
 }
+
+/** La pestaña del fixture ("f3", "r2") donde está un partido: a ella vuelve quien abre su ficha y regresa. */
+export function tabKeyOfMatch(match: { decisive: boolean; matchday: number }): string {
+  return `${match.decisive ? "r" : "f"}${match.matchday}`;
+}

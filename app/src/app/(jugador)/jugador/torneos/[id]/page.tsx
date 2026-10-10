@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getMatches, getStandings, getScorers, getTournament, getTournaments, type TournamentDetail } from "@/_lib/api";
@@ -202,6 +203,8 @@ export default function JugadorTorneoDetailPage() {
         {shownTab === "Partidos" && (
           <FixtureWithStandings
             bleed
+            syncUrl
+            hrefFor={(m) => `/jugador/torneos/${id}/partido/${m.id}`}
             matches={allMatches}
             standings={standings}
             qualifyCount={llaves}
@@ -231,7 +234,11 @@ export default function JugadorTorneoDetailPage() {
               {bracketMatches
                 .filter((m) => m.matchday === currentRound)
                 .map((match) => (
-                  <div key={match.id} className="rounded-lg border border-brand-100 px-3 py-3">
+                  <Link
+                    key={match.id}
+                    href={`/jugador/torneos/${id}/partido/${match.id}`}
+                    className="block rounded-lg border border-brand-100 px-3 py-3 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+                  >
                     <div className="border-b border-brand-100 pb-2">
                       <span className="text-xs text-text-secondary">
                         {roundLabel(match.matchday, totalRounds)}
@@ -269,7 +276,7 @@ export default function JugadorTorneoDetailPage() {
                         Penales {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}
                       </p>
                     )}
-                  </div>
+                  </Link>
                 ))}
             </div>
           </div>

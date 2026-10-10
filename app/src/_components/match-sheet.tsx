@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { getMatches, getStandings, getTournament, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { teamForm, roundLabel, type FormEntry } from "@/_lib/fixture";
@@ -31,17 +32,29 @@ export function MatchSheet({
   tournamentId,
   backHref,
   backLabel,
+  liveVersion = 0,
   children,
 }: {
   match: MatchListItem;
   tournamentId: string;
   backHref: string;
   backLabel: string;
+  /** Sube cada vez que llega una novedad en vivo: la forma de los equipos y la tabla se vuelven a pedir. */
+  liveVersion?: number;
   children: React.ReactNode;
 }) {
-  const { data: matches } = useApi(() => getMatches({ tournamentId }));
-  const { data: standings } = useApi(() => getStandings(tournamentId));
+  const { data: matches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId }));
+  const { data: standings, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId));
   const { data: tournament } = useApi(() => getTournament(tournamentId));
+
+  // La suscripción en vivo la tiene la pantalla que monta la ficha (una sola por pantalla); acá solo se reacciona al aviso.
+  const seenVersion = useRef(liveVersion);
+  useEffect(() => {
+    if (seenVersion.current === liveVersion) return;
+    seenVersion.current = liveVersion;
+    refetchMatches();
+    refetchStandings();
+  });
 
   const home = match.homeTeam;
   const away = match.awayTeam;

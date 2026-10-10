@@ -21,8 +21,7 @@ export function MatchRow({
   onEdit,
 }: {
   match: MatchListItem;
-  /** Si no se pasa (vista pública de un fan: ningún rol tiene una ficha de partido sin sesión),
-   * la fila se muestra igual pero sin link. */
+  /** A la ficha del partido. Si no se pasa, la fila se muestra igual pero sin link. */
   href?: string;
   /** Resalta (fondo) los partidos donde juega el club logueado. */
   mine?: boolean;
