@@ -26,7 +26,7 @@ export function FixtureTabs({
   syncUrl = false,
 }: {
   matches: MatchListItem[];
-  /** Si no se pasa (vista pública de un fan), la fila se muestra igual pero sin link. */
+  /** A la ficha de cada partido. Si no se pasa, la fila se muestra igual pero sin link. */
   hrefFor?: (match: MatchListItem) => string;
   /** Si se pasa, resalta (fondo) los partidos donde juega este club. */
   highlightClubId?: string;

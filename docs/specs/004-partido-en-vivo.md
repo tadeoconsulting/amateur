@@ -62,6 +62,7 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 - **`/torneos/:id/resultado/:matchId`:** marcador y crónica real (inicio, jugadas, final).
 - **`/torneos/:id/partidos/:matchId`:** ficha del partido con marcador, minuto en vivo y la línea de tiempo.
 - **`/torneos/:id/partido/:matchId`:** previa con cuenta regresiva hasta la hora programada.
+- **Ficha de lectura para fan, jugador y club** (`MatchDetail`): `/{organizador}/{torneo}/partido/:matchId` (pública), `/jugador/torneos/:id/partido/:matchId` y `/club/torneos/:id/partido/:matchId`. Marcador, minuto en vivo, cronología con nombres y, en escritorio, forma de los equipos y tabla; se actualiza por tiempo real. Ver [008](008-observaciones-octubre-2026.md), Fase 4.
 
 ## Tiempo real (ficha del partido)
 
@@ -80,7 +81,7 @@ Implementa el ADR de `docs/arquitectura.md` §7-9 (SSE conceptualmente; en la pr
 - **El minuto de una jugada no se edita** (sale del reloj). Desde la pantalla solo se deshace la **última** jugada.
 - **El cambio no registra jugadores** (la pantalla no envía `detail` ni quién entra o sale).
 - **Un equipo temporal no tiene jugadores**, así que sus jugadas se registran sin jugador.
-- **El tiempo real solo llega a la ficha del partido** (`/torneos/:id/partidos/:matchId`). Las demás pantallas (previa, en vivo del organizador, tabla de posiciones, goleadores, lista de partidos) siguen viendo el estado solo al abrir o recargar. Ver "Tiempo real" más abajo.
+- **El tiempo real solo llega a las fichas del partido** (`/torneos/:id/partidos/:matchId` del organizador y la ficha de lectura de fan, jugador y club). Las demás pantallas (previa, en vivo del organizador, tabla de posiciones, goleadores, lista de partidos) siguen viendo el estado solo al abrir o recargar. Ver "Tiempo real" más abajo.
 - El cronómetro usa el reloj del navegador contra un `startedAt` del servidor: un reloj desajustado se nota.
 - **El tiempo real no avisa cuando un ganador avanza al siguiente partido del cuadro,** ni a quien mira la tabla de posiciones o los goleadores: hay que recargar esas pantallas.
 - **Sin backoff propio ante reconexión:** se apoya en el del cliente de Ably. Un `ABLY_API_KEY` sobregirado en su plan simplemente deja de repartir en vivo (la ficha sigue funcionando con lo último que cargó).

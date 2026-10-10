@@ -56,3 +56,14 @@ test("la fecha elegida se lee de la URL y se escribe conservando los demás par�
   assert.equal(withTabParam("fecha=3&unirme=1", "r1"), "unirme=1&ronda=1");
   assert.equal(withTabParam("fecha=3", null), "");
 });
+
+test("cada partido sabe en qué pestaña del fixture está (para volver a ella desde su ficha)", async () => {
+  const { tabKeyOfMatch, tabKeyFromSearch, withTabParam, buildFixtureTabs } = await import("../../src/_lib/fixture.ts");
+  assert.equal(tabKeyOfMatch({ decisive: false, matchday: 3 }), "f3");
+  assert.equal(tabKeyOfMatch({ decisive: true, matchday: 1 }), "r1");
+  // es la misma clave que arma el fixture y que lee la URL
+  const matches = [m(3), m(1, { decisive: true })];
+  const keys = buildFixtureTabs(matches).map((t) => t.key);
+  assert.ok(matches.every((x) => keys.includes(tabKeyOfMatch(x))));
+  assert.equal(tabKeyFromSearch(`?${withTabParam("vista=fixture", tabKeyOfMatch(matches[1]))}`), "r1");
+});

@@ -18,8 +18,8 @@ export default function JugadorLayout({
     /^\/jugador\/equipos/.test(pathname) ||
     /^\/jugador\/ajustes\/.+/.test(pathname);
   // Escritorio: la pantalla de un torneo es ancha (fixture con la tabla al lado); el resto, una columna
-  // cómoda de lectura. En el celular todo sigue en 430 px.
-  const wide = /^\/jugador\/torneos\/[^/]+$/.test(pathname);
+  // cómoda de lectura. La ficha de un partido también es ancha. En el celular todo sigue en 430 px.
+  const wide = /^\/jugador\/torneos\/[^/]+(\/partido\/[^/]+)?$/.test(pathname);
 
   const items = jugadorNavItems.map((item) => ({
     href: item.href,

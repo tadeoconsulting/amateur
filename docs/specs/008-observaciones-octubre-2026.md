@@ -1,6 +1,6 @@
 # 008 · Observaciones de octubre 2026
 
-**Estado:** ✅ implementada (as-built). Entregada en cuatro PRs: #83, #84, #85 y #86.
+**Estado:** ✅ implementada (as-built). Entregada en los PRs #83–#86 (observaciones originales) y, como seguimiento, #87–#100 y la ficha pública del partido (§ 11, Fase 4).
 **Origen:** `Observaciones Amateur(Octubre).csv`: seis observaciones de dos perfiles (organizador y administrador) tras probar la plataforma.
 **Toca:** [002](002-crear-torneo-y-equipos.md) (editar por pestañas, sedes), [003](003-fixture.md) (llaves en una liga), [007](007-fixture-eliminacion-copa-relampago.md) (los partidos del cuadro), [modelo-de-datos.md](modelo-de-datos.md) (`playoffTeams`, `deletedAt`).
 
@@ -121,7 +121,7 @@ El panel ya era de escritorio (menú lateral y contenido), así que se revisó y
 - Lógica pura y probada en `_lib/fixture.ts` (`buildFixtureTabs`, `currentTabKey`, `groupByDay`); `tests/unit/fixture-view.test.mjs`.
 - **Accesibilidad:** objetivos táctiles de al menos 44 px, foco visible, anuncio del cambio de fecha (`aria-live`) y la animación de "En vivo" respeta `prefers-reduced-motion`.
 
-**Pendiente:** Fase 2 (ficha del partido con cabecera por colores del club y "forma del equipo", últimos 5) y Fase 3 (agregar al calendario y URL por fecha). La barra de filtros de `/partidos` del organizador se alinea con este patrón en la Fase 1b.
+**Seguimiento (referencia Premier League):** Fases 1–3 y la Fase 4 (ficha pública del partido) están hechas; ver § 11. La barra de filtros de `/partidos` del organizador (Fase 1b) se canceló.
 
 ### Fase 2 · Ficha del partido en escritorio
 Tomando la ficha del partido de la Premier League como referencia. **Solo escritorio** (desde 900 px de ancho): en el celular cada pantalla sigue como siempre y no hace ninguna consulta nueva.
@@ -130,7 +130,7 @@ Tomando la ficha del partido de la Premier League como referencia. **Solo escrit
   - **Al lado, fijo al desplazarse:** *Forma de los equipos* (últimos 5 partidos de cada uno en el torneo, de izquierda a derecha, con G / E / P, marcador y rival; la letra acompaña al color y cada resultado tiene su descripción para lectores de pantalla), *Posiciones* (tabla compacta con los dos clubes resaltados; solo en una liga) e *Información del partido* (día y hora, sede, fecha o ronda, grupo).
 - **`teamForm`** (`_lib/fixture.ts`, con pruebas en `tests/unit/team-form.test.mjs`): solo partidos finalizados con marcador, sin el de la ficha; si el partido ya tiene día y hora, solo los anteriores; un partido decisivo empatado cuenta por quien avanzó. Sale de los partidos del torneo ya existentes: sin API nueva.
 - `useWideSheet` (`useMediaQuery`) monta la ficha solo en pantallas anchas; los *layouts* del club y del organizador usan la columna ancha en estas dos rutas.
-- **Pendiente:** una ficha pública para el fan y el jugador (hoy sus filas de partido no llevan a ninguna pantalla) y la ficha en celular.
+- La ficha para el fan y el jugador y la ficha en celular se resolvieron en la Fase 4 (abajo).
 
 ### Fase 3 · Compartir una vista por enlace
 Referencia: la URL por fecha de la Premier League. Disponible en la vista pública del fan (`/{organizador}/{torneo}`), en celular y en escritorio. **El calendario (agregar partidos a Google/Apple Calendar) se evaluó y se dejó fuera por ahora**, por decisión del usuario.
@@ -138,6 +138,20 @@ Referencia: la URL por fecha de la Premier League. Disponible en la vista públi
 - **Botón "Compartir"** justo después de *Detalles*: comparte (en el celular, el menú de compartir del sistema; en escritorio, copia el enlace con el aviso "Enlace copiado"). El enlace lleva **solo la vista** —sección, fecha o ronda, pestaña de resultados—, sin `unirme` ni nada de iniciar sesión, para que sirva a cualquiera. Está fuera de la fila de secciones que se desplaza, así que en el celular siempre se ve (solo el ícono) y en pantallas con espacio lleva el texto.
 - En pantallas de 375 px las pestañas de sección usan un espaciado un poco menor (7 px en vez de 12) para que las cuatro sigan completas junto al ícono.
 - **No incluido:** compartir desde las pantallas con sesión de jugador, club y organizador (la fecha elegida allí no está en la URL).
+
+### Fase 4 · Ficha pública del partido (fan y jugador)
+Hasta la Fase 3, las filas de partido del fan y del jugador no llevaban a ninguna pantalla (solo el club y el organizador tenían ficha). Ahora las cuatro vistas comparten una sola ficha de lectura.
+- **`MatchDetail`** (`_components/match-detail.tsx`): la ficha de un partido, en celular y en escritorio. Sale de la ficha que ya tenía el club, con datos reales:
+  - **Celular:** tarjeta con el estado (**"17′ En vivo"** con el minuto real —antes el club mostraba un "75′" fijo—, "FT · Finalizado" o el día y la hora), el marcador, "Se definió por penales: x-y" si corresponde, y debajo *fecha o ronda · grupo · sede*. Después, la **cronología** (gol, amarilla, roja) con **el nombre de cada jugador** (antes la ficha del club no los mostraba, porque pedía las jugadas por una ruta que no los trae: ahora usa `GET /api/matches/:id/events`). Un partido por jugar muestra "El partido aún no ha comenzado" con día, hora y sede; uno jugado sin jugadas, "No se registraron jugadas en este partido".
+  - **Escritorio (≥ 900 px):** el mismo contenido dentro de `MatchSheet` (Fase 2): cabecera por colores de los clubes y, al lado, forma de los equipos, posiciones e información.
+  - **En vivo:** una sola suscripción de Ably por pantalla (`useMatchRealtime`, igual que la ficha del organizador); cada aviso vuelve a pedir el partido y sus jugadas, y la ficha de escritorio (`MatchSheet`, con la prop `liveVersion`) vuelve a pedir también la tabla y la forma de los equipos. El cronómetro corre solo mientras el partido está en vivo, y un partido colgado muestra "En juego" en vez de un minuto absurdo (`isStale`).
+  - Un partido de otro torneo o inexistente muestra "Este partido no existe".
+  - Lo propio de cada rol entra por la prop `extra`: el club conserva **Definir titulares** (mientras el partido está programado o en vivo).
+- **Fan (público, sin cuenta):** `cupamateur.com/{organizador}/{torneo}/partido/{id}` (`PublicMatchView`). Un partido solo existe dentro de su torneo y organizador: con otro, `404`. Los torneos anteriores a las URLs con nombre usan `/convocatoria/{id}/partido/{id}`, que **redirige** a la ruta con nombre si el torneo ya la tiene. Cada ficha pone en el título (y en la vista previa del enlace) *Local vs Visitante · Torneo* y, si ya se juega, el marcador. La flecha **"Volver al torneo"** cae en el fixture, **en la fecha (o ronda) donde está el partido** (`?vista=fixture&fecha=N`), no en la primera.
+- **Jugador:** `/jugador/torneos/{id}/partido/{id}`, con la barra superior y la columna ancha como el resto de su torneo; "Volver al torneo" cae en su fecha. El fixture del jugador guarda ahora la fecha en la URL (`syncUrl`), y las tarjetas de **Llaves** también llevan a la ficha.
+- **Club:** la ficha del club (`/club/torneos/{id}/partido/{id}`) pasó a usar `MatchDetail`; el resto no cambió.
+- Lógica pura: `tabKeyOfMatch` (`_lib/fixture.ts`; la pestaña del fixture donde está un partido), con prueba en `tests/unit/fixture-view.test.mjs`. Sin API nueva ni cambios en la base: las lecturas de un partido ya eran públicas (001, regla 19).
+- **No incluido:** botón de compartir en la propia ficha (el enlace es la URL de la página); alineaciones públicas (hay datos de menores: requeriría decidir qué se muestra); sustituciones y la tanda de penales intento por intento en la cronología.
 
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):
