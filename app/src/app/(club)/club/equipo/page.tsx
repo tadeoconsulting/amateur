@@ -9,6 +9,7 @@ import { MyClubCard } from "../../_components/my-club-card";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
 import { ClubCrest } from "@/_components/club-crest";
+import { SubTabs } from "@/_components/sub-tabs";
 
 const tabs = ["Categorías", "Planilla"] as const;
 type Tab = (typeof tabs)[number];
@@ -290,21 +291,7 @@ function ClubEquipoContent({
       <JoinRequests clubId={clubId} onJoined={() => { refetchCategories(); refetchStaff(); }} />
 
       {/* Tabs */}
-      <div className="mt-4 flex border-b border-brand-200 px-4">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 cursor-pointer py-2.5 text-center text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? "border-b-2 border-brand-900 text-text-primary"
-                : "text-text-secondary"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      <SubTabs label="Equipo" value={activeTab} onChange={setActiveTab} tabs={tabs.map((t) => ({ key: t, label: t }))} />
 
       {/* Categorías Tab */}
       {activeTab === "Categorías" && (

@@ -123,6 +123,13 @@ El panel ya era de escritorio (menú lateral y contenido), así que se revisó y
 
 **Seguimiento (referencia Premier League):** Fases 1–3 y la Fase 4 (ficha pública del partido) están hechas; ver § 11. La barra de filtros de `/partidos` del organizador (Fase 1b) se canceló.
 
+### Sub-pestañas del club en escritorio
+Las pantallas del club tenían pestañas secundarias con **subrayado** (distintas de las píldoras de las fechas del fixture y de las secciones del torneo). En escritorio —desde 768 px, donde aparece la barra superior— ahora usan **`PillTabs`**, el mismo estilo y comportamiento (teclado con flechas, desplazamiento) que el resto; **en el celular siguen exactamente igual**, con el subrayado.
+- **`SubTabs`** (`_components/sub-tabs.tsx`): un solo componente con las dos presentaciones (subrayado `md:hidden`, píldoras `hidden md:block`). `mobile="equal"` reparte las pestañas en todo el ancho (equipo, jugadores); `mobile="start"` las deja a la izquierda con letra más chica (Libre / Sub 18).
+- Pantallas: Torneos (**Libre / Sub 18**), Equipo (**Categorías / Planilla**), Jugadores (**Masculino / Femenino / Mixto**) y la lista de una categoría (la barra de género de "Sin categoría", que solo aparece con el id fijo `cat-sin`: no existe con datos reales).
+- No se tocaron las pestañas principales de Torneos (*Mis torneos / Solicitudes*, con insignia de pendientes): ya eran botones tipo píldora.
+- Sin lógica nueva ni API: solo presentación; no hay prueba unitaria.
+
 ### Fase 2 · Ficha del partido en escritorio
 Tomando la ficha del partido de la Premier League como referencia. **Solo escritorio** (desde 900 px de ancho): en el celular cada pantalla sigue como siempre y no hace ninguna consulta nueva.
 - **`MatchSheet`** (`_components/match-sheet.tsx`), usado por la ficha del partido del club (`/club/torneos/[id]/partido/[matchId]`) y por el resultado del organizador (`/torneos/[id]/resultado/[matchId]`); el contenido propio de cada pantalla (titulares, cronología, "Editar el resultado") va en la columna principal.

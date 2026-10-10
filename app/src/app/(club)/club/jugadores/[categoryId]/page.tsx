@@ -12,6 +12,7 @@ import { getClubCategories, getClubPlayers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import type { PlayerCategory, PlayerGender, PlayerStatus, RosterPlayer } from "@/_lib/types";
+import { SubTabs } from "@/_components/sub-tabs";
 
 const genderTabs: { key: PlayerGender; label: string }[] = [
   { key: "masculino", label: "Masculino" },
@@ -194,21 +195,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
 
       {/* Gender sub-tabs for sin categoria */}
       {isSinCategoria && (
-        <div className="mt-4 flex border-b border-brand-200 px-4">
-          {genderTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setGender(tab.key)}
-              className={`flex-1 cursor-pointer py-2.5 text-center text-sm font-medium transition-colors ${
-                gender === tab.key
-                  ? "border-b-2 border-brand-900 text-text-primary"
-                  : "text-text-secondary"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <SubTabs label="Género" value={gender} onChange={setGender} tabs={genderTabs} />
       )}
 
       {/* Player List */}

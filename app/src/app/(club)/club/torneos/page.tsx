@@ -15,6 +15,7 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { notifyChanged } from "@/_lib/notifications-changed";
+import { SubTabs } from "@/_components/sub-tabs";
 
 type MainTab = "mis_torneos" | "solicitudes";
 type CategoryTab = "libre" | "sub18";
@@ -115,28 +116,16 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
       </div>
 
       {/* Category sub-tabs */}
-      <div className="mt-4 flex gap-4 border-b border-border-primary px-4">
-        <button
-          onClick={() => setCategoryTab("libre")}
-          className={`cursor-pointer pb-2 font-body text-sm transition-colors ${
-            categoryTab === "libre"
-              ? "border-b-2 border-text-primary font-semibold text-text-primary"
-              : "text-text-secondary"
-          }`}
-        >
-          Libre
-        </button>
-        <button
-          onClick={() => setCategoryTab("sub18")}
-          className={`cursor-pointer pb-2 font-body text-sm transition-colors ${
-            categoryTab === "sub18"
-              ? "border-b-2 border-text-primary font-semibold text-text-primary"
-              : "text-text-secondary"
-          }`}
-        >
-          Sub 18
-        </button>
-      </div>
+      <SubTabs
+        label="Categoría"
+        mobile="start"
+        value={categoryTab}
+        onChange={setCategoryTab}
+        tabs={[
+          { key: "libre", label: "Libre" },
+          { key: "sub18", label: "Sub 18" },
+        ]}
+      />
 
       {/* Mis torneos content */}
       {mainTab === "mis_torneos" && (
