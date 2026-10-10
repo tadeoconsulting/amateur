@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     where.OR = [
       { firstName: { contains: search, mode: "insensitive" } },
       { lastName: { contains: search, mode: "insensitive" } },
-      ...(admin ? [{ email: { contains: search, mode: "insensitive" } }] : []),
+      ...(admin ? [{ email: { contains: search, mode: "insensitive" } }, { dni: { contains: search } }] : []),
     ];
   }
 
@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
       // Datos personales y de contacto: solo para admins.
       ...(admin && {
         email: u.email,
+        dni: u.dni,
         phone: u.phone,
         gender: u.gender,
         department: u.department,

@@ -1,6 +1,6 @@
 # 009 · Jugadores provisionales
 
-**Estado:** 🟡 **Entrega 1 implementada** (as-built, abajo); la entrega 2 (asignar cuenta y unir perfiles) sigue como propuesta.
+**Estado:** ✅ **Entregas 1 y 2 implementadas** (as-built, abajo).
 **Origen:** el torneo Clausura 2026 de La Ensenada tiene 11 equipos temporales y su lista de jugadores. Se necesita **la tabla de goleadores** con nombres, sin esperar a que cada jugador cree una cuenta, y sin perder esos datos cuando después la creen.
 **Toca:** [modelo-de-datos.md](modelo-de-datos.md) (`PlayerProfile`), [004](004-partido-en-vivo.md) (jugadas y goleadores), [001](001-autenticacion-y-permisos.md) (permisos de admin).
 
@@ -52,12 +52,20 @@ También acepta un archivo (`--archivo ruta.csv` o `.json`).
   - **Editar** (solo provisionales; los jugadores con cuenta siguen con su editor): nombres, apellidos, DNI (8 dígitos, único entre provisionales), fecha de nacimiento, posición, número, equipo, categoría y estado. `PATCH /api/players/:id` valida los datos propios con `parseProvisionalEdit` (`409` si el DNI ya es de otro provisional; `400` si el jugador tiene cuenta o se intenta dejarlo sin equipo). El equipo actual siempre aparece entre las opciones.
   - **Eliminar** (para una carga errónea): `DELETE /api/players/:id`, solo admin y solo provisionales (`409` si tiene cuenta: se elimina desde Usuarios). Pide escribir el nombre; se van sus estadísticas y alineaciones, y en las jugadas queda el registro sin el jugador.
   - **Privacidad:** el DNI y la fecha de nacimiento de un provisional solo los devuelve la lista a un admin; una cuenta que no es admin no ve provisionales ni al listar ni al buscar, y las respuestas de edición no los devuelven.
-- **Lo que no hay todavía:** asignar una cuenta a un provisional y unir perfiles (entrega 2).
 
-## Entrega 2 · Asignar cuenta y unir perfiles (solo admin)
-- **Asignar cuenta:** en la ficha del provisional, el admin busca la cuenta por correo o DNI y la vincula. Si no existe, la crea desde el admin (ya genera una contraseña temporal) o espera a que la persona se registre. Se copia el DNI y la fecha de nacimiento a la cuenta solo si están vacíos ahí; si difieren, **se avisa y no se pisa nada**. Luego se muestra el nombre de la cuenta.
-- **Unir perfiles:** si esa cuenta **ya tiene ficha en el mismo equipo** (o una ficha libre), el admin ve la advertencia y confirma "Unir": en una sola transacción, las jugadas, alineaciones y estadísticas del provisional pasan a la ficha real (los goles del mismo torneo se suman) y el provisional se elimina. Si la cuenta tiene fichas en otros equipos, no hay conflicto.
-- **Organizadores y clubes** no ven estas acciones.
+## Entrega 2 · Asignar cuenta y unir perfiles (solo admin, implementada)
+En **Admin → Jugadores**, cada provisional tiene un botón **Asignar cuenta** (`_components/link-account-modal.tsx`, ruta `POST /api/players/:id/link`, solo admin).
+1. **Buscar la cuenta** por correo, nombre o **DNI** (`GET /api/users?search=`, que para un admin también busca y devuelve el DNI). El diálogo se abre buscando por el DNI del provisional: si esa persona ya tiene cuenta con ese DNI, aparece de una vez. Una cuenta de administrador no se puede elegir (un admin no es jugador). Si la persona no tiene cuenta, hay que crearla (ella al registrarse, o el admin desde Usuarios) y volver a buscar.
+2. **Resumen antes de confirmar** (`dryRun: true`, no escribe nada): qué va a pasar, cuántas jugadas, alineaciones y estadísticas se mueven, y los avisos.
+3. **Confirmar**: todo en una sola transacción (todo o nada). No se puede deshacer.
+
+**Dos casos** (lógica pura en `_lib/provisional-link.ts › planLink`, con `tests/unit/provisional-link.test.mjs`):
+- **Vincular** — la cuenta no tiene ficha en el equipo del provisional ni una ficha sin equipo: el perfil provisional pasa a ser la ficha de la cuenta (se le pone el `userId` y se vacían sus datos propios: nombre, DNI y nacimiento quedan en la cuenta). Es el **mismo perfil**, así que sus goles y partidos se conservan sin mover nada. Si la cuenta no tenía el rol de jugador, se le agrega.
+- **Unir** — la cuenta **ya tiene ficha en ese equipo, o una ficha sin equipo** (se elige primero la del equipo): no puede haber dos. Las **jugadas** pasan a la ficha de la cuenta; las **alineaciones** también (si la ficha real ya estaba en ese partido, la del provisional sobra); las **estadísticas** de cada torneo también (las del mismo torneo se **suman**); y el provisional se elimina. A la ficha de la cuenta se le completa lo que tenía vacío (posición, número, categoría; el equipo, si era una ficha sin equipo) sin pisar nada.
+
+**Nunca se pisa un dato de la cuenta:** el DNI y la fecha de nacimiento del provisional solo se copian a la cuenta si ahí están vacíos. Si difieren, se **avisa** (en el resumen) y se queda el de la cuenta. También se avisa si el nombre de la cuenta es distinto: desde ahora se muestra el de la cuenta.
+
+**Verificado a mano** (base de pruebas): vincular a una cuenta sin ficha (con rol agregado), unir con la ficha del mismo equipo (las jugadas pasaron a su nombre, los goleadores muestran sus goles y la cuenta heredó el DNI) y unir con una ficha sin equipo (pasó a ser la del equipo, conservando su posición); un jugador que ya tiene cuenta responde `409`, una cuenta inexistente `404`, falta `userId` `400`, y un no admin `403`.
 
 ## Lo que implica construir
 - **Base de datos:** `PlayerProfile.userId` pasa a ser opcional, más `firstName`, `lastName`, `dni`, `birthDate` (todas opcionales). Las columnas se agregan en producción **antes** de mergear (como `deletedAt`).
