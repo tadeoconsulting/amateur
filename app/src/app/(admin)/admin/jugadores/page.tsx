@@ -10,6 +10,7 @@ import { ConfirmDelete } from "../_components/confirm-delete";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
+import { LinkAccountModal } from "../_components/link-account-modal";
 
 interface PlayerRow {
   id: string;
@@ -569,6 +570,7 @@ export default function AdminJugadoresPage() {
   const [clubFilter, setClubFilter] = useState<string[]>([]);
   const [editingPlayer, setEditingPlayer] = useState<PlayerRow | null>(null);
   const [deleting, setDeleting] = useState<PlayerRow | null>(null);
+  const [linking, setLinking] = useState<PlayerRow | null>(null);
   // Con cuenta o provisional (sin cuenta, cargado por un admin: especificación 009).
   const [kind, setKind] = useState<"all" | "account" | "provisional">("all");
 
@@ -753,6 +755,14 @@ export default function AdminJugadoresPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
+                        {player.provisional && (
+                          <button
+                            onClick={() => setLinking(player)}
+                            className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+                          >
+                            Asignar cuenta
+                          </button>
+                        )}
                         <button
                         onClick={() => setEditingPlayer(player)}
                         className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
@@ -794,6 +804,13 @@ export default function AdminJugadoresPage() {
       )}
       {editingPlayer?.provisional && (
         <EditProvisionalModal player={editingPlayer} clubs={clubs ?? []} onClose={() => setEditingPlayer(null)} onSaved={handlePlayerSaved} />
+      )}
+      {linking && (
+        <LinkAccountModal
+          player={{ id: linking.id, firstName: linking.user.firstName, lastName: linking.user.lastName, dni: linking.dni ?? null, clubName: linking.club?.name ?? null }}
+          onClose={() => setLinking(null)}
+          onDone={() => { setLinking(null); refetch(); }}
+        />
       )}
       {deleting && (
         <ConfirmDelete
