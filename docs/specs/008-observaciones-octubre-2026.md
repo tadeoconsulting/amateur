@@ -144,7 +144,7 @@ Referencia: la URL por fecha de la Premier League. Disponible en la vista públi
 - **El enlace abre exactamente donde estaba quien lo compartió.** La vista actual va en la URL: `?vista=fixture|resultados|equipos|detalles`; en el fixture, `&fecha=5` (fecha de la liga o los grupos) o `&ronda=2` (ronda del cuadro); en resultados, `&sub=tabla|goleadores`. Elegir una sección, una fecha o una pestaña actualiza la URL (se conservan los demás parámetros, por ejemplo `unirme`), así que también se puede copiar de la barra de direcciones y sobrevive a recargar. Lo inválido o inexistente se ignora y se abre en lo de siempre (el fixture, en la fecha actual). Lógica pura en `_lib/share-view.ts` (`parseView`, `withView`, `shareSearch`) y `_lib/fixture.ts` (`tabKeyFromSearch`, `withTabParam`), con pruebas.
 - **Botón "Compartir"** justo después de *Detalles*: comparte (en el celular, el menú de compartir del sistema; en escritorio, copia el enlace con el aviso "Enlace copiado"). El enlace lleva **solo la vista** —sección, fecha o ronda, pestaña de resultados—, sin `unirme` ni nada de iniciar sesión, para que sirva a cualquiera. Está fuera de la fila de secciones que se desplaza, así que en el celular siempre se ve (solo el ícono) y en pantallas con espacio lleva el texto.
 - En pantallas de 375 px las pestañas de sección usan un espaciado un poco menor (7 px en vez de 12) para que las cuatro sigan completas junto al ícono.
-- **No incluido:** compartir desde las pantallas con sesión de jugador, club y organizador (la fecha elegida allí no está en la URL).
+- Compartir desde las pantallas con sesión (jugador, club y organizador) se resolvió después (Fase 5, abajo).
 
 ### Fase 4 · Ficha pública del partido (fan y jugador)
 Hasta la Fase 3, las filas de partido del fan y del jugador no llevaban a ninguna pantalla (solo el club y el organizador tenían ficha). Ahora las cuatro vistas comparten una sola ficha de lectura.
@@ -159,6 +159,17 @@ Hasta la Fase 3, las filas de partido del fan y del jugador no llevaban a ningun
 - **Club:** la ficha del club (`/club/torneos/{id}/partido/{id}`) pasó a usar `MatchDetail`; el resto no cambió.
 - Lógica pura: `tabKeyOfMatch` (`_lib/fixture.ts`; la pestaña del fixture donde está un partido), con prueba en `tests/unit/fixture-view.test.mjs`. Sin API nueva ni cambios en la base: las lecturas de un partido ya eran públicas (001, regla 19).
 - **No incluido:** botón de compartir en la propia ficha (el enlace es la URL de la página); alineaciones públicas (hay datos de menores: requeriría decidir qué se muestra); sustituciones y la tanda de penales intento por intento en la cronología.
+
+### Fase 5 · Compartir desde las pantallas con sesión
+El jugador, el club y el organizador comparten ahora igual que el fan: un botón **Compartir** junto a las pestañas de su pantalla del torneo, que manda **el enlace público** (`/{organizador}/{torneo}`, o `/convocatoria/{id}` en torneos viejos) **en la vista donde están**: la misma sección, la misma fecha o ronda del fixture y la misma pestaña de resultados. Nunca se comparte la URL interna (exige sesión y rol): el enlace sirve a cualquiera, sin cuenta.
+- **`ShareViewButton`** (`_components/share-view-button.tsx`): la única definición del botón (menú de compartir del sistema en el celular; si no existe, copia el enlace y avisa con "Enlace copiado"; si falla, avisa del error). `ghost` (por omisión) va junto a las pestañas —en el celular solo el ícono, siempre a la vista, fuera de la fila que se desplaza—; `solid` es el botón lleno de la cabecera del Fixture del organizador. La vista del fan pasó a usarlo, con el mismo aspecto de antes.
+- **Qué vista pública corresponde a cada pestaña** (`competitionView` y `clubView` en `_lib/share-view.ts`, con pruebas; `shareUrl` arma el enlace):
+  - Jugador y organizador: *Partidos* y *Llaves* → fixture (en *Llaves* del jugador, con la ronda que está viendo); *Tabla* y *Goleadores* → resultados con esa pestaña; *Equipos* → equipos.
+  - Club: *Fixture* y *Torneo › Partidos* → fixture; *Resultados* → tabla o goleadores; *Torneo › Inscritos* → equipos; *Torneo › Amonestados* (no es público) → detalles del torneo.
+  - Un organizador con el torneo en convocatoria (*Inscritos / Solicitudes / Invitados*) no tiene este botón: ahí sigue la tarjeta de enlace de la convocatoria.
+- **La fecha va en la URL de la pantalla** (`syncUrl`, como ya hacían el fan y el jugador) en el fixture del club (sus dos pestañas) y del organizador (detalle del torneo y pantalla *Fixture*): así el enlace sale con `fecha=N` o `ronda=N`.
+- **Cambios de comportamiento:** el club ya no tiene la sub-pestaña *Resultados › Compartir* (un botón grande que mandaba el torneo sin vista): la reemplaza el botón de arriba. El botón *Compartir* de la pantalla *Fixture* del organizador, que mandaba el enlace sin vista, ahora lleva la fecha.
+- **No incluido:** compartir desde la ficha de un partido (el enlace es la URL de su página pública); el armado de llaves del organizador no recuerda qué ronda se mira, así que *Llaves* comparte el fixture sin ronda.
 
 ## Verificación en producción (2026-10-08)
 Tras mergear #83–#86 y agregar las columnas (`deletedAt`, `playoffTeams`):

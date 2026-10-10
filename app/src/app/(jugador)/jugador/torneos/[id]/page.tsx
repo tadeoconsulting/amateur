@@ -14,6 +14,9 @@ import { ClubCrest } from "@/_components/club-crest";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { TeamsList } from "@/_components/teams-list";
+import { ShareViewButton } from "@/_components/share-view-button";
+import { tournamentPublicPath } from "@/_lib/slug";
+import { competitionView } from "@/_lib/share-view";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
 type Tab = (typeof tabs)[number];
@@ -177,25 +180,36 @@ export default function JugadorTorneoDetailPage() {
       {/* Tarjeta del torneo y su selector. `key`: si cambia la persona se vuelve a pedir su lista. */}
       <TournamentSwitcher key={user?.id ?? "anon"} userId={user?.id ?? null} currentId={id} tournament={tournamentDetail} />
 
-      {/* Tabs */}
-      <div className="mt-6 flex gap-2 overflow-x-auto px-4 scrollbar-none">
-        {visibleTabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={(e) => {
-              setActiveTab(tab);
-              // La barra se desplaza: la pestaña elegida queda a la vista.
-              e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-            }}
-            className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              shownTab === tab
-                ? "bg-surface-secondary text-text-invert"
-                : "border border-border-primary text-text-primary"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      {/* Tabs. "Compartir" va fuera de la fila que se desplaza, para que siempre se vea. */}
+      <div className="mt-6 flex items-center gap-1.5 px-4">
+        <div className="flex min-w-0 gap-2 overflow-x-auto scrollbar-none">
+          {visibleTabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={(e) => {
+                setActiveTab(tab);
+                // La barra se desplaza: la pestaña elegida queda a la vista.
+                e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+              }}
+              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+                shownTab === tab
+                  ? "bg-surface-secondary text-text-invert"
+                  : "border border-border-primary text-text-primary"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {tournamentDetail && (
+          <ShareViewButton
+            title={tournamentDetail.name}
+            publicPath={tournamentPublicPath({ id, slug: tournamentDetail.slug, organizerSlug: tournamentDetail.organizer.organizerSlug })}
+            view={competitionView(shownTab.toLowerCase())}
+            // Las llaves son rondas del fixture: se comparte la que se está viendo.
+            search={shownTab === "Llaves" ? `ronda=${currentRound}` : undefined}
+          />
+        )}
       </div>
 
       {/* Tab content */}

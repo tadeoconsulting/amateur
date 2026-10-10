@@ -6,7 +6,7 @@ import { getTournament, getMatches } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { formatLabel } from "@/_lib/tournament-labels";
-import { shareLink } from "@/_lib/share";
+import { ShareViewButton } from "@/_components/share-view-button";
 import { Toast } from "@/_components/toast";
 import { FixtureTabs } from "@/_components/fixture-tabs";
 import { tournamentPublicPath } from "@/_lib/slug";
@@ -29,19 +29,6 @@ function PartidosFixtureContent() {
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(() =>
     searchParams.get("saved") === "true" ? { message: "Se definió los partidos con éxito.", tone: "success" } : null
   );
-
-  async function handleShare() {
-    if (!tournament) return;
-    // El link público del torneo (ver decisiones — es la única pantalla del torneo
-    // que no exige haber iniciado sesión): cualquiera que lo abra ve el fixture y los equipos.
-    const result = await shareLink({
-      title: tournament.name,
-      text: `Mira el fixture de ${tournament.name} en Amateur`,
-      url: `${window.location.origin}${tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}`,
-    });
-    if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
-    if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
-  }
 
   if (loading || !tournament || !allMatches) {
     return (
@@ -69,16 +56,13 @@ function PartidosFixtureContent() {
           </svg>
           <h1 className="font-heading text-xl font-bold text-text-primary">Fixture</h1>
         </div>
-        <button
-          onClick={handleShare}
-          className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 5.5L7 2l5 3.5M7 2v10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M4 8l-2 1.5V12h4v-2.5a1 1 0 012 0V12h4V9.5L10 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Compartir
-        </button>
+        {/* El enlace público abre en la fecha del fixture que se está viendo. */}
+        <ShareViewButton
+          variant="solid"
+          title={tournament.name}
+          publicPath={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
+          view={{ vista: "fixture" }}
+        />
       </header>
 
       {/* Tournament info pill */}
@@ -116,7 +100,7 @@ function PartidosFixtureContent() {
       {/* Tabs "Fecha N" + grupos, con badge "En vivo" — mismo componente que usan el
           organizador (torneos/[id], pestaña Partidos) y el club, para que las tres vistas
           organicen el fixture igual que se construyó el torneo. */}
-      <FixtureTabs matches={allMatches} hrefFor={(match) => `/torneos/${params.id}/partido/${match.id}`} />
+      <FixtureTabs syncUrl matches={allMatches} hrefFor={(match) => `/torneos/${params.id}/partido/${match.id}`} />
     </div>
   );
 }

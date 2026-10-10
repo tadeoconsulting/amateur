@@ -10,8 +10,8 @@ import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { useMyClub } from "@/_lib/use-my-club";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { formatWhen } from "@/_lib/match-format";
-import { shareLink } from "@/_lib/share";
-import { Toast } from "@/_components/toast";
+import { ShareViewButton } from "@/_components/share-view-button";
+import { clubView } from "@/_lib/share-view";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
@@ -21,14 +21,13 @@ import { TeamsList } from "@/_components/teams-list";
 
 type DetailTab = "torneo" | "fixture" | "resultados";
 type TorneoSubTab = "partidos" | "amonestados" | "inscritos";
-type ResultadosSubTab = "tabla" | "goleadores" | "compartir";
+type ResultadosSubTab = "tabla" | "goleadores";
 
 export default function ClubTorneoDetallePage() {
   const { id } = useParams<{ id: string }>();
   const [detailTab, setDetailTab] = useState<DetailTab>("torneo");
   const [torneoSubTab, setTorneoSubTab] = useState<TorneoSubTab>("partidos");
   const [resultadosSubTab, setResultadosSubTab] = useState<ResultadosSubTab>("tabla");
-  const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const { club } = useMyClub();
   const { data: tournament, loading: loadingTournament } = useApi(() => getTournament(id));
@@ -56,19 +55,6 @@ export default function ClubTorneoDetallePage() {
     );
   }
 
-  async function handleShare() {
-    if (!tournament) return;
-    // El link público del torneo (no exige haber iniciado sesión): cualquiera que lo
-    // abra ve el fixture, los equipos y ahora los resultados.
-    const result = await shareLink({
-      title: tournament.name,
-      text: `Mira los resultados de ${tournament.name} en Amateur`,
-      url: `${window.location.origin}${tournamentPublicPath({ id: id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}`,
-    });
-    if (result === "copied") setToast({ message: "Link copiado. Pégalo en WhatsApp.", tone: "success" });
-    if (result === "failed") setToast({ message: "No se pudo copiar. Copia el link a mano.", tone: "error" });
-  }
-
   const tournamentMatches = allMatches ?? [];
   const standings = standingsData ?? [];
   // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
@@ -92,7 +78,6 @@ export default function ClubTorneoDetallePage() {
   return (
     // `@container`: lo de adentro se adapta al ancho de la pantalla (una columna en el celular; el fixture con la tabla al lado en escritorio).
     <div className="@container flex min-h-dvh flex-col pb-4">
-      {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
         <Link href="/club/torneos" className="shrink-0 p-1 text-text-primary">
@@ -140,21 +125,28 @@ export default function ClubTorneoDetallePage() {
         </div>
       </div>
 
-      {/* Detail tabs */}
-      <div className="mt-4 flex gap-2 px-4">
-        {detailTabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setDetailTab(tab.key)}
-            className={`cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
-              detailTab === tab.key
-                ? "bg-surface-secondary text-text-invert"
-                : "border border-border-primary text-text-primary"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* Detail tabs. "Compartir" lleva el enlace público a la vista que se está mirando. */}
+      <div className="mt-4 flex items-center gap-1.5 px-4">
+        <div className="flex gap-2">
+          {detailTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setDetailTab(tab.key)}
+              className={`cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                detailTab === tab.key
+                  ? "bg-surface-secondary text-text-invert"
+                  : "border border-border-primary text-text-primary"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <ShareViewButton
+          title={tournament.name}
+          publicPath={tournamentPublicPath({ id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
+          view={clubView(detailTab, torneoSubTab, resultadosSubTab)}
+        />
       </div>
 
       {/* Torneo tab content */}
@@ -176,6 +168,7 @@ export default function ClubTorneoDetallePage() {
           {torneoSubTab === "partidos" && (
             <div className="mt-4">
               <FixtureWithStandings
+                syncUrl
                 matches={tournamentMatches}
                 standings={standings}
                 qualifyCount={llaves}
@@ -248,6 +241,7 @@ export default function ClubTorneoDetallePage() {
             <h3 className="px-4 font-heading text-sm font-bold text-text-primary">Todos los partidos</h3>
             <div className="mt-2">
               <FixtureWithStandings
+                syncUrl
                 matches={tournamentMatches}
                 standings={standings}
                 qualifyCount={llaves}
@@ -276,7 +270,6 @@ export default function ClubTorneoDetallePage() {
             tabs={[
               { key: "tabla", label: "Tabla" },
               { key: "goleadores", label: "Goleadores" },
-              { key: "compartir", label: "Compartir" },
             ]}
           />
 
@@ -289,26 +282,6 @@ export default function ClubTorneoDetallePage() {
           {resultadosSubTab === "goleadores" && (
             <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
               <ScorersList scorers={topScorers} />
-            </div>
-          )}
-
-          {resultadosSubTab === "compartir" && (
-            <div className="mt-8 flex flex-col items-center gap-4 px-4">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
-                <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-              <p className="text-center font-body text-sm text-text-secondary">
-                Comparte los resultados del torneo con tu comunidad
-              </p>
-              <button
-                onClick={handleShare}
-                className="cursor-pointer rounded-lg bg-surface-secondary px-6 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
-              >
-                Compartir resultados
-              </button>
             </div>
           )}
         </>

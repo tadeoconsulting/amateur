@@ -28,8 +28,8 @@ import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
-import { shareLink } from "@/_lib/share";
-import { parseView, shareSearch, withView } from "@/_lib/share-view";
+import { parseView, withView } from "@/_lib/share-view";
+import { ShareViewButton } from "@/_components/share-view-button";
 
 type Notify = (message: string, tone: "success" | "error") => void;
 type MainTab = "fixture" | "resultados" | "equipos" | "detalles";
@@ -110,15 +110,6 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   function pickResultados(sub: ResultadosSubTab) {
     setResultadosTab(sub);
     writeView("resultados", sub);
-  }
-
-  // El enlace que se comparte lleva solo la vista actual: la sección, la fecha del fixture o la pestaña de resultados.
-  async function shareView() {
-    const search = shareSearch(window.location.search, { vista: mainTab, sub: resultadosTab });
-    const name = tournament?.name ?? "este torneo";
-    const result = await shareLink({ title: name, text: `Mira ${name} en Amateur`, url: `${window.location.origin}${publicPath}?${search}` });
-    if (result === "copied") notify("Enlace copiado. Pégalo donde quieras compartirlo.", "success");
-    if (result === "failed") notify("No se pudo copiar el enlace. Cópialo de la barra de direcciones.", "error");
   }
 
   const isOpen = OPEN_STATUSES.includes(tournament.status);
@@ -213,17 +204,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
           ))}
         </div>
           {/* Fuera de la fila que se desplaza: en el celular queda siempre a la vista (solo el ícono); donde hay espacio, con texto y pegado a "Detalles". */}
-          <button
-            type="button"
-            onClick={shareView}
-            aria-label="Compartir esta vista"
-            className="inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 font-heading text-[13px] font-medium text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
-          >
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M10 12.5V3m0 0L6.5 6.5M10 3l3.5 3.5M4.5 10.5v5a1.5 1.5 0 001.5 1.5h8a1.5 1.5 0 001.5-1.5v-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="hidden sm:inline">Compartir</span>
-          </button>
+          <ShareViewButton title={tournament.name} publicPath={publicPath} view={{ vista: mainTab, sub: resultadosTab }} />
         </div>
 
         {mainTab === "detalles" && (

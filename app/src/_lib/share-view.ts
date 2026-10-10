@@ -56,3 +56,34 @@ export function shareSearch(search: string, view: { vista: FanView; sub?: Result
   }
   return kept.toString();
 }
+
+// ─── Compartir desde las pantallas con sesión ──────────────────────────────
+// El jugador, el club y el organizador ven el torneo en pantallas propias (con sus pestañas); lo que
+// comparten es siempre el enlace público, en la vista que corresponde a la pestaña donde están.
+
+export type ShareView = { vista: FanView; sub?: ResultSub | null };
+
+/** Las pestañas de jugador y organizador (partidos, llaves, tabla, goleadores, equipos) → la vista pública. Las llaves son rondas del fixture. */
+export function competitionView(tab: string): ShareView {
+  if (tab === "tabla") return { vista: "resultados", sub: "tabla" };
+  if (tab === "goleadores") return { vista: "resultados", sub: "goleadores" };
+  if (tab === "equipos") return { vista: "equipos" };
+  return { vista: "fixture" };
+}
+
+/**
+ * Las pestañas del club → la vista pública. Lo que no tiene equivalente público (los amonestados) comparte
+ * los detalles del torneo.
+ */
+export function clubView(detailTab: string, torneoSub: string, resultadosSub: string): ShareView {
+  if (detailTab === "resultados") return { vista: "resultados", sub: resultadosSub === "goleadores" ? "goleadores" : "tabla" };
+  if (detailTab === "fixture") return { vista: "fixture" };
+  if (torneoSub === "partidos") return { vista: "fixture" };
+  if (torneoSub === "inscritos") return { vista: "equipos" };
+  return { vista: "detalles" };
+}
+
+/** El enlace público que se comparte: la ruta del torneo con solo la vista (ver `shareSearch`). */
+export function shareUrl(origin: string, publicPath: string, search: string, view: ShareView): string {
+  return `${origin}${publicPath}?${shareSearch(search, view)}`;
+}
