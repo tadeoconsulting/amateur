@@ -20,41 +20,44 @@ enum Role {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  dni          String?
-  phone        String?
-  avatarUrl    String?
-  department   String?
-  birthDate    DateTime?
-  gender       String?
-  organization String?
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  dni           String?
+  phone         String?
+  avatarUrl     String?
+  department    String?
+  birthDate     DateTime?
+  gender        String?
+  organization  String?
   // Primer tramo de la URL pública de sus torneos (cupamateur.com/{organizerSlug}/{slug}). Se
   // asigna al crear su primer torneo, a partir de la organización (o de su nombre), y después no
   // cambia aunque se edite el perfil: los links ya compartidos no se rompen. Ver _lib/slug.ts.
-  organizerSlug String? @unique
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  organizerSlug String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  roles               UserRole[]
-  ownedClubs          Club[]               @relation("ClubOwner")
+  roles                      UserRole[]
+  ownedClubs                 Club[]               @relation("ClubOwner")
   // Un jugador puede estar en varios clubes: una ficha (PlayerProfile) por club, más a lo sumo una
   // "libre" (clubId null: solo tiene posición, todavía sin equipo). Ver _lib/player-clubs.ts.
-  playerProfiles      PlayerProfile[]
+  playerProfiles             PlayerProfile[]
   // Con qué equipo "sale a la cancha" hoy: el que muestra la pestaña Actividad. Es un id de club
   // sin relación a propósito: si ya no es de sus equipos, se ignora y se usa el primero.
-  activeClubId        String?
-  tournaments         Tournament[]         @relation("TournamentOrganizer")
-  staffRoles          StaffMember[]
-  invitations         PlayerInvitation[]
-  staffInvitations    StaffInvitation[]
-  tournamentRequests  TournamentRequest[]
-  sedes               Sede[]
-  joinRequests        PlayerJoinRequest[]
-  passwordResetTokens PasswordResetToken[]
+  activeClubId               String?
+  tournaments                Tournament[]         @relation("TournamentOrganizer")
+  staffRoles                 StaffMember[]
+  invitations                PlayerInvitation[]
+  staffInvitations           StaffInvitation[]
+  tournamentRequests         TournamentRequest[]
+  sedes                      Sede[]
+  joinRequests               PlayerJoinRequest[]
+  passwordResetTokens        PasswordResetToken[]
+  // Invitaciones a reclamar un perfil provisional (especificación 009): las que envió (un admin) y las que aceptó.
+  profileInvitationsSent     ProfileInvitation[]  @relation("ProfileInvitationInviter")
+  profileInvitationsAccepted ProfileInvitation[]  @relation("ProfileInvitationAcceptedBy")
 }
 
 // Un enlace de "Olvidé mi contraseña" (se manda por correo). Se guarda el hash del token, no el
@@ -168,7 +171,7 @@ model StaffMember {
 // La ficha de un jugador EN un club (dorsal, categoría, estadísticas por torneo). Un mismo usuario
 // puede tener varias, una por club donde juega.
 model PlayerProfile {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   position   String?
   number     Int?
   // null = jugador provisional: cargado por un admin sin cuenta (especificación 009). Sus goles y
@@ -177,28 +180,56 @@ model PlayerProfile {
   userId     String?
   clubId     String?
   categoryId String?
-  status     String   @default("activo")
+  status     String    @default("activo")
   // Datos propios del provisional (con cuenta, el nombre, DNI y fecha de nacimiento salen de User y
   // acá quedan en null). Nunca son públicos: solo el nombre y la posición se muestran. El DNI es
   // único entre provisionales: una misma persona no es dos provisionales.
   firstName  String?
   lastName   String?
-  dni        String?  @unique
+  dni        String?   @unique
   birthDate  DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  user        User?         @relation(fields: [userId], references: [id])
-  club        Club?         @relation(fields: [clubId], references: [id])
-  category    TeamCategory? @relation(fields: [categoryId], references: [id])
+  user        User?               @relation(fields: [userId], references: [id])
+  club        Club?               @relation(fields: [clubId], references: [id])
+  category    TeamCategory?       @relation(fields: [categoryId], references: [id])
   stats       PlayerStats[]
   matchEvents MatchEvent[]
   lineups     MatchLineup[]
+  invitations ProfileInvitation[]
 
   // Una ficha por club (el clubId null — la ficha "libre" — queda fuera de esta regla en la base:
   // que haya una sola lo cuida _lib/player-clubs.ts).
   @@unique([userId, clubId])
   @@index([userId])
+}
+
+// Una invitación para que una persona reclame un perfil PROVISIONAL (especificación 009, entrega 3): la crea
+// un admin, por correo o como enlace para compartir (email null), y vale 7 días. Quien la abre inicia sesión y
+// confirma el DNI del perfil; si coincide, su cuenta queda vinculada. Un enlace sin correo lo protege solo
+// el DNI, por eso los intentos fallidos se cuentan (`attempts`) y al llegar al límite se bloquea.
+//   pending   vigente (si `expiresAt` ya pasó, está vencida)
+//   review    la aceptó una cuenta que ya tenía ficha en ese equipo: un admin debe unir los perfiles
+//   accepted  vinculada · cancelled  la cancelaron o la reemplazaron · locked  demasiados DNI equivocados
+model ProfileInvitation {
+  id           String    @id @default(cuid())
+  profileId    String
+  email        String?
+  token        String    @unique
+  status       String    @default("pending")
+  attempts     Int       @default(0)
+  invitedBy    String
+  acceptedById String?
+  acceptedAt   DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  profile    PlayerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  inviter    User          @relation("ProfileInvitationInviter", fields: [invitedBy], references: [id], onDelete: Cascade)
+  acceptedBy User?         @relation("ProfileInvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([profileId])
 }
 
 model PlayerStats {
