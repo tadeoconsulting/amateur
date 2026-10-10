@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { Role } from "@prisma/client";
 import { badRequest, readJson, requireRole } from "@/_lib/auth";
 import { omitInviteToken } from "@/_lib/club-public";
+import { makeClubOfficial, OfficializeConflict } from "@/_lib/club-official-server";
 
 /**
  * Convierte un equipo temporal (cargado por un organizador para su torneo, sin dueño propio) en un
@@ -12,6 +13,8 @@ import { omitInviteToken } from "@/_lib/club-public";
  *
  * Sigue inscrito en los torneos donde ya estaba (la inscripción no se toca): el organizador
  * conserva su fixture, tabla y resultados.
+ *
+ * Las invitaciones de delegado vigentes del equipo se cancelan (especificación 009, entrega 4).
  *
  * El nuevo dueño no puede ser un administrador (esas cuentas no tienen otros perfiles) ni dirigir
  * ya otro equipo: la app del club trabaja con un equipo por cuenta.
@@ -44,15 +47,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const result = await tx.club.update({ where: { id }, data: { ownerId, isTemporary: false } });
-    await tx.userRole.upsert({
-      where: { userId_role: { userId: ownerId, role: Role.CLUB_OWNER } },
-      update: {},
-      create: { userId: ownerId, role: Role.CLUB_OWNER },
-    });
-    return result;
-  });
-
-  return Response.json(omitInviteToken(updated));
+  try {
+    const updated = await makeClubOfficial(id, ownerId);
+    return Response.json(omitInviteToken(updated));
+  } catch (error) {
+    if (error instanceof OfficializeConflict) return Response.json({ error: "Este equipo ya es oficial" }, { status: 409 });
+    throw error;
+  }
 }

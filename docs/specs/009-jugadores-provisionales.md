@@ -1,6 +1,6 @@
 # 009 · Jugadores provisionales
 
-**Estado:** ✅ **Entregas 1, 2 y 3 implementadas**, más el **importador del panel** (as-built, abajo). Falta la entrega 4: invitar al delegado de un equipo temporal.
+**Estado:** ✅ **Entregas 1 a 4 implementadas**, más el **importador del panel** y la **página pública del club** (as-built, abajo). La entrega 4 es invitar al delegado de un equipo temporal.
 **Origen:** el torneo Clausura 2026 de La Ensenada tiene 11 equipos temporales y su lista de jugadores. Se necesita **la tabla de goleadores** con nombres, sin esperar a que cada jugador cree una cuenta, y sin perder esos datos cuando después la creen.
 **Toca:** [modelo-de-datos.md](modelo-de-datos.md) (`PlayerProfile`), [004](004-partido-en-vivo.md) (jugadas y goleadores), [001](001-autenticacion-y-permisos.md) (permisos de admin).
 
@@ -134,6 +134,65 @@ ALTER TABLE "ProfileInvitation" ADD CONSTRAINT "ProfileInvitation_acceptedById_f
 ```
 
 **Verificado a mano** (base de pruebas): crear un enlace sin correo desde el panel y abrirlo sin sesión; DNI equivocado (avisa los intentos que quedan) y correcto; vinculación con rol agregado y DNI copiado; el enlace usado responde `410`; invitación con correo (se normaliza), reenviar (mismo enlace), cambiar el correo (el enlace viejo muere), correo inválido `400`; aceptar con otra cuenta `403` sin revelar el correo; bloqueo a los 5 intentos aun con el DNI correcto; caso *Por revisar* y su resolución con **Revisar y unir**; asignar a mano una cuenta cancela la invitación pendiente.
+
+## Entrega 4 · Invitar al delegado de un equipo temporal (solo admin, implementada)
+Un equipo temporal (cargado por un organizador) todavía no tiene delegado. Hasta ahora el admin solo podía **oficializarlo** eligiendo una cuenta que ya existiera. Ahora, en **Admin → Clubes → Editar** de un equipo temporal, hay un bloque **Invitar al delegado** (encima de *Oficializar equipo*) para quien todavía no tiene cuenta.
+
+**Cómo funciona**
+1. El admin escribe un **correo** (opcional) y crea la invitación. Con correo se envía por Resend (`invitacionDelegado`) y es para esa cuenta; sin correo solo se crea un **enlace para compartir por WhatsApp** (quien lo abra primero será el delegado: se comparte solo con él). Vale **7 días** y se usa **una sola vez**.
+2. Quien abre `/delegado/invitacion/{token}` (pública) ve **solo el equipo** y, si la invitación es para un correo, con cuál entrar (enmascarado). Inicia sesión o crea su cuenta (con el perfil de delegado ya elegido; la invitación lo trae de vuelta) y pulsa **Aceptar y ser delegado**.
+3. Al aceptar pasa lo mismo que con *Oficializar*: el equipo pasa a su cuenta y **deja de ser temporal**, su cuenta recibe el perfil de delegado y el equipo **sigue inscrito** en sus torneos (el organizador conserva fixture, tabla y resultados). Entra directo a `/club`.
+
+**Reglas** (las mismas de *Oficializar*; lógica pura en `_lib/delegate-invitation.ts › checkDelegateAccept`, con pruebas)
+- **Una cuenta de administrador no puede ser delegada** (`400`) y **quien ya dirige un equipo no puede dirigir otro** (`409`): la invitación sigue vigente para otra cuenta.
+- Si la invitación lleva correo, **solo la acepta la cuenta con ese correo** (`403`, sin revelarlo).
+- Usada o cancelada, vencida, o un equipo que ya tiene delegado: `410`.
+- **Un solo uso, también en carrera:** si dos cuentas abren el mismo enlace a la vez, solo una lo consigue (la invitación se reclama con una actualización condicional dentro de la misma transacción que cambia el dueño del equipo).
+- Crear una invitación **reemplaza** la anterior (su enlace deja de funcionar): sirve para **cambiar el correo** o sacar un enlace nuevo. **Oficializar a mano** cancela las invitaciones vigentes del equipo.
+- El admin ve **quién aceptó y cuándo** en el modal del club (ya oficial: "Delegado por invitación: …"), y en la tabla un equipo temporal con invitación lleva "· invitación enviada" o "· invitación vencida".
+
+**API**
+- Admin: `GET/POST/PATCH/DELETE /api/clubs/:id/delegate-invitation` — ver la vigente, crear (con `email` opcional), `{ action: "resend" }` (mismo enlace, renueva 7 días, vuelve a mandar el correo) y cancelar. `GET /api/clubs` trae `delegateInvitation` (la última vigente o aceptada) **solo para un admin**.
+- Público: `GET /api/delegate-invitations/:token` (vista previa: equipo, color, vencimiento, correo enmascarado) y `POST /api/delegate-invitations/:token/accept` (exige sesión).
+- `_lib/club-official-server.ts › makeClubOfficial` es lo que comparten *Oficializar* y la aceptación.
+
+**Base de datos:** una tabla nueva, `DelegateInvitation` (equipo, correo opcional, token único, estado `pending | accepted | cancelled`, quién invitó y quién aceptó, vencimiento). Se crea en producción **antes** de mergear (no afecta al código anterior). Sin datos personales de menores ni DNI.
+
+SQL para producción (generado con `prisma migrate diff` contra el esquema anterior):
+```sql
+-- CreateTable
+CREATE TABLE "DelegateInvitation" (
+    "id" TEXT NOT NULL,
+    "clubId" TEXT NOT NULL,
+    "email" TEXT,
+    "token" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "invitedBy" TEXT NOT NULL,
+    "acceptedById" TEXT,
+    "acceptedAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "DelegateInvitation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DelegateInvitation_token_key" ON "DelegateInvitation"("token");
+
+-- CreateIndex
+CREATE INDEX "DelegateInvitation_clubId_idx" ON "DelegateInvitation"("clubId");
+
+-- AddForeignKey
+ALTER TABLE "DelegateInvitation" ADD CONSTRAINT "DelegateInvitation_clubId_fkey" FOREIGN KEY ("clubId") REFERENCES "Club"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DelegateInvitation" ADD CONSTRAINT "DelegateInvitation_invitedBy_fkey" FOREIGN KEY ("invitedBy") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DelegateInvitation" ADD CONSTRAINT "DelegateInvitation_acceptedById_fkey" FOREIGN KEY ("acceptedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+```
+
+**Verificado a mano** (base de pruebas): crear enlace sin correo y con correo (se normaliza; uno inválido `400`) desde el panel y por API; vista previa anónima; aceptar sin sesión `401`; correo equivocado `403`; aceptar con el correo correcto; reusar el enlace `410`; una cuenta que ya dirige un equipo `409`; una cuenta de admin `400`; carrera de dos cuentas sobre el mismo enlace (una `200`, otra `410`); oficializar a mano cancela la invitación pendiente y crear una invitación sobre un equipo ya oficial `409`; flujo completo en pantalla (enlace → aceptar → "Ir a mi equipo" → `/club` con su torneo). **Falta en producción:** el envío real del correo (Resend).
 
 ## Página pública del club en un torneo (implementada) · menores abreviados
 Cada club tiene su propia página dentro de un torneo: `/{organizador}/{torneo}/equipo/{clubId}` (y `/convocatoria/{id}/equipo/{clubId}`, que redirige a la anterior). Es pública; muestra la **posición del club en la tabla** (solo su fila: lugar dentro de su grupo, puntos y PJ, con enlace a la tabla completa) y tres pestañas (`?pestana=`): **Partidos** (solo los del club), **Jugadores** (nombre, posición, número y goles) y **Resultados** (balance G-E-P y goles a favor/contra).

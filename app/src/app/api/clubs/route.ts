@@ -2,6 +2,20 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, isAdmin, readJson, requireRole, requireUser } from "@/_lib/auth";
 import { shortNameError } from "@/_lib/short-name";
+import { effectiveStatus } from "@/_lib/profile-invitation";
+
+type InvitationRow = { email: string | null; status: string; expiresAt: Date; acceptedAt: Date | null; acceptedBy: { firstName: string; lastName: string; email: string } | null };
+
+function summarizeDelegateInvitation(i: InvitationRow | undefined) {
+  if (!i) return null;
+  return {
+    email: i.email,
+    status: effectiveStatus(i.status, i.expiresAt, new Date()),
+    expiresAt: i.expiresAt,
+    acceptedAt: i.acceptedAt,
+    acceptedBy: i.acceptedBy ? { name: `${i.acceptedBy.firstName} ${i.acceptedBy.lastName}`, email: i.acceptedBy.email } : null,
+  };
+}
 
 export async function GET(request: NextRequest) {
   // Requiere sesión: el listado incluye los datos de contacto del delegado.
@@ -21,9 +35,17 @@ export async function GET(request: NextRequest) {
   const includeTemporary = isAdmin(auth.user) && request.nextUrl.searchParams.get("includeTemporary") === "1";
   if (!includeTemporary && !(ownerId && ownerId === auth.user.id)) where.isTemporary = false;
 
+  const admin = isAdmin(auth.user);
   const clubs = await prisma.club.findMany({
     where,
     include: {
+      // La última invitación de delegado vigente o aceptada (especificación 009, entrega 4): solo se le muestra a un admin.
+      delegateInvitations: {
+        where: { status: { in: ["pending", "accepted"] } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { email: true, status: true, expiresAt: true, acceptedAt: true, acceptedBy: { select: { firstName: true, lastName: true, email: true } } },
+      },
       _count: { select: { players: true, categories: true } },
       // El correo del dueño solo lo ve un admin (mismo criterio que el resto de datos de
       // contacto): al resto de sesiones no se le agrega el select y queda undefined.
@@ -47,6 +69,7 @@ export async function GET(request: NextRequest) {
       playerCount: c._count.players,
       categoriesCount: c._count.categories,
       owner: c.owner,
+      ...(admin && { delegateInvitation: summarizeDelegateInvitation(c.delegateInvitations[0]) }),
     }))
   );
 }
