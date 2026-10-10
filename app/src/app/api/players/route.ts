@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { isAdmin, requireUser } from "@/_lib/auth";
+import { playerIdentity } from "@/_lib/player-identity";
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser();
@@ -11,15 +12,30 @@ export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get("status");
 
   // Los jugadores provisionales (sin cuenta) no se buscan ni se invitan: no hay a quién.
-  const where: Record<string, unknown> = { userId: { not: null } };
+  const admin = isAdmin(auth.user);
+  // Los jugadores provisionales (sin cuenta, especificación 009) solo los ve un admin: no se buscan ni se
+  // invitan desde la comunidad, no hay a quién. Solo el admin los lista, con su DNI, para corregirlos.
+  const where: Record<string, unknown> = admin ? {} : { userId: { not: null } };
 
   if (search) {
-    where.user = {
-      OR: [
+    const byAccount = {
+      user: {
+        OR: [
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+        ],
+      },
+    };
+    if (admin) {
+      where.OR = [
+        byAccount,
         { firstName: { contains: search, mode: "insensitive" } },
         { lastName: { contains: search, mode: "insensitive" } },
-      ],
-    };
+        { dni: { contains: search } },
+      ];
+    } else {
+      Object.assign(where, byAccount);
+    }
   }
 
   if (clubId) where.clubId = clubId;
@@ -40,22 +56,30 @@ export async function GET(request: NextRequest) {
       club: { select: { id: true, name: true, shortName: true } },
       category: { select: { id: true, name: true, gender: true } },
     },
-    orderBy: { user: { firstName: "asc" } },
   });
 
   // Correo y teléfono de los jugadores: solo para admins.
-  const showContact = isAdmin(auth.user);
+  const showContact = admin;
 
   return Response.json(
-    players.map((p) => ({
-      id: p.id,
-      userId: p.userId,
-      number: p.number,
-      position: p.position,
-      status: p.status,
-      user: showContact ? p.user : { ...p.user, email: null, phone: null },
-      club: p.club,
-      category: p.category,
-    }))
+    players
+      .map((p) => ({ p, who: playerIdentity(p) }))
+      .sort((a, b) => a.who.firstName.localeCompare(b.who.firstName, "es") || a.who.lastName.localeCompare(b.who.lastName, "es"))
+      .map(({ p, who }) => ({
+        id: p.id,
+        userId: p.userId,
+        provisional: who.provisional,
+        number: p.number,
+        position: p.position,
+        status: p.status,
+        // Sin cuenta no hay correo ni teléfono ni foto: el nombre sale del perfil.
+        user: p.user
+          ? showContact ? p.user : { ...p.user, email: null, phone: null }
+          : { firstName: who.firstName, lastName: who.lastName, email: null, avatarUrl: null, phone: null },
+        // DNI y fecha de nacimiento de un provisional: solo el admin (nunca son públicos).
+        ...(admin && who.provisional ? { dni: p.dni, birthDate: p.birthDate } : {}),
+        club: p.club,
+        category: p.category,
+      }))
   );
 }

@@ -208,3 +208,37 @@ export function planImport(input: {
 
   return plan;
 }
+
+// ─── Corregir los datos de un provisional (solo admin) ─────────────────────
+
+export type ProvisionalEdit = { firstName?: string; lastName?: string; dni?: string; birthDate?: string };
+
+/**
+ * Los datos propios de un jugador provisional que un admin corrige desde el panel: nombres, apellidos, DNI y
+ * fecha de nacimiento. Solo valida lo que viene en `body`; lo demás (posición, número, club...) lo valida la
+ * ruta, igual que para cualquier jugador.
+ */
+export function parseProvisionalEdit(body: Record<string, unknown>, today: string): { data: ProvisionalEdit } | { error: string } {
+  const data: ProvisionalEdit = {};
+  if (body.firstName !== undefined) {
+    const v = cleanName(body.firstName);
+    if (!v) return { error: "Los nombres no pueden quedar vacíos" };
+    data.firstName = v;
+  }
+  if (body.lastName !== undefined) {
+    const v = cleanName(body.lastName);
+    if (!v) return { error: "Los apellidos no pueden quedar vacíos" };
+    data.lastName = v;
+  }
+  if (body.dni !== undefined) {
+    const v = parseDni(body.dni);
+    if (!v) return { error: "El DNI debe tener 8 dígitos" };
+    data.dni = v;
+  }
+  if (body.birthDate !== undefined) {
+    const v = parseBirthDate(body.birthDate, today);
+    if (!v) return { error: "La fecha de nacimiento no es válida (AAAA-MM-DD, pasada)" };
+    data.birthDate = v;
+  }
+  return { data };
+}

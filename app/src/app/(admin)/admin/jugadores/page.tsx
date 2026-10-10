@@ -13,20 +13,28 @@ import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 
 interface PlayerRow {
   id: string;
-  userId: string;
+  /** null = jugador provisional: cargado sin cuenta (especificación 009). */
+  userId: string | null;
+  provisional?: boolean;
+  /** Solo de un provisional (y solo lo ve el admin). */
+  dni?: string | null;
+  birthDate?: string | null;
   number: number | null;
   position: string | null;
   status: string;
   user: {
     firstName: string;
     lastName: string;
-    email: string;
+    email: string | null;
     avatarUrl: string | null;
     phone: string | null;
   };
   club: { id: string; name: string; shortName: string } | null;
   category: { id: string; name: string; gender: string } | null;
 }
+
+/** Un jugador con cuenta: la que edita `EditPlayerModal` (nombre, correo, foto, contraseña). */
+type AccountPlayerRow = PlayerRow & { userId: string; user: PlayerRow["user"] & { email: string } };
 
 interface ClubOption {
   id: string;
@@ -59,7 +67,7 @@ function EditPlayerModal({
   onSaved,
   onPhotoChanged,
 }: {
-  player: PlayerRow;
+  player: AccountPlayerRow;
   clubs: ClubOption[];
   onClose: () => void;
   onSaved: () => void;
@@ -386,11 +394,169 @@ function EditPlayerModal({
   );
 }
 
+/**
+ * Corrige a un jugador provisional (sin cuenta): sus datos propios, su puesto y su equipo. No tiene correo, foto
+ * ni contraseña: eso llega cuando se le asigne una cuenta (especificación 009, entrega 2).
+ */
+function EditProvisionalModal({
+  player,
+  clubs,
+  onClose,
+  onSaved,
+}: {
+  player: PlayerRow;
+  clubs: ClubOption[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [form, setForm] = useState({
+    firstName: player.user.firstName,
+    lastName: player.user.lastName,
+    dni: player.dni ?? "",
+    birthDate: player.birthDate ? player.birthDate.slice(0, 10) : "",
+    position: player.position ?? "",
+    number: player.number != null ? String(player.number) : "",
+    status: player.status,
+    clubId: player.club?.id ?? "",
+    categoryId: player.category?.id ?? "",
+  });
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+
+  useEffect(() => {
+    if (!form.clubId) return;
+    let cancelled = false;
+    fetch(`/api/clubs/${form.clubId}/categories`)
+      .then((r) => r.json())
+      .then((data: CategoryOption[]) => { if (!cancelled) setCategories(data); })
+      .catch(() => { if (!cancelled) setCategories([]); });
+    return () => { cancelled = true; };
+  }, [form.clubId]);
+
+  // El equipo actual siempre aparece entre las opciones, aunque no viniera en la lista.
+  const clubOptions = player.club && !clubs.some((c) => c.id === player.club?.id) ? [player.club, ...clubs] : clubs;
+  const positionOptions = form.position && !positions.includes(form.position) ? [form.position, ...positions] : positions;
+  const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    const res = await fetch(`/api/players/${player.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        dni: form.dni,
+        birthDate: form.birthDate,
+        position: form.position || null,
+        number: form.number ? Number(form.number) : null,
+        status: form.status,
+        clubId: form.clubId,
+        categoryId: form.clubId === player.club?.id || !form.categoryId ? form.categoryId || null : null,
+      }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "No se pudo guardar");
+      setSaving(false);
+      return;
+    }
+    onSaved();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div role="dialog" aria-modal="true" aria-label="Editar jugador provisional" className="w-full max-w-md rounded-2xl bg-surface-primary p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="font-heading text-lg font-bold text-text-primary">Editar jugador provisional</h2>
+          <button onClick={onClose} aria-label="Cerrar" className="cursor-pointer p-1 text-text-secondary hover:text-text-primary">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+        <p className="mb-4 font-body text-xs text-text-secondary">Todavía no tiene cuenta. Solo su nombre y su posición se ven en la plataforma; el DNI y la fecha de nacimiento nunca son públicos.</p>
+
+        {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">{error}</div>}
+
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="pv-nombre" className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombres *</label>
+              <input id="pv-nombre" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} className={input} />
+            </div>
+            <div>
+              <label htmlFor="pv-apellido" className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellidos *</label>
+              <input id="pv-apellido" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} className={input} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="pv-dni" className="mb-1 block font-body text-xs font-medium text-text-secondary">DNI *</label>
+              <input id="pv-dni" inputMode="numeric" maxLength={8} value={form.dni} onChange={(e) => set("dni", e.target.value)} className={input} />
+            </div>
+            <div>
+              <label htmlFor="pv-nac" className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de nacimiento *</label>
+              <input id="pv-nac" type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className={input} />
+            </div>
+          </div>
+
+          <hr className="border-border-primary" />
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">En el equipo</p>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="pv-pos" className="mb-1 block font-body text-xs font-medium text-text-secondary">Posición</label>
+              <select id="pv-pos" value={form.position} onChange={(e) => set("position", e.target.value)} className={`${input} cursor-pointer`}>
+                <option value="">Sin definir</option>
+                {positionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="pv-num" className="mb-1 block font-body text-xs font-medium text-text-secondary">Número</label>
+              <input id="pv-num" type="number" min={1} max={99} value={form.number} onChange={(e) => set("number", e.target.value)} className={input} placeholder="10" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="pv-club" className="mb-1 block font-body text-xs font-medium text-text-secondary">Club *</label>
+            <select id="pv-club" value={form.clubId} onChange={(e) => setForm((f) => ({ ...f, clubId: e.target.value, categoryId: "" }))} className={`${input} cursor-pointer`}>
+              {clubOptions.map((c) => <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="pv-cat" className="mb-1 block font-body text-xs font-medium text-text-secondary">Categoría</label>
+            <select id="pv-cat" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)} className={`${input} cursor-pointer`}>
+              <option value="">Sin categoría</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.gender})</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="pv-estado" className="mb-1 block font-body text-xs font-medium text-text-secondary">Estado</label>
+            <select id="pv-estado" value={form.status} onChange={(e) => set("status", e.target.value)} className={`${input} cursor-pointer`}>
+              {Object.entries(statusLabels).map(([key, { label }]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={onClose} className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular">Cancelar</button>
+          <button onClick={handleSave} disabled={saving} className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50">
+            {saving ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const NO_CLUB = "__sin_club__";
 
 const sortAccessors = {
   player: (p: PlayerRow) => `${p.user.firstName} ${p.user.lastName}`,
-  email: (p: PlayerRow) => p.user.email,
+  email: (p: PlayerRow) => p.user.email ?? "",
   club: (p: PlayerRow) => p.club?.name,
   category: (p: PlayerRow) => p.category?.name,
   position: (p: PlayerRow) => p.position,
@@ -403,9 +569,13 @@ export default function AdminJugadoresPage() {
   const [clubFilter, setClubFilter] = useState<string[]>([]);
   const [editingPlayer, setEditingPlayer] = useState<PlayerRow | null>(null);
   const [deleting, setDeleting] = useState<PlayerRow | null>(null);
+  // Con cuenta o provisional (sin cuenta, cargado por un admin: especificación 009).
+  const [kind, setKind] = useState<"all" | "account" | "provisional">("all");
 
+  // Con los equipos temporales (los que cargan los organizadores para su torneo): ahí es donde están los
+  // jugadores provisionales, y sin ellos no se podría filtrar ni elegir su equipo.
   const { data: clubs } = useApi<ClubOption[]>(() =>
-    fetch("/api/clubs").then((r) => r.json())
+    fetch("/api/clubs?includeTemporary=1").then((r) => r.json())
   );
 
   // La búsqueda por nombre se hace en el servidor; los equipos se filtran acá, de a varios.
@@ -415,7 +585,12 @@ export default function AdminJugadoresPage() {
     return fetch(`/api/players?${params.toString()}`).then((r) => r.json());
   });
 
-  const filtered = players?.filter((p) => clubFilter.length === 0 || clubFilter.includes(p.club?.id ?? NO_CLUB));
+  const filtered = players?.filter(
+    (p) =>
+      (clubFilter.length === 0 || clubFilter.includes(p.club?.id ?? NO_CLUB)) &&
+      (kind === "all" || (kind === "provisional") === !!p.provisional)
+  );
+  const provisionalCount = (players ?? []).filter((p) => p.provisional).length;
   const { sorted, sort, toggle } = useSort(filtered, sortAccessors);
   const clubOptions = (() => {
     const counts = new Map<string, number>();
@@ -437,6 +612,7 @@ export default function AdminJugadoresPage() {
         <h1 className="font-heading text-2xl font-bold text-text-primary">Jugadores</h1>
         <p className="mt-1 font-body text-sm text-text-secondary">
           Todos los jugadores registrados en la plataforma
+          {provisionalCount > 0 && ` · ${provisionalCount} ${provisionalCount === 1 ? "provisional (sin cuenta)" : "provisionales (sin cuenta)"}`}
         </p>
       </div>
 
@@ -457,8 +633,18 @@ export default function AdminJugadoresPage() {
         </div>
 
         <MultiSelect allLabel="Todos los equipos" noun="equipos" options={clubOptions} selected={clubFilter} onChange={setClubFilter} searchPlaceholder="Buscar equipo..." />
-        {clubFilter.length > 0 && (
-          <button type="button" onClick={() => setClubFilter([])} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
+        <select
+          value={kind}
+          onChange={(e) => setKind(e.target.value as typeof kind)}
+          aria-label="Tipo de jugador"
+          className="cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+        >
+          <option value="all">Con y sin cuenta</option>
+          <option value="account">Con cuenta</option>
+          <option value="provisional">Provisionales (sin cuenta)</option>
+        </select>
+        {(clubFilter.length > 0 || kind !== "all") && (
+          <button type="button" onClick={() => { setClubFilter([]); setKind("all"); }} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
             Quitar filtros
           </button>
         )}
@@ -510,15 +696,24 @@ export default function AdminJugadoresPage() {
                         <div>
                           <p className="font-heading text-sm font-semibold text-text-primary">
                             {player.user.firstName} {player.user.lastName}
+                            {player.provisional && (
+                              <span className="ml-2 inline-flex rounded-full bg-brand-100 px-2 py-0.5 align-middle font-heading text-[10px] font-bold text-text-secondary">Provisional</span>
+                            )}
                           </p>
-                          {player.user.phone && (
-                            <p className="font-body text-xs text-text-secondary">{player.user.phone}</p>
+                          {player.provisional ? (
+                            <p className="font-body text-xs text-text-secondary">DNI {player.dni ?? "—"}</p>
+                          ) : (
+                            player.user.phone && <p className="font-body text-xs text-text-secondary">{player.user.phone}</p>
                           )}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-body text-sm text-text-secondary">{player.user.email}</p>
+                      {player.provisional ? (
+                        <span className="font-body text-sm italic text-text-secondary">Sin cuenta</span>
+                      ) : (
+                        <p className="font-body text-sm text-text-secondary">{player.user.email}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {player.club ? (
@@ -588,34 +783,49 @@ export default function AdminJugadoresPage() {
         </div>
       )}
 
-      {editingPlayer && (
+      {editingPlayer && !editingPlayer.provisional && (
         <EditPlayerModal
-          player={editingPlayer}
+          player={editingPlayer as AccountPlayerRow}
           clubs={clubs ?? []}
           onClose={() => setEditingPlayer(null)}
           onSaved={handlePlayerSaved}
           onPhotoChanged={refetch}
         />
       )}
+      {editingPlayer?.provisional && (
+        <EditProvisionalModal player={editingPlayer} clubs={clubs ?? []} onClose={() => setEditingPlayer(null)} onSaved={handlePlayerSaved} />
+      )}
       {deleting && (
         <ConfirmDelete
-          title="¿Eliminar a este jugador?"
+          title={deleting.provisional ? "¿Eliminar a este jugador provisional?" : "¿Eliminar a este jugador?"}
           confirmWord={`${deleting.user.firstName} ${deleting.user.lastName}`}
           confirmLabel="Eliminar jugador"
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
-            const res = await fetch(`/api/users/${deleting.userId}`, { method: "DELETE" });
+            const res = await fetch(deleting.provisional ? `/api/players/${deleting.id}` : `/api/users/${deleting.userId}`, { method: "DELETE" });
             if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo eliminar al jugador";
             setDeleting(null);
             refetch();
             return null;
           }}
         >
-          <p>
-            Se elimina la cuenta de <strong className="text-text-primary">{deleting.user.firstName} {deleting.user.lastName}</strong> ({deleting.user.email}) y todas sus
-            fichas de jugador: sus estadísticas y alineaciones en todos sus equipos. En las jugadas de partidos queda el registro, sin el jugador.
-          </p>
-          <p>Si es dueño de un equipo o organiza torneos, no se elimina hasta resolver eso. No se puede deshacer.</p>
+          {deleting.provisional ? (
+            <>
+              <p>
+                Se elimina la ficha provisional de <strong className="text-text-primary">{deleting.user.firstName} {deleting.user.lastName}</strong> (DNI {deleting.dni}), con sus estadísticas y alineaciones.
+                En las jugadas de partidos queda el registro, sin el jugador.
+              </p>
+              <p>Úsalo si se cargó por error. No se puede deshacer.</p>
+            </>
+          ) : (
+            <>
+              <p>
+                Se elimina la cuenta de <strong className="text-text-primary">{deleting.user.firstName} {deleting.user.lastName}</strong> ({deleting.user.email}) y todas sus
+                fichas de jugador: sus estadísticas y alineaciones en todos sus equipos. En las jugadas de partidos queda el registro, sin el jugador.
+              </p>
+              <p>Si es dueño de un equipo o organiza torneos, no se elimina hasta resolver eso. No se puede deshacer.</p>
+            </>
+          )}
         </ConfirmDelete>
       )}
     </div>
