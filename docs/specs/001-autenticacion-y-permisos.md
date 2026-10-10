@@ -38,7 +38,7 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 
 ### Datos que se protegen
 18. Correo y teléfono de jugadores: solo admin. Fecha de nacimiento: la propia persona, el dueño de su club y admin. Tokens de invitación: el dueño del club.
-19. **Lecturas públicas** (sin sesión): torneos, partidos, jugadas, tabla de posiciones, goleadores y equipos inscritos. Todo lo demás exige sesión. Las páginas públicas son el torneo (`/{organizador}/{torneo}`, `/convocatoria/{id}`) y la ficha de cada uno de sus partidos (`.../partido/{id}`).
+19. **Lecturas públicas** (sin sesión): torneos, partidos, jugadas, tabla de posiciones, goleadores y equipos inscritos. Todo lo demás exige sesión. Las páginas públicas son el torneo (`/{organizador}/{torneo}`, `/convocatoria/{id}`) y la ficha de cada uno de sus partidos (`.../partido/{id}`). También es pública la pantalla de una invitación a reclamar un perfil (`/jugador/invitacion/perfil/{token}`): el token es el secreto; aceptarla exige sesión y el DNI.
 
 ### Páginas
 20. `src/proxy.ts` redirige a `/?auth=login&next=<ruta>` cuando no hay sesión válida en estas rutas: `/torneos`, `/dashboard`, `/jugadores`, `/ajustes`, `/partidos`, `/notificaciones`, `/crear-torneo`, `/seleccion-perfil`, `/club`, `/jugador`, `/admin`. **Excepción:** `/jugador/invitacion`, que abre alguien sin cuenta.

@@ -2,6 +2,23 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { isAdmin, requireUser } from "@/_lib/auth";
 import { playerIdentity } from "@/_lib/player-identity";
+import { effectiveStatus } from "@/_lib/profile-invitation";
+
+type WithInvitation = { invitations?: { id: string; token: string; email: string | null; status: string; expiresAt: Date; acceptedBy?: { firstName: string; lastName: string; email: string } | null }[] };
+
+/** Resumen de la invitación vigente de un provisional (para la fila del panel); null si no tiene. */
+function summarize(p: WithInvitation) {
+  const i = p.invitations?.[0];
+  if (!i) return null;
+  return {
+    id: i.id,
+    token: i.token,
+    email: i.email,
+    status: effectiveStatus(i.status, i.expiresAt, new Date()),
+    expiresAt: i.expiresAt,
+    acceptedBy: i.acceptedBy ? { name: `${i.acceptedBy.firstName} ${i.acceptedBy.lastName}`, email: i.acceptedBy.email } : null,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const auth = await requireUser();
@@ -55,6 +72,15 @@ export async function GET(request: NextRequest) {
       },
       club: { select: { id: true, name: true, shortName: true } },
       category: { select: { id: true, name: true, gender: true } },
+      // Solo el admin ve el estado de las invitaciones de un provisional (con su enlace, para copiarlo).
+      ...(admin && {
+        invitations: {
+          where: { status: { in: ["pending", "review", "locked"] } },
+          orderBy: { createdAt: "desc" as const },
+          take: 1,
+          include: { acceptedBy: { select: { firstName: true, lastName: true, email: true } } },
+        },
+      }),
     },
   });
 
@@ -78,6 +104,7 @@ export async function GET(request: NextRequest) {
           : { firstName: who.firstName, lastName: who.lastName, email: null, avatarUrl: null, phone: null },
         // DNI y fecha de nacimiento de un provisional: solo el admin (nunca son públicos).
         ...(admin && who.provisional ? { dni: p.dni, birthDate: p.birthDate } : {}),
+        ...(admin && who.provisional ? { invitation: summarize(p) } : {}),
         club: p.club,
         category: p.category,
       }))

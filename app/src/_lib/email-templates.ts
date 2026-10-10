@@ -53,6 +53,24 @@ export function invitacionJugador(input: { clubName: string; inviterName: string
   return { subject, text, html };
 }
 
+/** Un admin invita a una persona a reclamar su perfil de jugador provisional (se acepta en /jugador/invitacion/perfil). */
+export function invitacionPerfil(input: { playerName: string; clubName: string; inviterName: string; url: string; days: number }): Contenido {
+  const { playerName, clubName, inviterName, url, days } = input;
+  const subject = `Reclama tu perfil de jugador en ${clubName} · Amateur`;
+  const text = `${inviterName} cargó tu perfil de jugador (${playerName}) en ${clubName} en Amateur.\n\nReclámalo con tu cuenta para ver tus goles y tus partidos (tendrás que confirmar tu DNI; el enlace vale ${days} días):\n${url}\n\nSi no esperabas este correo, puedes ignorarlo.`;
+  const html = layout({
+    title: `Reclama tu perfil en ${escapeHtml(clubName)}`,
+    paragraphs: [
+      `<strong>${escapeHtml(inviterName)}</strong> cargó tu perfil de jugador <strong>(${escapeHtml(playerName)})</strong> en <strong>${escapeHtml(clubName)}</strong> en Amateur.`,
+      `Reclámalo con tu cuenta para ver tus goles y tus partidos. Te pediremos confirmar tu DNI. El enlace vale ${days} días.`,
+    ],
+    buttonLabel: "Reclamar mi perfil",
+    url,
+    footer: "Si no esperabas este correo, puedes ignorarlo.",
+  });
+  return { subject, text, html };
+}
+
 /** Un club invita a alguien a su cuerpo técnico (se acepta en /staff/invitacion). */
 export function invitacionStaff(input: { clubName: string; inviterName: string; roleLabel: string; url: string; days: number }): Contenido {
   const { clubName, inviterName, roleLabel, url, days } = input;

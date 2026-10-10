@@ -11,6 +11,7 @@ import { AvatarCropper } from "@/_components/avatar-cropper";
 import { PlayerAvatar } from "@/_components/player-avatar";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { LinkAccountModal } from "../_components/link-account-modal";
+import type { InvitationSummary } from "../_components/invite-player-panel";
 
 interface PlayerRow {
   id: string;
@@ -20,6 +21,8 @@ interface PlayerRow {
   /** Solo de un provisional (y solo lo ve el admin). */
   dni?: string | null;
   birthDate?: string | null;
+  /** La invitación vigente para reclamar este perfil (solo un provisional). */
+  invitation?: InvitationSummary | null;
   number: number | null;
   position: string | null;
   status: string;
@@ -553,6 +556,23 @@ function EditProvisionalModal({
   );
 }
 
+const chipDate = (iso: string) => new Date(iso).toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+
+/** El estado de la invitación de un provisional, en una línea (el detalle está en Asignar cuenta). */
+function InvitationChip({ invitation }: { invitation: InvitationSummary | null }) {
+  if (!invitation) return null;
+  const tone =
+    invitation.status === "pending" ? "bg-green-100 text-green-700"
+    : invitation.status === "review" ? "bg-amber-100 text-amber-700"
+    : "bg-red-100 text-red-700";
+  const text =
+    invitation.status === "pending" ? `Invitado${invitation.email ? ` · ${invitation.email}` : " · por enlace"} · vence ${chipDate(invitation.expiresAt)}`
+    : invitation.status === "expired" ? `Invitación vencida el ${chipDate(invitation.expiresAt)}`
+    : invitation.status === "review" ? `Aceptó ${invitation.acceptedBy?.name ?? "una cuenta"}: falta unir`
+    : "Invitación bloqueada";
+  return <span className={`mt-1 block w-fit max-w-[220px] truncate rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone}`} title={text}>{text}</span>;
+}
+
 const NO_CLUB = "__sin_club__";
 
 const sortAccessors = {
@@ -570,7 +590,8 @@ export default function AdminJugadoresPage() {
   const [clubFilter, setClubFilter] = useState<string[]>([]);
   const [editingPlayer, setEditingPlayer] = useState<PlayerRow | null>(null);
   const [deleting, setDeleting] = useState<PlayerRow | null>(null);
-  const [linking, setLinking] = useState<PlayerRow | null>(null);
+  // Solo el id: la invitación del jugador se lee de la lista, así se actualiza sola al volver a pedirla.
+  const [linkingId, setLinkingId] = useState<string | null>(null);
   // Con cuenta o provisional (sin cuenta, cargado por un admin: especificación 009).
   const [kind, setKind] = useState<"all" | "account" | "provisional">("all");
 
@@ -592,6 +613,7 @@ export default function AdminJugadoresPage() {
       (clubFilter.length === 0 || clubFilter.includes(p.club?.id ?? NO_CLUB)) &&
       (kind === "all" || (kind === "provisional") === !!p.provisional)
   );
+  const linking = players?.find((p) => p.id === linkingId) ?? null;
   const provisionalCount = (players ?? []).filter((p) => p.provisional).length;
   const { sorted, sort, toggle } = useSort(filtered, sortAccessors);
   const clubOptions = (() => {
@@ -712,7 +734,10 @@ export default function AdminJugadoresPage() {
                     </td>
                     <td className="px-4 py-3">
                       {player.provisional ? (
-                        <span className="font-body text-sm italic text-text-secondary">Sin cuenta</span>
+                        <>
+                          <span className="font-body text-sm italic text-text-secondary">Sin cuenta</span>
+                          <InvitationChip invitation={player.invitation ?? null} />
+                        </>
                       ) : (
                         <p className="font-body text-sm text-text-secondary">{player.user.email}</p>
                       )}
@@ -757,7 +782,7 @@ export default function AdminJugadoresPage() {
                       <div className="flex justify-end gap-2">
                         {player.provisional && (
                           <button
-                            onClick={() => setLinking(player)}
+                            onClick={() => setLinkingId(player.id)}
                             className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
                           >
                             Asignar cuenta
@@ -808,8 +833,12 @@ export default function AdminJugadoresPage() {
       {linking && (
         <LinkAccountModal
           player={{ id: linking.id, firstName: linking.user.firstName, lastName: linking.user.lastName, dni: linking.dni ?? null, clubName: linking.club?.name ?? null }}
-          onClose={() => setLinking(null)}
-          onDone={() => { setLinking(null); refetch(); }}
+          invitation={linking.invitation ?? null}
+          // Si ya hay una invitación en curso, se abre en ella: es lo que el admin viene a ver.
+          initialTab={linking.invitation ? "invite" : "account"}
+          onClose={() => setLinkingId(null)}
+          onDone={() => { setLinkingId(null); refetch(); }}
+          onInvitationChanged={refetch}
         />
       )}
       {deleting && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { InvitePlayerPanel, type InvitationSummary } from "./invite-player-panel";
 
 interface AccountResult {
   id: string;
@@ -29,13 +30,21 @@ interface LinkSummary {
  */
 export function LinkAccountModal({
   player,
+  invitation,
+  initialTab = "account",
   onClose,
   onDone,
+  onInvitationChanged,
 }: {
   player: { id: string; firstName: string; lastName: string; dni: string | null; clubName: string | null };
+  /** La invitación vigente de este jugador (la lista se vuelve a pedir cuando cambia). */
+  invitation: InvitationSummary | null;
+  initialTab?: "account" | "invite";
   onClose: () => void;
   onDone: () => void;
+  onInvitationChanged: () => void;
 }) {
+  const [tab, setTab] = useState<"account" | "invite">(initialTab);
   // Se abre buscando por el DNI del provisional: si la persona ya tiene cuenta con ese DNI, sale de una vez.
   const [query, setQuery] = useState(player.dni ?? "");
   const [results, setResults] = useState<AccountResult[] | null>(null);
@@ -118,6 +127,34 @@ export function LinkAccountModal({
           {player.clubName ? ` · ${player.clubName}` : ""} · DNI {player.dni ?? "—"}. Sus goles, tarjetas y partidos pasan a la cuenta que elijas: no se pierde nada.
         </p>
 
+        <div role="tablist" aria-label="Cómo asignar la cuenta" className="mb-4 flex gap-1 rounded-lg bg-brand-50 p-1">
+          {([["account", "Cuenta existente"], ["invite", invitation && invitation.status !== "expired" ? "Invitar · activa" : "Invitar por correo o enlace"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={`min-h-10 flex-1 cursor-pointer rounded-md px-3 py-2 font-heading text-xs font-semibold transition-colors ${tab === key ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "invite" ? (
+          <>
+            <InvitePlayerPanel
+              player={{ id: player.id, firstName: player.firstName, lastName: player.lastName }}
+              invitation={invitation}
+              onChanged={onInvitationChanged}
+              onReview={(email) => { setQuery(email); setChosen(null); setSummary(null); setError(null); setTab("account"); }}
+            />
+            <div className="mt-6 flex justify-end">
+              <button onClick={onClose} className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular">Cerrar</button>
+            </div>
+          </>
+        ) : (
+          <>
         {error && <div role="alert" className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">{error}</div>}
 
         {!chosen && (
@@ -223,6 +260,8 @@ export function LinkAccountModal({
             </button>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );
