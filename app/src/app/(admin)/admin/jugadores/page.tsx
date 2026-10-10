@@ -823,7 +823,7 @@ export default function AdminJugadoresPage() {
                 Se elimina la cuenta de <strong className="text-text-primary">{deleting.user.firstName} {deleting.user.lastName}</strong> ({deleting.user.email}) y todas sus
                 fichas de jugador: sus estadísticas y alineaciones en todos sus equipos. En las jugadas de partidos queda el registro, sin el jugador.
               </p>
-              <p>Si es dueño de un equipo o organiza torneos, no se elimina hasta resolver eso. No se puede deshacer.</p>
+              <p>Si es delegado de un equipo o organiza torneos, no se elimina hasta resolver eso. No se puede deshacer.</p>
             </>
           )}
         </ConfirmDelete>

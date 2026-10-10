@@ -133,7 +133,7 @@ export async function POST(
   // El organizador no mete a un club de otro dueño sin su consentimiento: lo invita.
   if (!club.isTemporary && club.ownerId !== user.id && !isAdmin(user)) {
     return Response.json(
-      { error: "Invita al equipo: su dueño debe aceptar la invitación", code: "invite_required" },
+      { error: "Invita al equipo: su delegado debe aceptar la invitación", code: "invite_required" },
       { status: 403 }
     );
   }

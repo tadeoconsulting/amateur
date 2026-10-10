@@ -82,7 +82,7 @@ export function RequestsPanel({ tournamentId, kind, requests, teamsCount, maxTea
           </Link>
         }
       >
-        Invita a un equipo de la comunidad y su dueño confirmará si se une.
+        Invita a un equipo de la comunidad y su delegado confirmará si se une.
       </EmptyState>
     );
   }

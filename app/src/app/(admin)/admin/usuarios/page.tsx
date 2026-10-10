@@ -26,7 +26,7 @@ interface UserRow {
 
 const allRoles = [
   { key: "ORGANIZADOR", label: "Organizador" },
-  { key: "CLUB_OWNER", label: "Dueño de club" },
+  { key: "CLUB_OWNER", label: "Delegado" },
   { key: "JUGADOR", label: "Jugador" },
   { key: "SPONSOR", label: "Sponsor" },
   { key: "FAN", label: "Fan" },

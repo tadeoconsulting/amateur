@@ -24,7 +24,7 @@ const statCards = [
 
 const roleLabels: Record<string, string> = {
   ORGANIZADOR: "Organizadores",
-  CLUB_OWNER: "Dueños de club",
+  CLUB_OWNER: "Delegados",
   JUGADOR: "Jugadores",
   SPONSOR: "Sponsors",
   FAN: "Fans",
