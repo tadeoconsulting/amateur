@@ -1,6 +1,6 @@
 # 009 · Jugadores provisionales
 
-**Estado:** ✅ **Entregas 1 y 2 implementadas** (as-built, abajo).
+**Estado:** ✅ **Entregas 1, 2 y 3 implementadas** (as-built, abajo). Falta la entrega 4: invitar al delegado de un equipo temporal.
 **Origen:** el torneo Clausura 2026 de La Ensenada tiene 11 equipos temporales y su lista de jugadores. Se necesita **la tabla de goleadores** con nombres, sin esperar a que cada jugador cree una cuenta, y sin perder esos datos cuando después la creen.
 **Toca:** [modelo-de-datos.md](modelo-de-datos.md) (`PlayerProfile`), [004](004-partido-en-vivo.md) (jugadas y goleadores), [001](001-autenticacion-y-permisos.md) (permisos de admin).
 
@@ -66,6 +66,65 @@ En **Admin → Jugadores**, cada provisional tiene un botón **Asignar cuenta** 
 **Nunca se pisa un dato de la cuenta:** el DNI y la fecha de nacimiento del provisional solo se copian a la cuenta si ahí están vacíos. Si difieren, se **avisa** (en el resumen) y se queda el de la cuenta. También se avisa si el nombre de la cuenta es distinto: desde ahora se muestra el de la cuenta.
 
 **Verificado a mano** (base de pruebas): vincular a una cuenta sin ficha (con rol agregado), unir con la ficha del mismo equipo (las jugadas pasaron a su nombre, los goleadores muestran sus goles y la cuenta heredó el DNI) y unir con una ficha sin equipo (pasó a ser la del equipo, conservando su posición); un jugador que ya tiene cuenta responde `409`, una cuenta inexistente `404`, falta `userId` `400`, y un no admin `403`.
+
+## Entrega 3 · Invitar a un jugador a reclamar su perfil (solo admin, implementada)
+Para quien **todavía no tiene cuenta**. En **Admin → Jugadores → Asignar cuenta** hay ahora dos pestañas: *Cuenta existente* (entrega 2) e *Invitar por correo o enlace*. Si el jugador ya tiene una invitación en curso, la ventana se abre en ella y la fila muestra su estado.
+
+**Cómo funciona**
+1. El admin escribe un **correo** (opcional) y la crea. Con correo se envía por Resend (`invitacionPerfil`) y la invitación es para esa cuenta; sin correo solo se crea un **enlace para compartir por WhatsApp**. Dura **7 días**.
+2. Quien abre `/jugador/invitacion/perfil/{token}` (pública) ve **solo el nombre del perfil y el equipo** (y, si la invitación es para un correo, con cuál entrar, enmascarado: `j***@gmail.com`). Nunca el DNI ni la fecha de nacimiento. Inicia sesión o crea su cuenta (la invitación lo lleva y lo trae de vuelta).
+3. **Confirma su DNI.** Si coincide con el del perfil y su cuenta no tiene ya una ficha en ese equipo, el perfil queda **vinculado a su cuenta** (el mismo perfil: nada se pierde; se le agrega el rol de jugador y se copian el DNI y la fecha a la cuenta si ahí estaban vacíos).
+4. Si su cuenta **ya tiene ficha en ese equipo** (o una sin equipo), **no se une sola**: la invitación pasa a *Por revisar* (constancia de quién aceptó) y un admin decide, como en la entrega 2: el botón **Revisar y unir** lleva a esa cuenta ya buscada, con su resumen.
+
+**Reglas de seguridad** (lógica pura en `_lib/profile-invitation.ts › checkAccept`, con pruebas):
+- El enlace es secreto (`randomBytes`), de **un solo uso**, vence a los 7 días y **solo lo acepta una cuenta con sesión**.
+- Si la invitación tiene correo, **solo la acepta la cuenta con ese correo** (otra recibe `403` con el correo enmascarado; no cuenta como intento).
+- El DNI se compara solo con dígitos (admite espacios). **Un DNI equivocado cuenta como intento: a los 5 la invitación se bloquea** (`423`), incluso si después se escribe el correcto; hay que crear una nueva.
+- Crear una invitación **reemplaza** la anterior (su enlace deja de funcionar): sirve para cambiar el correo o para sacar un enlace nuevo. Asignar una cuenta a mano (entrega 2) cancela las invitaciones pendientes del perfil.
+
+**API**
+- Admin: `GET/POST/PATCH/DELETE /api/players/:id/invitation` — ver la vigente, crear (con `email` opcional; **cambiar el correo** es crear una nueva), `{ action: "resend" }` (mismo enlace, renueva 7 días, vuelve a mandar el correo) y cancelar. `GET /api/players` trae el resumen de la invitación de cada provisional (solo para un admin) y `GET /api/users` busca por DNI.
+- Público: `GET /api/profile-invitations/:token` (vista previa) y `POST /api/profile-invitations/:token/accept` (con `{ dni }`, exige sesión).
+- La lógica de vincular/unir pasó a `_lib/provisional-link-server.ts`, compartida entre la ruta del admin y la aceptación.
+
+**Base de datos:** una tabla nueva, `ProfileInvitation` (perfil, correo opcional, token único, estado `pending | review | accepted | cancelled | locked`, intentos, quién invitó y quién aceptó, vencimiento). Se crea en producción **antes** de mergear (no afecta al código anterior). Sin datos personales: el DNI nunca se guarda ahí.
+
+SQL para producción (generado con `prisma migrate diff` contra el esquema anterior):
+```sql
+-- CreateTable
+CREATE TABLE "ProfileInvitation" (
+    "id" TEXT NOT NULL,
+    "profileId" TEXT NOT NULL,
+    "email" TEXT,
+    "token" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "invitedBy" TEXT NOT NULL,
+    "acceptedById" TEXT,
+    "acceptedAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ProfileInvitation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProfileInvitation_token_key" ON "ProfileInvitation"("token");
+
+-- CreateIndex
+CREATE INDEX "ProfileInvitation_profileId_idx" ON "ProfileInvitation"("profileId");
+
+-- AddForeignKey
+ALTER TABLE "ProfileInvitation" ADD CONSTRAINT "ProfileInvitation_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "PlayerProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProfileInvitation" ADD CONSTRAINT "ProfileInvitation_invitedBy_fkey" FOREIGN KEY ("invitedBy") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProfileInvitation" ADD CONSTRAINT "ProfileInvitation_acceptedById_fkey" FOREIGN KEY ("acceptedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+```
+
+**Verificado a mano** (base de pruebas): crear un enlace sin correo desde el panel y abrirlo sin sesión; DNI equivocado (avisa los intentos que quedan) y correcto; vinculación con rol agregado y DNI copiado; el enlace usado responde `410`; invitación con correo (se normaliza), reenviar (mismo enlace), cambiar el correo (el enlace viejo muere), correo inválido `400`; aceptar con otra cuenta `403` sin revelar el correo; bloqueo a los 5 intentos aun con el DNI correcto; caso *Por revisar* y su resolución con **Revisar y unir**; asignar a mano una cuenta cancela la invitación pendiente.
 
 ## Lo que implica construir
 - **Base de datos:** `PlayerProfile.userId` pasa a ser opcional, más `firstName`, `lastName`, `dni`, `birthDate` (todas opcionales). Las columnas se agregan en producción **antes** de mergear (como `deletedAt`).
