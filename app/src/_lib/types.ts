@@ -64,6 +64,8 @@ export interface MatchEvent {
   matchId: string;
   type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion";
   minute: number;
+  /** En qué tiempo ocurrió (1 o 2); null/ausente en un partido sin tiempos. */
+  half?: number | null;
   playerId: string;
   playerName: string;
   teamId: string;

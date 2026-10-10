@@ -16,6 +16,13 @@ import {
   MATCH_PHASES,
   isMatchPhase,
   canTransitionPhase,
+  MATCH_PERIODS,
+  isMatchPeriod,
+  canTransitionPeriod,
+  halfMinutes,
+  matchClock,
+  halfForEvent,
+  splitHalves,
 } from "../../src/_lib/match-live.ts";
 
 describe("estados del partido", () => {
@@ -155,4 +162,87 @@ test("sin hora de inicio nunca está colgado", () => {
 test("cuánto lleva en vivo: horas, y días si pasa de dos", () => {
   assert.equal(formatLiveFor(new Date(T0), after(200)), "3 h");
   assert.equal(formatLiveFor(new Date(T0), after(8428)), "5 días");
+});
+
+describe("los dos tiempos", () => {
+  const MIN = 60_000;
+  const t0 = Date.parse("2026-10-10T15:00:00Z");
+
+  test("períodos y transiciones", () => {
+    assert.deepEqual([...MATCH_PERIODS], ["primer_tiempo", "descanso", "segundo_tiempo"]);
+    assert.equal(isMatchPeriod("descanso"), true);
+    assert.equal(isMatchPeriod("tercer_tiempo"), false);
+    assert.equal(canTransitionPeriod("primer_tiempo", "descanso"), true);
+    assert.equal(canTransitionPeriod("descanso", "segundo_tiempo"), true);
+    assert.equal(canTransitionPeriod("descanso", "primer_tiempo"), true, "se tocó sin querer");
+    assert.equal(canTransitionPeriod("primer_tiempo", "segundo_tiempo"), false, "no se salta el descanso");
+    assert.equal(canTransitionPeriod("segundo_tiempo", "descanso"), false);
+    assert.equal(canTransitionPeriod(null, "descanso"), false, "un partido sin tiempos no los estrena a mitad");
+  });
+
+  test("minutos de un tiempo: los del torneo o 35 por defecto", () => {
+    assert.equal(halfMinutes(40), 40);
+    assert.equal(halfMinutes(null), 35);
+    assert.equal(halfMinutes(0), 35);
+  });
+
+  test("1.er tiempo y partido sin tiempos: corre desde el inicio, pasa del minuto del torneo", () => {
+    const m = { startedAt: new Date(t0).toISOString(), period: "primer_tiempo" };
+    assert.equal(matchClock(m, t0 + 38 * MIN, 35).minute, 38);
+    assert.equal(matchClock({ startedAt: m.startedAt, period: null }, t0 + 12 * MIN, 35).minute, 12);
+    assert.equal(matchClock({ startedAt: null, period: "primer_tiempo" }, t0, 35).seconds, 0);
+  });
+
+  test("descanso: queda congelado en lo que duró el primer tiempo", () => {
+    const m = { startedAt: new Date(t0), period: "descanso", firstHalfEndedAt: new Date(t0 + 37 * MIN) };
+    assert.equal(matchClock(m, t0 + 40 * MIN, 35).minute, 37);
+    assert.equal(matchClock(m, t0 + 50 * MIN, 35).minute, 37);
+    assert.equal(matchClock(m, t0 + 50 * MIN, 35).stale, false);
+    assert.equal(matchClock(m, t0 + 37 * MIN + 121 * MIN, 35).stale, true, "un descanso de más de 2 h se da por olvidado");
+  });
+
+  test("2.º tiempo: sigue desde los minutos de un tiempo, aunque el primero se alargara", () => {
+    const m = {
+      startedAt: new Date(t0),
+      period: "segundo_tiempo",
+      firstHalfEndedAt: new Date(t0 + 38 * MIN),
+      secondHalfStartedAt: new Date(t0 + 50 * MIN),
+    };
+    assert.equal(matchClock(m, t0 + 50 * MIN, 35).minute, 35, "arranca en 35, no en 38");
+    assert.equal(matchClock(m, t0 + 62 * MIN, 35).minute, 47);
+    assert.equal(matchClock(m, t0 + 62 * MIN + 30_000, 35).seconds, 47 * 60 + 30);
+    assert.equal(matchClock(m, t0 + 62 * MIN, 35).stale, false);
+  });
+
+  test("un partido colgado se detiene donde se da por colgado", () => {
+    const m = { startedAt: new Date(t0), period: null };
+    const c = matchClock(m, t0 + 600 * MIN, 35);
+    assert.equal(c.stale, true);
+    assert.equal(c.seconds, (70 + 60) * 60);
+  });
+
+  test("la jugada guarda en qué tiempo ocurrió", () => {
+    assert.equal(halfForEvent("primer_tiempo"), 1);
+    assert.equal(halfForEvent("descanso"), 1);
+    assert.equal(halfForEvent("segundo_tiempo"), 2);
+    assert.equal(halfForEvent(null), null);
+    assert.equal(halfForEvent(undefined), null);
+  });
+});
+
+describe("cronología en dos tiempos", () => {
+  const ev = (id, minute, half) => ({ id, minute, half });
+
+  test("con tiempos guardados manda el tiempo, no el minuto (el tiempo agregado del primero)", () => {
+    const { firstHalf, secondHalf } = splitHalves([ev("a", 12, 1), ev("b", 38, 1), ev("c", 36, 2), ev("d", 50, 2)], 35);
+    assert.deepEqual(firstHalf.map((e) => e.id), ["a", "b"]);
+    assert.deepEqual(secondHalf.map((e) => e.id), ["c", "d"]);
+  });
+
+  test("sin tiempos (partido anterior) se corta por el minuto del torneo, o 45", () => {
+    const events = [ev("a", 10), ev("b", 34), ev("c", 40), ev("d", 44)];
+    assert.deepEqual(splitHalves(events, 35).secondHalf.map((e) => e.id), ["c", "d"]);
+    assert.equal(splitHalves(events, null).secondHalf.length, 0);
+    assert.equal(splitHalves([ev("a", 50)], undefined).secondHalf.length, 1);
+  });
 });

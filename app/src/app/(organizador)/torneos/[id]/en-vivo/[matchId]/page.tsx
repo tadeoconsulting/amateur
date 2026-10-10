@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, clockSeconds, formatLiveFor, isStale, matchDurationMinutes, type MatchPhase } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
 import { ClubCrest } from "@/_components/club-crest";
 
@@ -88,8 +88,13 @@ export default function EnVivoPage() {
   // El cronómetro cuenta desde el inicio real; fuera de juego se detiene en 0, y si el partido
   // se quedó en vivo sin finalizar se detiene donde se da por colgado (ver isStale).
   const minutesPerHalf = match.tournament.minutesPerHalf;
-  const elapsedSeconds = live ? clockSeconds(match.startedAt, now, minutesPerHalf) : 0;
-  const stale = live && isStale(match.startedAt, now, minutesPerHalf);
+  const clock = matchClock(match, now, minutesPerHalf);
+  const elapsedSeconds = live ? clock.seconds : 0;
+  const stale = live && clock.stale;
+  // Los dos tiempos (especificación 010); null = un partido que empezó antes de que existieran.
+  const period: MatchPeriod | null = match.period ?? null;
+  const onBreak = live && period === "descanso";
+  const inFirstHalf = live && period === "primer_tiempo";
   const minutes = Math.floor(elapsedSeconds / 60);
   const seconds = elapsedSeconds % 60;
   const matchDuration = matchDurationMinutes(match.tournament.minutesPerHalf);
@@ -244,6 +249,13 @@ export default function EnVivoPage() {
     if (ok) setEditingEventId(null);
   };
 
+  const setPeriod = async (next: MatchPeriod) => {
+    if (saving) return;
+    setSelectedAction(null);
+    setSelectedPlayer(null);
+    await call(matchUrl, "PATCH", { period: next });
+  };
+
   const setStatus = async (status: "en_curso" | "finalizado") => {
     if (saving) return;
     setConfirmEnd(false);
@@ -253,7 +265,7 @@ export default function EnVivoPage() {
   // Un partido decisivo (cuadro de eliminación) no puede terminar empatado: mientras siga
   // así, la pantalla ofrece pasar de fase en vez de "Finalizar partido" (especificación 007).
   const tied = homeScore === awayScore;
-  const showPhaseButton = match.decisive && tied && match.phase !== "penales";
+  const showPhaseButton = match.decisive && tied && match.phase !== "penales" && !inFirstHalf && !onBreak;
   const nextPhase: MatchPhase = match.phase === "regulacion" ? "tiempo_extra" : "penales";
   const nextPhaseLabel = match.phase === "regulacion" ? "Ir a tiempo extra" : "Ir a penales";
 
@@ -295,7 +307,9 @@ export default function EnVivoPage() {
         {live &&
           (confirmEnd ? (
             <div className="flex items-center gap-3">
-              <span className="font-body text-xs text-text-secondary">¿Finalizar?</span>
+              <span className="font-body text-xs text-text-secondary">
+                {inFirstHalf ? "¿Finalizar en el 1.er tiempo?" : onBreak ? "¿Finalizar en el descanso?" : "¿Finalizar?"}
+              </span>
               <button
                 onClick={() => setStatus("finalizado")}
                 disabled={saving}
@@ -361,7 +375,9 @@ export default function EnVivoPage() {
                 ? match.phase === "tiempo_extra"
                   ? "Tiempo extra"
                   : "Penales"
-                : `Fecha ${match.matchday}`}
+                : live && period
+                  ? PERIOD_LABELS[period]
+                  : `Fecha ${match.matchday}`}
             </p>
           </div>
         </div>
@@ -378,6 +394,41 @@ export default function EnVivoPage() {
         </div>
         <span className="font-heading text-sm font-bold text-field-dark">{matchDuration}&apos;</span>
       </div>
+
+      {/* Los dos tiempos: terminar el primero, el descanso y empezar el segundo. */}
+      {inFirstHalf && !stale && (
+        <div className="mx-4 mb-5">
+          <button
+            onClick={() => setPeriod("descanso")}
+            disabled={saving}
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+          >
+            Finalizar 1.er tiempo
+          </button>
+        </div>
+      )}
+      {onBreak && (
+        <div className="mx-4 mb-5 rounded-xl bg-btn-regular px-4 py-4 text-center">
+          <p className="font-heading text-sm font-bold text-text-primary">Descanso</p>
+          <p className="mb-3 mt-1 font-body text-xs text-text-secondary">
+            El cronómetro está detenido en {minutes}&apos;. El 2.º tiempo sigue desde el minuto {halfMinutes(minutesPerHalf)}.
+          </p>
+          <button
+            onClick={() => setPeriod("segundo_tiempo")}
+            disabled={saving}
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+          >
+            Iniciar 2.º tiempo
+          </button>
+          <button
+            onClick={() => setPeriod("primer_tiempo")}
+            disabled={saving}
+            className="mt-3 cursor-pointer font-heading text-xs font-semibold text-text-secondary underline disabled:opacity-40"
+          >
+            Volver al 1.er tiempo
+          </button>
+        </div>
+      )}
 
       {/* Un partido que lleva muchísimo en vivo se olvidó sin finalizar: se avisa en vez de seguir
           contando (y dejando el minuto de las jugadas fuera de rango). */}
@@ -431,7 +482,7 @@ export default function EnVivoPage() {
           </button>
         </div>
       )}
-      {live && match.phase !== "penales" && events.length > 0 && !selectedAction && (
+      {live && !onBreak && match.phase !== "penales" && events.length > 0 && !selectedAction && (
         <button
           onClick={undoLast}
           disabled={saving}
@@ -442,7 +493,7 @@ export default function EnVivoPage() {
       )}
 
       {/* Team toggle */}
-      <div className={`mx-4 mb-5 flex gap-3${live ? "" : " hidden"}`}>
+      <div className={`mx-4 mb-5 flex gap-3${live && !onBreak ? "" : " hidden"}`}>
         <button
           onClick={() => { setActiveTeam("local"); setSelectedPlayer(null); }}
           className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
@@ -466,7 +517,7 @@ export default function EnVivoPage() {
       </div>
 
       {/* Action icons (no aplican en la tanda de penales: ver PenaltyShootout más abajo) */}
-      <div className={`mx-4 mb-4 flex justify-between${live && match.phase !== "penales" ? "" : " hidden"}`}>
+      <div className={`mx-4 mb-4 flex justify-between${live && !onBreak && match.phase !== "penales" ? "" : " hidden"}`}>
         {actions.map((action) => (
           <button
             key={action.id}
@@ -686,7 +737,7 @@ export default function EnVivoPage() {
       {error && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
 
       {/* Bottom button (la tanda de penales tiene sus propios botones, ver PenaltyShootout) */}
-      <div className={`sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3${live && match.phase !== "penales" ? "" : " hidden"}`}>
+      <div className={`sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3${live && !onBreak && match.phase !== "penales" ? "" : " hidden"}`}>
         <button
           onClick={handleSave}
           className={`w-full cursor-pointer rounded-lg py-3.5 font-heading text-sm font-bold transition-colors ${

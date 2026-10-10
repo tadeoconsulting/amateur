@@ -3,7 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
 import { CLASH_MESSAGE, hasScheduleClash } from "@/_lib/match-schedule";
-import { canTransition, canTransitionPhase, isMatchPhase, isMatchStatus, MATCH_PHASES, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
+import { canTransition, canTransitionPeriod, canTransitionPhase, isMatchPeriod, isMatchPhase, isMatchStatus, MATCH_PERIODS, MATCH_PHASES, type MatchPeriod, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { CLUB_REF_SELECT } from "@/_lib/club-public";
 
@@ -18,7 +18,7 @@ export async function GET(
     include: {
       homeTeam: { select: CLUB_REF_SELECT },
       awayTeam: { select: CLUB_REF_SELECT },
-      events: { orderBy: [{ minute: "asc" }, { createdAt: "asc" }] },
+      events: { orderBy: [{ half: { sort: "asc", nulls: "first" } }, { minute: "asc" }, { createdAt: "asc" }] },
       tournament: { select: { id: true, name: true, format: true, minutesPerHalf: true, extraTimeMinutes: true, slug: true, organizer: { select: { organizerSlug: true } } } },
     },
   });
@@ -43,6 +43,9 @@ const conflict = (error: string) => Response.json({ error }, { status: 409 });
  *
  * El estado sigue el ciclo programado → en_curso → finalizado (ver canTransition):
  * - Al empezar se guarda `startedAt` (el cronómetro sale de ahí) y el marcador arranca 0-0.
+ * - Los dos tiempos (especificación 010): `period` pasa de primer_tiempo a descanso (el cronómetro
+ *   se congela en `firstHalfEndedAt`) y a segundo_tiempo (`secondHalfStartedAt`); del descanso se
+ *   puede volver al primer tiempo, y el partido se puede finalizar desde cualquiera de los tres.
  * - Al terminar el marcador nunca queda vacío, porque las tablas ignoran los partidos sin
  *   marcador. Cuando termina el último partido del torneo, el torneo pasa a "finalizado"
  *   (y vuelve a "en_curso" si se reabre uno).
@@ -65,7 +68,7 @@ export async function PATCH(
 
   const body = await readJson(request);
   if (!body) return badRequest();
-  const { homeScore, awayScore, status, phase, date, time, location, homeTeamId, awayTeamId } = body;
+  const { homeScore, awayScore, status, phase, period, date, time, location, homeTeamId, awayTeamId } = body;
 
   if ((homeScore !== undefined && !isScore(homeScore)) || (awayScore !== undefined && !isScore(awayScore))) {
     return badRequest("El marcador debe ser un entero mayor o igual a 0");
@@ -75,6 +78,10 @@ export async function PATCH(
   }
   if (phase !== undefined && !isMatchPhase(phase)) {
     return badRequest(`phase debe ser una de: ${MATCH_PHASES.join(", ")}`);
+  }
+
+  if (period !== undefined && !isMatchPeriod(period)) {
+    return badRequest(`period debe ser uno de: ${MATCH_PERIODS.join(", ")}`);
   }
 
   // Programación del partido: día (YYYY-MM-DD), hora (HH:MM, 24 h) y sede.
@@ -107,6 +114,8 @@ export async function PATCH(
       homeScore: true,
       awayScore: true,
       startedAt: true,
+      period: true,
+      firstHalfEndedAt: true,
       date: true,
       time: true,
       location: true,
@@ -171,10 +180,37 @@ export async function PATCH(
   if (homeScore !== undefined) data.homeScore = homeScore as number | null;
   if (awayScore !== undefined) data.awayScore = awayScore as number | null;
 
+  // ─── Tiempo (primer tiempo, descanso, segundo tiempo) ───
+  if (period !== undefined) {
+    if (status !== undefined && status !== current.status) return badRequest("Cambia el tiempo y el estado por separado");
+    if (current.status !== "en_curso") return conflict("Solo se cambia de tiempo mientras el partido está en juego");
+    if (current.period === null) return conflict("Este partido empezó antes de que hubiera tiempos: sigue con un solo cronómetro");
+    if (period !== current.period) {
+      if (!canTransitionPeriod(current.period as MatchPeriod, period as MatchPeriod)) {
+        return conflict(`No se puede pasar de "${current.period}" a "${period}"`);
+      }
+      const nowDate = new Date();
+      data.period = period;
+      if (period === "descanso") {
+        data.firstHalfEndedAt = nowDate;
+      } else if (period === "segundo_tiempo") {
+        data.secondHalfStartedAt = nowDate;
+      } else if (period === "primer_tiempo" && current.startedAt && current.firstHalfEndedAt) {
+        // Volver al primer tiempo: el descanso no cuenta, así que el inicio se corre lo que duró.
+        data.startedAt = new Date(current.startedAt.getTime() + (nowDate.getTime() - current.firstHalfEndedAt.getTime()));
+        data.firstHalfEndedAt = null;
+      }
+    }
+  }
+
   // ─── Fase (solo partidos `decisive`, que no admiten empate) ───
   if (phase !== undefined) {
     if (!current.decisive) return conflict("Este partido admite empate: no tiene fases");
     if (current.status !== "en_curso") return conflict("Solo se cambia de fase mientras el partido está en juego");
+    const playingPeriod = (data.period as string | undefined) ?? current.period;
+    if (playingPeriod === "primer_tiempo" || playingPeriod === "descanso") {
+      return conflict("Primero se juegan los dos tiempos: pasa al segundo tiempo antes de ir a tiempo extra");
+    }
     if (phase !== current.phase) {
       if (!canTransitionPhase(current.phase as MatchPhase, phase)) {
         return conflict(`No se puede pasar de "${current.phase}" a "${phase}"`);
@@ -214,6 +250,9 @@ export async function PATCH(
 
     if (to === "en_curso") {
       data.startedAt = current.startedAt ?? new Date();
+      // Un partido que nunca empezó estrena los tiempos; uno que ya había empezado (antes de que
+      // existieran) o que se reabre conserva el tiempo en que quedó.
+      if (current.period === null && current.startedAt === null) data.period = "primer_tiempo";
       if (current.homeScore === null && data.homeScore === undefined) data.homeScore = 0;
       if (current.awayScore === null && data.awayScore === undefined) data.awayScore = 0;
       if (reopeningDecided) { data.winnerTeamId = null; winnerTeamId = null; }
@@ -246,6 +285,9 @@ export async function PATCH(
     } else if (to === "programado") {
       if (current._count.events > 0) return conflict("El partido ya tiene jugadas registradas: no se puede volver a programado");
       data.startedAt = null;
+      data.period = null;
+      data.firstHalfEndedAt = null;
+      data.secondHalfStartedAt = null;
       data.homeScore = null;
       data.awayScore = null;
       if (current.decisive) data.phase = "regulacion";

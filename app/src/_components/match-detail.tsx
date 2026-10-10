@@ -6,7 +6,7 @@ import { getMatches, type MatchEventItem, type MatchListItem } from "@/_lib/api"
 import { roundLabel } from "@/_lib/fixture";
 import { clubPublicPath } from "@/_lib/slug";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
-import { isStale, liveMinute } from "@/_lib/match-live";
+import { matchClock } from "@/_lib/match-live";
 import { useApi } from "@/_lib/use-api";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { ClubCrest } from "@/_components/club-crest";
@@ -95,7 +95,9 @@ export function MatchDetail({
   // Cada equipo lleva a su página en este torneo (si el partido trae los datos del torneo para armar el enlace).
   const clubLink = (clubId: string | undefined) =>
     clubId && match.tournament?.organizer ? clubPublicPath({ id: match.tournamentId, slug: match.tournament.slug, organizerSlug: match.tournament.organizer.organizerSlug }, clubId) : undefined;
-  const stale = live && isStale(match.startedAt, now, match.tournament?.minutesPerHalf);
+  const clock = matchClock(match, now, match.tournament?.minutesPerHalf);
+  const stale = live && clock.stale;
+  const onBreak = live && clock.period === "descanso";
   // La tanda de penales no es una jugada de un jugador: se resume aparte, junto al marcador.
   const plays = (events ?? []).filter((e) => e.type === "gol" || e.type === "tarjeta_amarilla" || e.type === "tarjeta_roja");
   const byPenalties = match.decisive && finished && match.winnerTeamId !== null && match.homeScore === match.awayScore;
@@ -151,7 +153,7 @@ export function MatchDetail({
         <div className="flex justify-center">
           {live && (
             <span className="rounded-full bg-verification px-3 py-1 font-heading text-xs font-bold text-white">
-              {stale ? "En juego" : `${liveMinute(match.startedAt, now)}' En vivo`}
+              {onBreak ? "Descanso" : stale ? "En juego" : `${clock.minute}' En vivo`}
             </span>
           )}
           {finished && <span className="rounded-full bg-brand-200 px-3 py-1 font-heading text-xs font-bold text-text-secondary">FT · Finalizado</span>}

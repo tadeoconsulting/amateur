@@ -17,6 +17,7 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [007-fixture-eliminacion-copa-relampago.md](007-fixture-eliminacion-copa-relampago.md) | Cuadro de eliminación, Copa (grupos + cuadro) y Relámpago, con tiempo extra y penales. API y pantallas implementadas |
 | [008-observaciones-octubre-2026.md](008-observaciones-octubre-2026.md) | Seis observaciones del organizador y el admin (octubre 2026): llaves para liga, partidos por torneo y fecha, editar por pestañas, sedes que se propagan, torneos eliminados recuperables |
 | [009-jugadores-provisionales.md](009-jugadores-provisionales.md) | Jugadores cargados por el admin sin cuenta (para goleadores), que luego se vinculan a su cuenta o se unen a una ficha existente sin perder datos. **Entregas 1 a 3 implementadas** (carga por el panel o por script, goleadores, asignar cuenta e invitaciones) |
+| [010-tiempos-del-partido.md](010-tiempos-del-partido.md) | Finalizar el primer tiempo, descanso con el cronómetro detenido e iniciar el segundo tiempo en el partido en vivo; la cronología pública separa los tiempos con el descanso real |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
 ## Glosario

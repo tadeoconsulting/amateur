@@ -6,7 +6,7 @@ import { MatchTimeline } from "@/_components/match-timeline";
 import { useApi } from "@/_lib/use-api";
 import type { MatchListItem } from "@/_lib/api";
 import { UNSCHEDULED_LABEL } from "@/_lib/match-format";
-import { isStale, liveMinute } from "@/_lib/match-live";
+import { matchClock } from "@/_lib/match-live";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { useEffect, useRef, useState } from "react";
 import { ClubCrest } from "@/_components/club-crest";
@@ -26,6 +26,7 @@ type MatchEventRow = {
   id: string;
   type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion";
   minute: number;
+  half?: number | null;
   playerName: string | null;
   teamId: string;
 };
@@ -128,7 +129,10 @@ export default function MatchDetailPage() {
             {match.status === "en_curso" && (
               <span className="text-base font-bold text-verification">
                 {/* Un partido que quedó en vivo sin finalizarse no muestra un minuto absurdo. */}
-                {isStale(match.startedAt, now, match.tournament?.minutesPerHalf) ? "En juego" : `${liveMinute(match.startedAt, now)}"`}
+                {(() => {
+                  const clock = matchClock(match, now, match.tournament?.minutesPerHalf);
+                  return clock.period === "descanso" ? "Descanso" : clock.stale ? "En juego" : `${clock.minute}"`;
+                })()}
               </span>
             )}
             {match.status === "finalizado" && (
@@ -184,6 +188,8 @@ export default function MatchDetailPage() {
           // partido "por definir"), así que acá homeTeam siempre existe.
           homeTeamId={match.homeTeam!.id}
           status={match.status === "en_curso" ? "en_vivo" : "finalizado"}
+          minutesPerHalf={match.tournament?.minutesPerHalf}
+          onBreak={match.status === "en_curso" && match.period === "descanso"}
         />
       )}
 

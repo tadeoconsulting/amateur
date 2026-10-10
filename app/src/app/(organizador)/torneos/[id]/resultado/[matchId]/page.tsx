@@ -30,6 +30,8 @@ type TimelineEvent = {
 };
 
 
+const HALFTIME_ROW: TimelineEvent = { minute: "HT", type: "halftime", title: "Descanso", description: "Fin del primer tiempo" };
+
 function formatMatchDate(dateStr: string) {
   const d = new Date(dateStr);
   const day = d.toLocaleDateString("es-PE", { weekday: "short", timeZone: "UTC" });
@@ -171,10 +173,10 @@ export default function ResultadoPage() {
       : []),
     ...reachedPhases.flatMap((phase, i): TimelineEvent[] => [
       ...(match.decisive && i > 0 ? [{ minute: "", type: "fase" as const, title: PHASE_LABELS[phase], description: "" }] : []),
-      ...eventsByPhase[phase].map((e): TimelineEvent => {
+      ...eventsByPhase[phase].flatMap((e, j, list): TimelineEvent[] => {
         const isAway = e.teamId === match.awayTeam?.id;
         const team = isAway ? match.awayTeam?.name ?? "Por definir" : match.homeTeam?.name ?? "Por definir";
-        return {
+        const row: TimelineEvent = {
           minute: `${e.minute}'`,
           type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
           title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
@@ -182,7 +184,12 @@ export default function ResultadoPage() {
           teamColor: (isAway ? match.awayTeam?.color : match.homeTeam?.color) ?? "#1B1B1B",
           detail: e.detail ?? undefined,
         };
+        // El descanso va entre la última jugada del primer tiempo y la primera del segundo.
+        const firstOfSecond = phase === "regulacion" && e.half === 2 && list[j - 1]?.half !== 2;
+        return firstOfSecond ? [HALFTIME_ROW, row] : [row];
       }),
+      // Si el segundo tiempo no tuvo jugadas, el descanso igual se muestra tras las del primero.
+      ...(phase === "regulacion" && match.firstHalfEndedAt && !eventsByPhase.regulacion.some((e) => e.half === 2) ? [HALFTIME_ROW] : []),
     ]),
     ...(match.status === "finalizado"
       ? [{
