@@ -100,3 +100,37 @@ test("un provisional solo está en un equipo: el mismo DNI en otro equipo es un 
   assert.equal(plan.create.length, 0);
   assert.match(plan.problems[0].reason, /solo está en uno/);
 });
+
+test("las filas pegadas desde una hoja (tabulaciones) se leen con su encabezado, en cualquier orden", async () => {
+  const { parseTable } = await import("../../src/_lib/provisional-import.ts");
+  const text = ["DNI\tNombres\tApellidos\tClub\tFecha de nacimiento", "10000001\tAna María\tNúñez Peña\tLGK\t1990-02-05", "10000002\tLuis\tPrueba Dos\tLGK\t15/02/1995"].join("\n");
+  const rows = parseTable(text);
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows[0], { dni: "10000001", nombres: "Ana María", apellidos: "Núñez Peña", club: "LGK", fechaNacimiento: "1990-02-05" });
+  assert.equal(rows[1].fechaNacimiento, "15/02/1995");
+});
+
+test("sin encabezado, las columnas van en el orden nombres, apellidos, club, DNI, fecha de nacimiento", async () => {
+  const { parseTable } = await import("../../src/_lib/provisional-import.ts");
+  const rows = parseTable("Ana María\tNúñez Peña\tLGK\t10000001\t1990-02-05\n\nLuis\tPrueba Dos\tLGK\t10000002\t1995-02-15\n");
+  assert.equal(rows.length, 2); // la línea en blanco no cuenta
+  assert.deepEqual(rows[0], { nombres: "Ana María", apellidos: "Núñez Peña", club: "LGK", dni: "10000001", fechaNacimiento: "1990-02-05" });
+});
+
+test("un CSV con ; o , y comillas también se lee, y un BOM de Excel no molesta", async () => {
+  const { parseTable } = await import("../../src/_lib/provisional-import.ts");
+  const semi = parseTable("﻿nombre;apellido;equipo;dni;nacimiento\nAna;Núñez;LGK;10000001;1990-02-05");
+  assert.deepEqual(semi, [{ nombres: "Ana", apellidos: "Núñez", club: "LGK", dni: "10000001", fechaNacimiento: "1990-02-05" }]);
+  const commas = parseTable('nombres,apellidos,club,dni,fecha de nacimiento\n"Ana, María",Núñez,LGK,10000001,1990-02-05');
+  assert.equal(commas[0].nombres, "Ana, María");
+  assert.equal(commas[0].dni, "10000001");
+});
+
+test("las filas pegadas pasan por la misma validación que el JSON", async () => {
+  const { parseTable } = await import("../../src/_lib/provisional-import.ts");
+  const rows = parseTable("nombres\tapellidos\tclub\tdni\tfechaNacimiento\nAna\tNúñez\tLGK\t10000001\t1990-02-05\nLuis\tDos\tLGK\t2000002\t1995-02-15");
+  const plan = run(rows);
+  assert.equal(plan.create.length, 1);
+  assert.equal(plan.problems.length, 1);
+  assert.match(plan.problems[0].reason, /7 dígitos.*0 al inicio/); // Excel suele quitar el cero inicial
+});

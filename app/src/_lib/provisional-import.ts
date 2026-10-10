@@ -75,6 +75,77 @@ export function matchClub(value: unknown, clubs: ClubRef[]): { club: ClubRef } |
   return { error: found.length === 0 ? "no_coincide" : "ambiguo" };
 }
 
+// ─── Filas pegadas desde una hoja de cálculo ───────────────────────────────
+
+const COLUMN_ALIASES: Record<keyof RawRow, string[]> = {
+  nombres: ["nombres", "nombre"],
+  apellidos: ["apellidos", "apellido"],
+  club: ["club", "equipo"],
+  dni: ["dni", "documento"],
+  fechaNacimiento: ["fechanacimiento", "fechadenacimiento", "nacimiento", "fecha"],
+};
+const POSITIONAL: (keyof RawRow)[] = ["nombres", "apellidos", "club", "dni", "fechaNacimiento"];
+
+const squash = (value: string) => normalizeText(value).replace(/[^a-z0-9]/g, "");
+
+/** Parte el texto en filas y celdas. Acepta comillas dobles (una celda puede traer el separador o un salto de línea). */
+function splitCells(text: string, delimiter: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === delimiter) {
+      row.push(cell);
+      cell = "";
+    } else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else cell += c;
+  }
+  row.push(cell);
+  rows.push(row);
+  return rows.map((r) => r.map((x) => x.trim())).filter((r) => r.some((x) => x !== ""));
+}
+
+/**
+ * Las filas de una hoja de cálculo copiadas y pegadas (separadas por tabulación, o `;` o `,` si es un CSV).
+ * La primera fila puede ser el encabezado (nombres, apellidos, club, DNI, fecha de nacimiento, en cualquier
+ * orden); si no hay encabezado, las columnas se leen en ese orden. Devuelve las filas en la misma forma que el
+ * JSON, para que `planImport` valide todo igual.
+ */
+export function parseTable(text: string): RawRow[] {
+  const clean = text.replace(/^\uFEFF/, "");
+  const firstLine = clean.split(/\r?\n/).find((l) => l.trim() !== "") ?? "";
+  // El separador es el que más aparece en la primera línea; la tabulación gana los empates (es lo que pega una hoja).
+  const delimiter = [",", ";", "\t"].reduce((best, d) => (firstLine.split(d).length >= firstLine.split(best).length ? d : best), "\t");
+  const table = splitCells(clean, delimiter);
+  if (table.length === 0) return [];
+
+  const header = table[0].map(squash);
+  const byColumn = (Object.keys(COLUMN_ALIASES) as (keyof RawRow)[]).map((key) => ({ key, index: header.findIndex((h) => COLUMN_ALIASES[key].includes(h)) }));
+  const hasHeader = byColumn.filter((c) => c.index >= 0).length >= 2;
+
+  const body = hasHeader ? table.slice(1) : table;
+  const columns = hasHeader ? byColumn.filter((c) => c.index >= 0) : POSITIONAL.map((key, index) => ({ key, index }));
+  return body.map((cells) => {
+    const row: RawRow = {};
+    for (const { key, index } of columns) if (cells[index] !== undefined && cells[index] !== "") row[key] = cells[index];
+    return row;
+  });
+}
+
 export function planImport(input: {
   rows: RawRow[];
   /** Club para las filas que no traen el suyo (el `equipo` del archivo). */
@@ -107,7 +178,10 @@ export function planImport(input: {
 
     if (!firstName) return fail("Falta el nombre (nombres)");
     if (!lastName) return fail("Faltan los apellidos");
-    if (!dni) return fail("El DNI debe tener 8 dígitos");
+    if (!dni) {
+      const digits = String(r.dni ?? "").trim();
+      return fail(/^\d{7}$/.test(digits) ? "El DNI tiene 7 dígitos: ¿la hoja le quitó un 0 al inicio? Debe tener 8" : "El DNI debe tener 8 dígitos");
+    }
     const birthDate = parseBirthDate(r.fechaNacimiento, today);
     if (!birthDate) return fail("La fecha de nacimiento no es válida (usa AAAA-MM-DD)");
 

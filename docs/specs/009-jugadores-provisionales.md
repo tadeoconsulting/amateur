@@ -22,14 +22,19 @@ Un `PlayerProfile` **sin cuenta**: `userId` vacío, con sus propios `firstName`,
 ## Entrega 1 · Cargar y ver goleadores (implementada)
 
 ### Cómo se carga
-`npm run db:cargar-jugadores -- --torneo organizador/torneo --archivo ruta.json [--aplicar]` (`prisma/cargar-jugadores.ts`).
-- **Sin `--aplicar` solo simula**: muestra la base a la que apunta (el servidor, sin contraseña), cuántos jugadores crearía por equipo, los ya cargados y los problemas, y no escribe nada.
-- **Con `--aplicar` guarda, pero solo si no hay ningún problema** (todo o nada); si hay, hay que corregir el archivo y volver a correr. **Correrlo dos veces no duplica** (lo ya cargado en ese equipo se omite).
-- **Archivo:** `{ "equipo": "LGK", "jugadores": [{ "nombres", "apellidos", "club", "dni", "fechaNacimiento" }] }` (o directamente la lista). El `club` de cada jugador (o el `equipo` del archivo si falta) se busca **entre los equipos inscritos en ese torneo**, por nombre o abreviatura, sin distinguir mayúsculas ni tildes.
-- **Validaciones** (cada una avisa la fila): nombres y apellidos no vacíos; DNI de 8 dígitos; fecha `AAAA-MM-DD` (o `DD/MM/AAAA`) de un día que existe, pasado y posterior a 1900; club que coincide con un solo equipo del torneo; **DNI repetido en el archivo** (se marcan todas sus filas); **DNI que ya tiene cuenta** (se avisa para vincularlo, no se duplica); **DNI ya cargado como provisional en otro equipo**.
-- **Lógica pura** en `src/_lib/provisional-import.ts` (con `tests/unit/provisional-import.test.mjs`); el script solo lee el archivo y la base.
-- **Datos personales:** el archivo trae DNIs y fechas de nacimiento (posiblemente de menores): se guarda **fuera del repositorio** o en `datos-privados/` (git lo ignora) y nunca se sube a GitHub.
-- **Producción:** el script se corre desde una terminal normal, con `set -a; . ./.env.local; set +a` para apuntar a Neon, y **después** de agregar las columnas (ver abajo).
+**Lo más simple: pegar las filas de la hoja de cálculo**, sin crear ningún archivo (así tampoco queda un archivo con DNIs en el disco). Se copian las filas de Excel o Google Sheets y se corre (`prisma/cargar-jugadores.ts`):
+
+`pbpaste | npm run db:cargar-jugadores -- --torneo organizador/torneo --archivo - [--aplicar]`
+
+También acepta un archivo (`--archivo ruta.csv` o `.json`).
+- **Filas:** nombres, apellidos, club, DNI y fecha de nacimiento. La primera fila puede ser el **encabezado** (en cualquier orden y con variantes: *Nombre*, *Equipo*, *Fecha de nacimiento*...); si no hay encabezado, las columnas se leen en ese orden. Separadas por tabulación (lo que pega una hoja), `;` o `,` (CSV, con comillas si hace falta). En el JSON: `{ "equipo": "LGK", "jugadores": [{ nombres, apellidos, club, dni, fechaNacimiento }] }` (o la lista).
+- **Sin `--aplicar` solo simula**: muestra la base a la que apunta (el servidor, sin contraseña), cuántas filas leyó, cuántos jugadores crearía por equipo, los ya cargados y los problemas, y no escribe nada.
+- **Con `--aplicar` guarda, pero solo si no hay ningún problema** (todo o nada); si hay, hay que corregir las filas y volver a correr. **Correrlo dos veces no duplica** (lo ya cargado en ese mismo equipo se omite).
+- El *club* de cada fila (o el `equipo` del JSON si falta) se busca **entre los equipos inscritos en ese torneo**, por nombre o abreviatura, sin distinguir mayúsculas ni tildes.
+- **Validaciones** (cada una avisa la fila, sin contar el encabezado): nombres y apellidos no vacíos; DNI de 8 dígitos (con 7 avisa que la hoja pudo quitar un 0 inicial: en la hoja, la columna del DNI debe tener formato *Texto*); fecha `AAAA-MM-DD` o `DD/MM/AAAA` (**día primero**; el resumen avisa cuántas filas usan esa forma) de un día que existe, pasado y posterior a 1900; club que coincide con un solo equipo del torneo; **DNI repetido en lo pegado** (se marcan todas sus filas); **DNI que ya tiene cuenta** (se avisa para vincularlo, no se duplica); **DNI ya cargado como provisional en otro equipo**.
+- **Lógica pura** en `src/_lib/provisional-import.ts` (`parseTable`, `planImport`; con `tests/unit/provisional-import.test.mjs`); el script solo lee la entrada y la base.
+- **Datos personales:** los DNIs y fechas de nacimiento (posiblemente de menores) **nunca van al repositorio** —ni en archivos, ni en pruebas, ni en la documentación—: las pruebas usan datos inventados. Si se usa un archivo, va fuera del repo o en `datos-privados/` (git lo ignora).
+- **Producción:** se corre desde una terminal normal, con `set -a; . ./.env.local; set +a`, y **después** de agregar las columnas (ver abajo) y de mergear el código.
 
 ### Qué cambia en la plataforma
 - **Base de datos:** `PlayerProfile.userId` pasa a ser opcional y se agregan `firstName`, `lastName`, `dni` (único) y `birthDate`. SQL para producción (se corre **antes** de mergear; el código anterior sigue funcionando con él):
@@ -56,6 +61,6 @@ Un `PlayerProfile` **sin cuenta**: `userId` vacío, con sus propios `firstName`,
 - **Pruebas:** la lógica pura del archivo (normalizar club, validar filas, detectar duplicados) y la unión de perfiles, con pruebas unitarias; el resto, a mano contra la base de pruebas.
 
 ## Preguntas resueltas
-- **Formato de la lista:** JSON, una fila por jugador (ver "Cómo se carga"); la fecha se acepta como AAAA-MM-DD o DD/MM/AAAA.
+- **Formato de la lista:** primero JSON; luego se pasó a **filas pegadas desde la hoja de cálculo** (más simple y sin archivos). La fecha se acepta como AAAA-MM-DD o DD/MM/AAAA.
 - **¿Un provisional en dos equipos?** No: un DNI, un equipo, hasta tener cuenta.
 - **La posición** no viene en la lista; se agrega después (un admin, hoy por `PATCH`) y recién entonces se muestra.
