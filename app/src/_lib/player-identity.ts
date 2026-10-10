@@ -51,3 +51,27 @@ export function compareByLastName(a: { lastName: string; firstName: string }, b:
 export function fullName(p: { firstName: string; lastName: string }) {
   return `${p.firstName} ${p.lastName}`.trim();
 }
+
+// ─── Cómo se ve el nombre de un jugador en lo público ──────────────────────
+// Un menor de 18 no se publica con su nombre completo: sale su primer nombre y la inicial de su primer apellido
+// ("Luigui Emmanuel Flores Medina" → "Luigui F."). Lo ven completo quienes gestionan al jugador: un admin, el
+// organizador del torneo y el delegado de su club. Un jugador sin fecha de nacimiento se trata como adulto: no hay
+// cómo saber otra cosa.
+
+/** ¿Es menor de 18 a la fecha `today` (YYYY-MM-DD)? Sin fecha de nacimiento, no. */
+export function isMinorOn(birthDate: Date | string | null | undefined, today: string): boolean {
+  if (!birthDate) return false;
+  const iso = typeof birthDate === "string" ? birthDate.slice(0, 10) : birthDate.toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const [by, bm, bd] = iso.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  return ty - by - (tm < bm || (tm === bm && td < bd) ? 1 : 0) < 18;
+}
+
+/** El nombre que sale en una pantalla pública: completo, o abreviado si es menor y quien mira no lo gestiona. */
+export function publicName(who: { firstName: string; lastName: string }, hide: boolean): string {
+  if (!hide) return fullName(who);
+  const first = who.firstName.trim().split(/\s+/)[0] ?? "";
+  const initial = who.lastName.trim().charAt(0).toUpperCase();
+  return [first, initial ? `${initial}.` : ""].filter(Boolean).join(" ");
+}

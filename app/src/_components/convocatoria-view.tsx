@@ -66,6 +66,8 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   const [resultadosTab, setResultadosTab] = useState<ResultadosSubTab>(() => (typeof window !== "undefined" ? (parseView(window.location.search).sub ?? "tabla") : "tabla"));
   const notify: Notify = (message, tone) => setToast({ message, tone });
 
+  // Cada equipo de las tablas lleva a su página dentro de este torneo.
+  const clubHref = (clubId: string) => `${publicPath}/equipo/${clubId}`;
   const matches = matchesData ?? [];
   const standings = standingsData ?? [];
   // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
@@ -267,7 +269,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {mainTab === "equipos" && (
           <div className="-mx-4">
-            <TeamsList teams={tournament.teams} standings={standings} />
+            <TeamsList teams={tournament.teams} standings={standings} clubHref={clubHref} />
           </div>
         )}
 
@@ -280,6 +282,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
               standings={standings}
               qualifyCount={llaves}
               hrefFor={(m) => `${publicPath}/partido/${m.id}`}
+              clubHref={clubHref}
               onViewFullTable={() => pickTab("resultados")}
             />
           </div>
@@ -302,11 +305,11 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             <div className="@2xl:grid @2xl:grid-cols-5 @2xl:items-start @2xl:gap-8">
               <div className={`mt-4 @2xl:col-span-3 ${resultadosTab === "tabla" ? "" : "hidden @2xl:block"}`}>
                 <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Posiciones</h2>
-                <StandingsTable standings={standings} qualifyCount={llaves} />
+                <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
               </div>
               <div className={`mt-4 @2xl:col-span-2 ${resultadosTab === "goleadores" ? "" : "hidden @2xl:block"}`}>
                 <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Goleadores</h2>
-                <ScorersList scorers={topScorers} />
+                <ScorersList scorers={topScorers} clubHref={clubHref} />
               </div>
             </div>
           </div>

@@ -1,9 +1,9 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, canManageMatch, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { changesScore, EVENT_TYPES, isEventType, statFor } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
-import { fullName, playerIdentity } from "@/_lib/player-identity";
+import { isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
 
 export async function GET(
   _request: NextRequest,
@@ -11,15 +11,21 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const events = await prisma.matchEvent.findMany({
-    where: { matchId: id },
-    include: {
-      player: {
-        include: { user: { select: { firstName: true, lastName: true } } },
-      },
-    },
-    orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
-  });
+  const [events, match, viewer] = await Promise.all([
+    prisma.matchEvent.findMany({
+      where: { matchId: id },
+      include: { player: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } } },
+      orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
+    }),
+    prisma.match.findUnique({
+      where: { id },
+      select: { tournament: { select: { organizerId: true } }, homeTeam: { select: { id: true, ownerId: true } }, awayTeam: { select: { id: true, ownerId: true } } },
+    }),
+    getCurrentUser(),
+  ]);
+  // Un menor de 18 sale abreviado ("Luigui F.") salvo para quien lo gestiona: un admin, el organizador del torneo o el delegado de su club.
+  const today = new Date().toISOString().slice(0, 10);
+  const ownerOf = (teamId: string | null) => (teamId && match?.homeTeam?.id === teamId ? match.homeTeam.ownerId : teamId && match?.awayTeam?.id === teamId ? match.awayTeam.ownerId : null);
 
   return Response.json(
     events.map((e) => ({
@@ -27,7 +33,13 @@ export async function GET(
       type: e.type,
       minute: e.minute,
       playerId: e.playerId,
-      playerName: e.player ? fullName(playerIdentity(e.player)) : null,
+      playerName: e.player
+        ? (() => {
+            const who = playerIdentity(e.player);
+            const manages = viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || viewer.id === ownerOf(e.teamId));
+            return publicName(who, !manages && isMinorOn(who.birthDate, today));
+          })()
+        : null,
       teamId: e.teamId,
       detail: e.detail,
       phase: e.phase,

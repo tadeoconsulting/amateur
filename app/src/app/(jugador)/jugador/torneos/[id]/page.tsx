@@ -15,7 +15,7 @@ import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { TeamsList } from "@/_components/teams-list";
 import { ShareViewButton } from "@/_components/share-view-button";
-import { tournamentPublicPath } from "@/_lib/slug";
+import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
 import { competitionView } from "@/_lib/share-view";
 
 const tabs = ["Partidos", "Llaves", "Tabla", "Goleadores", "Equipos"] as const;
@@ -148,6 +148,8 @@ export default function JugadorTorneoDetailPage() {
   const allMatches = matchesData ?? [];
   const standings = standingsData ?? [];
   const topScorers = scorersData ?? [];
+  // Cada equipo de las tablas lleva a su página dentro de este torneo.
+  const clubHref = tournamentDetail ? (clubId: string) => clubPublicPath({ id, slug: tournamentDetail.slug, organizerSlug: tournamentDetail.organizer.organizerSlug }, clubId) : undefined;
   // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
   const llaves = tournamentDetail?.format === "liga" ? (tournamentDetail.playoffTeams ?? null) : null;
 
@@ -219,6 +221,7 @@ export default function JugadorTorneoDetailPage() {
             bleed
             syncUrl
             hrefFor={(m) => `/jugador/torneos/${id}/partido/${m.id}`}
+            clubHref={clubHref}
             matches={allMatches}
             standings={standings}
             qualifyCount={llaves}
@@ -298,19 +301,19 @@ export default function JugadorTorneoDetailPage() {
 
         {shownTab === "Tabla" && (
           <div className="@4xl:mx-auto @4xl:max-w-4xl">
-            <StandingsTable standings={standings} qualifyCount={llaves} />
+            <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
           </div>
         )}
 
         {shownTab === "Goleadores" && (
           <div className="@4xl:mx-auto @4xl:max-w-3xl">
-            <ScorersList scorers={topScorers} />
+            <ScorersList scorers={topScorers} clubHref={clubHref} />
           </div>
         )}
 
         {shownTab === "Equipos" && (
           <div className="-mx-4">
-            <TeamsList teams={tournamentDetail?.teams ?? []} standings={standings} />
+            <TeamsList teams={tournamentDetail?.teams ?? []} standings={standings} clubHref={clubHref} />
           </div>
         )}
       </div>

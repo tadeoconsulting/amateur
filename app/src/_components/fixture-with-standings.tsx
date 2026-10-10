@@ -21,6 +21,7 @@ export function FixtureWithStandings({
   stickyTop = "@4xl:top-4",
   bleed = false,
   syncUrl,
+  clubHref,
 }: {
   matches: MatchListItem[];
   standings: StandingsRow[];
@@ -36,6 +37,8 @@ export function FixtureWithStandings({
   bleed?: boolean;
   /** Ver `FixtureTabs`: la fecha elegida en la URL. */
   syncUrl?: boolean;
+  /** Si se pasa, los equipos de la tabla llevan a su página. */
+  clubHref?: (clubId: string) => string;
 }) {
   return (
     <div className="@4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
@@ -45,7 +48,7 @@ export function FixtureWithStandings({
       {standings.length > 0 && (
         <aside aria-label="Posiciones" className={`hidden @4xl:sticky @4xl:block ${stickyTop} ${bleed ? "" : "@4xl:mr-4"}`}>
           <h2 className="mb-3 font-heading text-sm font-bold text-text-primary">Posiciones</h2>
-          <StandingsTable standings={standings} qualifyCount={qualifyCount} compact />
+          <StandingsTable standings={standings} qualifyCount={qualifyCount} compact clubHref={clubHref} />
           <button
             type="button"
             onClick={onViewFullTable}

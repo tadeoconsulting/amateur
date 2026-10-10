@@ -15,7 +15,7 @@ import { clubView } from "@/_lib/share-view";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
-import { tournamentPublicPath } from "@/_lib/slug";
+import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
 import { displayShortName } from "@/_lib/short-name";
 import { TeamsList } from "@/_components/teams-list";
 
@@ -60,6 +60,8 @@ export default function ClubTorneoDetallePage() {
   // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
   const llaves = tournament.format === "liga" ? (tournament.playoffTeams ?? null) : null;
   const topScorers = scorersData ?? [];
+  // Cada equipo de las tablas lleva a su página dentro de este torneo.
+  const clubHref = (clubId: string) => clubPublicPath({ id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug }, clubId);
   const finishedMatches = tournamentMatches.filter((m) => m.status === "finalizado");
   // "Próximos partidos" es del club logueado, no de todo el torneo — antes mostraba los
   // próximos partidos de CUALQUIER equipo. Incluye el que esté en vivo ahora mismo (si no,
@@ -173,6 +175,7 @@ export default function ClubTorneoDetallePage() {
                 standings={standings}
                 qualifyCount={llaves}
                 hrefFor={(m) => `/club/torneos/${id}/partido/${m.id}`}
+                clubHref={clubHref}
                 highlightClubId={club?.id}
                 onViewFullTable={() => {
                   setDetailTab("resultados");
@@ -196,7 +199,7 @@ export default function ClubTorneoDetallePage() {
               <p className="mt-4 px-4 font-body text-sm text-text-secondary">
                 {tournament._count.teams} equipos inscritos de {tournament.maxTeams} cupos.
               </p>
-              <TeamsList teams={tournament.teams} standings={standings} />
+              <TeamsList teams={tournament.teams} standings={standings} clubHref={clubHref} />
             </>
           )}
         </>
@@ -246,6 +249,7 @@ export default function ClubTorneoDetallePage() {
                 standings={standings}
                 qualifyCount={llaves}
                 hrefFor={(m) => `/club/torneos/${id}/partido/${m.id}`}
+                clubHref={clubHref}
                 highlightClubId={club?.id}
                 onViewFullTable={() => {
                   setDetailTab("resultados");
@@ -275,13 +279,13 @@ export default function ClubTorneoDetallePage() {
 
           {resultadosSubTab === "tabla" && (
             <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-4xl">
-              <StandingsTable standings={standings} qualifyCount={llaves} />
+              <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
             </div>
           )}
 
           {resultadosSubTab === "goleadores" && (
             <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
-              <ScorersList scorers={topScorers} />
+              <ScorersList scorers={topScorers} clubHref={clubHref} />
             </div>
           )}
         </>

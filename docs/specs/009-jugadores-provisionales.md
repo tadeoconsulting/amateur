@@ -135,6 +135,13 @@ ALTER TABLE "ProfileInvitation" ADD CONSTRAINT "ProfileInvitation_acceptedById_f
 
 **Verificado a mano** (base de pruebas): crear un enlace sin correo desde el panel y abrirlo sin sesión; DNI equivocado (avisa los intentos que quedan) y correcto; vinculación con rol agregado y DNI copiado; el enlace usado responde `410`; invitación con correo (se normaliza), reenviar (mismo enlace), cambiar el correo (el enlace viejo muere), correo inválido `400`; aceptar con otra cuenta `403` sin revelar el correo; bloqueo a los 5 intentos aun con el DNI correcto; caso *Por revisar* y su resolución con **Revisar y unir**; asignar a mano una cuenta cancela la invitación pendiente.
 
+## Página pública del club en un torneo (implementada) · menores abreviados
+Cada club tiene su propia página dentro de un torneo: `/{organizador}/{torneo}/equipo/{clubId}` (y `/convocatoria/{id}/equipo/{clubId}`, que redirige a la anterior). Es pública; muestra la **posición del club en la tabla** (solo su fila: lugar dentro de su grupo, puntos y PJ, con enlace a la tabla completa) y tres pestañas (`?pestana=`): **Partidos** (solo los del club), **Jugadores** (nombre, posición, número y goles) y **Resultados** (balance G-E-P y goles a favor/contra).
+- **Los clubes son clickeables** en la tabla de posiciones, la lista de equipos, los goleadores, el fixture, la ficha del partido (cabecera, "últimos partidos" y tarjetas del móvil) y en las pantallas con sesión (jugador, delegado y organizador).
+- **API pública:** `GET /api/tournaments/:id/teams/:clubId`. Lógica pura en `_lib/fixture.ts` (`clubRecord`, `clubStanding`) y `_lib/slug.ts` (`clubPublicPath`).
+- **Menores (regla b):** quien no es admin, organizador del torneo ni delegado del club ve a los **menores de 18** como *nombre + inicial del primer apellido* ("Luigui F."), sin foto. Se aplica en la página del club, en **goleadores** y en la **cronología del partido** (`isMinorOn` y `publicName` en `_lib/player-identity.ts`, con pruebas). Sin fecha de nacimiento se trata como adulto. El DNI y la fecha de nacimiento nunca son públicos.
+- Sin cambios en la base de datos.
+
 ## Lo que implica construir
 - **Base de datos:** `PlayerProfile.userId` pasa a ser opcional, más `firstName`, `lastName`, `dni`, `birthDate` (todas opcionales). Las columnas se agregan en producción **antes** de mergear (como `deletedAt`).
 - **Código:** hay lugares que asumen `perfil.user` (goleadores, jugadas, alineaciones, listas del club, tabla de equipos); pasarán a leer el nombre del perfil cuando no hay cuenta.

@@ -50,3 +50,8 @@ export function tournamentSlugBase(name: string): string {
 export function tournamentPublicPath(t: { id: string; slug?: string | null; organizerSlug?: string | null }): string {
   return t.slug && t.organizerSlug ? `/${t.organizerSlug}/${t.slug}` : `/convocatoria/${t.id}`;
 }
+
+/** La página pública de un club dentro de un torneo: `/{organizador}/{torneo}/equipo/{clubId}`. */
+export function clubPublicPath(t: { id: string; slug?: string | null; organizerSlug?: string | null }, clubId: string): string {
+  return `${tournamentPublicPath(t)}/equipo/${clubId}`;
+}

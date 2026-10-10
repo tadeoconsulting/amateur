@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ScorerRow, StandingsRow } from "@/_lib/api";
 import { displayShortName } from "@/_lib/short-name";
 import { ClubCrest } from "@/_components/club-crest";
@@ -17,7 +18,20 @@ import { PlayerAvatar } from "@/_components/player-avatar";
  * llaves, del 1.º al N.º va en verde y del N+1 en adelante en rojo; sin ellas, la marca de siempre
  * (1.º–2.º verde, 7.º en adelante rojo).
  */
-export function StandingsTable({ standings, qualifyCount, compact = false, highlightClubIds = [] }: { standings: StandingsRow[]; qualifyCount: number | null; compact?: boolean; highlightClubIds?: string[] }) {
+export function StandingsTable({
+  standings,
+  qualifyCount,
+  compact = false,
+  highlightClubIds = [],
+  clubHref,
+}: {
+  standings: StandingsRow[];
+  qualifyCount: number | null;
+  compact?: boolean;
+  highlightClubIds?: string[];
+  /** Si se pasa, el equipo de cada fila lleva a su página (partidos, jugadores y resultados). */
+  clubHref?: (clubId: string) => string;
+}) {
   const dot = (position: number) =>
     qualifyCount !== null
       ? position <= qualifyCount ? "bg-verification text-white" : "bg-error text-white"
@@ -46,10 +60,17 @@ export function StandingsTable({ standings, qualifyCount, compact = false, highl
                   <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${dot(row.position)}`}>{row.position}</div>
                 </td>
                 <td className="px-2 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <ClubCrest club={row} />
-                    <span className="truncate font-heading text-xs font-semibold text-text-primary">{displayShortName(row.shortName)}</span>
-                  </div>
+                  {clubHref ? (
+                    <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
+                      <ClubCrest club={row} />
+                      <span className="truncate font-heading text-xs font-semibold text-text-primary underline-offset-2 hover:underline">{displayShortName(row.shortName)}</span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <ClubCrest club={row} />
+                      <span className="truncate font-heading text-xs font-semibold text-text-primary">{displayShortName(row.shortName)}</span>
+                    </div>
+                  )}
                 </td>
                 <td className="px-2 py-2.5 text-center text-text-secondary">{row.played}</td>
                 {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>}
@@ -82,7 +103,7 @@ export function StandingsTable({ standings, qualifyCount, compact = false, highl
   );
 }
 
-export function ScorersList({ scorers }: { scorers: ScorerRow[] }) {
+export function ScorersList({ scorers, clubHref }: { scorers: ScorerRow[]; clubHref?: (clubId: string) => string }) {
   return (
     <div className="flex flex-col gap-2">
       {scorers.map((p, i) => (
@@ -98,7 +119,14 @@ export function ScorersList({ scorers }: { scorers: ScorerRow[] }) {
             <p className="font-heading text-sm font-bold text-text-primary">
               {p.firstName} {p.lastName}
             </p>
-            <p className="font-body text-xs text-text-secondary">{[p.clubName, p.playerPosition].filter(Boolean).join(" · ")}</p>
+            <p className="font-body text-xs text-text-secondary">
+              {clubHref && p.clubId ? (
+                <Link href={clubHref(p.clubId)} className="underline-offset-2 hover:text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-text-primary">{p.clubName}</Link>
+              ) : (
+                p.clubName
+              )}
+              {p.playerPosition ? ` · ${p.playerPosition}` : ""}
+            </p>
           </div>
           <div className="flex items-center gap-1">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary" aria-hidden="true">

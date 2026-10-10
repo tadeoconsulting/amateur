@@ -21,18 +21,21 @@ export function ShareViewButton({
   publicPath,
   view,
   search,
+  fixedUrl,
   variant = "ghost",
 }: {
   title: string;
   publicPath: string;
   view: ShareView;
   search?: string;
+  /** Comparte exactamente este enlace (con `?pestana=...`, por ejemplo), en vez de armarlo con la vista del torneo. */
+  fixedUrl?: () => string;
   variant?: "ghost" | "solid";
 }) {
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   async function share() {
-    const url = shareUrl(window.location.origin, publicPath, search ?? window.location.search, view);
+    const url = fixedUrl ? fixedUrl() : shareUrl(window.location.origin, publicPath, search ?? window.location.search, view);
     const result = await shareLink({ title, text: `Mira ${title} en Amateur`, url });
     if (result === "copied") setToast({ message: "Enlace copiado. Pégalo donde quieras compartirlo.", tone: "success" });
     if (result === "failed") setToast({ message: "No se pudo copiar el enlace. Cópialo de la barra de direcciones.", tone: "error" });

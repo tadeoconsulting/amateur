@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMatches, type MatchEventItem, type MatchListItem } from "@/_lib/api";
 import { roundLabel } from "@/_lib/fixture";
+import { clubPublicPath } from "@/_lib/slug";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
 import { isStale, liveMinute } from "@/_lib/match-live";
 import { useApi } from "@/_lib/use-api";
@@ -91,6 +92,9 @@ export function MatchDetail({
   const back = typeof backHref === "string" ? backHref : backHref(match);
   const finished = match.status === "finalizado";
   const scheduled = match.status === "programado";
+  // Cada equipo lleva a su página en este torneo (si el partido trae los datos del torneo para armar el enlace).
+  const clubLink = (clubId: string | undefined) =>
+    clubId && match.tournament?.organizer ? clubPublicPath({ id: match.tournamentId, slug: match.tournament.slug, organizerSlug: match.tournament.organizer.organizerSlug }, clubId) : undefined;
   const stale = live && isStale(match.startedAt, now, match.tournament?.minutesPerHalf);
   // La tanda de penales no es una jugada de un jugador: se resume aparte, junto al marcador.
   const plays = (events ?? []).filter((e) => e.type === "gol" || e.type === "tarjeta_amarilla" || e.type === "tarjeta_roja");
@@ -155,10 +159,7 @@ export function MatchDetail({
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <div className="flex flex-col items-center gap-2">
-            <ClubCrest club={match.homeTeam} size="h-12 w-12" textSize="text-xs" />
-            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.homeTeam?.name ?? "Por definir"}</span>
-          </div>
+          <TeamCard team={match.homeTeam} href={clubLink(match.homeTeam?.id)} />
 
           <div className="flex items-center gap-3 font-heading tabular-nums">
             {scheduled ? (
@@ -172,10 +173,7 @@ export function MatchDetail({
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-2">
-            <ClubCrest club={match.awayTeam} size="h-12 w-12" textSize="text-xs" />
-            <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{match.awayTeam?.name ?? "Por definir"}</span>
-          </div>
+          <TeamCard team={match.awayTeam} href={clubLink(match.awayTeam?.id)} />
         </div>
 
         {byPenalties && (
@@ -260,4 +258,21 @@ function BracketRound({ match }: { match: MatchListItem }) {
   const { data: matches } = useApi(() => getMatches({ tournamentId: match.tournamentId }));
   const rounds = (matches ?? []).filter((m) => m.decisive).map((m) => m.matchday);
   return <>{roundLabel(match.matchday, rounds.length ? Math.max(...rounds) : match.matchday)}</>;
+}
+
+/** El escudo y el nombre de un equipo en la tarjeta del partido (celular): un enlace a su página si se conoce. */
+function TeamCard({ team, href }: { team: MatchListItem["homeTeam"]; href?: string }) {
+  const inner = (
+    <>
+      <ClubCrest club={team} size="h-12 w-12" textSize="text-xs" />
+      <span className="max-w-[80px] text-center font-body text-xs text-text-primary">{team?.name ?? "Por definir"}</span>
+    </>
+  );
+  return href ? (
+    <Link href={href} aria-label={`Ver a ${team?.name}`} className="flex min-h-11 flex-col items-center gap-2 rounded-lg p-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
+      {inner}
+    </Link>
+  ) : (
+    <div className="flex flex-col items-center gap-2 p-1">{inner}</div>
+  );
 }
