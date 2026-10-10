@@ -1,7 +1,59 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageClub, canManageTournament, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, canManageClub, canManageTournament, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { compareByLastName, isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
 import { OPEN_STATUSES } from "@/_lib/tournament-labels";
+
+/**
+ * La página pública de un club dentro de un torneo (`/{organizador}/{torneo}/equipo/{club}`): el club, su grupo y su
+ * plantilla con los goles que lleva en este torneo. Público: nada de contacto del delegado, y de los jugadores solo
+ * el nombre, la posición, el número y los goles —nunca el DNI ni la fecha de nacimiento—. Un menor de 18 sale con su
+ * primer nombre y la inicial de su apellido ("Luigui F."), salvo para quien lo gestiona (un admin, el organizador del
+ * torneo o el delegado del club), que lo ve completo. Los partidos y la tabla salen de sus lecturas públicas de siempre.
+ */
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string; clubId: string }> }) {
+  const { id, clubId } = await params;
+
+  const enrollment = await prisma.tournamentTeam.findFirst({
+    where: { tournamentId: id, clubId, tournament: { deletedAt: null } },
+    select: {
+      groupName: true,
+      club: { select: { id: true, name: true, shortName: true, logoUrl: true, color: true, ownerId: true } },
+      tournament: { select: { id: true, name: true, format: true, playoffTeams: true, slug: true, organizerId: true, organizer: { select: { organizerSlug: true } } } },
+    },
+  });
+  if (!enrollment) return Response.json({ error: "Este equipo no juega en este torneo" }, { status: 404 });
+  const { club, tournament } = enrollment;
+
+  const viewer = await getCurrentUser();
+  const seesFull = viewer !== null && (isAdmin(viewer) || viewer.id === tournament.organizerId || viewer.id === club.ownerId);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const profiles = await prisma.playerProfile.findMany({
+    where: { clubId, status: { notIn: ["en_espera", "inactivo"] } },
+    include: {
+      user: { select: { firstName: true, lastName: true, birthDate: true } },
+      stats: { where: { tournamentId: id }, select: { goals: true } },
+    },
+  });
+  const players = profiles
+    .map((p) => ({ p, who: playerIdentity(p) }))
+    .sort((a, b) => compareByLastName(a.who, b.who))
+    .map(({ p, who }) => ({
+      id: p.id,
+      name: publicName(who, !seesFull && isMinorOn(who.birthDate, today)),
+      position: p.position,
+      number: p.number,
+      goals: p.stats.reduce((sum, s) => sum + s.goals, 0),
+    }));
+
+  return Response.json({
+    club: { id: club.id, name: club.name, shortName: club.shortName, logoUrl: club.logoUrl, color: club.color },
+    groupName: enrollment.groupName,
+    tournament: { id: tournament.id, name: tournament.name, format: tournament.format, playoffTeams: tournament.playoffTeams, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug },
+    players,
+  });
+}
 
 /**
  * Asigna (o quita) el grupo de un equipo ya inscrito — lo pide el formato "grupos" (y la fase

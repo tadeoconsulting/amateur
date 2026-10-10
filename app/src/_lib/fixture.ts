@@ -632,3 +632,49 @@ export function withTabParam(search: string, key: string | null): string {
 export function tabKeyOfMatch(match: { decisive: boolean; matchday: number }): string {
   return `${match.decisive ? "r" : "f"}${match.matchday}`;
 }
+
+// ─── La página de un club en un torneo ─────────────────────────────────────
+
+export type ClubRecord = { played: number; won: number; drawn: number; lost: number; goalsFor: number; goalsAgainst: number; goalDifference: number };
+
+/**
+ * Cómo le fue a un club en el torneo: todos sus partidos finalizados con marcador, también los del cuadro de
+ * eliminación (la tabla de posiciones no los cuenta; esto sí). Un partido decisivo empatado se resuelve por
+ * quien avanzó, igual que en `teamForm`. Los goles son los del marcador, sin los penales.
+ */
+export function clubRecord(matches: FormMatch[], clubId: string): ClubRecord {
+  const rec: ClubRecord = { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 };
+  for (const m of matches) {
+    if (m.status !== "finalizado" || m.homeScore === null || m.awayScore === null) continue;
+    const home = m.homeTeam?.id === clubId;
+    if (!home && m.awayTeam?.id !== clubId) continue;
+    const gf = home ? m.homeScore : m.awayScore;
+    const ga = home ? m.awayScore : m.homeScore;
+    rec.played++;
+    rec.goalsFor += gf;
+    rec.goalsAgainst += ga;
+    if (gf === ga && m.decisive && m.winnerTeamId) {
+      if (m.winnerTeamId === clubId) rec.won++;
+      else rec.lost++;
+    } else if (gf > ga) rec.won++;
+    else if (gf < ga) rec.lost++;
+    else rec.drawn++;
+  }
+  rec.goalDifference = rec.goalsFor - rec.goalsAgainst;
+  return rec;
+}
+
+export type ClubStanding = { rank: number; total: number; groupName: string | null; points: number; played: number };
+
+/**
+ * El puesto de un club en la tabla del torneo. Con grupos (copa) el puesto cuenta dentro de su grupo: la tabla
+ * viene mezclada, y un "1.º" de otro grupo no dice nada. `null` si el club no está en la tabla (por ejemplo,
+ * en un torneo de eliminación directa, que no tiene).
+ */
+export function clubStanding(standings: { clubId: string; groupName: string | null; position: number; points: number; played: number }[], clubId: string): ClubStanding | null {
+  const row = standings.find((s) => s.clubId === clubId);
+  if (!row) return null;
+  if (row.groupName === null) return { rank: row.position, total: standings.filter((s) => s.groupName === null).length, groupName: null, points: row.points, played: row.played };
+  const group = standings.filter((s) => s.groupName === row.groupName);
+  return { rank: group.findIndex((s) => s.clubId === clubId) + 1, total: group.length, groupName: row.groupName, points: row.points, played: row.played };
+}

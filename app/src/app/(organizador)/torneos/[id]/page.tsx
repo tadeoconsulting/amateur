@@ -30,7 +30,7 @@ import { MatchEditor } from "./_components/match-editor";
 import { TeamsList } from "@/_components/teams-list";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
-import { tournamentPublicPath } from "@/_lib/slug";
+import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores" | "equipos";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
@@ -39,7 +39,7 @@ type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
  * verde los primeros N puestos (por eso la posición es la del `rows` recibido, no la global de
  * `row.position`, que en un torneo con grupos mezcla los grupos — ver el comentario en
  * `_lib/standings.ts`); `showDescends` solo tiene sentido en una liga de tabla única. */
-function StandingsTable({ rows, advanceCount, showDescends, restOut = false }: { rows: StandingsRow[]; advanceCount: number; showDescends: boolean; restOut?: boolean }) {
+function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clubHref }: { rows: StandingsRow[]; advanceCount: number; showDescends: boolean; restOut?: boolean; clubHref: (clubId: string) => string }) {
   return (
     <div className="overflow-hidden rounded-xl border border-brand-200">
       <table className="w-full text-left text-sm">
@@ -74,10 +74,10 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false }: {
                   </div>
                 </td>
                 <td className="px-1 py-2.5">
-                  <div className="flex items-center gap-2">
+                  <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
                     <ClubCrest club={row} size="h-6 w-6" />
-                    <span className="truncate text-xs font-medium text-text-primary">{row.clubName}</span>
-                  </div>
+                    <span className="truncate text-xs font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
+                  </Link>
                 </td>
                 <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.played}</td>
                 <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.won}</td>
@@ -217,6 +217,8 @@ export default function TournamentDetailPage() {
   }
 
   const pendingRequests = (requests ?? []).filter((r) => r.kind === "request" && r.status === "pending").length;
+  // Cada equipo de las tablas lleva a su página pública dentro de este torneo.
+  const clubHref = (clubId: string) => clubPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug }, clubId);
   const isConvocatoria = tournament.status === "inscripcion";
   const badge = statusLabel(tournament.status);
   const matches = tournamentMatches || [];
@@ -518,6 +520,7 @@ export default function TournamentDetailPage() {
           {/* La tabla al lado solo si es una sola tabla: con grupos (copa) una lista mezclada no dice quién clasifica. */}
           <FixtureWithStandings
             syncUrl
+            clubHref={clubHref}
             matches={matches}
             standings={(standings ?? []).some((r) => r.groupName) ? [] : (standings ?? [])}
             qualifyCount={tournament.format === "liga" ? tournament.playoffTeams : null}
@@ -568,10 +571,10 @@ export default function TournamentDetailPage() {
               ? [...byGroup.entries()].map(([groupName, rows]) => (
                   <div key={groupName}>
                     <h3 className="mb-2 font-heading text-sm font-bold text-text-primary">{groupName || "Sin grupo"}</h3>
-                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} />
+                    <StandingsTable rows={rows} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} clubHref={clubHref} />
                   </div>
                 ))
-              : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} />}
+              : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} clubHref={clubHref} />}
             <div className="flex items-center gap-4 px-1">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-verification" />
@@ -588,7 +591,7 @@ export default function TournamentDetailPage() {
         );
       })()}
 
-      {!isConvocatoria && shownTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} showDelegate />}
+      {!isConvocatoria && shownTab === "equipos" && <TeamsList teams={tournament.teams} standings={standings ?? []} showDelegate clubHref={clubHref} />}
 
       {!isConvocatoria && shownTab === "goleadores" && scorers && (
         <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
@@ -612,7 +615,9 @@ export default function TournamentDetailPage() {
                         <span>{p.firstName} {p.lastName}</span>
                       </div>
                     </td>
-                    <td className="px-2 py-2.5 text-xs text-text-secondary">{p.clubName}</td>
+                    <td className="px-2 py-2.5 text-xs text-text-secondary">
+                      {p.clubId ? <Link href={clubHref(p.clubId)} className="underline-offset-2 hover:text-text-primary hover:underline">{p.clubName}</Link> : p.clubName}
+                    </td>
                     <td className="px-2 py-2.5 pr-3 text-center text-xs font-bold text-text-primary">{p.goals}</td>
                   </tr>
                 ))}

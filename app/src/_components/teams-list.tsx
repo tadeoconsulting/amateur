@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ClubCrest } from "@/_components/club-crest";
 import type { StandingsRow, TournamentDetail } from "@/_lib/api";
 
@@ -11,10 +12,13 @@ export function TeamsList({
   teams,
   standings,
   showDelegate = false,
+  clubHref,
 }: {
   teams: TournamentDetail["teams"];
   standings: StandingsRow[];
   showDelegate?: boolean;
+  /** Si se pasa, cada equipo lleva a su página (partidos, jugadores y resultados). */
+  clubHref?: (clubId: string) => string;
 }) {
   const byClub = new Map(standings.map((s) => [s.clubId, s]));
   const rows = [...teams].sort((a, b) => a.club.name.localeCompare(b.club.name, "es"));
@@ -41,18 +45,37 @@ export function TeamsList({
                 : "Sin delegado";
           const subtitle = [team.groupName, who].filter(Boolean).join(" · ");
           return (
-            <li key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
-              <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
-                {subtitle && <p className="mt-0.5 truncate font-body text-xs text-text-secondary">{subtitle}</p>}
-              </div>
-              {s && (
-                <div className="shrink-0 text-right">
-                  <p className="font-heading text-sm font-bold text-text-primary">{s.points} pts</p>
-                  <p className="font-body text-xs text-text-secondary">{s.played} PJ</p>
-                </div>
-              )}
+            <li key={team.id} className="border-b border-brand-200 last:border-0">
+              {(() => {
+                const content = (
+                  <>
+                    <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
+                      {subtitle && <p className="mt-0.5 truncate font-body text-xs text-text-secondary">{subtitle}</p>}
+                    </div>
+                    {s && (
+                      <div className="shrink-0 text-right">
+                        <p className="font-heading text-sm font-bold text-text-primary">{s.points} pts</p>
+                        <p className="font-body text-xs text-text-secondary">{s.played} PJ</p>
+                      </div>
+                    )}
+                    {clubHref && (
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" className="shrink-0 text-text-secondary" aria-hidden="true">
+                        <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </>
+                );
+                const row = "flex items-center gap-3 py-3.5";
+                return clubHref ? (
+                  <Link href={clubHref(team.club.id)} className={`${row} -mx-2 rounded-lg px-2 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary`}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div className={row}>{content}</div>
+                );
+              })()}
             </li>
           );
         })}

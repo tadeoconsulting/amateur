@@ -67,3 +67,40 @@ test("cada partido sabe en qué pestaña del fixture está (para volver a ella d
   assert.ok(matches.every((x) => keys.includes(tabKeyOfMatch(x))));
   assert.equal(tabKeyFromSearch(`?${withTabParam("vista=fixture", tabKeyOfMatch(matches[1]))}`), "r1");
 });
+
+test("cómo le fue a un club: todos sus partidos jugados, y el empate de un cruce se resuelve por quien avanzó", async () => {
+  const { clubRecord } = await import("../../src/_lib/fixture.ts");
+  const t = (id) => ({ id });
+  const g = (id, h, a, hs, as, over = {}) => ({ id, status: "finalizado", date: "2026-10-10T00:00:00.000Z", time: "10:00", homeTeam: t(h), awayTeam: t(a), homeScore: hs, awayScore: as, decisive: false, winnerTeamId: null, ...over });
+  const matches = [
+    g("1", "A", "B", 2, 0), // gana A
+    g("2", "C", "A", 1, 1), // empata A
+    g("3", "A", "D", 0, 3), // pierde A
+    g("4", "A", "E", 1, 1, { decisive: true, winnerTeamId: "A" }), // empate en un cruce: avanzó A -> ganó
+    g("5", "F", "A", 2, 2, { decisive: true, winnerTeamId: "F" }), // avanzó F -> perdió A
+    g("6", "A", "G", null, null, { status: "programado" }), // no cuenta
+    g("7", "B", "C", 5, 0), // ni lo mira
+  ];
+  assert.deepEqual(clubRecord(matches, "A"), { played: 5, won: 2, drawn: 1, lost: 2, goalsFor: 6, goalsAgainst: 7, goalDifference: -1 });
+  assert.equal(clubRecord(matches, "Z").played, 0);
+});
+
+test("el puesto de un club en la tabla: global, o dentro de su grupo si el torneo tiene grupos", async () => {
+  const { clubStanding } = await import("../../src/_lib/fixture.ts");
+  const liga = [
+    { clubId: "A", groupName: null, position: 1, points: 9, played: 3 },
+    { clubId: "B", groupName: null, position: 2, points: 6, played: 3 },
+    { clubId: "C", groupName: null, position: 3, points: 1, played: 3 },
+  ];
+  assert.deepEqual(clubStanding(liga, "B"), { rank: 2, total: 3, groupName: null, points: 6, played: 3 });
+  // con grupos la tabla viene mezclada: el puesto se cuenta dentro del grupo
+  const copa = [
+    { clubId: "A", groupName: "Grupo A", position: 1, points: 9, played: 3 },
+    { clubId: "X", groupName: "Grupo B", position: 2, points: 7, played: 3 },
+    { clubId: "B", groupName: "Grupo A", position: 3, points: 4, played: 3 },
+    { clubId: "Y", groupName: "Grupo B", position: 4, points: 2, played: 3 },
+  ];
+  assert.deepEqual(clubStanding(copa, "B"), { rank: 2, total: 2, groupName: "Grupo A", points: 4, played: 3 });
+  assert.deepEqual(clubStanding(copa, "Y"), { rank: 2, total: 2, groupName: "Grupo B", points: 2, played: 3 });
+  assert.equal(clubStanding(liga, "ZZ"), null); // sin tabla (eliminación directa), no hay puesto
+});

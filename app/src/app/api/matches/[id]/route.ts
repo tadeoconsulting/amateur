@@ -19,7 +19,7 @@ export async function GET(
       homeTeam: { select: CLUB_REF_SELECT },
       awayTeam: { select: CLUB_REF_SELECT },
       events: { orderBy: [{ minute: "asc" }, { createdAt: "asc" }] },
-      tournament: { select: { id: true, name: true, format: true, minutesPerHalf: true, extraTimeMinutes: true } },
+      tournament: { select: { id: true, name: true, format: true, minutesPerHalf: true, extraTimeMinutes: true, slug: true, organizer: { select: { organizerSlug: true } } } },
     },
   });
 

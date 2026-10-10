@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { getMatches, getStandings, getTournament, type MatchListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { teamForm, roundLabel, type FormEntry } from "@/_lib/fixture";
+import { clubPublicPath } from "@/_lib/slug";
 import { formatTime12, formatWhen, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { useMediaQuery } from "@/_lib/use-media-query";
 import { ClubCrest } from "@/_components/club-crest";
@@ -65,6 +66,8 @@ export function MatchSheet({
   const phase = match.decisive ? roundLabel(match.matchday, rounds.length ? Math.max(...rounds) : match.matchday) : `Fecha ${match.matchday}`;
   const qualifyCount = tournament?.format === "liga" ? (tournament.playoffTeams ?? null) : null;
   const showTable = tournament?.format === "liga" && (standings?.length ?? 0) > 0;
+  // El equipo lleva a su página dentro de este torneo (partidos, jugadores y resultados).
+  const clubHref = tournament ? (id: string) => clubPublicPath({ id: tournament.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug }, id) : undefined;
 
   return (
     <div className="px-4 pb-10 pt-4">
@@ -86,7 +89,7 @@ export function MatchSheet({
         </div>
         <div aria-hidden="true" className="absolute inset-0 bg-black/55" />
         <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-10 py-10">
-          <TeamBlock team={home} />
+          <TeamBlock team={home} href={home && clubHref ? clubHref(home.id) : undefined} />
           <div className="flex min-w-40 flex-col items-center gap-2">
             <p className="font-body text-xs text-white/80">{phase}</p>
             <div className="rounded-2xl bg-surface-secondary px-7 py-3 text-center font-heading font-bold tabular-nums text-text-invert">
@@ -118,7 +121,7 @@ export function MatchSheet({
               </p>
             )}
           </div>
-          <TeamBlock team={away} />
+          <TeamBlock team={away} href={away && clubHref ? clubHref(away.id) : undefined} />
         </div>
       </section>
 
@@ -132,8 +135,8 @@ export function MatchSheet({
             </h2>
             <p className="mt-0.5 font-body text-xs text-text-secondary">Últimos 5 partidos del torneo, de izquierda a derecha.</p>
             <div className="mt-4 flex flex-col gap-5">
-              <FormRow team={home} entries={home ? teamForm(matches ?? [], home.id, match) : []} loading={!matches} />
-              <FormRow team={away} entries={away ? teamForm(matches ?? [], away.id, match) : []} loading={!matches} />
+              <FormRow team={home} entries={home ? teamForm(matches ?? [], home.id, match) : []} loading={!matches} href={home && clubHref ? clubHref(home.id) : undefined} />
+              <FormRow team={away} entries={away ? teamForm(matches ?? [], away.id, match) : []} loading={!matches} href={away && clubHref ? clubHref(away.id) : undefined} />
             </div>
           </section>
 
@@ -142,7 +145,7 @@ export function MatchSheet({
               <h2 id="tabla-titulo" className="mb-3 font-heading text-sm font-bold text-text-primary">
                 Posiciones
               </h2>
-              <StandingsTable standings={standings ?? []} qualifyCount={qualifyCount} compact highlightClubIds={[home?.id, away?.id].filter((x): x is string => !!x)} />
+              <StandingsTable standings={standings ?? []} qualifyCount={qualifyCount} compact highlightClubIds={[home?.id, away?.id].filter((x): x is string => !!x)} clubHref={clubHref} />
             </section>
           )}
 
@@ -163,14 +166,22 @@ export function MatchSheet({
   );
 }
 
-function TeamBlock({ team }: { team: MatchListItem["homeTeam"] }) {
-  return (
-    <div className="flex min-w-0 flex-col items-center gap-3 text-center">
+function TeamBlock({ team, href }: { team: MatchListItem["homeTeam"]; href?: string }) {
+  const inner = (
+    <>
       <span className="rounded-full bg-white p-1">
         <ClubCrest club={team} size="h-20 w-20" textSize="text-lg" />
       </span>
       <p className="max-w-full font-heading text-xl font-bold leading-tight">{team?.name ?? UNSCHEDULED_LABEL}</p>
-    </div>
+    </>
+  );
+  const box = "flex min-w-0 flex-col items-center gap-3 text-center";
+  return href ? (
+    <Link href={href} aria-label={`Ver a ${team?.name}`} className={`${box} rounded-xl p-2 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={box}>{inner}</div>
   );
 }
 
@@ -180,13 +191,20 @@ const RESULT_STYLE: Record<FormEntry["result"], { chip: string; label: string }>
   P: { chip: "bg-error text-white", label: "Perdió" },
 };
 
-function FormRow({ team, entries, loading }: { team: MatchListItem["homeTeam"]; entries: FormEntry[]; loading: boolean }) {
+export function FormRow({ team, entries, loading, href }: { team: MatchListItem["homeTeam"]; entries: FormEntry[]; loading: boolean; href?: string }) {
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
-        <ClubCrest club={team} size="h-6 w-6" textSize="text-[9px]" />
-        <span className="truncate font-heading text-xs font-bold text-text-primary">{team?.name ?? UNSCHEDULED_LABEL}</span>
-      </div>
+      {href ? (
+        <Link href={href} className="mb-2 flex w-fit max-w-full items-center gap-2 rounded hover:underline focus-visible:outline-2 focus-visible:outline-text-primary">
+          <ClubCrest club={team} size="h-6 w-6" textSize="text-[9px]" />
+          <span className="truncate font-heading text-xs font-bold text-text-primary">{team?.name ?? UNSCHEDULED_LABEL}</span>
+        </Link>
+      ) : (
+        <div className="mb-2 flex items-center gap-2">
+          <ClubCrest club={team} size="h-6 w-6" textSize="text-[9px]" />
+          <span className="truncate font-heading text-xs font-bold text-text-primary">{team?.name ?? UNSCHEDULED_LABEL}</span>
+        </div>
+      )}
       {entries.length === 0 ? (
         <p className="font-body text-xs text-text-secondary">{loading ? "Cargando..." : "Todavía no jugó."}</p>
       ) : (

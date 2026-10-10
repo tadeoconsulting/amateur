@@ -113,7 +113,7 @@ export interface MatchListItem {
   awayTeam: MatchTeamRef;
   _count: { events: number };
   /** Solo viene en GET /api/matches (la lista), no en el detalle de un partido. */
-  tournament?: { id: string; name: string; minutesPerHalf: number | null; logoUrl?: string | null };
+  tournament?: { id: string; name: string; minutesPerHalf: number | null; logoUrl?: string | null; slug?: string | null; organizer?: { organizerSlug: string | null } };
   // ─── Cuadro de eliminación (especificación 007) ───
   /** ¿Este partido es parte de un cuadro de eliminación? Si no, siempre admite empate. */
   decisive: boolean;
@@ -165,6 +165,8 @@ export interface StandingsRow {
 export interface ScorerRow {
   position: number;
   playerId: string;
+  /** Su club (para enlazar a su página); null si ya no tiene. */
+  clubId: string | null;
   firstName: string;
   lastName: string;
   avatarUrl: string | null;
@@ -265,6 +267,22 @@ export function getMatches(params?: Record<string, string>) {
 
 export function getStandings(tournamentId: string) {
   return fetcher<StandingsRow[]>(`/api/tournaments/${tournamentId}/standings`);
+}
+
+/** La página pública de un club dentro de un torneo (`GET /api/tournaments/:id/teams/:clubId`). */
+export interface ClubInTournament {
+  club: { id: string; name: string; shortName: string; logoUrl: string | null; color: string | null };
+  groupName: string | null;
+  tournament: { id: string; name: string; format: string; playoffTeams: number | null; slug: string | null; organizerSlug: string | null };
+  /** `name` ya viene listo para mostrar: un menor de 18 sale abreviado ("Luigui F."). */
+  players: { id: string; name: string; position: string | null; number: number | null; goals: number }[];
+}
+
+export async function getClubInTournament(tournamentId: string, clubId: string): Promise<ClubInTournament | null> {
+  const res = await fetch(`/api/tournaments/${tournamentId}/teams/${clubId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
 }
 
 export function getScorers(tournamentId: string) {
