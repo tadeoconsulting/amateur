@@ -80,7 +80,7 @@ Implementa el ADR de `docs/arquitectura.md` §7-9 (SSE conceptualmente; en la pr
 - **Sin descanso ni pausa:** el cronómetro corre continuo desde `startedAt`. La duración prevista es solo una guía visual.
 - **El minuto de una jugada no se edita** (sale del reloj). Desde la pantalla solo se deshace la **última** jugada.
 - **El cambio no registra jugadores** (la pantalla no envía `detail` ni quién entra o sale).
-- **Un equipo temporal no tiene jugadores**, así que sus jugadas se registran sin jugador.
+- **Un equipo temporal no tiene jugadores** salvo que un admin cargue **jugadores provisionales** (especificación [009](009-jugadores-provisionales.md)); sin ellos, sus jugadas se registran sin jugador.
 - **El tiempo real solo llega a las fichas del partido** (`/torneos/:id/partidos/:matchId` del organizador y la ficha de lectura de fan, jugador y club). Las demás pantallas (previa, en vivo del organizador, tabla de posiciones, goleadores, lista de partidos) siguen viendo el estado solo al abrir o recargar. Ver "Tiempo real" más abajo.
 - El cronómetro usa el reloj del navegador contra un `startedAt` del servidor: un reloj desajustado se nota.
 - **El tiempo real no avisa cuando un ganador avanza al siguiente partido del cuadro,** ni a quien mira la tabla de posiciones o los goleadores: hay que recargar esas pantallas.

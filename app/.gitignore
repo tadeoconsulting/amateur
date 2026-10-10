@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# datos personales (DNI, fechas de nacimiento) para cargas puntuales: nunca al repositorio
+/datos-privados/

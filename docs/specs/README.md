@@ -16,6 +16,7 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [006-solicitudes-de-equipos.md](006-solicitudes-de-equipos.md) | Solicitudes e invitaciones de equipos a un torneo, alta de club y convocatoria pública |
 | [007-fixture-eliminacion-copa-relampago.md](007-fixture-eliminacion-copa-relampago.md) | Cuadro de eliminación, Copa (grupos + cuadro) y Relámpago, con tiempo extra y penales. API y pantallas implementadas |
 | [008-observaciones-octubre-2026.md](008-observaciones-octubre-2026.md) | Seis observaciones del organizador y el admin (octubre 2026): llaves para liga, partidos por torneo y fecha, editar por pestañas, sedes que se propagan, torneos eliminados recuperables |
+| [009-jugadores-provisionales.md](009-jugadores-provisionales.md) | Jugadores cargados por el admin sin cuenta (para goleadores), que luego se vinculan a su cuenta o se unen a una ficha existente sin perder datos. **Entrega 1 implementada** (carga por script y goleadores); la entrega 2 es propuesta |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
 ## Cómo se usa esto

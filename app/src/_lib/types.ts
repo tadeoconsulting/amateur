@@ -102,6 +102,8 @@ export interface RosterPlayer {
   status: PlayerStatus;
   categoryId: string;
   clubId: string;
+  /** Sin cuenta todavía (jugador provisional): se ve, pero no se mueve ni se libera. */
+  provisional?: boolean;
 }
 
 export type StaffRole = "delegado" | "asistente" | "director_tecnico";

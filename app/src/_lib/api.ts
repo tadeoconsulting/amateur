@@ -168,6 +168,8 @@ export interface ScorerRow {
   firstName: string;
   lastName: string;
   avatarUrl: string | null;
+  /** Su puesto en la cancha; null = no se muestra. (`position` es el lugar en la tabla.) */
+  playerPosition: string | null;
   clubName: string;
   goals: number;
   matchesPlayed: number;
@@ -205,6 +207,8 @@ export interface PlayerListItem {
   number: number | null;
   position: string | null;
   status: string;
+  /** Sin cuenta todavía (jugador provisional, especificación 009). */
+  provisional?: boolean;
   user: { firstName: string; lastName: string; avatarUrl: string | null; birthDate?: string | null };
   category: { id: string; name: string } | null;
 }

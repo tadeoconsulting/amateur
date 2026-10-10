@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { getClubCategories } from "@/_lib/api";
+import { getClubCategories, getClubPlayers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import type { PlayerGender } from "@/_lib/types";
@@ -39,6 +39,8 @@ export default function ClubJugadoresPage() {
 function ClubJugadoresContent({ clubId }: { clubId: string }) {
   const [gender, setGender] = useState<PlayerGender>("masculino");
   const { data: playerCategories, loading } = useApi(() => getClubCategories(clubId));
+  // Jugadores sin categoría (por ejemplo los provisionales, que carga un admin): se ven en su propia entrada.
+  const { data: uncategorized } = useApi(() => getClubPlayers(clubId, { categoryId: "cat-sin" }));
 
   if (loading || !playerCategories) {
     return (
@@ -107,6 +109,20 @@ function ClubJugadoresContent({ clubId }: { clubId: string }) {
             </svg>
           </Link>
         ))}
+        {(uncategorized?.length ?? 0) > 0 && (
+          <Link
+            href="/club/jugadores/cat-sin"
+            className="flex items-center justify-between border-b border-brand-200 py-4 last:border-0"
+          >
+            <div>
+              <p className="font-heading font-bold text-text-primary">Sin categoría</p>
+              <p className="text-sm text-text-secondary">{uncategorized?.length} jugadores</p>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-text-secondary" aria-hidden="true">
+              <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+        )}
       </div>
 
       {/* Define categories link */}

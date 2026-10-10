@@ -26,11 +26,14 @@ export function PlayerRosterRow({
           )}
         </div>
         <p className="text-sm text-text-secondary">
-          {player.position} | {player.age} anos
+          {player.provisional ? player.position : `${player.position} | ${player.age} anos`}
         </p>
       </div>
       {action ?? (
-        player.status === "en_espera" ? (
+        player.provisional ? (
+          // Sin cuenta: lo gestiona un admin (especificación 009), así que no tiene casilla para mover ni liberar.
+          <span className="shrink-0 rounded-full bg-brand-100 px-2.5 py-1 font-heading text-xs font-semibold text-text-secondary">Provisional</span>
+        ) : player.status === "en_espera" ? (
           <span className="shrink-0 text-sm font-medium text-text-secondary">En espera</span>
         ) : (
           <button

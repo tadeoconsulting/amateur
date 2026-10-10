@@ -98,7 +98,7 @@ export function ScorersList({ scorers }: { scorers: ScorerRow[] }) {
             <p className="font-heading text-sm font-bold text-text-primary">
               {p.firstName} {p.lastName}
             </p>
-            <p className="font-body text-xs text-text-secondary">{p.clubName}</p>
+            <p className="font-body text-xs text-text-secondary">{[p.clubName, p.playerPosition].filter(Boolean).join(" · ")}</p>
           </div>
           <div className="flex items-center gap-1">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-secondary" aria-hidden="true">

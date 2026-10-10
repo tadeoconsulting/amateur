@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { playerIdentity } from "@/_lib/player-identity";
 
 export async function GET(
   _request: NextRequest,
@@ -33,13 +34,15 @@ export async function GET(
     isAdmin(auth.user) ||
     (profile.clubId ? await canManageClub(auth.user, profile.clubId) : false);
 
+  const who = playerIdentity(profile);
   return Response.json({
     id: profile.id,
-    firstName: profile.user.firstName,
-    lastName: profile.user.lastName,
-    avatarUrl: profile.user.avatarUrl,
-    birthDate: canSeeBirthDate ? profile.user.birthDate : null,
-    gender: profile.user.gender,
+    firstName: who.firstName,
+    lastName: who.lastName,
+    avatarUrl: who.avatarUrl,
+    birthDate: canSeeBirthDate ? who.birthDate : null,
+    provisional: who.provisional,
+    gender: profile.user?.gender ?? null,
     position: profile.position,
     number: profile.number,
     status: profile.status,
@@ -72,6 +75,8 @@ export async function PATCH(
   if (!profile) {
     return Response.json({ error: "Jugador no encontrado" }, { status: 404 });
   }
+  // Un jugador provisional (sin cuenta) lo gestiona solo un admin; el delegado y el organizador lo ven y nada más.
+  if (profile.userId === null && !isAdmin(user)) return forbidden();
 
   const body = await readJson(request);
   if (!body) return badRequest();

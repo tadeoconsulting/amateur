@@ -66,8 +66,9 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
     categoryId: p.category?.id ?? params.categoryId,
     clubId,
     status: p.status as PlayerStatus,
-    verified: true,
+    verified: !p.provisional, // el tilde es de una cuenta verificada: un provisional todavía no tiene
     avatarUrl: p.user.avatarUrl,
+    provisional: p.provisional,
   }));
   const isSinCategoria = params.categoryId === "cat-sin";
 
@@ -146,7 +147,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
     );
   }
 
-  if (!category) {
+  if (!category && !isSinCategoria) {
     return (
       <div className="w-full py-20 text-center text-text-secondary">
         Categoria no encontrada
@@ -173,7 +174,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
             />
           </svg>
           <h1 className="font-heading text-xl font-bold text-text-primary">
-            {isSinCategoria ? "Sin categoria" : `${category.name} Masculino`}
+            {isSinCategoria || !category ? "Sin categoria" : `${category.name} Masculino`}
           </h1>
         </div>
         <Link
