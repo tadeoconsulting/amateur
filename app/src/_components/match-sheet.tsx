@@ -107,7 +107,7 @@ export function MatchSheet({
               {live ? (
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-verification motion-reduce:animate-none" aria-hidden="true" />
-                  En vivo
+                  {match.period === "descanso" ? "Descanso" : "En vivo"}
                 </span>
               ) : match.status === "finalizado" ? (
                 "Final"

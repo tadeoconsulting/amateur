@@ -142,3 +142,105 @@ export function formatLiveFor(startedAt: string | Date | null | undefined, now: 
   const hours = Math.floor(liveSeconds(startedAt, now) / 3600);
   return hours < 48 ? `${hours} h` : `${Math.floor(hours / 24)} días`;
 }
+
+// ─── Los dos tiempos (especificación 010) ──────────────────────────────────
+// Un partido que se inicia empieza en "primer_tiempo"; el organizador lo pasa a "descanso"
+// (el cronómetro se detiene) y luego a "segundo_tiempo". `null` es un partido que empezó
+// antes de que existieran los tiempos: sigue con su cronómetro único, sin descanso.
+
+export const MATCH_PERIODS = ["primer_tiempo", "descanso", "segundo_tiempo"] as const;
+export type MatchPeriod = (typeof MATCH_PERIODS)[number];
+
+export const isMatchPeriod = (value: unknown): value is MatchPeriod =>
+  (MATCH_PERIODS as readonly unknown[]).includes(value);
+
+export const PERIOD_LABELS: Record<MatchPeriod, string> = {
+  primer_tiempo: "1.er tiempo",
+  descanso: "Descanso",
+  segundo_tiempo: "2.º tiempo",
+};
+
+/** primer_tiempo → descanso → segundo_tiempo; del descanso se puede volver al primero (se tocó sin querer). */
+const PERIOD_TRANSITIONS: Record<MatchPeriod, MatchPeriod[]> = {
+  primer_tiempo: ["descanso"],
+  descanso: ["segundo_tiempo", "primer_tiempo"],
+  segundo_tiempo: [],
+};
+
+export function canTransitionPeriod(from: MatchPeriod | null, to: MatchPeriod) {
+  if (from === null) return false;
+  return from === to || PERIOD_TRANSITIONS[from].includes(to);
+}
+
+/** Un descanso que dura más que esto se da por olvidado. */
+export const STALE_BREAK_MINUTES = 120;
+
+/** Minutos de cada tiempo: los del torneo, o la mitad de la duración por defecto. */
+export function halfMinutes(minutesPerHalf: number | null | undefined) {
+  return matchDurationMinutes(minutesPerHalf) / 2;
+}
+
+type Instant = string | Date | null | undefined;
+
+const toMs = (value: Instant) => {
+  if (!value) return null;
+  const ms = typeof value === "string" ? Date.parse(value) : value.getTime();
+  return Number.isNaN(ms) ? null : ms;
+};
+
+/** Lo que el cronómetro necesita saber de un partido. */
+export interface ClockSource {
+  startedAt?: Instant;
+  period?: string | null;
+  firstHalfEndedAt?: Instant;
+  secondHalfStartedAt?: Instant;
+}
+
+/**
+ * El cronómetro de un partido en vivo, ya con los tiempos:
+ * - 1.er tiempo (o sin tiempos): corre desde el inicio, sin tope (el tiempo agregado pasa del minuto del torneo).
+ * - descanso: queda congelado en lo que duró el primer tiempo.
+ * - 2.º tiempo: sigue desde los minutos de un tiempo (35 + lo que lleve del segundo).
+ * `stale` avisa de un partido olvidado: el cronómetro se detiene y se pide finalizarlo.
+ */
+export function matchClock(match: ClockSource, now: number, minutesPerHalf: number | null | undefined) {
+  const period = isMatchPeriod(match.period) ? match.period : null;
+  const started = toMs(match.startedAt);
+  const firstEnded = toMs(match.firstHalfEndedAt);
+  const secondStarted = toMs(match.secondHalfStartedAt);
+  const staleSeconds = staleAfterMinutes(minutesPerHalf) * 60;
+
+  let raw: number;
+  let stale: boolean;
+  if (period === "descanso" && started !== null && firstEnded !== null) {
+    raw = Math.max(0, Math.floor((firstEnded - started) / 1000));
+    stale = now - firstEnded > STALE_BREAK_MINUTES * 60_000;
+  } else if (period === "segundo_tiempo" && secondStarted !== null) {
+    raw = halfMinutes(minutesPerHalf) * 60 + Math.max(0, Math.floor((now - secondStarted) / 1000));
+    stale = raw > staleSeconds;
+  } else {
+    raw = liveSeconds(match.startedAt, now);
+    stale = raw > staleSeconds;
+  }
+  const seconds = period === "descanso" ? raw : Math.min(raw, staleSeconds);
+  return { seconds, minute: Math.floor(seconds / 60), stale, period };
+}
+
+/** En qué tiempo se registra una jugada nueva (1, 2, o null si el partido no tiene tiempos). */
+export function halfForEvent(period: string | null | undefined): 1 | 2 | null {
+  if (period === "segundo_tiempo") return 2;
+  if (period === "primer_tiempo" || period === "descanso") return 1;
+  return null;
+}
+
+
+/** Cómo se separa la cronología en dos tiempos: por el tiempo guardado en cada jugada (`half`) o, en un partido sin tiempos, por el minuto. */
+export function splitHalves<T extends { minute: number; half?: number | null }>(events: T[], minutesPerHalf: number | null | undefined) {
+  if (events.some((e) => e.half != null)) {
+    return { firstHalf: events.filter((e) => e.half !== 2), secondHalf: events.filter((e) => e.half === 2) };
+  }
+  const limit = minutesPerHalf && minutesPerHalf > 0 ? minutesPerHalf : 45;
+  const cut = events.findIndex((e) => e.minute > limit);
+  return cut === -1 ? { firstHalf: events, secondHalf: [] } : { firstHalf: events.slice(0, cut), secondHalf: events.slice(cut) };
+}
+

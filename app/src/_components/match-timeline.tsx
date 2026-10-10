@@ -1,3 +1,4 @@
+import { splitHalves } from "@/_lib/match-live";
 import type { MatchEvent, MatchStatus } from "@/_lib/types";
 
 function EventIcon({ type }: { type: MatchEvent["type"] }) {
@@ -31,14 +32,18 @@ export function MatchTimeline({
   events,
   homeTeamId,
   status,
+  minutesPerHalf,
+  onBreak,
 }: {
   events: MatchEvent[];
   homeTeamId: string;
   status: MatchStatus;
+  /** Para separar los tiempos de un partido que no los registró (jugadas sin `half`). */
+  minutesPerHalf?: number | null;
+  /** El partido está en el descanso: se muestra en lugar de "En Vivo". */
+  onBreak?: boolean;
 }) {
-  const halftimeIndex = events.findIndex((e) => e.minute > 45);
-  const firstHalf = halftimeIndex === -1 ? events : events.slice(0, halftimeIndex);
-  const secondHalf = halftimeIndex === -1 ? [] : events.slice(halftimeIndex);
+  const { firstHalf, secondHalf } = splitHalves(events, minutesPerHalf);
 
   return (
     <div className="relative px-4 py-6">
@@ -66,8 +71,8 @@ export function MatchTimeline({
       )}
 
       <div className="relative mt-8 flex justify-center">
-        <span className={`z-10 rounded bg-white px-3 py-1 text-sm font-medium ${status === "en_vivo" ? "text-verification" : "text-text-secondary"}`}>
-          {status === "en_vivo" ? "En Vivo" : "Finalizado"}
+        <span className={`z-10 rounded bg-white px-3 py-1 text-sm font-medium ${status === "en_vivo" && !onBreak ? "text-verification" : "text-text-secondary"}`}>
+          {onBreak ? "Descanso" : status === "en_vivo" ? "En Vivo" : "Finalizado"}
         </span>
       </div>
     </div>

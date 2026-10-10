@@ -1,7 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
-import { changesScore, EVENT_TYPES, isEventType, statFor } from "@/_lib/match-live";
+import { changesScore, EVENT_TYPES, halfForEvent, isEventType, statFor } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
 
@@ -15,7 +15,7 @@ export async function GET(
     prisma.matchEvent.findMany({
       where: { matchId: id },
       include: { player: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } } },
-      orderBy: [{ minute: "asc" }, { createdAt: "asc" }],
+      orderBy: [{ half: { sort: "asc", nulls: "first" } }, { minute: "asc" }, { createdAt: "asc" }],
     }),
     prisma.match.findUnique({
       where: { id },
@@ -43,6 +43,7 @@ export async function GET(
       teamId: e.teamId,
       detail: e.detail,
       phase: e.phase,
+      half: e.half,
       scored: e.scored,
     }))
   );
@@ -82,7 +83,7 @@ export async function POST(
 
   const match = await prisma.match.findUnique({
     where: { id },
-    select: { status: true, phase: true, homeTeamId: true, awayTeamId: true, tournamentId: true },
+    select: { status: true, phase: true, period: true, homeTeamId: true, awayTeamId: true, tournamentId: true },
   });
   if (!match) return Response.json({ error: "Partido no encontrado" }, { status: 404 });
   if (match.status !== "en_curso") {
@@ -124,6 +125,7 @@ export async function POST(
           teamId: typeof teamId === "string" ? teamId : null,
           detail: typeof detail === "string" ? detail : null,
           phase: match.phase,
+          half: halfForEvent(match.period),
           scored: type === "penal_definicion" ? (scored as boolean) : null,
         },
       });

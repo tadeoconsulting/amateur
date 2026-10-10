@@ -109,6 +109,10 @@ export interface MatchListItem {
   groupName: string | null;
   /** Cuándo empezó el partido; null si todavía no. El cronómetro en vivo se calcula desde acá. */
   startedAt?: string | null;
+  /** Los dos tiempos (especificación 010): null en un partido sin tiempos (ver match-live.ts). */
+  period?: "primer_tiempo" | "descanso" | "segundo_tiempo" | null;
+  firstHalfEndedAt?: string | null;
+  secondHalfStartedAt?: string | null;
   homeTeam: MatchTeamRef;
   awayTeam: MatchTeamRef;
   _count: { events: number };
@@ -135,6 +139,8 @@ export interface MatchEventItem {
   teamId: string | null;
   detail: string | null;
   phase: string;
+  /** En qué tiempo ocurrió (1 o 2); null en un partido sin tiempos. */
+  half?: number | null;
   /** Solo para el tipo "penal_definicion": ¿convirtió el intento? */
   scored: boolean | null;
 }

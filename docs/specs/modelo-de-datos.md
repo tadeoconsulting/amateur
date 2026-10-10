@@ -89,9 +89,11 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 | `time = ""` | **Partido sin programar** (fixture manual). Su `date` es provisoriamente la fecha de inicio del torneo. |
 | `matchday` | Número de fecha, desde 1 |
 | `startedAt` | Se fija al empezar; de ahí sale el cronómetro |
+| `period`, `firstHalfEndedAt`, `secondHalfStartedAt` | Los dos tiempos ([010](010-tiempos-del-partido.md)): `primer_tiempo`, `descanso`, `segundo_tiempo`; `null` en un partido sin empezar o que empezó antes de que existieran los tiempos |
 
 ### MatchEvent
 - `type`: `gol`, `tarjeta_amarilla`, `tarjeta_roja`, `sustitucion`, `penal`.
+- `half`: `1` o `2` según el tiempo en que se registró ([010](010-tiempos-del-partido.md)); `null` en un partido sin tiempos.
 - `teamId` no tiene relación declarada con `Club` (se valida en la API que sea uno de los dos equipos del partido).
 - Se borra en cascada con el partido.
 

@@ -419,25 +419,32 @@ model TournamentRequest {
 // ─── Matches & Events ───────────────────────────────────────────
 
 model Match {
-  id           String    @id @default(cuid())
-  tournamentId String
+  id                  String    @id @default(cuid())
+  tournamentId        String
   // "Por definir": null hasta que se conoce el ganador del cruce anterior (solo pasa en
   // un cuadro de eliminación). En liga/grupos siempre vienen los dos desde que se crea.
-  homeTeamId   String?
-  awayTeamId   String?
-  homeScore    Int?
-  awayScore    Int?
-  status       String    @default("programado")
-  date         DateTime
-  time         String
-  location     String
-  matchday     Int
-  groupName    String?
+  homeTeamId          String?
+  awayTeamId          String?
+  homeScore           Int?
+  awayScore           Int?
+  status              String    @default("programado")
+  date                DateTime
+  time                String
+  location            String
+  matchday            Int
+  groupName           String?
   // Cuándo se dio inicio al partido (pasó a "en_curso"). El cronómetro en vivo se calcula
   // desde acá, así sobrevive a recargar la página.
-  startedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  startedAt           DateTime?
+  // Los dos tiempos (especificación 010): "primer_tiempo" | "descanso" | "segundo_tiempo".
+  // null = un partido que empezó antes de que existieran (sigue con un solo cronómetro) o que
+  // todavía no empezó. `firstHalfEndedAt` congela el cronómetro en el descanso y
+  // `secondHalfStartedAt` marca desde dónde corre el segundo tiempo.
+  period              String?
+  firstHalfEndedAt    DateTime?
+  secondHalfStartedAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   // ─── Cuadro de eliminación (especificación 007) ────────────────────────────
   // A qué partido y de qué lado pasa quien gane este (null fuera de un cuadro).
@@ -491,6 +498,10 @@ model MatchEvent {
   // solo aplica al tipo "penal_definicion": ¿convirtió o falló ese intento?
   phase     String   @default("regulacion")
   scored    Boolean?
+  // En qué tiempo ocurrió (1 o 2); null en un partido sin tiempos. Es lo que separa la
+  // cronología en "Segundo tiempo": el minuto solo no alcanza (el tiempo agregado del primero
+  // puede pasar del minuto en que arranca el segundo).
+  half      Int?
 
   match  Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
   player PlayerProfile? @relation(fields: [playerId], references: [id])
