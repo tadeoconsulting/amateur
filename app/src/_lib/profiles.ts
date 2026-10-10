@@ -6,7 +6,7 @@ export type ProfileRole = "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR";
 
 export const PROFILE_ROLES: { role: ProfileRole; label: string; description: string; href: string }[] = [
   { role: "ORGANIZADOR", label: "Organizador de torneo", description: "Crea y gestiona torneos", href: "/torneos" },
-  { role: "CLUB_OWNER", label: "Equipo de fútbol", description: "Administra tu equipo y su plantilla", href: "/club" },
+  { role: "CLUB_OWNER", label: "Delegado", description: "Administra tu equipo y su plantilla", href: "/club" },
   { role: "JUGADOR", label: "Jugador", description: "Sigue tus partidos y estadísticas", href: "/jugador/torneos" },
 ];
 

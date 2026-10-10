@@ -68,7 +68,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   const handleSubmit = async () => {
     if (!form.name || !form.shortName || !selectedOwner) {
-      setError("Nombre, abreviatura y dueño son requeridos");
+      setError("Nombre, abreviatura y delegado son requeridos");
       return;
     }
     setSaving(true);
@@ -149,10 +149,10 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <hr className="border-border-primary" />
-          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Delegado / Dueño</p>
+          <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Delegado</p>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Dueño del club *</label>
+            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Delegado del club *</label>
             {selectedOwner ? (
               <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2.5">
                 <span className="font-body text-sm text-text-primary">
@@ -501,7 +501,7 @@ function EditClubModal({
             <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Oficializar equipo</p>
             <p className="font-body text-sm text-text-secondary">
               Hoy es un equipo temporal de {club.owner.firstName} {club.owner.lastName}: sirve para su torneo, pero no sale en la búsqueda de
-              equipos ni tiene dueño propio. Al oficializarlo pasa a ser de su delegado, que lo maneja con su propia cuenta, y aparece en
+              equipos ni tiene delegado propio. Al oficializarlo pasa a ser de su delegado, que lo maneja con su propia cuenta, y aparece en
               la búsqueda. Sigue inscrito en sus torneos.
             </p>
             {newOwner ? (
@@ -546,7 +546,7 @@ function EditClubModal({
                   </div>
                 )}
                 <p className="mt-1 font-body text-xs text-text-secondary">
-                  ¿El delegado no tiene cuenta? Créala primero en Usuarios (tipo Dueño de club) y vuelve aquí.
+                  ¿El delegado no tiene cuenta? Créala primero en Usuarios (perfil Delegado) y vuelve aquí.
                 </p>
               </div>
             )}
@@ -590,7 +590,7 @@ function EditClubModal({
           <div className="mt-6">
             {/* La contraseña es de quien dirige el club, no del club. En un equipo temporal el "dueño" es el
                 organizador que lo cargó: su contraseña no se restablece desde acá. */}
-            <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (dueño de ${club.name})`} />
+            <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (${club.isTemporary ? "organizador del equipo temporal" : "delegado de"} ${club.name})`} />
           </div>
         )}
 
@@ -708,7 +708,7 @@ function AdminClubesContent() {
             placeholder="Buscar club..."
           />
         </div>
-        <MultiSelect allLabel="Todos los organizadores" noun="organizadores" options={ownerOptions} selected={ownerFilter} onChange={setOwnerFilter} searchPlaceholder="Buscar organizador..." />
+        <MultiSelect allLabel="Todos los delegados" noun="delegados" options={ownerOptions} selected={ownerFilter} onChange={setOwnerFilter} searchPlaceholder="Buscar delegado u organizador..." />
         {ownerFilter.length > 0 && (
           <button type="button" onClick={() => setOwnerFilter([])} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
             Quitar filtros
@@ -737,7 +737,7 @@ function AdminClubesContent() {
               <tr className="border-b border-border-primary bg-brand-50">
                 <SortTh label="Club" sortKey="club" sort={sort} onToggle={toggle} />
                 <SortTh label="Abreviatura" sortKey="short" sort={sort} onToggle={toggle} />
-                <SortTh label="Dueño" sortKey="owner" sort={sort} onToggle={toggle} />
+                <SortTh label="Delegado" sortKey="owner" sort={sort} onToggle={toggle} />
                 <SortTh label="Email" sortKey="email" sort={sort} onToggle={toggle} />
                 <SortTh label="Jugadores" sortKey="players" sort={sort} onToggle={toggle} align="center" />
                 <SortTh label="Categorías" sortKey="categories" sort={sort} onToggle={toggle} align="center" />
@@ -781,6 +781,8 @@ function AdminClubesContent() {
                     <p className="font-body text-sm text-text-secondary">
                       {club.owner.firstName} {club.owner.lastName}
                     </p>
+                    {/* Un equipo temporal todavía no tiene delegado: figura quien lo cargó (el organizador), hasta oficializarlo. */}
+                    {club.isTemporary && <p className="font-body text-xs text-text-secondary">Organizador · aún sin delegado</p>}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-body text-sm text-text-secondary">{club.owner.email ?? "—"}</p>

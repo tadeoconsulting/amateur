@@ -19,6 +19,10 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [009-jugadores-provisionales.md](009-jugadores-provisionales.md) | Jugadores cargados por el admin sin cuenta (para goleadores), que luego se vinculan a su cuenta o se unen a una ficha existente sin perder datos. **Entrega 1 implementada** (carga por script y goleadores); la entrega 2 es propuesta |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
+## Glosario
+
+- **Delegado** es el nombre que ve la gente del perfil que dirige un equipo: el dueño del club. Por dentro no cambia nada: el rol sigue siendo `CLUB_OWNER`, la columna `Club.ownerId` y las rutas siguen igual, y los documentos y comentarios del código pueden decir "dueño" para referirse a lo mismo. Solo cambió lo que se ve en pantalla (elegir perfil, panel de admin, avisos). Un equipo **temporal** todavía no tiene delegado: figura quien lo cargó (el organizador) hasta que un admin lo oficializa.
+
 ## Cómo se usa esto
 
 1. **El código y las pruebas son la verdad; estos documentos explican el porqué.** Si un documento y una prueba se contradicen, gana la prueba y el documento tiene un error: corrígelo.

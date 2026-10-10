@@ -213,7 +213,7 @@ export default function BuscarEquipoPage() {
           {isOpen && isFull && " · El torneo ya tiene todos sus equipos."}
         </p>
         <p className="mt-1 font-body text-xs text-text-secondary">
-          Al invitar a un equipo, su dueño debe aceptar para que quede inscrito.
+          Al invitar a un equipo, su delegado debe aceptar para que quede inscrito.
         </p>
       </div>
 

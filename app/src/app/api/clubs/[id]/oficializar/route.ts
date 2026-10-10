@@ -35,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
   if (!owner) return Response.json({ error: "El usuario elegido no existe" }, { status: 404 });
   if (owner.roles.some((r) => r.role === Role.ADMIN)) {
-    return badRequest("Una cuenta de administrador no puede ser dueña de un equipo");
+    return badRequest("Una cuenta de administrador no puede ser delegada de un equipo");
   }
   if (owner._count.ownedClubs > 0) {
     return Response.json(
