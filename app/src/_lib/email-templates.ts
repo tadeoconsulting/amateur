@@ -71,6 +71,24 @@ export function invitacionPerfil(input: { playerName: string; clubName: string; 
   return { subject, text, html };
 }
 
+/** Un admin invita a alguien a ser el delegado de un equipo temporal (se acepta en /delegado/invitacion/{token}). */
+export function invitacionDelegado(input: { clubName: string; inviterName: string; url: string; days: number }): Contenido {
+  const { clubName, inviterName, url, days } = input;
+  const subject = `Te invitamos a ser delegado de ${clubName} · Amateur`;
+  const text = `${inviterName} te invitó a ser el delegado de ${clubName} en Amateur.\n\nCrea tu cuenta o inicia sesión para aceptar: desde ahí manejarás el equipo, sus jugadores y sus torneos (el enlace vale ${days} días y se usa una sola vez):\n${url}\n\nSi no esperabas este correo, puedes ignorarlo.`;
+  const html = layout({
+    title: `Sé el delegado de ${escapeHtml(clubName)}`,
+    paragraphs: [
+      `<strong>${escapeHtml(inviterName)}</strong> te invitó a ser el delegado de <strong>${escapeHtml(clubName)}</strong> en Amateur.`,
+      `Crea tu cuenta o inicia sesión para aceptar: desde ahí manejarás el equipo, sus jugadores y sus torneos. El enlace vale ${days} días y se usa una sola vez.`,
+    ],
+    buttonLabel: "Aceptar y ser delegado",
+    url,
+    footer: "Si no esperabas este correo, puedes ignorarlo.",
+  });
+  return { subject, text, html };
+}
+
 /** Un club invita a alguien a su cuerpo técnico (se acepta en /staff/invitacion). */
 export function invitacionStaff(input: { clubName: string; inviterName: string; roleLabel: string; url: string; days: number }): Contenido {
   const { clubName, inviterName, roleLabel, url, days } = input;

@@ -39,25 +39,27 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  roles                      UserRole[]
-  ownedClubs                 Club[]               @relation("ClubOwner")
+  roles                       UserRole[]
+  ownedClubs                  Club[]               @relation("ClubOwner")
   // Un jugador puede estar en varios clubes: una ficha (PlayerProfile) por club, más a lo sumo una
   // "libre" (clubId null: solo tiene posición, todavía sin equipo). Ver _lib/player-clubs.ts.
-  playerProfiles             PlayerProfile[]
+  playerProfiles              PlayerProfile[]
   // Con qué equipo "sale a la cancha" hoy: el que muestra la pestaña Actividad. Es un id de club
   // sin relación a propósito: si ya no es de sus equipos, se ignora y se usa el primero.
-  activeClubId               String?
-  tournaments                Tournament[]         @relation("TournamentOrganizer")
-  staffRoles                 StaffMember[]
-  invitations                PlayerInvitation[]
-  staffInvitations           StaffInvitation[]
-  tournamentRequests         TournamentRequest[]
-  sedes                      Sede[]
-  joinRequests               PlayerJoinRequest[]
-  passwordResetTokens        PasswordResetToken[]
+  activeClubId                String?
+  tournaments                 Tournament[]         @relation("TournamentOrganizer")
+  staffRoles                  StaffMember[]
+  invitations                 PlayerInvitation[]
+  staffInvitations            StaffInvitation[]
+  tournamentRequests          TournamentRequest[]
+  sedes                       Sede[]
+  joinRequests                PlayerJoinRequest[]
+  passwordResetTokens         PasswordResetToken[]
   // Invitaciones a reclamar un perfil provisional (especificación 009): las que envió (un admin) y las que aceptó.
-  profileInvitationsSent     ProfileInvitation[]  @relation("ProfileInvitationInviter")
-  profileInvitationsAccepted ProfileInvitation[]  @relation("ProfileInvitationAcceptedBy")
+  profileInvitationsSent      ProfileInvitation[]  @relation("ProfileInvitationInviter")
+  profileInvitationsAccepted  ProfileInvitation[]  @relation("ProfileInvitationAcceptedBy")
+  delegateInvitationsSent     DelegateInvitation[] @relation("DelegateInvitationInviter")
+  delegateInvitationsAccepted DelegateInvitation[] @relation("DelegateInvitationAcceptedBy")
 }
 
 // Un enlace de "Olvidé mi contraseña" (se manda por correo). Se guarda el hash del token, no el
@@ -122,18 +124,19 @@ model Club {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  owner              User                @relation("ClubOwner", fields: [ownerId], references: [id])
-  categories         TeamCategory[]
-  staffMembers       StaffMember[]
-  players            PlayerProfile[]
-  homeMatches        Match[]             @relation("HomeTeam")
-  awayMatches        Match[]             @relation("AwayTeam")
-  enrollments        TournamentTeam[]
-  invitations        PlayerInvitation[]
-  staffInvitations   StaffInvitation[]
-  tournamentRequests TournamentRequest[]
-  lineups            MatchLineup[]
-  joinRequests       PlayerJoinRequest[]
+  owner               User                 @relation("ClubOwner", fields: [ownerId], references: [id])
+  categories          TeamCategory[]
+  staffMembers        StaffMember[]
+  players             PlayerProfile[]
+  homeMatches         Match[]              @relation("HomeTeam")
+  awayMatches         Match[]              @relation("AwayTeam")
+  enrollments         TournamentTeam[]
+  invitations         PlayerInvitation[]
+  staffInvitations    StaffInvitation[]
+  tournamentRequests  TournamentRequest[]
+  lineups             MatchLineup[]
+  joinRequests        PlayerJoinRequest[]
+  delegateInvitations DelegateInvitation[]
 }
 
 model TeamCategory {
@@ -230,6 +233,30 @@ model ProfileInvitation {
   acceptedBy User?         @relation("ProfileInvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
 
   @@index([profileId])
+}
+
+// Invitación para que alguien pase a ser el delegado de un equipo temporal (especificación 009, entrega 4). Un
+// enlace secreto (con o sin correo) que el admin crea y comparte; quien lo acepta con su cuenta queda como dueño del
+// equipo, igual que con "Oficializar". Vale 7 días y se usa una vez.
+//   pending  vigente (una que ya pasó su fecha está vencida)  ·  accepted  ya hay delegado
+//   cancelled  la cancelaron o la reemplazaron
+model DelegateInvitation {
+  id           String    @id @default(cuid())
+  clubId       String
+  email        String?
+  token        String    @unique
+  status       String    @default("pending")
+  invitedBy    String
+  acceptedById String?
+  acceptedAt   DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  club       Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  inviter    User  @relation("DelegateInvitationInviter", fields: [invitedBy], references: [id], onDelete: Cascade)
+  acceptedBy User? @relation("DelegateInvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId])
 }
 
 model PlayerStats {

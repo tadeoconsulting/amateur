@@ -12,6 +12,7 @@ import { ClubCrest } from "@/_components/club-crest";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { displayShortName } from "@/_lib/short-name";
 import { ConfirmDelete } from "../_components/confirm-delete";
+import { InviteDelegatePanel } from "../_components/invite-delegate-panel";
 
 interface ClubRow {
   id: string;
@@ -28,6 +29,8 @@ interface ClubRow {
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string; email?: string };
+  /** La última invitación de delegado vigente o aceptada (solo la ve un admin). */
+  delegateInvitation?: { email: string | null; status: string; expiresAt: string; acceptedAt: string | null; acceptedBy: { name: string; email: string } | null } | null;
 }
 
 interface UserOption {
@@ -497,6 +500,11 @@ function EditClubModal({
         </div>
 
         {club.isTemporary ? (
+          <>
+          <div className="mt-6 flex flex-col gap-3 border-t border-border-primary pt-4">
+            <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Invitar al delegado</p>
+            <InviteDelegatePanel club={{ id: club.id, name: club.name }} onChanged={onLogoChanged} />
+          </div>
           <div className="mt-6 flex flex-col gap-3 border-t border-border-primary pt-4">
             <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Oficializar equipo</p>
             <p className="font-body text-sm text-text-secondary">
@@ -546,7 +554,7 @@ function EditClubModal({
                   </div>
                 )}
                 <p className="mt-1 font-body text-xs text-text-secondary">
-                  ¿El delegado no tiene cuenta? Créala primero en Usuarios (perfil Delegado) y vuelve aquí.
+                  ¿El delegado no tiene cuenta? Invítalo con el enlace de arriba, o créala primero en Usuarios (perfil Delegado) y vuelve aquí.
                 </p>
               </div>
             )}
@@ -586,8 +594,15 @@ function EditClubModal({
                 </button>
               ))}
           </div>
+          </>
         ) : (
           <div className="mt-6">
+            {club.delegateInvitation?.status === "accepted" && club.delegateInvitation.acceptedBy && (
+              <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 font-body text-sm text-text-primary">
+                Delegado por invitación: <strong>{club.delegateInvitation.acceptedBy.name}</strong> ({club.delegateInvitation.acceptedBy.email})
+                {club.delegateInvitation.acceptedAt && <> aceptó el {new Date(club.delegateInvitation.acceptedAt).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}.</>}
+              </p>
+            )}
             {/* La contraseña es de quien dirige el club, no del club. En un equipo temporal el "dueño" es el
                 organizador que lo cargó: su contraseña no se restablece desde acá. */}
             <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (${club.isTemporary ? "organizador del equipo temporal" : "delegado de"} ${club.name})`} />
@@ -782,7 +797,13 @@ function AdminClubesContent() {
                       {club.owner.firstName} {club.owner.lastName}
                     </p>
                     {/* Un equipo temporal todavía no tiene delegado: figura quien lo cargó (el organizador), hasta oficializarlo. */}
-                    {club.isTemporary && <p className="font-body text-xs text-text-secondary">Organizador · aún sin delegado</p>}
+                    {club.isTemporary && (
+                      <p className="font-body text-xs text-text-secondary">
+                        Organizador · aún sin delegado
+                        {club.delegateInvitation?.status === "pending" && <span className="ml-1 font-semibold text-text-primary">· invitación enviada</span>}
+                        {club.delegateInvitation?.status === "expired" && <span className="ml-1 font-semibold text-amber-700">· invitación vencida</span>}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-body text-sm text-text-secondary">{club.owner.email ?? "—"}</p>
