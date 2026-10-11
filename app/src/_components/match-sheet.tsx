@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { getMatches, getStandings, getTournament, type MatchListItem } from "@/_lib/api";
@@ -105,12 +106,12 @@ export function MatchSheet({
             </div>
             <p className="font-heading text-xs font-bold">
               {live ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-verification motion-reduce:animate-none" aria-hidden="true" />
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ${MATCH_TONE[matchTone(match.status, match.period)].chip}`}>
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-current motion-reduce:animate-none" aria-hidden="true" />
                   {match.period === "descanso" ? "Descanso" : "En vivo"}
                 </span>
               ) : match.status === "finalizado" ? (
-                "Final"
+                <span className={`inline-flex rounded-full px-2.5 py-1 ${MATCH_TONE.finished.chip}`}>Final</span>
               ) : (
                 match.time === "" ? UNSCHEDULED_LABEL : "Por jugar"
               )}

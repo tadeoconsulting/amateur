@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import { useParams } from "next/navigation";
 import { BackHeader } from "@/_components/back-header";
 import { MatchTimeline } from "@/_components/match-timeline";
@@ -128,7 +129,7 @@ export default function MatchDetailPage() {
           </div>
           <div className="flex w-20 flex-col items-center justify-center border-l border-brand-200 px-2 text-center">
             {match.status === "en_curso" && (
-              <span className="text-base font-bold text-verification">
+              <span className={`text-base font-bold ${MATCH_TONE[matchTone(match.status, match.period)].text}`}>
                 {/* Un partido que quedó en vivo sin finalizarse no muestra un minuto absurdo. */}
                 {(() => {
                   const clock = matchClock(match, now, match.tournament?.minutesPerHalf);
@@ -137,7 +138,7 @@ export default function MatchDetailPage() {
               </span>
             )}
             {match.status === "finalizado" && (
-              <span className="text-base font-bold text-text-primary">FT</span>
+              <span className={`text-base font-bold ${MATCH_TONE.finished.text}`}>FT</span>
             )}
             {match.status === "programado" && (
               <span className="text-xs text-text-secondary">{match.time === "" ? UNSCHEDULED_LABEL : match.time}</span>

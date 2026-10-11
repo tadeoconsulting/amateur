@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -220,9 +221,9 @@ export default function ClubTorneoDetallePage() {
                     className="flex w-56 shrink-0 flex-col rounded-xl border border-border-primary p-3"
                   >
                     {m.status === "en_curso" ? (
-                      <span className="inline-flex items-center gap-1 font-heading text-[10px] font-bold text-field-green">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green" />
-                        En vivo
+                      <span className={`inline-flex items-center gap-1 font-heading text-[10px] font-bold ${MATCH_TONE[matchTone(m.status, m.period)].text}`}>
+                        <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${MATCH_TONE[matchTone(m.status, m.period)].dot}`} />
+                        {m.period === "descanso" ? "Descanso" : "En vivo"}
                       </span>
                     ) : (
                       <span className="font-body text-[10px] text-text-secondary">{formatWhen(m)}</span>

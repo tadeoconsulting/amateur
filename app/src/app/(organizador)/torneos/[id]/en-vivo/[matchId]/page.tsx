@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
@@ -108,6 +109,8 @@ export default function EnVivoPage() {
   // Los dos tiempos (especificación 010); null = un partido que empezó antes de que existieran.
   const period: MatchPeriod | null = match.period ?? null;
   const onBreak = live && period === "descanso";
+  // El color del estado: en vivo rojo, descanso negro, finalizado gris (ver match-tone.ts).
+  const tone = matchTone(match.status, match.period);
   const inFirstHalf = live && period === "primer_tiempo";
   const minutes = Math.floor(elapsedSeconds / 60);
   const seconds = elapsedSeconds % 60;
@@ -396,7 +399,7 @@ export default function EnVivoPage() {
           <div className="mx-3 h-12 w-px bg-border-primary" />
 
           <div className="text-right">
-            <p className="font-heading text-sm font-bold text-brand-500">
+            <p className={`font-heading text-sm font-bold ${MATCH_TONE[tone].text}`}>
               {minutes}:{seconds.toString().padStart(2, "0")}&quot;
             </p>
             <p className="font-body text-xs text-text-secondary">
@@ -415,13 +418,13 @@ export default function EnVivoPage() {
       {/* Progress bar. field-green (no brand-500, un gris casi igual al riel) para que el avance
           se note; al finalizar pulsa una vez sola (animate-progress-complete, ver globals.css). */}
       <div className="mx-4 mb-5 flex items-center gap-2">
-        <div className={`h-2 flex-1 rounded-full bg-border-primary overflow-hidden${finished ? " animate-progress-complete" : ""}`}>
+        <div className={`h-2 flex-1 rounded-full bg-brand-200 overflow-hidden${finished ? " animate-progress-complete" : ""}`}>
           <div
-            className="h-full rounded-full bg-field-green transition-all duration-1000"
+            className={`h-full rounded-full ${MATCH_TONE[tone].bar} transition-all duration-1000`}
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="font-heading text-sm font-bold text-field-dark">{matchDuration}&apos;</span>
+        <span className={`font-heading text-sm font-bold ${MATCH_TONE[tone].text}`}>{matchDuration}&apos;</span>
       </div>
 
       {/* Los dos tiempos: terminar el primero, el descanso y empezar el segundo. */}

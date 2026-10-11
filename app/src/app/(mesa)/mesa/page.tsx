@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import { useApi } from "@/_lib/use-api";
 import { ClubCrest } from "@/_components/club-crest";
@@ -91,7 +92,7 @@ export default function MesaHomePage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span className="font-heading text-xs font-bold text-text-secondary">{statusLabel(m)}</span>
+                    <span className={`font-heading text-xs font-bold ${m.status === "programado" ? "text-text-secondary" : MATCH_TONE[matchTone(m.status, m.period)].text}`}>{statusLabel(m)}</span>
                     {t.open && m.homeTeam && m.awayTeam && (
                       <Link href={`/mesa/torneos/${t.id}/en-vivo/${m.id}`} className={`${m.status === "finalizado" ? btnOutline : btnSolid} !min-h-10 !px-3 !text-xs`}>
                         {m.status === "finalizado" ? "Ver" : "Gestionar"}
