@@ -2,6 +2,9 @@
 // pruebas unitarias (ver constitución, sección 3). `lib/profiles.tsx` agrega el ícono de cada
 // uno para la UI.
 
+/** El inicio de una cuenta de mesa. */
+export const MESA_HOME = "/mesa";
+
 export type ProfileRole = "ORGANIZADOR" | "CLUB_OWNER" | "JUGADOR";
 
 export const PROFILE_ROLES: { role: ProfileRole; label: string; description: string; href: string }[] = [
@@ -17,6 +20,8 @@ export const PROFILE_ROLES: { role: ProfileRole; label: string; description: str
  * ignoran acá).
  */
 export function soleProfileHome(roles: string[]): string | undefined {
+  // La mesa es solo mesa (especificación 011): su cuenta no elige perfil, entra a su inicio.
+  if (roles.includes("MESA")) return MESA_HOME;
   const own = PROFILE_ROLES.filter((p) => roles.includes(p.role));
   return own.length === 1 ? own[0].href : undefined;
 }

@@ -141,6 +141,8 @@ export interface MatchEventItem {
   phase: string;
   /** En qué tiempo ocurrió (1 o 2); null en un partido sin tiempos. */
   half?: number | null;
+  /** Quién la registró (organizador, admin o mesa): solo lo ve quien gestiona el partido. */
+  recordedBy?: string | null;
   /** Solo para el tipo "penal_definicion": ¿convirtió el intento? */
   scored: boolean | null;
 }

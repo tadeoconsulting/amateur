@@ -17,6 +17,9 @@ enum Role {
   JUGADOR
   SPONSOR
   FAN
+  // Quien gestiona el partido en vivo de los torneos que se le asignan, solo en los días de juego
+  // (especificación 011). Es solo mesa: no comparte perfil con ningún otro.
+  MESA
 }
 
 model User {
@@ -58,6 +61,9 @@ model User {
   // Invitaciones a reclamar un perfil provisional (especificación 009): las que envió (un admin) y las que aceptó.
   profileInvitationsSent      ProfileInvitation[]  @relation("ProfileInvitationInviter")
   profileInvitationsAccepted  ProfileInvitation[]  @relation("ProfileInvitationAcceptedBy")
+  mesaAssignments             TournamentMesa[]     @relation("MesaUser")
+  mesaAssignmentsMade         TournamentMesa[]     @relation("MesaAssignedBy")
+  eventsRecorded              MatchEvent[]         @relation("EventRecordedBy")
   delegateInvitationsSent     DelegateInvitation[] @relation("DelegateInvitationInviter")
   delegateInvitationsAccepted DelegateInvitation[] @relation("DelegateInvitationAcceptedBy")
 }
@@ -235,6 +241,24 @@ model ProfileInvitation {
   @@index([profileId])
 }
 
+// La mesa de un torneo (especificación 011): una cuenta con el perfil MESA a la que el organizador (o el admin)
+// le asignó el torneo. Solo puede gestionar el partido en vivo de los torneos asignados y solo dentro de su
+// ventana de acceso (el día de juego, de 1 h antes del primer partido a 1 h después del último).
+model TournamentMesa {
+  id           String   @id @default(cuid())
+  tournamentId String
+  userId       String
+  assignedById String
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation("MesaUser", fields: [userId], references: [id], onDelete: Cascade)
+  assignedBy User       @relation("MesaAssignedBy", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+  @@index([userId])
+}
+
 // Invitación para que alguien pase a ser el delegado de un equipo temporal (especificación 009, entrega 4). Un
 // enlace secreto (con o sin correo) que el admin crea y comparte; quien lo acepta con su cuenta queda como dueño del
 // equipo, igual que con "Oficializar". Vale 7 días y se usa una vez.
@@ -373,6 +397,7 @@ model Tournament {
   teams       TournamentTeam[]
   requests    TournamentRequest[]
   matches     Match[]
+  mesas       TournamentMesa[]
   playerStats PlayerStats[]
   sponsors    TournamentSponsor[]
 
@@ -470,6 +495,8 @@ model Match {
   period              String?
   firstHalfEndedAt    DateTime?
   secondHalfStartedAt DateTime?
+  // Cuándo terminó (pasó a "finalizado"); null mientras no. De ahí sale el cierre de la ventana de la mesa.
+  finishedAt          DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -513,23 +540,26 @@ model MatchLineup {
 }
 
 model MatchEvent {
-  id        String   @id @default(cuid())
-  matchId   String
-  type      String
-  minute    Int
-  playerId  String?
-  teamId    String?
-  detail    String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  matchId      String
+  type         String
+  minute       Int
+  playerId     String?
+  teamId       String?
+  detail       String?
+  createdAt    DateTime @default(now())
   // En qué fase ocurrió (solo distinto de "regulacion" en un partido decisivo). "scored"
   // solo aplica al tipo "penal_definicion": ¿convirtió o falló ese intento?
-  phase     String   @default("regulacion")
-  scored    Boolean?
+  phase        String   @default("regulacion")
+  scored       Boolean?
   // En qué tiempo ocurrió (1 o 2); null en un partido sin tiempos. Es lo que separa la
   // cronología en "Segundo tiempo": el minuto solo no alcanza (el tiempo agregado del primero
   // puede pasar del minuto en que arranca el segundo).
-  half      Int?
+  half         Int?
+  // Quién registró la jugada (organizador, admin o mesa); null en las anteriores a la especificación 011.
+  recordedById String?
 
-  match  Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  player PlayerProfile? @relation(fields: [playerId], references: [id])
+  match      Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player     PlayerProfile? @relation(fields: [playerId], references: [id])
+  recordedBy User?          @relation("EventRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
 }

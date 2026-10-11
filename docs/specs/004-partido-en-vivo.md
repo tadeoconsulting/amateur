@@ -77,6 +77,7 @@ Implementa el ADR de `docs/arquitectura.md` §7-9 (SSE conceptualmente; en la pr
 ## Limitaciones conocidas
 - **Un penal convertido hay que registrarlo como gol.** El botón "Penal" solo deja constancia en la crónica y no cambia el marcador. *Decisión pendiente.*
 - **Sin alineaciones:** `matchesPlayed` de los goleadores queda en 0 y `assists` no se registra.
+- **Quién gestiona el partido:** el organizador del torneo, el admin y, desde la especificación [011](011-mesa.md), la **mesa** asignada (solo el día de juego, sin reabrir partidos ni tocar el marcador a mano).
 - **Descanso y dos tiempos:** desde la especificación [010](010-tiempos-del-partido.md) un partido nuevo se juega en dos tiempos, con descanso que detiene el cronómetro. Un partido que ya estaba en vivo antes de ese cambio sigue con su cronómetro continuo desde `startedAt`.
 - **El minuto de una jugada no se edita** (sale del reloj). Desde la pantalla solo se deshace la **última** jugada.
 - **El cambio no registra jugadores** (la pantalla no envía `detail` ni quién entra o sale).

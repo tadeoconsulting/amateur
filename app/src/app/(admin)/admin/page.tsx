@@ -28,6 +28,7 @@ const roleLabels: Record<string, string> = {
   JUGADOR: "Jugadores",
   SPONSOR: "Sponsors",
   FAN: "Fans",
+  MESA: "Mesas",
 };
 
 export default function AdminDashboardPage() {

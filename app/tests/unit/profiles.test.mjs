@@ -1,7 +1,7 @@
 // Pruebas unitarias de src/_lib/profiles.ts (sin servidor ni React).
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { PROFILE_ROLES, soleProfileHome } from "../../src/_lib/profiles.ts";
+import { PROFILE_ROLES, soleProfileHome, MESA_HOME } from "../../src/_lib/profiles.ts";
 
 describe("soleProfileHome", () => {
   test("con un solo perfil activable, va directo a su pantalla", () => {
@@ -29,5 +29,16 @@ describe("soleProfileHome", () => {
       PROFILE_ROLES.map((p) => p.role).sort(),
       ["CLUB_OWNER", "JUGADOR", "ORGANIZADOR"]
     );
+  });
+});
+
+describe("la mesa", () => {
+  test("una cuenta de mesa entra directo a su inicio", () => {
+    assert.equal(MESA_HOME, "/mesa");
+    assert.equal(soleProfileHome(["MESA"]), "/mesa");
+  });
+
+  test("la mesa no es un perfil que se elija al registrarse (no está en la lista)", () => {
+    assert.equal(PROFILE_ROLES.some((p) => p.role === "MESA"), false);
   });
 });

@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, readJson, requireUser } from "@/_lib/auth";
+import { denyResponse, matchAccess } from "@/_lib/mesa-server";
 import { changesScore, isEventType, statFor } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 
@@ -14,7 +15,8 @@ export async function PATCH(
   if ("response" in auth) return auth.response;
 
   const { id, eventId } = await params;
-  if (!(await canManageMatch(auth.user, id))) return forbidden();
+  const access = await matchAccess(auth.user, id);
+  if (!access.ok) return denyResponse(access);
 
   const body = await readJson(request);
   if (!body || !Number.isInteger(body.minute) || (body.minute as number) < 0) {
@@ -47,7 +49,8 @@ export async function DELETE(
   if ("response" in auth) return auth.response;
 
   const { id, eventId } = await params;
-  if (!(await canManageMatch(auth.user, id))) return forbidden();
+  const access = await matchAccess(auth.user, id);
+  if (!access.ok) return denyResponse(access);
 
   const event = await prisma.matchEvent.findFirst({ where: { id: eventId, matchId: id } });
   if (!event) return Response.json({ error: "Jugada no encontrada" }, { status: 404 });

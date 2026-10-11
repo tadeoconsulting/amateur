@@ -506,6 +506,9 @@ export default function TournamentDetailPage() {
             <Link href={`/torneos/${params.id}/editar`} className="font-heading text-xs font-bold text-text-primary underline">
               Editar torneo
             </Link>
+            <Link href={`/torneos/${params.id}/mesa`} className="font-heading text-xs font-bold text-text-primary underline">
+              Mesa
+            </Link>
             {matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0) && (
               <button
                 onClick={() => setConfirmUndoFixture(true)}

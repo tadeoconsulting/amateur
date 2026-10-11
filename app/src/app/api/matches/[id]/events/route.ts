@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageMatch, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
+import { denyResponse, matchAccess } from "@/_lib/mesa-server";
 import { changesScore, EVENT_TYPES, halfForEvent, isEventType, statFor } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
@@ -14,7 +15,7 @@ export async function GET(
   const [events, match, viewer] = await Promise.all([
     prisma.matchEvent.findMany({
       where: { matchId: id },
-      include: { player: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } } },
+      include: { player: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } }, recordedBy: { select: { firstName: true, lastName: true } } },
       orderBy: [{ half: { sort: "asc", nulls: "first" } }, { minute: "asc" }, { createdAt: "asc" }],
     }),
     prisma.match.findUnique({
@@ -23,6 +24,9 @@ export async function GET(
     }),
     getCurrentUser(),
   ]);
+  // Quien gestiona el partido: el admin y el organizador, o una mesa asignada con su ventana abierta (especificación 011).
+  const access = viewer ? await matchAccess(viewer, id) : null;
+  const staffOrMesa = access?.ok === true;
   // Un menor de 18 sale abreviado ("Luigui F.") salvo para quien lo gestiona: un admin, el organizador del torneo o el delegado de su club.
   const today = new Date().toISOString().slice(0, 10);
   const ownerOf = (teamId: string | null) => (teamId && match?.homeTeam?.id === teamId ? match.homeTeam.ownerId : teamId && match?.awayTeam?.id === teamId ? match.awayTeam.ownerId : null);
@@ -36,7 +40,7 @@ export async function GET(
       playerName: e.player
         ? (() => {
             const who = playerIdentity(e.player);
-            const manages = viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || viewer.id === ownerOf(e.teamId));
+            const manages = staffOrMesa || (viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || viewer.id === ownerOf(e.teamId)));
             return publicName(who, !manages && isMinorOn(who.birthDate, today));
           })()
         : null,
@@ -44,6 +48,8 @@ export async function GET(
       detail: e.detail,
       phase: e.phase,
       half: e.half,
+      // Quién la registró: solo para quien gestiona el partido (el público no lo ve).
+      recordedBy: staffOrMesa && e.recordedBy ? `${e.recordedBy.firstName} ${e.recordedBy.lastName}`.trim() : null,
       scored: e.scored,
     }))
   );
@@ -64,7 +70,8 @@ export async function POST(
   if ("response" in auth) return auth.response;
 
   const { id } = await params;
-  if (!(await canManageMatch(auth.user, id))) return forbidden();
+  const access = await matchAccess(auth.user, id);
+  if (!access.ok) return denyResponse(access);
 
   const body = await readJson(request);
   if (!body) return badRequest();
@@ -126,6 +133,7 @@ export async function POST(
           detail: typeof detail === "string" ? detail : null,
           phase: match.phase,
           half: halfForEvent(match.period),
+          recordedById: auth.user.id,
           scored: type === "penal_definicion" ? (scored as boolean) : null,
         },
       });
