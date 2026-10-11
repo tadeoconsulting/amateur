@@ -28,6 +28,7 @@ type MatchEventRow = {
   minute: number;
   half?: number | null;
   playerName: string | null;
+  playerInName?: string | null;
   teamId: string;
 };
 

@@ -136,6 +136,9 @@ export interface MatchEventItem {
   minute: number;
   playerId: string | null;
   playerName: string | null;
+  /** Solo en un cambio ("sustitucion"): quien entra. `playerId`/`playerName` son quien sale. */
+  playerInId?: string | null;
+  playerInName?: string | null;
   teamId: string | null;
   detail: string | null;
   phase: string;

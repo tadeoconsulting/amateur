@@ -33,7 +33,7 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 | `gol` | Gol | **sí**, +1 al equipo | `goals` |
 | `tarjeta_amarilla` | Amarilla | no | `yellowCards` |
 | `tarjeta_roja` | Roja | no | `redCards` |
-| `sustitucion` | Cambio | no | — |
+| `sustitucion` | Cambio (`playerId` sale, `playerInId` entra) | no | — |
 | `penal` | Penal | **no** | — |
 
 ### Registrar (`POST /api/matches/:id/events`)
@@ -80,7 +80,7 @@ Implementa el ADR de `docs/arquitectura.md` §7-9 (SSE conceptualmente; en la pr
 - **Quién gestiona el partido:** el organizador del torneo, el admin y, desde la especificación [011](011-mesa.md), la **mesa** asignada (solo el día de juego, sin reabrir partidos ni tocar el marcador a mano).
 - **Descanso y dos tiempos:** desde la especificación [010](010-tiempos-del-partido.md) un partido nuevo se juega en dos tiempos, con descanso que detiene el cronómetro. Un partido que ya estaba en vivo antes de ese cambio sigue con su cronómetro continuo desde `startedAt`.
 - **El minuto de una jugada no se edita** (sale del reloj). Desde la pantalla solo se deshace la **última** jugada.
-- **El cambio no registra jugadores** (la pantalla no envía `detail` ni quién entra o sale).
+- **Cambios:** desde la corrección de octubre de 2026 un cambio registra **quién sale** (`playerId`) **y quién entra** (`playerInId`, columna nueva de `MatchEvent`). En la pantalla en vivo son dos pasos (*¿Quién sale?* → *¿Quién entra?*); quien entra tiene que ser del mismo equipo y distinto de quien sale (`substitutionError`, `_lib/match-live.ts`). Sin elegir a nadie, el cambio se guarda sin jugadores, como antes. Se ve como "Sale X · Entra Y" en la crónica en vivo, en la pantalla de resultado, en la cronología del organizador y en la del público (los menores, abreviados como siempre). Los cambios anteriores quedan sin jugador que entra. No cuenta minutos jugados ni estadísticas (`statFor` no suma nada para un cambio).
 - **Un equipo temporal no tiene jugadores** salvo que un admin cargue **jugadores provisionales** (especificación [009](009-jugadores-provisionales.md)); sin ellos, sus jugadas se registran sin jugador.
 - **El tiempo real solo llega a las fichas del partido** (`/torneos/:id/partidos/:matchId` del organizador y la ficha de lectura de fan, jugador y club). Las demás pantallas (previa, en vivo del organizador, tabla de posiciones, goleadores, lista de partidos) siguen viendo el estado solo al abrir o recargar. Ver "Tiempo real" más abajo.
 - El cronómetro usa el reloj del navegador contra un `startedAt` del servidor: un reloj desajustado se nota.

@@ -244,3 +244,16 @@ export function splitHalves<T extends { minute: number; half?: number | null }>(
   return cut === -1 ? { firstHalf: events, secondHalf: [] } : { firstHalf: events.slice(0, cut), secondHalf: events.slice(cut) };
 }
 
+/**
+ * Las reglas de quién sale y quién entra en un cambio ("sustitucion"): `playerId` es quien sale y `playerInId`,
+ * quien entra. Quien entra solo existe en un cambio, necesita que se sepa quién sale y no puede ser la misma persona.
+ * Devuelve el mensaje del problema, o null si está bien. (Que ambos sean del equipo lo comprueba la API.)
+ */
+export function substitutionError(type: string, playerId: unknown, playerInId: unknown): string | null {
+  if (playerInId === undefined || playerInId === null) return null;
+  if (type !== "sustitucion") return "Solo un cambio lleva al jugador que entra";
+  if (typeof playerInId !== "string") return "playerInId inválido";
+  if (typeof playerId !== "string" || !playerId) return "Un cambio con jugador que entra necesita al que sale (playerId)";
+  if (playerInId === playerId) return "Quien entra no puede ser quien sale";
+  return null;
+}

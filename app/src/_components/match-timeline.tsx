@@ -79,12 +79,18 @@ export function MatchTimeline({
   );
 }
 
+/** Lo que se lee de una jugada: el jugador, o en un cambio, quién sale y quién entra. */
+function label(event: MatchEvent) {
+  if (event.type !== "sustitucion") return event.playerName;
+  return `Sale ${event.playerName}${event.playerInName ? ` · Entra ${event.playerInName}` : ""}`;
+}
+
 function TimelineEvent({ event, isHome }: { event: MatchEvent; isHome: boolean }) {
   return (
     <div className={`relative mb-6 flex items-center ${isHome ? "justify-start pr-[55%]" : "justify-end pl-[55%]"}`}>
       {isHome ? (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-text-primary">{event.playerName}</span>
+          <span className="text-sm text-text-primary">{label(event)}</span>
           <EventIcon type={event.type} />
           <span className="font-heading text-sm font-bold text-text-primary">{event.minute}&apos;</span>
         </div>
@@ -92,7 +98,7 @@ function TimelineEvent({ event, isHome }: { event: MatchEvent; isHome: boolean }
         <div className="flex items-center gap-2">
           <span className="font-heading text-sm font-bold text-text-primary">{event.minute}&apos;</span>
           <EventIcon type={event.type} />
-          <span className="text-sm text-text-primary">{event.playerName}</span>
+          <span className="text-sm text-text-primary">{label(event)}</span>
         </div>
       )}
     </div>

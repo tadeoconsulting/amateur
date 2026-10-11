@@ -2,7 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { denyResponse, matchAccess } from "@/_lib/mesa-server";
-import { changesScore, EVENT_TYPES, halfForEvent, isEventType, statFor } from "@/_lib/match-live";
+import { changesScore, EVENT_TYPES, halfForEvent, isEventType, statFor, substitutionError } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
 
@@ -15,7 +15,7 @@ export async function GET(
   const [events, match, viewer] = await Promise.all([
     prisma.matchEvent.findMany({
       where: { matchId: id },
-      include: { player: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } }, recordedBy: { select: { firstName: true, lastName: true } } },
+      include: { player: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } }, playerIn: { include: { user: { select: { firstName: true, lastName: true, birthDate: true } } } }, recordedBy: { select: { firstName: true, lastName: true } } },
       orderBy: [{ half: { sort: "asc", nulls: "first" } }, { minute: "asc" }, { createdAt: "asc" }],
     }),
     prisma.match.findUnique({
@@ -31,19 +31,24 @@ export async function GET(
   const today = new Date().toISOString().slice(0, 10);
   const ownerOf = (teamId: string | null) => (teamId && match?.homeTeam?.id === teamId ? match.homeTeam.ownerId : teamId && match?.awayTeam?.id === teamId ? match.awayTeam.ownerId : null);
 
+  // Un jugador sale con su nombre; un menor de 18, abreviado, salvo para quien gestiona (ver arriba).
+  const nameFor = (player: (typeof events)[number]["player"], teamId: string | null) => {
+    if (!player) return null;
+    const who = playerIdentity(player);
+    const manages = staffOrMesa || (viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || viewer.id === ownerOf(teamId)));
+    return publicName(who, !manages && isMinorOn(who.birthDate, today));
+  };
+
   return Response.json(
     events.map((e) => ({
       id: e.id,
       type: e.type,
       minute: e.minute,
       playerId: e.playerId,
-      playerName: e.player
-        ? (() => {
-            const who = playerIdentity(e.player);
-            const manages = staffOrMesa || (viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || viewer.id === ownerOf(e.teamId)));
-            return publicName(who, !manages && isMinorOn(who.birthDate, today));
-          })()
-        : null,
+      playerName: nameFor(e.player, e.teamId),
+      // En un cambio, quien entra (`playerName` es quien sale).
+      playerInId: e.playerInId,
+      playerInName: nameFor(e.playerIn, e.teamId),
       teamId: e.teamId,
       detail: e.detail,
       phase: e.phase,
@@ -75,7 +80,7 @@ export async function POST(
 
   const body = await readJson(request);
   if (!body) return badRequest();
-  const { type, minute, playerId, teamId, detail, scored } = body;
+  const { type, minute, playerId, playerInId, teamId, detail, scored } = body;
 
   if (!isEventType(type)) return badRequest(`type debe ser uno de: ${EVENT_TYPES.join(", ")}`);
   if (!Number.isInteger(minute) || (minute as number) < 0 || (minute as number) > 200) {
@@ -84,6 +89,8 @@ export async function POST(
   if (detail !== undefined && detail !== null && (typeof detail !== "string" || detail.length > 200)) {
     return badRequest("detail debe ser un texto de hasta 200 caracteres");
   }
+  const subProblem = substitutionError(type, playerId, playerInId);
+  if (subProblem) return badRequest(subProblem);
   if (type === "penal_definicion" && typeof scored !== "boolean") {
     return badRequest("Un intento de la tanda de penales necesita scored (true o false)");
   }
@@ -118,6 +125,12 @@ export async function POST(
     const player = await prisma.playerProfile.findUnique({ where: { id: playerId }, select: { clubId: true } });
     if (!player || player.clubId !== teamId) return badRequest("El jugador no pertenece a ese equipo");
   }
+  // En un cambio, quien entra también tiene que ser del equipo.
+  if (typeof playerInId === "string") {
+    if (typeof teamId !== "string") return badRequest("playerInId necesita teamId");
+    const playerIn = await prisma.playerProfile.findUnique({ where: { id: playerInId }, select: { clubId: true } });
+    if (!playerIn || playerIn.clubId !== teamId) return badRequest("El jugador que entra no pertenece a ese equipo");
+  }
 
   try {
     // Un solo bloque: la jugada, el marcador y las estadísticas. Los incrementos son atómicos,
@@ -129,6 +142,7 @@ export async function POST(
           type,
           minute: minute as number,
           playerId: typeof playerId === "string" ? playerId : null,
+          playerInId: typeof playerInId === "string" ? playerInId : null,
           teamId: typeof teamId === "string" ? teamId : null,
           detail: typeof detail === "string" ? detail : null,
           phase: match.phase,

@@ -49,7 +49,7 @@ export type LinkContext = Extract<Awaited<ReturnType<typeof loadLinkContext>>, {
  */
 export async function linkMoves(profileId: string) {
   const [events, lineups, stats] = await Promise.all([
-    prisma.matchEvent.count({ where: { playerId: profileId } }),
+    prisma.matchEvent.count({ where: { OR: [{ playerId: profileId }, { playerInId: profileId }] } }),
     prisma.matchLineup.count({ where: { playerId: profileId } }),
     prisma.playerStats.aggregate({ where: { playerId: profileId }, _sum: { goals: true }, _count: true }),
   ]);
@@ -82,6 +82,7 @@ export async function executeLink(ctx: LinkContext, options: { acceptInvitationI
       const target = plan.targetProfileId as string;
       keptId = target;
       await tx.matchEvent.updateMany({ where: { playerId: id }, data: { playerId: target } });
+      await tx.matchEvent.updateMany({ where: { playerInId: id }, data: { playerInId: target } });
 
       // Una alineación por partido y jugador: si la ficha real ya estaba en ese partido, la del provisional sobra.
       const already = await tx.matchLineup.findMany({ where: { playerId: target }, select: { matchId: true } });
