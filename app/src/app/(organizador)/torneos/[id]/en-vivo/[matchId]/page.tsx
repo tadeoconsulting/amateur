@@ -20,6 +20,8 @@ type MatchEvent = {
   minute: number;
   playerId: string | null;
   playerName: string | null;
+  /** Solo en un cambio: quien entra (`playerName` es quien sale). */
+  playerInName: string | null;
   /** Quién la registró (solo lo ve quien gestiona el partido). */
   recordedBy: string | null;
 };
@@ -55,6 +57,14 @@ export default function EnVivoPage() {
   const [activeTeam, setActiveTeam] = useState<"local" | "visitante">("local");
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  // Un cambio tiene dos jugadores: primero quien sale (`selectedPlayer`) y después quien entra.
+  const [selectedPlayerIn, setSelectedPlayerIn] = useState<string | null>(null);
+  const [choosingIn, setChoosingIn] = useState(false);
+  const resetPick = () => {
+    setSelectedPlayer(null);
+    setSelectedPlayerIn(null);
+    setChoosingIn(false);
+  };
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -114,6 +124,7 @@ export default function EnVivoPage() {
     minute: e.minute,
     playerId: e.playerId,
     playerName: e.playerName,
+    playerInName: e.playerInName ?? null,
     recordedBy: e.recordedBy ?? null,
   }));
 
@@ -216,18 +227,31 @@ export default function EnVivoPage() {
 
   const matchUrl = `/api/matches/${params.matchId}`;
 
+  const isCambio = selectedAction === "cambio";
+  // Mientras se elige quién entra, la lista es la del mismo equipo sin quien ya salió.
+  const pickingIn = isCambio && choosingIn;
+  const pickedId = pickingIn ? selectedPlayerIn : selectedPlayer;
+  const listPlayers = pickingIn ? teamPlayers.filter((p) => p.id !== selectedPlayer) : teamPlayers;
+  const pick = (id: string) => (pickingIn ? setSelectedPlayerIn(selectedPlayerIn === id ? null : id) : setSelectedPlayer(selectedPlayer === id ? null : id));
+  const outPlayer = teamPlayers.find((p) => p.id === selectedPlayer);
+  // Con quien sale elegido, el botón pasa a "quién entra"; sin nadie elegido se guarda el cambio sin jugadores, como siempre.
+  const goToIn = isCambio && !choosingIn && selectedPlayer !== null;
+  const waitingIn = pickingIn && selectedPlayerIn === null;
+
   const handleSave = async () => {
-    if (!selectedAction || saving) return;
+    if (!selectedAction || saving || waitingIn) return;
+    if (goToIn) return setChoosingIn(true);
     const ok = await call(`${matchUrl}/events`, "POST", {
       type: EVENT_TYPE_FROM_ACTION[selectedAction],
       // El servidor no acepta más de 200 (ver api/matches/[id]/events).
       minute: Math.min(minutes, 200),
       teamId: activeClubId,
       playerId: selectedPlayer,
+      ...(isCambio && selectedPlayerIn && { playerInId: selectedPlayerIn }),
     });
     if (ok) {
       setSelectedAction(null);
-      setSelectedPlayer(null);
+      resetPick();
     }
   };
 
@@ -257,7 +281,7 @@ export default function EnVivoPage() {
   const setPeriod = async (next: MatchPeriod) => {
     if (saving) return;
     setSelectedAction(null);
-    setSelectedPlayer(null);
+    resetPick();
     await call(matchUrl, "PATCH", { period: next });
   };
 
@@ -502,7 +526,7 @@ export default function EnVivoPage() {
       {/* Team toggle */}
       <div className={`mx-4 mb-5 flex gap-3${live && !onBreak ? "" : " hidden"}`}>
         <button
-          onClick={() => { setActiveTeam("local"); setSelectedPlayer(null); }}
+          onClick={() => { setActiveTeam("local"); resetPick(); }}
           className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
             activeTeam === "local"
               ? "bg-surface-secondary text-text-invert"
@@ -512,7 +536,7 @@ export default function EnVivoPage() {
           Local
         </button>
         <button
-          onClick={() => { setActiveTeam("visitante"); setSelectedPlayer(null); }}
+          onClick={() => { setActiveTeam("visitante"); resetPick(); }}
           className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
             activeTeam === "visitante"
               ? "bg-surface-secondary text-text-invert"
@@ -530,7 +554,7 @@ export default function EnVivoPage() {
             key={action.id}
             onClick={() => {
               setSelectedAction(selectedAction === action.id ? null : action.id);
-              setSelectedPlayer(null);
+              resetPick();
             }}
             className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-lg p-2 transition-colors ${
               selectedAction === action.id
@@ -560,21 +584,31 @@ export default function EnVivoPage() {
       ) : selectedAction ? (
         <div className="flex-1 px-4 pb-2">
           <div className="flex flex-col">
-            {teamPlayers.map((player) => {
+            {isCambio && (
+              <div className="mb-1 flex items-center justify-between gap-3 px-1 py-2">
+                <p className="font-heading text-sm font-bold text-text-primary">{pickingIn ? "¿Quién entra?" : "¿Quién sale?"}</p>
+                {pickingIn && (
+                  <button type="button" onClick={() => { setChoosingIn(false); setSelectedPlayerIn(null); }} className="cursor-pointer font-body text-xs text-text-secondary underline">
+                    Sale: {outPlayer ? `${outPlayer.user.firstName} ${outPlayer.user.lastName}` : "—"} · Cambiar
+                  </button>
+                )}
+              </div>
+            )}
+            {listPlayers.map((player) => {
               const cards = playerCards(player.id);
               return (
                 <button
                   key={player.id}
-                  onClick={() => setSelectedPlayer(selectedPlayer === player.id ? null : player.id)}
+                  onClick={() => pick(player.id)}
                   className="flex cursor-pointer items-center gap-3 border-b border-border-primary px-1 py-3 transition-colors hover:bg-btn-regular"
                 >
                   {/* Radio button */}
                   <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                    selectedPlayer === player.id
+                    pickedId === player.id
                       ? "border-surface-secondary bg-surface-secondary"
                       : "border-border-primary"
                   }`}>
-                    {selectedPlayer === player.id && (
+                    {pickedId === player.id && (
                       <div className="h-2 w-2 rounded-full bg-surface-primary" />
                     )}
                   </div>
@@ -721,7 +755,9 @@ export default function EnVivoPage() {
                         </span>
                       </div>
                       <p className={`font-body text-xs ${descStyle}`}>
-                        {event.playerName ? `${event.playerName} - ${teamName}` : teamName}
+                        {event.type === "cambio" && event.rawType === "sustitucion" && event.playerName
+                          ? `Sale ${event.playerName}${event.playerInName ? ` · Entra ${event.playerInName}` : ""} - ${teamName}`
+                          : event.playerName ? `${event.playerName} - ${teamName}` : teamName}
                         {event.recordedBy ? ` · por ${event.recordedBy}` : ""}
                       </p>
                     </div>
@@ -749,12 +785,12 @@ export default function EnVivoPage() {
         <button
           onClick={handleSave}
           className={`w-full cursor-pointer rounded-lg py-3.5 font-heading text-sm font-bold transition-colors ${
-            selectedAction
+            selectedAction && !waitingIn
               ? "bg-surface-secondary text-text-invert hover:bg-brand-700"
               : "bg-surface-secondary/50 text-text-invert/50 cursor-not-allowed"
           }`}
         >
-          Guardar jugada
+          {goToIn ? "Siguiente: ¿quién entra?" : "Guardar jugada"}
         </button>
       </div>
     </div>

@@ -23,6 +23,7 @@ import {
   matchClock,
   halfForEvent,
   splitHalves,
+  substitutionError,
 } from "../../src/_lib/match-live.ts";
 
 describe("estados del partido", () => {
@@ -244,5 +245,21 @@ describe("cronología en dos tiempos", () => {
     assert.deepEqual(splitHalves(events, 35).secondHalf.map((e) => e.id), ["c", "d"]);
     assert.equal(splitHalves(events, null).secondHalf.length, 0);
     assert.equal(splitHalves([ev("a", 50)], undefined).secondHalf.length, 1);
+  });
+});
+
+describe("cambios: quién sale y quién entra", () => {
+  test("un cambio con los dos jugadores distintos está bien; sin jugador que entra, como antes", () => {
+    assert.equal(substitutionError("sustitucion", "p1", "p2"), null);
+    assert.equal(substitutionError("sustitucion", "p1", undefined), null);
+    assert.equal(substitutionError("sustitucion", null, null), null);
+  });
+  test("quien entra necesita quien sale, y no puede ser la misma persona", () => {
+    assert.match(substitutionError("sustitucion", null, "p2") ?? "", /necesita al que sale/);
+    assert.match(substitutionError("sustitucion", "p1", "p1") ?? "", /no puede ser quien sale/);
+  });
+  test("solo un cambio lleva jugador que entra", () => {
+    assert.match(substitutionError("gol", "p1", "p2") ?? "", /Solo un cambio/);
+    assert.equal(substitutionError("gol", "p1", undefined), null);
   });
 });

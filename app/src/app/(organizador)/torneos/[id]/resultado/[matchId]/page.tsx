@@ -180,7 +180,7 @@ export default function ResultadoPage() {
           minute: `${e.minute}'`,
           type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
           title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
-          description: e.playerName ? `${e.playerName} - ${team}` : team,
+          description: e.type === "sustitucion" && e.playerName ? `Sale ${e.playerName}${e.playerInName ? ` · Entra ${e.playerInName}` : ""} - ${team}` : e.playerName ? `${e.playerName} - ${team}` : team,
           teamColor: (isAway ? match.awayTeam?.color : match.homeTeam?.color) ?? "#1B1B1B",
           detail: e.detail ?? undefined,
         };

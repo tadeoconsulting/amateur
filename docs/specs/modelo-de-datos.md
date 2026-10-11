@@ -96,6 +96,7 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 
 ### MatchEvent
 - `type`: `gol`, `tarjeta_amarilla`, `tarjeta_roja`, `sustitucion`, `penal`.
+- `playerInId`: solo en un cambio (`sustitucion`): el jugador que **entra** (`playerId` es quien sale). Si el jugador se elimina o se une a otra ficha, queda en `null` o se mueve a la ficha que se conserva.
 - `recordedById`: quién registró la jugada (organizador, admin o mesa); `null` en las anteriores a [011](011-mesa.md).
 - `half`: `1` o `2` según el tiempo en que se registró ([010](010-tiempos-del-partido.md)); `null` en un partido sin tiempos.
 - `teamId` no tiene relación declarada con `Club` (se valida en la API que sea uno de los dos equipos del partido).

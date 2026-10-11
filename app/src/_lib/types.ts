@@ -68,6 +68,8 @@ export interface MatchEvent {
   half?: number | null;
   playerId: string;
   playerName: string;
+  /** Solo en un cambio: quien entra (`playerName` es quien sale). */
+  playerInName?: string | null;
   teamId: string;
 }
 

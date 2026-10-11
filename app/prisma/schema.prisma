@@ -200,13 +200,15 @@ model PlayerProfile {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  user        User?               @relation(fields: [userId], references: [id])
-  club        Club?               @relation(fields: [clubId], references: [id])
-  category    TeamCategory?       @relation(fields: [categoryId], references: [id])
-  stats       PlayerStats[]
-  matchEvents MatchEvent[]
-  lineups     MatchLineup[]
-  invitations ProfileInvitation[]
+  user            User?               @relation(fields: [userId], references: [id])
+  club            Club?               @relation(fields: [clubId], references: [id])
+  category        TeamCategory?       @relation(fields: [categoryId], references: [id])
+  stats           PlayerStats[]
+  matchEvents     MatchEvent[]        @relation("EventPlayer")
+  // Los cambios en que este jugador entró (en un cambio, `playerId` es quien sale).
+  substitutionsIn MatchEvent[]        @relation("SubstitutionIn")
+  lineups         MatchLineup[]
+  invitations     ProfileInvitation[]
 
   // Una ficha por club (el clubId null — la ficha "libre" — queda fuera de esta regla en la base:
   // que haya una sola lo cuida _lib/player-clubs.ts).
@@ -558,8 +560,11 @@ model MatchEvent {
   half         Int?
   // Quién registró la jugada (organizador, admin o mesa); null en las anteriores a la especificación 011.
   recordedById String?
+  // Solo en un cambio ("sustitucion"): quien entra. `playerId` es quien sale.
+  playerInId   String?
 
   match      Match          @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  player     PlayerProfile? @relation(fields: [playerId], references: [id])
+  player     PlayerProfile? @relation("EventPlayer", fields: [playerId], references: [id])
+  playerIn   PlayerProfile? @relation("SubstitutionIn", fields: [playerInId], references: [id], onDelete: SetNull)
   recordedBy User?          @relation("EventRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
 }
