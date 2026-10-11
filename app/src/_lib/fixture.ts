@@ -664,17 +664,18 @@ export function clubRecord(matches: FormMatch[], clubId: string): ClubRecord {
   return rec;
 }
 
-export type ClubStanding = { rank: number; total: number; groupName: string | null; points: number; played: number };
+/** `live`: el club está jugando ahora y la tabla ya cuenta su marcador de ahora (tabla en vivo). */
+export type ClubStanding = { rank: number; total: number; groupName: string | null; points: number; played: number; live: boolean };
 
 /**
  * El puesto de un club en la tabla del torneo. Con grupos (copa) el puesto cuenta dentro de su grupo: la tabla
  * viene mezclada, y un "1.º" de otro grupo no dice nada. `null` si el club no está en la tabla (por ejemplo,
  * en un torneo de eliminación directa, que no tiene).
  */
-export function clubStanding(standings: { clubId: string; groupName: string | null; position: number; points: number; played: number }[], clubId: string): ClubStanding | null {
+export function clubStanding(standings: { clubId: string; groupName: string | null; position: number; points: number; played: number; live?: boolean }[], clubId: string): ClubStanding | null {
   const row = standings.find((s) => s.clubId === clubId);
   if (!row) return null;
-  if (row.groupName === null) return { rank: row.position, total: standings.filter((s) => s.groupName === null).length, groupName: null, points: row.points, played: row.played };
+  if (row.groupName === null) return { rank: row.position, total: standings.filter((s) => s.groupName === null).length, groupName: null, points: row.points, played: row.played, live: row.live === true };
   const group = standings.filter((s) => s.groupName === row.groupName);
-  return { rank: group.findIndex((s) => s.clubId === clubId) + 1, total: group.length, groupName: row.groupName, points: row.points, played: row.played };
+  return { rank: group.findIndex((s) => s.clubId === clubId) + 1, total: group.length, groupName: row.groupName, points: row.points, played: row.played, live: row.live === true };
 }

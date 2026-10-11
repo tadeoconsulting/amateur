@@ -1,5 +1,7 @@
 "use client";
 
+import { LiveDot, LiveStandingsNotice, PlaceMove, PointsDelta } from "@/_components/live-standings";
+import { placeChanges } from "@/_lib/standings";
 import { useParams, useRouter } from "next/navigation";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { useState } from "react";
@@ -40,7 +42,12 @@ type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
  * `row.position`, que en un torneo con grupos mezcla los grupos — ver el comentario en
  * `_lib/standings.ts`); `showDescends` solo tiene sentido en una liga de tabla única. */
 function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clubHref }: { rows: StandingsRow[]; advanceCount: number; showDescends: boolean; restOut?: boolean; clubHref: (clubId: string) => string }) {
+  // Tabla en vivo: los equipos que juegan ahora ya cuentan su marcador de ahora (ver la API de standings).
+  const anyLive = rows.some((r) => r.live);
+  const moves = anyLive ? placeChanges(rows) : new Map<string, number>();
   return (
+    <>
+    {anyLive && <LiveStandingsNotice />}
     <div className="overflow-hidden rounded-xl border border-brand-200">
       <table className="w-full text-left text-sm">
         <thead>
@@ -71,12 +78,14 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
                       }`}
                     />
                     <span className="text-xs font-medium text-text-secondary">{position}</span>
+                    <PlaceMove change={moves.get(row.clubId)} />
                   </div>
                 </td>
                 <td className="px-1 py-2.5">
                   <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
                     <ClubCrest club={row} size="h-6 w-6" />
                     <span className="truncate text-xs font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
+                    {row.live && <LiveDot />}
                   </Link>
                 </td>
                 <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">{row.played}</td>
@@ -86,13 +95,14 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
                 <td className="px-1 py-2.5 text-center text-xs tabular-nums text-text-primary">
                   {row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}
                 </td>
-                <td className="px-1 py-2.5 pr-3 text-center text-xs font-bold tabular-nums text-text-primary">{row.points}</td>
+                <td className="px-1 py-2.5 pr-3 text-center text-xs font-bold tabular-nums text-text-primary">{row.points}<PointsDelta delta={row.pointsDelta} /></td>
               </tr>
             );
           })}
         </tbody>
       </table>
     </div>
+    </>
   );
 }
 

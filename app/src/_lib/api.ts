@@ -171,6 +171,12 @@ export interface StandingsRow {
   goalDifference: number;
   points: number;
   groupName: string | null;
+  /** Tabla en vivo: el lugar oficial (solo con los finalizados). `position` ya cuenta los partidos en juego. */
+  officialPosition?: number;
+  /** ¿Este equipo está jugando ahora? */
+  live?: boolean;
+  /** Puntos que le da el marcador de ahora en su partido en vivo (0, 1 o 3). */
+  pointsDelta?: number;
 }
 
 export interface ScorerRow {
@@ -277,7 +283,8 @@ export function getMatches(params?: Record<string, string>) {
 }
 
 export function getStandings(tournamentId: string) {
-  return fetcher<StandingsRow[]>(`/api/tournaments/${tournamentId}/standings`);
+  // `live=1`: la tabla suma los partidos que se están jugando, con el marcador de ahora (ver la API de standings).
+  return fetcher<StandingsRow[]>(`/api/tournaments/${tournamentId}/standings?live=1`);
 }
 
 /** La página pública de un club dentro de un torneo (`GET /api/tournaments/:id/teams/:clubId`). */

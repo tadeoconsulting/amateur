@@ -1,5 +1,6 @@
 "use client";
 
+import { LiveDot } from "@/_components/live-standings";
 import Link from "next/link";
 import { useState } from "react";
 import { getClubInTournament, getMatches, getStandings, type ClubInTournament, type MatchListItem } from "@/_lib/api";
@@ -135,7 +136,15 @@ function PositionCard({ standing, qualifyCount, tableHref }: { standing: NonNull
   const qualifies = qualifyCount !== null ? standing.rank <= qualifyCount : null;
   return (
     <section className="rounded-xl border border-border-primary p-4">
-      <h2 className="font-heading text-xs font-bold uppercase tracking-wider text-text-secondary">Posición en la tabla</h2>
+      <h2 className="flex items-center gap-2 font-heading text-xs font-bold uppercase tracking-wider text-text-secondary">
+        Posición en la tabla
+        {standing.live && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-red/10 px-2 py-0.5 text-[10px] text-red">
+            <LiveDot />
+            En vivo
+          </span>
+        )}
+      </h2>
       <p className="mt-2 flex items-baseline gap-2">
         <span className="font-heading text-4xl font-bold tabular-nums text-text-primary">{ordinal(standing.rank)}</span>
         <span className="font-body text-sm text-text-secondary">de {standing.total}{standing.groupName ? ` en ${standing.groupName}` : ""}</span>

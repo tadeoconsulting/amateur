@@ -3,6 +3,8 @@ import type { ScorerRow, StandingsRow } from "@/_lib/api";
 import { displayShortName } from "@/_lib/short-name";
 import { ClubCrest } from "@/_components/club-crest";
 import { PlayerAvatar } from "@/_components/player-avatar";
+import { LiveDot, LiveStandingsNotice, PlaceMove, PointsDelta } from "@/_components/live-standings";
+import { placeChanges } from "@/_lib/standings";
 
 /**
  * Tabla de posiciones y goleadores tal como los ven el fan, el jugador y el club: una sola
@@ -37,8 +39,13 @@ export function StandingsTable({
       ? position <= qualifyCount ? "bg-verification text-white" : "bg-error text-white"
       : position <= 2 ? "bg-verification text-white" : position >= 7 ? "bg-error text-white" : "bg-brand-200 text-text-secondary";
 
+  // Tabla en vivo: si algún equipo está jugando, ya cuenta su marcador de ahora (ver la API de standings).
+  const anyLive = standings.some((r) => r.live);
+  const moves = anyLive ? placeChanges(standings) : new Map<string, number>();
+
   return (
     <>
+      {anyLive && <LiveStandingsNotice />}
       <div className="overflow-x-auto rounded-xl border border-border-primary">
         <table className="w-full text-left font-body text-xs">
           <thead>
@@ -57,18 +64,23 @@ export function StandingsTable({
             {standings.map((row) => (
               <tr key={row.clubId} className={`border-b border-border-primary last:border-0 ${highlightClubIds.includes(row.clubId) ? "bg-field-light" : ""}`}>
                 <td className="px-2 py-2.5">
-                  <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${dot(row.position)}`}>{row.position}</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${dot(row.position)}`}>{row.position}</div>
+                    <PlaceMove change={moves.get(row.clubId)} />
+                  </div>
                 </td>
                 <td className="px-2 py-2.5">
                   {clubHref ? (
                     <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
                       <ClubCrest club={row} />
                       <span className="truncate font-heading text-xs font-semibold text-text-primary underline-offset-2 hover:underline">{displayShortName(row.shortName)}</span>
+                      {row.live && <LiveDot />}
                     </Link>
                   ) : (
                     <div className="flex items-center gap-2">
                       <ClubCrest club={row} />
                       <span className="truncate font-heading text-xs font-semibold text-text-primary">{displayShortName(row.shortName)}</span>
+                      {row.live && <LiveDot />}
                     </div>
                   )}
                 </td>
@@ -77,7 +89,7 @@ export function StandingsTable({
                 {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>}
                 {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.lost}</td>}
                 <td className="px-2 py-2.5 text-center text-text-secondary">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
-                <td className="px-2 py-2.5 text-center font-heading font-bold text-text-primary">{row.points}</td>
+                <td className="px-2 py-2.5 text-center font-heading font-bold text-text-primary">{row.points}<PointsDelta delta={row.pointsDelta} /></td>
               </tr>
             ))}
           </tbody>

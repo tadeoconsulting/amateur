@@ -92,7 +92,7 @@ test("el puesto de un club en la tabla: global, o dentro de su grupo si el torne
     { clubId: "B", groupName: null, position: 2, points: 6, played: 3 },
     { clubId: "C", groupName: null, position: 3, points: 1, played: 3 },
   ];
-  assert.deepEqual(clubStanding(liga, "B"), { rank: 2, total: 3, groupName: null, points: 6, played: 3 });
+  assert.deepEqual(clubStanding(liga, "B"), { rank: 2, total: 3, groupName: null, points: 6, played: 3, live: false });
   // con grupos la tabla viene mezclada: el puesto se cuenta dentro del grupo
   const copa = [
     { clubId: "A", groupName: "Grupo A", position: 1, points: 9, played: 3 },
@@ -100,7 +100,8 @@ test("el puesto de un club en la tabla: global, o dentro de su grupo si el torne
     { clubId: "B", groupName: "Grupo A", position: 3, points: 4, played: 3 },
     { clubId: "Y", groupName: "Grupo B", position: 4, points: 2, played: 3 },
   ];
-  assert.deepEqual(clubStanding(copa, "B"), { rank: 2, total: 2, groupName: "Grupo A", points: 4, played: 3 });
-  assert.deepEqual(clubStanding(copa, "Y"), { rank: 2, total: 2, groupName: "Grupo B", points: 2, played: 3 });
+  assert.deepEqual(clubStanding(copa, "B"), { rank: 2, total: 2, groupName: "Grupo A", points: 4, played: 3, live: false });
+  assert.deepEqual(clubStanding(copa, "Y"), { rank: 2, total: 2, groupName: "Grupo B", points: 2, played: 3, live: false });
+  assert.equal(clubStanding([{ ...liga[1], live: true }], "B")?.live, true, "si el club juega ahora, la tabla lo marca");
   assert.equal(clubStanding(liga, "ZZ"), null); // sin tabla (eliminación directa), no hay puesto
 });

@@ -83,3 +83,59 @@ export function computeStandings(teams: StandingTeam[], matches: StandingMatch[]
     .map((s) => ({ ...s, goalDifference: s.goalsFor - s.goalsAgainst }))
     .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor);
 }
+
+export type LiveStandingRow = StandingRow & {
+  /** Lugar en la tabla incluyendo los partidos que se están jugando (como si terminaran así). */
+  position: number;
+  /** Lugar en la tabla oficial, solo con los partidos finalizados. */
+  officialPosition: number;
+  /** ¿Este equipo está jugando ahora? */
+  live: boolean;
+  /** Puntos que le suma el partido en vivo con el marcador de ahora (0, 1 o 3). */
+  pointsDelta: number;
+};
+
+/**
+ * La tabla "en vivo": suma a la oficial los partidos que se están jugando, con el marcador de este momento, como si
+ * terminaran así. Es solo una proyección: no se guarda nada, y cuando el partido finaliza, la oficial pasa a ser
+ * igual. Cada fila lleva su lugar de ahora (`position`), el oficial (`officialPosition`), si juega ahora (`live`) y
+ * cuántos puntos le da el marcador de ahora (`pointsDelta`). Sin partidos en vivo, es la oficial.
+ */
+export function computeLiveStandings(teams: StandingTeam[], finished: StandingMatch[], inPlay: StandingMatch[]): LiveStandingRow[] {
+  const official = computeStandings(teams, finished);
+  const projected = inPlay.length > 0 ? computeStandings(teams, [...finished, ...inPlay]) : official;
+
+  const officialPosition = new Map(official.map((row, i) => [row.clubId, i + 1]));
+  const officialPoints = new Map(official.map((row) => [row.clubId, row.points]));
+  const playing = new Set<string>();
+  for (const m of inPlay) {
+    if (m.homeScore === null || m.awayScore === null || m.homeTeamId === null || m.awayTeamId === null) continue;
+    playing.add(m.homeTeamId);
+    playing.add(m.awayTeamId);
+  }
+
+  return projected.map((row, i) => ({
+    ...row,
+    position: i + 1,
+    officialPosition: officialPosition.get(row.clubId) ?? i + 1,
+    live: playing.has(row.clubId),
+    pointsDelta: row.points - (officialPoints.get(row.clubId) ?? 0),
+  }));
+}
+
+/**
+ * Cuántos lugares subió (positivo) o bajó (negativo) cada equipo de esta lista respecto de la tabla oficial. La lista
+ * es la que se muestra (toda la tabla o un solo grupo) y va en el orden en vivo; el lugar oficial se toma entre
+ * esos mismos equipos, así que en un torneo con grupos cada grupo se mide solo contra sí mismo.
+ */
+export function placeChanges(rows: readonly { clubId: string; officialPosition?: number }[]): Map<string, number> {
+  const changes = new Map<string, number>();
+  if (rows.some((r) => r.officialPosition === undefined)) return changes;
+  const officialOrder = [...rows].sort((a, b) => (a.officialPosition as number) - (b.officialPosition as number));
+  const officialRank = new Map(officialOrder.map((r, i) => [r.clubId, i]));
+  rows.forEach((r, i) => {
+    const change = (officialRank.get(r.clubId) ?? i) - i;
+    if (change !== 0) changes.set(r.clubId, change);
+  });
+  return changes;
+}
