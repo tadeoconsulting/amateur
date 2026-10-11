@@ -116,6 +116,12 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
   const isJugador = form.roles.includes("JUGADOR");
   const isOrganizador = form.roles.includes("ORGANIZADOR");
+  const isMesa = form.roles.includes("MESA");
+  // Una mesa se puede crear ya con sus torneos (especificación 011): se le asignan al crearla.
+  const [mesaTournamentIds, setMesaTournamentIds] = useState<string[]>([]);
+  const [assignedCount, setAssignedCount] = useState(0);
+  const { data: allTournaments } = useApi<{ id: string; name: string }[]>(() => fetch("/api/tournaments").then((r) => (r.ok ? r.json() : [])));
+  const toggleMesaTournament = (id: string) => setMesaTournamentIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   const handleSubmit = async () => {
     if (!form.email || !form.firstName || !form.lastName) {
@@ -160,6 +166,16 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     }
 
     const created = await res.json();
+    if (isMesa && mesaTournamentIds.length > 0) {
+      const results = await Promise.all(
+        mesaTournamentIds.map((tid) =>
+          fetch(`/api/tournaments/${tid}/mesa`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: created.id }) })
+            .then((r) => r.ok)
+            .catch(() => false)
+        )
+      );
+      setAssignedCount(results.filter(Boolean).length);
+    }
     if (created.temporaryPassword) {
       // La contraseña temporal se muestra una sola vez: hay que pasársela a la persona.
       setTemporaryPassword(created.temporaryPassword);
@@ -175,6 +191,12 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
         <div className="w-full max-w-md rounded-2xl bg-surface-primary p-6 shadow-xl">
           <h2 className="font-heading text-lg font-bold text-text-primary">Usuario creado</h2>
+          {isMesa && (
+            <p className="mt-2 font-body text-sm text-text-primary">
+              {assignedCount > 0 ? `Asignada a ${assignedCount} ${assignedCount === 1 ? "torneo" : "torneos"}.` : "Todavía no tiene torneos: asígnaselos desde su ficha (Editar) o desde el torneo."}
+              {assignedCount < mesaTournamentIds.length && " Algunos torneos no se pudieron asignar: revísalo en su ficha."}
+            </p>
+          )}
           <p className="mt-2 font-body text-sm text-text-secondary">
             Esta contraseña temporal se muestra una sola vez. Compártela con {form.firstName} para que pueda iniciar sesión.
           </p>
@@ -335,6 +357,31 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           {/* Campos de Organizador */}
+          {isMesa && (
+            <div>
+              <span className="mb-2 block font-body text-xs font-medium text-text-secondary">Torneos de la mesa (opcional)</span>
+              <p className="mb-2 font-body text-xs text-text-secondary">
+                Solo podrá gestionar el partido en vivo de los torneos que marques, y solo el día de juego. Los puedes cambiar después.
+              </p>
+              {!allTournaments ? (
+                <p className="font-body text-sm text-text-secondary">Cargando torneos...</p>
+              ) : allTournaments.length === 0 ? (
+                <p className="font-body text-sm text-text-secondary">Todavía no hay torneos.</p>
+              ) : (
+                <ul className="max-h-44 overflow-y-auto rounded-lg border border-border-primary">
+                  {allTournaments.map((t, i) => (
+                    <li key={t.id} className={i > 0 ? "border-t border-border-primary" : ""}>
+                      <label className="flex min-h-11 cursor-pointer items-center gap-3 px-3 py-2 font-body text-sm text-text-primary">
+                        <input type="checkbox" checked={mesaTournamentIds.includes(t.id)} onChange={() => toggleMesaTournament(t.id)} className="h-4 w-4" />
+                        <span className="min-w-0 truncate">{t.name}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {isOrganizador && (
             <>
               <hr className="border-border-primary" />
