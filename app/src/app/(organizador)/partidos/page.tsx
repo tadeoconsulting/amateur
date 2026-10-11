@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -52,12 +53,12 @@ function PartidoRow({ m }: { m: MatchListItem }) {
       <span aria-hidden="true" className="h-10 w-px shrink-0 bg-border-primary" />
       <div className="w-[92px] shrink-0 text-right">
         {m.status === "en_curso" ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-field-green/10 px-2 py-0.5 font-heading text-xs font-bold text-field-green">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green" aria-hidden="true" />
-            En vivo
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-heading text-xs font-bold ${MATCH_TONE[matchTone(m.status, m.period)].soft}`}>
+            <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${MATCH_TONE[matchTone(m.status, m.period)].dot}`} aria-hidden="true" />
+            {m.period === "descanso" ? "Descanso" : "En vivo"}
           </span>
         ) : m.status === "finalizado" ? (
-          <span className="font-heading text-xs font-semibold text-text-secondary">Final</span>
+          <span className={`font-heading text-xs font-semibold ${MATCH_TONE.finished.text}`}>Final</span>
         ) : (
           <span className="font-heading text-xs font-bold text-text-primary">{m.time === "" ? UNSCHEDULED_LABEL : formatTime12(m.time)}</span>
         )}
@@ -178,7 +179,7 @@ function PartidosContent({ organizerId }: { organizerId: string }) {
             )}
             {conPartidos.map((t) => (
               <button key={t.id} type="button" onClick={() => ir({ torneo: t.id })} aria-pressed={torneo === t.id} className={chip(torneo === t.id)}>
-                {enVivoDe(t.id) > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green" aria-label="Con partidos en vivo" />}
+                {enVivoDe(t.id) > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red" aria-label="Con partidos en vivo" />}
                 <span className="max-w-[180px] truncate">{t.name}</span>
               </button>
             ))}

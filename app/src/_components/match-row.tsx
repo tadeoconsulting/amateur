@@ -1,3 +1,4 @@
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import type { MatchListItem } from "@/_lib/api";
 import { formatTime12, UNSCHEDULED_LABEL } from "@/_lib/match-format";
@@ -36,12 +37,12 @@ export function MatchRow({
   // Estado: lo que se muestra en el centro (marcador u hora) y la etiqueta de abajo.
   const played = match.status === "finalizado" || live;
   const statusLabel = live ? (
-    <span className="inline-flex items-center gap-1 font-heading text-xs font-bold text-field-dark">
-      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-field-green motion-reduce:animate-none" aria-hidden="true" />
+    <span className={`inline-flex items-center gap-1 font-heading text-xs font-bold ${MATCH_TONE[matchTone(match.status, match.period)].text}`}>
+      <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${MATCH_TONE[matchTone(match.status, match.period)].dot} motion-reduce:animate-none`} aria-hidden="true" />
       {match.period === "descanso" ? "Descanso" : "En vivo"}
     </span>
   ) : match.status === "finalizado" ? (
-    <span className="font-heading text-xs font-bold text-text-secondary">Final</span>
+    <span className={`font-heading text-xs font-bold ${MATCH_TONE.finished.text}`}>Final</span>
   ) : isUnscheduled(match) ? (
     <span className="font-body text-xs text-text-secondary">{UNSCHEDULED_LABEL}</span>
   ) : (

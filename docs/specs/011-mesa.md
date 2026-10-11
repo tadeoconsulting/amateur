@@ -21,7 +21,11 @@
 ## Cómo se crea y se asigna
 - El perfil es `MESA` (valor nuevo de `Role`). No se puede elegir al registrarse ni sumar desde "Cambiar de perfil".
 - **Organizador:** en su torneo, **Mesa** (junto a *Editar torneo*): lista de mesas, **Agregar mesa** (nombre, apellido y correo) y quitar. Si el correo no existe, se crea la cuenta con una **contraseña temporal que se muestra una sola vez** (como al crear un usuario desde el panel admin; la persona la cambia al entrar); si ya es una cuenta de mesa, solo se le asigna el torneo; si es una cuenta con otros perfiles, `409`.
-- **Admin:** crea la cuenta desde **Usuarios** (perfil Mesa) y le asigna **torneos** desde ahí; también puede usar la pantalla del organizador.
+- **Admin**, de tres maneras (todas se guardan al momento):
+  - **Desde el torneo:** en **Admin → Torneos → Editar**, el bloque **Mesa del torneo** lista las mesas asignadas, crea una cuenta nueva (contraseña temporal una sola vez), **asigna una cuenta de mesa que ya existe** y quita.
+  - **Al crear la cuenta:** en **Usuarios → Crear usuario**, con el perfil Mesa, se marcan sus torneos y se le asignan al crearla.
+  - **Desde la cuenta:** en **Usuarios → Editar** de una mesa, **Torneos de la mesa** asigna o quita torneos.
+  - La lógica de las mesas de un torneo es un solo componente (`_components/mesa-manager.tsx`), el mismo que usa el organizador.
 - Una mesa puede tener **varios torneos**, de organizadores distintos. Quitarla de un torneo le saca el acceso a sus partidos al instante.
 
 ## Ventana de acceso

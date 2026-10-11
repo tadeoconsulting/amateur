@@ -1,5 +1,6 @@
 "use client";
 
+import { MesaManager } from "@/_components/mesa-manager";
 import { useEffect, useState, type ReactNode } from "react";
 import { COMPETITION_TYPES, GENDERS, MODALITIES, TOURNAMENT_STATUSES } from "@/_lib/tournament-labels";
 import { TournamentPhotoField } from "@/_components/tournament-photo-field";
@@ -444,6 +445,17 @@ export function TournamentModal({
               )}
               {editing && <p className="mt-1 font-body text-xs text-text-secondary">Un torneo no cambia de organizador desde aquí.</p>}
             </div>
+
+            {/* La mesa (especificación 011): quien gestiona el partido en vivo. Se crea o se asigna al momento, sin esperar a "Guardar cambios". */}
+            {editing && tournamentId && (
+              <div className="flex flex-col gap-2 border-t border-border-primary pt-4">
+                <span className="font-body text-xs font-medium text-text-secondary">Mesa del torneo</span>
+                <p className="font-body text-xs text-text-secondary">
+                  Quienes gestionan el partido en vivo. Solo ven este torneo y solo pueden entrar el día de juego (de 1 hora antes del primer partido a 1 hora después del último). Los cambios se guardan al momento.
+                </p>
+                <MesaManager tournamentId={tournamentId} admin />
+              </div>
+            )}
           </div>
         )}
 

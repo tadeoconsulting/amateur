@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import { useState } from "react";
 import type { MatchListItem, StandingsRow, TournamentDetail } from "@/_lib/api";
@@ -40,10 +41,10 @@ function BracketMatchCard({ tournamentId, match }: { tournamentId: string; match
     <div className={`rounded-xl border border-border-primary p-3 ${href ? "transition-colors hover:bg-btn-regular" : ""}`}>
       <div className="mb-2 flex items-center justify-between">
         <span
-          className={`inline-flex items-center gap-1.5 font-body text-xs ${match.status === "en_curso" ? "font-semibold text-verification" : "text-text-secondary"}`}
+          className={`inline-flex items-center gap-1.5 font-body text-xs ${match.status === "en_curso" ? `font-semibold ${MATCH_TONE[matchTone(match.status, match.period)].text}` : "text-text-secondary"}`}
         >
-          {match.status === "en_curso" && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-verification" aria-hidden="true" />}
-          {match.status === "en_curso" ? "En vivo" : match.status === "finalizado" ? "Finalizado" : "Por jugar"}
+          {match.status === "en_curso" && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${MATCH_TONE[matchTone(match.status, match.period)].dot}`} aria-hidden="true" />}
+          {match.status === "en_curso" ? (match.period === "descanso" ? "Descanso" : "En vivo") : match.status === "finalizado" ? "Finalizado" : "Por jugar"}
         </span>
         {decidedByPenalties(match) && (
           <span className="font-body text-xs text-text-secondary">

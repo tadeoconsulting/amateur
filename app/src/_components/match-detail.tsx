@@ -1,5 +1,6 @@
 "use client";
 
+import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMatches, type MatchEventItem, type MatchListItem } from "@/_lib/api";
@@ -152,11 +153,11 @@ export function MatchDetail({
       <div className="mx-4 mt-2 rounded-xl border border-border-primary p-4">
         <div className="flex justify-center">
           {live && (
-            <span className="rounded-full bg-verification px-3 py-1 font-heading text-xs font-bold text-white">
+            <span className={`rounded-full px-3 py-1 font-heading text-xs font-bold ${MATCH_TONE[matchTone(match.status, match.period)].chip}`}>
               {onBreak ? "Descanso" : stale ? "En juego" : `${clock.minute}' En vivo`}
             </span>
           )}
-          {finished && <span className="rounded-full bg-brand-200 px-3 py-1 font-heading text-xs font-bold text-text-secondary">FT · Finalizado</span>}
+          {finished && <span className={`rounded-full px-3 py-1 font-heading text-xs font-bold ${MATCH_TONE.finished.chip}`}>FT · Finalizado</span>}
           {scheduled && <span className="rounded-full bg-brand-100 px-3 py-1 font-heading text-xs font-bold text-text-secondary">{formatWhen(match)}</span>}
         </div>
 

@@ -1,3 +1,4 @@
+import { MATCH_TONE } from "@/_lib/match-tone";
 import { splitHalves } from "@/_lib/match-live";
 import type { MatchEvent, MatchStatus } from "@/_lib/types";
 
@@ -71,7 +72,7 @@ export function MatchTimeline({
       )}
 
       <div className="relative mt-8 flex justify-center">
-        <span className={`z-10 rounded bg-white px-3 py-1 text-sm font-medium ${status === "en_vivo" && !onBreak ? "text-verification" : "text-text-secondary"}`}>
+        <span className={`z-10 rounded bg-white px-3 py-1 text-sm font-medium ${onBreak ? MATCH_TONE.break.text : status === "en_vivo" ? MATCH_TONE.live.text : MATCH_TONE.finished.text}`}>
           {onBreak ? "Descanso" : status === "en_vivo" ? "En Vivo" : "Finalizado"}
         </span>
       </div>
