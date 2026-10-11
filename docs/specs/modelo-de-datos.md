@@ -43,6 +43,7 @@ Club ──< PlayerInvitation                (invitaciones personales)
 - **Jugador provisional** (especificación [009](009-jugadores-provisionales.md)): una ficha **sin cuenta** (`userId` null) cargada por un admin, con `firstName`, `lastName`, `dni` (único, y solo entre provisionales: una ficha con cuenta lo deja en null y lo guarda en `User`) y `birthDate`, siempre en un club. Sus jugadas y estadísticas cuelgan de la ficha, así que al asignarle una cuenta (entrega 2) no se pierde nada. Un provisional solo está en un equipo. El DNI y la fecha de nacimiento nunca son públicos. El nombre de un jugador, con o sin cuenta, sale de `_lib/player-identity.ts`.
 - **`ProfileInvitation`** (especificación [009](009-jugadores-provisionales.md), entrega 3): una invitación para que una persona reclame un perfil provisional. Lleva el perfil (`profileId`, con borrado en cascada), un `email` opcional (sin correo es un enlace para compartir), un `token` secreto y único, el `status` (`pending`, `review`, `accepted`, `cancelled`, `locked`), los `attempts` de DNI equivocado, quién la creó (`invitedBy`) y quién la aceptó, y cuándo vence (7 días). No guarda el DNI.
 - **`DelegateInvitation`** (especificación [009](009-jugadores-provisionales.md), entrega 4): una invitación para que una persona pase a ser el delegado de un equipo temporal. Lleva el club (`clubId`, con borrado en cascada), un `email` opcional (sin correo es un enlace para compartir), un `token` secreto y único, el `status` (`pending`, `accepted`, `cancelled`), quién la creó (`invitedBy`) y quién la aceptó, y cuándo vence (7 días). Aceptarla hace lo mismo que *Oficializar*: `Club.ownerId` pasa a la cuenta y `isTemporary` a `false`.
+- **`TournamentMesa`** (especificación [011](011-mesa.md)): la asignación de una cuenta con el perfil `MESA` a un torneo (`tournamentId`, `userId`, quién la asignó; única por torneo y cuenta; se borra en cascada). `MESA` es un valor nuevo de `Role` y es exclusivo: una mesa no tiene otros perfiles.
 - **Un usuario puede jugar en varios clubes: tiene una ficha (`PlayerProfile`) por club.** `(userId, clubId)` es único. Además puede tener una ficha "libre" (`clubId` null: solo la posición, todavía sin equipo, p. ej. la del registro); al sumarse a un club se usa esa ficha en vez de crear otra. Que haya una sola libre lo cuida el código (`_lib/invite.ts › joinClub`), no la base: en Postgres los `NULL` no chocan en un índice único.
 - `categoryId`, `number` y las estadísticas son **de cada ficha** (de cada club). La posición es de la persona: se aplica a todas sus fichas.
 - `User.activeClubId`: con qué equipo "sale a la cancha" hoy (el que muestra Actividad). Sin relación a propósito: si ya no es uno de sus equipos, se ignora y se usa el más antiguo (`_lib/player-clubs.ts › resolveActiveClubId`).
@@ -90,10 +91,12 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 | `time = ""` | **Partido sin programar** (fixture manual). Su `date` es provisoriamente la fecha de inicio del torneo. |
 | `matchday` | Número de fecha, desde 1 |
 | `startedAt` | Se fija al empezar; de ahí sale el cronómetro |
+| `finishedAt` | Se fija al finalizar y se borra al reabrir; de ahí sale el cierre de la ventana de la mesa ([011](011-mesa.md)) |
 | `period`, `firstHalfEndedAt`, `secondHalfStartedAt` | Los dos tiempos ([010](010-tiempos-del-partido.md)): `primer_tiempo`, `descanso`, `segundo_tiempo`; `null` en un partido sin empezar o que empezó antes de que existieran los tiempos |
 
 ### MatchEvent
 - `type`: `gol`, `tarjeta_amarilla`, `tarjeta_roja`, `sustitucion`, `penal`.
+- `recordedById`: quién registró la jugada (organizador, admin o mesa); `null` en las anteriores a [011](011-mesa.md).
 - `half`: `1` o `2` según el tiempo en que se registró ([010](010-tiempos-del-partido.md)); `null` en un partido sin tiempos.
 - `teamId` no tiene relación declarada con `Club` (se valida en la API que sea uno de los dos equipos del partido).
 - Se borra en cascada con el partido.

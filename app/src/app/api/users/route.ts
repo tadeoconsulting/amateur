@@ -52,6 +52,8 @@ export async function GET(request: NextRequest) {
       ownedClubs: { select: { id: true, name: true } },
       playerProfiles: { orderBy: { createdAt: "asc" }, include: { club: { select: { id: true, name: true } } } },
       _count: { select: { tournaments: true } },
+      // Los torneos de una cuenta de mesa (especificación 011): solo se le muestran a un admin.
+      mesaAssignments: { select: { tournament: { select: { id: true, name: true } } } },
     },
     orderBy: { createdAt: "desc" },
     ...(admin ? {} : { take: NON_ADMIN_MAX_RESULTS }),
@@ -77,6 +79,7 @@ export async function GET(request: NextRequest) {
         createdAt: u.createdAt,
         ownedClubs: u.ownedClubs,
         tournamentsCount: u._count.tournaments,
+        mesaTournaments: u.mesaAssignments.map((m) => m.tournament),
       }),
     }))
   );

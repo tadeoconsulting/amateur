@@ -44,6 +44,7 @@ export const config = {
     "/crear-torneo/:path*",
     "/seleccion-perfil",
     "/club/:path*",
+    "/mesa/:path*",
     "/jugador/:path*",
     "/admin/:path*",
   ],

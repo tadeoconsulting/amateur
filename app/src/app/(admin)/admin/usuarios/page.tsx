@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { MesaTournaments } from "../_components/mesa-tournaments";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
 import { SortTh, useSort } from "../_components/sortable";
@@ -22,6 +23,8 @@ interface UserRow {
   ownedClubs: { id: string; name: string }[];
   playerProfiles: { id: string; position: string | null; club: { id: string; name: string } | null }[];
   tournamentsCount: number;
+  /** Los torneos de una cuenta de mesa. */
+  mesaTournaments?: { id: string; name: string }[];
 }
 
 const allRoles = [
@@ -35,10 +38,13 @@ const allRoles = [
 // Administrador va aparte: es exclusivo (una cuenta de administrador no tiene otros perfiles), así
 // que elegirlo desmarca los demás y elegir otro perfil lo desmarca.
 const ADMIN_ROLE = { key: "ADMIN", label: "Administrador" };
-const selectableRoles = [...allRoles, ADMIN_ROLE];
+// La mesa (quien gestiona el partido en vivo, especificación 011) también es exclusiva: es solo mesa.
+const MESA_ROLE = { key: "MESA", label: "Mesa" };
+const selectableRoles = [...allRoles, MESA_ROLE, ADMIN_ROLE];
+const EXCLUSIVE_ROLES = ["ADMIN", "MESA"];
 const toggleExclusive = (current: string[], role: string) => {
-  if (role === "ADMIN") return current.includes("ADMIN") ? [] : ["ADMIN"];
-  const without = current.filter((r) => r !== "ADMIN");
+  if (EXCLUSIVE_ROLES.includes(role)) return current.includes(role) ? [] : [role];
+  const without = current.filter((r) => !EXCLUSIVE_ROLES.includes(r));
   return without.includes(role) ? without.filter((r) => r !== role) : [...without, role];
 };
 
@@ -49,6 +55,7 @@ const roleBadgeColors: Record<string, string> = {
   SPONSOR: "bg-amber-100 text-amber-700",
   FAN: "bg-gray-100 text-gray-700",
   ADMIN: "bg-red-100 text-red-700",
+  MESA: "bg-teal-100 text-teal-700",
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -617,6 +624,13 @@ function EditUserModal({
             </div>
           </div>
         </div>
+
+        {user.roles.includes("MESA") && (
+          <div className="mt-6 flex flex-col gap-3 border-t border-border-primary pt-4">
+            <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Torneos de la mesa</p>
+            <MesaTournaments user={{ id: user.id, firstName: user.firstName }} initial={user.mesaTournaments ?? []} />
+          </div>
+        )}
 
         <div className="mt-6">
           <ResetPassword userId={user.id} userLabel={`${user.firstName} ${user.lastName}`} />

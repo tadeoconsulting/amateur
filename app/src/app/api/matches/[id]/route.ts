@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageMatch, forbidden, readJson, requireUser } from "@/_lib/auth";
+import { denyResponse, matchAccess } from "@/_lib/mesa-server";
 import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
 import { CLASH_MESSAGE, hasScheduleClash } from "@/_lib/match-schedule";
 import { canTransition, canTransitionPeriod, canTransitionPhase, isMatchPeriod, isMatchPhase, isMatchStatus, MATCH_PERIODS, MATCH_PHASES, type MatchPeriod, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
@@ -64,10 +65,17 @@ export async function PATCH(
   if ("response" in auth) return auth.response;
 
   const { id } = await params;
-  if (!(await canManageMatch(auth.user, id))) return forbidden();
+  const access = await matchAccess(auth.user, id);
+  if (!access.ok) return denyResponse(access);
 
   const body = await readJson(request);
   if (!body) return badRequest();
+  // La mesa (especificación 011) solo lleva el partido: estado, tiempo y fase. Nada de marcador a mano, ni de
+  // programación, ni de equipos.
+  const isMesa = access.kind === "mesa";
+  if (isMesa && Object.keys(body).some((k) => !["status", "period", "phase"].includes(k))) {
+    return forbidden();
+  }
   const { homeScore, awayScore, status, phase, period, date, time, location, homeTeamId, awayTeamId } = body;
 
   if ((homeScore !== undefined && !isScore(homeScore)) || (awayScore !== undefined && !isScore(awayScore))) {
@@ -225,6 +233,10 @@ export async function PATCH(
   // ─── Estado ───
   const from = current.status as MatchStatus;
   const to = status as MatchStatus | undefined;
+  // La mesa inicia el partido y lo finaliza; reabrirlo, volverlo a "programado" o cargar el resultado directo es del organizador.
+  if (isMesa && to !== undefined && to !== from && !((from === "programado" && to === "en_curso") || (from === "en_curso" && to === "finalizado"))) {
+    return forbidden();
+  }
   // Un partido "por definir" (cuadro de eliminación sin resolver todavía) no se puede jugar.
   if ((to === "en_curso" || to === "finalizado") && isTbd(current)) {
     return conflict("Los equipos de este partido todavía no están definidos");
@@ -250,6 +262,7 @@ export async function PATCH(
 
     if (to === "en_curso") {
       data.startedAt = current.startedAt ?? new Date();
+      data.finishedAt = null;
       // Un partido que nunca empezó estrena los tiempos; uno que ya había empezado (antes de que
       // existieran) o que se reabre conserva el tiempo en que quedó.
       if (current.period === null && current.startedAt === null) data.period = "primer_tiempo";
@@ -257,6 +270,7 @@ export async function PATCH(
       if (current.awayScore === null && data.awayScore === undefined) data.awayScore = 0;
       if (reopeningDecided) { data.winnerTeamId = null; winnerTeamId = null; }
     } else if (to === "finalizado") {
+      data.finishedAt = new Date();
       if (current.homeScore === null && data.homeScore === undefined) data.homeScore = 0;
       if (current.awayScore === null && data.awayScore === undefined) data.awayScore = 0;
 
@@ -285,6 +299,7 @@ export async function PATCH(
     } else if (to === "programado") {
       if (current._count.events > 0) return conflict("El partido ya tiene jugadas registradas: no se puede volver a programado");
       data.startedAt = null;
+      data.finishedAt = null;
       data.period = null;
       data.firstHalfEndedAt = null;
       data.secondHalfStartedAt = null;

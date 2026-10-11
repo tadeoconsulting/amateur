@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
@@ -20,11 +20,15 @@ type MatchEvent = {
   minute: number;
   playerId: string | null;
   playerName: string | null;
+  /** Quién la registró (solo lo ve quien gestiona el partido). */
+  recordedBy: string | null;
 };
 
 export default function EnVivoPage() {
   const params = useParams<{ id: string; matchId: string }>();
   const router = useRouter();
+  // La mesa (especificación 011) usa esta misma pantalla desde /mesa: vuelve a su inicio y no reabre partidos.
+  const inMesa = usePathname().startsWith("/mesa");
   // Todo sale de la API: el marcador, las jugadas y el momento de inicio (así el cronómetro
   // y la crónica sobreviven a recargar la página).
   const { data: match, refetch: refetchMatch } = useApi<MatchDetail>(() =>
@@ -110,6 +114,7 @@ export default function EnVivoPage() {
     minute: e.minute,
     playerId: e.playerId,
     playerName: e.playerName,
+    recordedBy: e.recordedBy ?? null,
   }));
 
   const homeScore = match.homeScore ?? 0;
@@ -293,7 +298,7 @@ export default function EnVivoPage() {
             lista...) en vez de ir a un destino fijo, así que finalizar un partido y volver
             atrás dejaba a la persona haciendo varios clics para llegar a Partidos. */}
         <button
-          onClick={() => router.push(`/torneos/${params.id}`)}
+          onClick={() => router.push(inMesa ? "/mesa" : `/torneos/${params.id}`)}
           className="flex cursor-pointer items-center gap-1 font-heading text-sm font-semibold text-text-primary"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
@@ -473,13 +478,15 @@ export default function EnVivoPage() {
               Se definió por penales: {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}
             </p>
           )}
-          <button
-            onClick={() => setStatus("en_curso")}
-            disabled={saving}
-            className="cursor-pointer font-heading text-sm font-semibold text-text-primary underline disabled:opacity-40"
-          >
-            Reabrir para corregir
-          </button>
+          {!inMesa && (
+            <button
+              onClick={() => setStatus("en_curso")}
+              disabled={saving}
+              className="cursor-pointer font-heading text-sm font-semibold text-text-primary underline disabled:opacity-40"
+            >
+              Reabrir para corregir
+            </button>
+          )}
         </div>
       )}
       {live && !onBreak && match.phase !== "penales" && events.length > 0 && !selectedAction && (
@@ -715,6 +722,7 @@ export default function EnVivoPage() {
                       </div>
                       <p className={`font-body text-xs ${descStyle}`}>
                         {event.playerName ? `${event.playerName} - ${teamName}` : teamName}
+                        {event.recordedBy ? ` · por ${event.recordedBy}` : ""}
                       </p>
                     </div>
                     {live && editingEventId !== event.id && (
