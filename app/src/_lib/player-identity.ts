@@ -75,3 +75,16 @@ export function publicName(who: { firstName: string; lastName: string }, hide: b
   const initial = who.lastName.trim().charAt(0).toUpperCase();
   return [first, initial ? `${initial}.` : ""].filter(Boolean).join(" ");
 }
+
+/**
+ * La identidad de un jugador tal como la ve una persona concreta: completa, o —si es menor de 18 y quien mira no lo
+ * gestiona— con el nombre abreviado ("Luigui F."), sin apellido ni foto. Es la misma regla de lo público, ahora
+ * también para las cuentas con sesión: registrarse es gratis, así que "tener cuenta" no es una razón para ver el
+ * nombre completo de un menor. `canSeeFull` lo decide quien llama (el propio jugador, su club, su torneo, un admin).
+ */
+export function visibleIdentity(who: { firstName: string; lastName: string; avatarUrl: string | null; birthDate: Date | string | null }, today: string, canSeeFull: boolean) {
+  if (canSeeFull || !isMinorOn(who.birthDate, today)) {
+    return { firstName: who.firstName, lastName: who.lastName, avatarUrl: who.avatarUrl, abbreviated: false };
+  }
+  return { firstName: publicName(who, true), lastName: "", avatarUrl: null, abbreviated: true };
+}

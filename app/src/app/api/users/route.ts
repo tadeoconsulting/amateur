@@ -1,5 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { adminRolesError } from "@/_lib/admin-roles";
+import { visibleIdentity } from "@/_lib/player-identity";
+import { todayIso } from "@/_lib/minor-visibility-server";
 import { type NextRequest } from "next/server";
 import { randomBytes } from "node:crypto";
 import { Role } from "@prisma/client";
@@ -59,8 +61,16 @@ export async function GET(request: NextRequest) {
     ...(admin ? {} : { take: NON_ADMIN_MAX_RESULTS }),
   });
 
+  // Un menor de 18 sale abreviado ("Luigui F.") en la búsqueda de quien no es admin, salvo la propia cuenta: registrarse
+  // es gratis, así que con tener cuenta no alcanza para ver el nombre completo de un menor.
+  const today = todayIso();
+  const shown = (u: (typeof users)[number]) =>
+    admin ? u : { ...u, ...visibleIdentity({ firstName: u.firstName, lastName: u.lastName, avatarUrl: u.avatarUrl, birthDate: u.birthDate }, today, u.id === auth.user.id) };
+
   return Response.json(
-    users.map((u) => ({
+    users.map((raw) => {
+      const u = shown(raw);
+      return {
       id: u.id,
       firstName: u.firstName,
       lastName: u.lastName,
@@ -81,7 +91,8 @@ export async function GET(request: NextRequest) {
         tournamentsCount: u._count.tournaments,
         mesaTournaments: u.mesaAssignments.map((m) => m.tournament),
       }),
-    }))
+      };
+    })
   );
 }
 

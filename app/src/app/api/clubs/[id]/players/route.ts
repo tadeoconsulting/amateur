@@ -1,7 +1,8 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, readJson, requireUser } from "@/_lib/auth";
-import { compareByLastName, playerIdentity } from "@/_lib/player-identity";
+import { compareByLastName, playerIdentity, visibleIdentity } from "@/_lib/player-identity";
+import { canSeeFullIn, clubsWithFullNames, todayIso } from "@/_lib/minor-visibility-server";
 
 export async function GET(
   request: NextRequest,
@@ -26,6 +27,9 @@ export async function GET(
 
   // La fecha de nacimiento es dato personal (puede ser de menores): solo la ve quien gestiona el club.
   const canSeeBirthDate = await canManageClub(auth.user, id);
+  // Un menor de 18 sale abreviado ("Luigui F.") salvo para quien lo gestiona (ver minor-visibility-server.ts).
+  const visible = await clubsWithFullNames(auth.user, [id]);
+  const today = todayIso();
 
   return Response.json(
     // Misma forma que PlayerListItem (nombre dentro de `user`): así la esperan las pantallas.
@@ -35,16 +39,17 @@ export async function GET(
     players
       .map((p) => ({ p, who: playerIdentity(p) }))
       .sort((a, b) => compareByLastName(a.who, b.who))
-      .map(({ p, who }) => ({
+      .map(({ p, who }) => ({ p, who, shown: visibleIdentity(who, today, p.userId === auth.user.id || canSeeFullIn(visible, id)) }))
+      .map(({ p, who, shown }) => ({
         id: p.id,
         number: p.number,
         position: p.position,
         status: p.status,
         provisional: who.provisional,
         user: {
-          firstName: who.firstName,
-          lastName: who.lastName,
-          avatarUrl: who.avatarUrl,
+          firstName: shown.firstName,
+          lastName: shown.lastName,
+          avatarUrl: shown.avatarUrl,
           birthDate: canSeeBirthDate ? who.birthDate : null,
         },
         category: p.category,
