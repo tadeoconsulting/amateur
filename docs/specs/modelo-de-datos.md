@@ -117,5 +117,5 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 ## Deuda del modelo (ver también [pendientes](pendientes-y-decisiones.md))
 - Los estados y formatos son `String`, no enums de base de datos: los valores válidos se hacen cumplir en la API, no en Postgres.
 - Sin entidad `Sede`: cada torneo y cada partido guardan un texto.
-- Sin índices declarados más allá de las claves y las unicidades.
+- **Índices (octubre 2026, auditoría hallazgo 2):** Prisma no crea índices para las claves foráneas, así que las consultas más frecuentes (los partidos de un torneo, las jugadas de un partido, los jugadores y los torneos de un club) hacían lectura completa de la tabla. Se agregaron 14: `Match(tournamentId, status)`, `Match(homeTeamId)`, `Match(awayTeamId)`, `MatchEvent(matchId)`, `MatchEvent(playerId)`, `PlayerProfile(clubId)`, `PlayerStats(tournamentId)`, `TournamentTeam(clubId)`, `Club(ownerId)`, `StaffMember(clubId)`, `TeamCategory(clubId)`, `PlayerInvitation(clubId)`, `StaffInvitation(clubId)` y `Sede(organizerId)`. Al agregar una relación que se consulta mucho, hay que declarar su `@@index`.
 - `MatchEvent.teamId` sin relación con `Club`.
