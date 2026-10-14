@@ -1,8 +1,9 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { isAdmin, requireUser } from "@/_lib/auth";
-import { playerIdentity } from "@/_lib/player-identity";
+import { playerIdentity, visibleIdentity } from "@/_lib/player-identity";
 import { effectiveStatus } from "@/_lib/profile-invitation";
+import { canSeeFullIn, clubsWithFullNames, todayIso } from "@/_lib/minor-visibility-server";
 
 type WithInvitation = { invitations?: { id: string; token: string; email: string | null; status: string; expiresAt: Date; acceptedBy?: { firstName: string; lastName: string; email: string } | null }[] };
 
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest) {
           email: true,
           avatarUrl: true,
           phone: true,
+          birthDate: true, // solo para decidir si es menor: no sale en la respuesta
         },
       },
       club: { select: { id: true, name: true, shortName: true } },
@@ -86,6 +88,11 @@ export async function GET(request: NextRequest) {
 
   // Correo y teléfono de los jugadores: solo para admins.
   const showContact = admin;
+  // Un menor de 18 sale abreviado ("Luigui F.") salvo para quien lo gestiona (ver minor-visibility-server.ts).
+  const visible = await clubsWithFullNames(auth.user, players.flatMap((p) => (p.clubId ? [p.clubId] : [])));
+  const today = todayIso();
+  const seen = (p: (typeof players)[number], who: ReturnType<typeof playerIdentity>) =>
+    visibleIdentity(who, today, p.userId === auth.user.id || canSeeFullIn(visible, p.clubId));
 
   return Response.json(
     players
@@ -100,7 +107,9 @@ export async function GET(request: NextRequest) {
         status: p.status,
         // Sin cuenta no hay correo ni teléfono ni foto: el nombre sale del perfil.
         user: p.user
-          ? showContact ? p.user : { ...p.user, email: null, phone: null }
+          ? showContact
+            ? { ...p.user, birthDate: undefined }
+            : { ...p.user, ...seen(p, who), email: null, phone: null, birthDate: undefined }
           : { firstName: who.firstName, lastName: who.lastName, email: null, avatarUrl: null, phone: null },
         // DNI y fecha de nacimiento de un provisional: solo el admin (nunca son públicos).
         ...(admin && who.provisional ? { dni: p.dni, birthDate: p.birthDate } : {}),

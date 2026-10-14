@@ -1,7 +1,8 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
-import { playerIdentity } from "@/_lib/player-identity";
+import { playerIdentity, visibleIdentity } from "@/_lib/player-identity";
+import { canSeeFullIn, clubsWithFullNames, todayIso } from "@/_lib/minor-visibility-server";
 import { parseProvisionalEdit } from "@/_lib/provisional-import";
 
 export async function GET(
@@ -36,11 +37,14 @@ export async function GET(
     (profile.clubId ? await canManageClub(auth.user, profile.clubId) : false);
 
   const who = playerIdentity(profile);
+  // Un menor de 18 sale abreviado ("Luigui F.") salvo para el propio jugador y para quien lo gestiona.
+  const visible = await clubsWithFullNames(auth.user, profile.clubId ? [profile.clubId] : []);
+  const shown = visibleIdentity(who, todayIso(), profile.userId === auth.user.id || canSeeFullIn(visible, profile.clubId));
   return Response.json({
     id: profile.id,
-    firstName: who.firstName,
-    lastName: who.lastName,
-    avatarUrl: who.avatarUrl,
+    firstName: shown.firstName,
+    lastName: shown.lastName,
+    avatarUrl: shown.avatarUrl,
     birthDate: canSeeBirthDate ? who.birthDate : null,
     provisional: who.provisional,
     gender: profile.user?.gender ?? null,

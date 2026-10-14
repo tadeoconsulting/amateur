@@ -1,7 +1,7 @@
 // Pruebas de la identidad de un jugador con o sin cuenta (src/_lib/player-identity.ts).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { compareByLastName, fullName, playerIdentity } from "../../src/_lib/player-identity.ts";
+import { compareByLastName, fullName, playerIdentity, visibleIdentity } from "../../src/_lib/player-identity.ts";
 
 test("un jugador con cuenta toma el nombre de la cuenta, aunque el perfil traiga otro", () => {
   const id = playerIdentity({
@@ -56,4 +56,24 @@ test("menor de 18 por fecha de nacimiento: el día que cumple 18 ya no lo es, y 
   assert.equal(isMinorOn("2010-05-01T00:00:00.000Z", hoy), true); // tal como llega de la base
   assert.equal(isMinorOn(null, hoy), false);
   assert.equal(isMinorOn("no es una fecha", hoy), false);
+});
+
+test("visibleIdentity: un menor sale abreviado y sin foto salvo para quien lo gestiona", () => {
+  const menor = { firstName: "Luigui Emmanuel", lastName: "Flores Medina", avatarUrl: "https://x/f.png", birthDate: "2010-05-01" };
+  const hoy = "2026-10-13";
+  assert.deepEqual(visibleIdentity(menor, hoy, false), { firstName: "Luigui F.", lastName: "", avatarUrl: null, abbreviated: true });
+  assert.deepEqual(visibleIdentity(menor, hoy, true), { firstName: "Luigui Emmanuel", lastName: "Flores Medina", avatarUrl: "https://x/f.png", abbreviated: false });
+});
+
+test("visibleIdentity: un adulto, o sin fecha de nacimiento, sale completo para todos", () => {
+  const adulto = { firstName: "Ana", lastName: "Pérez", avatarUrl: null, birthDate: "1990-01-01" };
+  const sinFecha = { firstName: "Luis", lastName: "Gómez", avatarUrl: null, birthDate: null };
+  assert.equal(visibleIdentity(adulto, "2026-10-13", false).abbreviated, false);
+  assert.equal(visibleIdentity(sinFecha, "2026-10-13", false).lastName, "Gómez");
+});
+
+test("visibleIdentity: cumplir 18 hoy ya es adulto", () => {
+  const justo = { firstName: "Mateo", lastName: "Rojas", avatarUrl: null, birthDate: "2008-10-13" };
+  assert.equal(visibleIdentity(justo, "2026-10-13", false).abbreviated, false);
+  assert.equal(visibleIdentity(justo, "2026-10-12", false).abbreviated, true);
 });
