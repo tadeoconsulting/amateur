@@ -106,6 +106,7 @@ tests/            integración (contra un servidor) y tests/unit/
 - `prisma` **no lee `.env.local`**: para usarlo, cargarlo antes (`set -a; . ./.env.local; set +a`).
 - `prisma/seed.ts` **borra todo antes de insertar**. Nunca correrlo contra una base con datos reales. Los usuarios del seed tienen un hash inválido: no pueden iniciar sesión, a propósito.
 - **Primer administrador:** registrarse en el sitio y correr `npm run db:make-admin -- correo` contra la base correspondiente.
+- **Dependencias:** Dependabot está activo (alertas y actualizaciones de seguridad) y `.github/dependabot.yml` abre cada lunes un PR con las actualizaciones menores y de parche agrupadas. Las versiones **mayores** (Next, React, Prisma, TypeScript, ESLint) se actualizan a mano. Antes de mergear una actualización: `tsc`, lint, pruebas unitarias y `npm run build`. `npm audit --omit=dev` debe quedar en 0; los avisos que quedan en herramientas de desarrollo (lint) no se despliegan.
 - **Despliegue:** Vercel construye desde GitHub con Root Directory `app` y framework Next.js. **Mezclar en `main` despliega producción.** `postinstall` genera el cliente de Prisma.
 
 ## 7. Flujo de trabajo (por confirmar)
