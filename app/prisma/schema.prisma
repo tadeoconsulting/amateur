@@ -207,7 +207,9 @@ model PlayerProfile {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  user            User?               @relation(fields: [userId], references: [id])
+  // Restrict a propósito: borrar una cuenta nunca deja una ficha huérfana sin nombre (parecería un provisional). El código borra
+  // las fichas de la cuenta antes que la cuenta (delete-user.ts). Producción ya lo tenía así; el esquema decía SetNull por omisión.
+  user            User?               @relation(fields: [userId], references: [id], onDelete: Restrict)
   club            Club?               @relation(fields: [clubId], references: [id])
   category        TeamCategory?       @relation(fields: [categoryId], references: [id])
   stats           PlayerStats[]
