@@ -59,6 +59,8 @@ export async function newUser(label, roles = []) {
 }
 
 export const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString();
+// Día de mañana como AAAA-MM-DD: es el formato que piden los partidos sueltos (POST /api/matches).
+export const tomorrowDay = () => tomorrow().slice(0, 10);
 
 
 /**

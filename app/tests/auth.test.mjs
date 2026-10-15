@@ -13,7 +13,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { BASE, COOKIE_NAME, Client, PASSWORD, RUN, newUser, tomorrow } from "./helpers.mjs";
+import { BASE, COOKIE_NAME, Client, PASSWORD, RUN, newUser, tomorrow, tomorrowDay } from "./helpers.mjs";
 
 describe("sin sesión", () => {
   const anon = new Client();
@@ -243,13 +243,18 @@ describe("permisos sobre torneos, clubes y partidos", () => {
     const t = await org.client.post("/api/tournaments", {
       name: "Copa M", format: "liga", maxTeams: 4, startDate: tomorrow(), location: "Lima",
     });
+    // Un partido suelto se agrega a un torneo que ya empezó, con los dos equipos inscritos.
+    for (const club of [home, away]) {
+      assert.equal((await org.client.post(`/api/tournaments/${t.data.id}/teams`, { clubId: club.data.id })).status, 201);
+    }
+    assert.equal((await org.client.patch(`/api/tournaments/${t.data.id}`, { status: "en_curso" })).status, 200);
     const m = await other.client.post("/api/matches", {
-      tournamentId: t.data.id, homeTeamId: home.data.id, awayTeamId: away.data.id, date: tomorrow(), time: "18:00",
+      tournamentId: t.data.id, homeTeamId: home.data.id, awayTeamId: away.data.id, date: tomorrowDay(), time: "18:00",
     });
     assert.equal(m.status, 403, "otro organizador no puede crear partidos en mi torneo");
 
     const match = await org.client.post("/api/matches", {
-      tournamentId: t.data.id, homeTeamId: home.data.id, awayTeamId: away.data.id, date: tomorrow(), time: "18:00",
+      tournamentId: t.data.id, homeTeamId: home.data.id, awayTeamId: away.data.id, date: tomorrowDay(), time: "18:00",
     });
     assert.equal(match.status, 201);
     const id = match.data.id;
@@ -327,11 +332,12 @@ describe("datos de usuarios", () => {
     const own = await a.client.get(`/api/users/${a.id}`);
     assert.equal(own.status, 200);
     assert.equal(own.data.passwordHash, undefined);
-    const upd = await a.client.patch(`/api/users/${a.id}`, { firstName: "Nuevo", passwordHash: "x", email: "otro@x.y" });
+    // El correo es con el que se entra: solo un admin lo cambia, ni siquiera el dueño de la cuenta.
+    assert.equal((await a.client.patch(`/api/users/${a.id}`, { email: "otro@x.y" })).status, 403);
+    const upd = await a.client.patch(`/api/users/${a.id}`, { firstName: "Nuevo", passwordHash: "x" });
     assert.equal(upd.status, 200);
     assert.equal(upd.data.firstName, "Nuevo");
     assert.equal(upd.data.passwordHash, undefined);
-    assert.notEqual(upd.data.email, "otro@x.y");
   });
 
   test("/api/players y /api/clubs no exponen contactos a un no-admin", async () => {
@@ -354,6 +360,11 @@ describe("protección de páginas (proxy)", () => {
       const res = await fetch(BASE + path, { redirect: "manual" });
       assert.ok([302, 303, 307, 308].includes(res.status), `${path} → ${res.status}`);
       const location = new URL(res.headers.get("location"), BASE);
+      if (path === "/admin") {
+        // El panel de administración tiene su propia pantalla de ingreso.
+        assert.equal(location.pathname, "/admin/login");
+        continue;
+      }
       assert.equal(location.pathname, "/");
       assert.equal(location.searchParams.get("auth"), "login");
       assert.equal(location.searchParams.get("next"), path);
@@ -377,7 +388,8 @@ const adminCreds = process.env.TEST_ADMIN_EMAIL && process.env.TEST_ADMIN_PASSWO
 describe("admin", { skip: !adminCreds && "definí TEST_ADMIN_EMAIL y TEST_ADMIN_PASSWORD" }, () => {
   async function adminClient() {
     const c = new Client();
-    const r = await c.post("/api/auth/login", { email: process.env.TEST_ADMIN_EMAIL, password: process.env.TEST_ADMIN_PASSWORD });
+    // Los administradores no entran por el login público: tienen el suyo.
+    const r = await c.post("/api/auth/admin-login", { email: process.env.TEST_ADMIN_EMAIL, password: process.env.TEST_ADMIN_PASSWORD });
     assert.equal(r.status, 200);
     assert.ok(r.data.roles.includes("ADMIN"), "la cuenta de prueba debe ser ADMIN");
     return { client: c, id: r.data.id };

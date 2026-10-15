@@ -32,6 +32,12 @@ async function tournamentWith(org, teams, overrides = {}) {
   return t.data.id;
 }
 
+// Un partido con fases solo pasa a tiempo extra cuando ya se jugaron los dos tiempos (especificación 010).
+async function toSecondHalf(client, matchId) {
+  assert.equal((await client.patch(`/api/matches/${matchId}`, { period: "descanso" })).status, 200);
+  assert.equal((await client.patch(`/api/matches/${matchId}`, { period: "segundo_tiempo" })).status, 200);
+}
+
 const byRound = (matches, round) => matches.filter((m) => m.matchday === round);
 const getMatches = async (client, tournamentId) => (await client.get(`/api/matches?tournamentId=${tournamentId}`)).data;
 
@@ -137,6 +143,8 @@ describe("un partido decisivo (partido único, sin empate posible)", () => {
     const tied = await org.client.patch(`/api/matches/${m.id}`, { status: "finalizado" });
     assert.equal(tied.status, 409);
 
+    assert.equal((await org.client.patch(`/api/matches/${m.id}`, { phase: "tiempo_extra" })).status, 409, "antes hay que jugar los dos tiempos");
+    await toSecondHalf(org.client, m.id);
     assert.equal((await org.client.patch(`/api/matches/${m.id}`, { phase: "penales" })).status, 409, "no se salta el tiempo extra");
     const toET = await org.client.patch(`/api/matches/${m.id}`, { phase: "tiempo_extra" });
     assert.equal(toET.status, 200, JSON.stringify(toET.data));
@@ -156,6 +164,7 @@ describe("un partido decisivo (partido único, sin empate posible)", () => {
     await org.client.post(`/api/tournaments/${id}/fixture`, { mode: "manual" });
     const [m] = await getMatches(org.client, id);
     await org.client.patch(`/api/matches/${m.id}`, { status: "en_curso", homeScore: 1, awayScore: 1 });
+    await toSecondHalf(org.client, m.id);
     await org.client.patch(`/api/matches/${m.id}`, { phase: "tiempo_extra" });
     await org.client.patch(`/api/matches/${m.id}`, { phase: "penales" });
 
@@ -202,6 +211,7 @@ describe("un partido decisivo (partido único, sin empate posible)", () => {
     await org.client.post(`/api/tournaments/${id}/fixture`, { mode: "manual" });
     const [m] = await getMatches(org.client, id);
     await org.client.patch(`/api/matches/${m.id}`, { status: "en_curso", homeScore: 0, awayScore: 0 });
+    await toSecondHalf(org.client, m.id);
     await org.client.patch(`/api/matches/${m.id}`, { phase: "tiempo_extra" });
     await org.client.patch(`/api/matches/${m.id}`, { phase: "penales" });
 
@@ -344,6 +354,7 @@ describe("relámpago: mismo cuadro, un solo día", () => {
     const [m] = await getMatches(org.client, id);
     await org.client.patch(`/api/matches/${m.id}`, { status: "en_curso", homeScore: 1, awayScore: 1 });
     assert.equal((await org.client.patch(`/api/matches/${m.id}`, { status: "finalizado" })).status, 409);
+    await toSecondHalf(org.client, m.id);
     await org.client.patch(`/api/matches/${m.id}`, { phase: "tiempo_extra" });
     await org.client.patch(`/api/matches/${m.id}`, { phase: "penales" });
     // 3-0 tras 3 intentos cada uno: recién ahí es matemáticamente imposible de alcanzar.

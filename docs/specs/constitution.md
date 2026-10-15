@@ -82,14 +82,16 @@ tests/            integración (contra un servidor) y tests/unit/
 | Comando (desde `app/`) | Qué hace |
 |---|---|
 | `npm run test:unit` | Pruebas de lógica pura (más de 300). Instantáneas, sin servidor ni base. |
-| `npm run test:api` | Pruebas de integración contra un servidor en marcha (tardan unos 17 minutos; no corren en la CI todavía; 5 están desactualizadas, ver pendientes). Las de `admin` solo corren si se definen `TEST_ADMIN_EMAIL` y `TEST_ADMIN_PASSWORD`. |
+| `npm run test:api` | Pruebas de integración (más de 160) contra un servidor en marcha. Con una base local tardan unos 25 segundos; contra Neon, más de 15 minutos por la latencia. Corren en la CI (job `integracion`). Las de `admin` solo corren si se definen `TEST_ADMIN_EMAIL` y `TEST_ADMIN_PASSWORD`. |
 | `npx tsc --noEmit` | Tipos. |
 | `npm run lint` | ESLint (hoy: 9 errores y 13 avisos preexistentes, casi todos reglas de React 19). |
 | `npm run lint:ci` | Lo que corre la CI: falla si hay **más** errores o avisos que los de `app/.lint-baseline.json`, y también si hay menos (hay que bajar la línea base en el mismo PR). |
 
 `test:auth` es un alias heredado de `test:api` (ejecutan lo mismo).
 
-**Cómo correr las pruebas de integración:** apunta la app a una base desechable (una rama de Neon), levántala en modo producción y ejecuta con `TEST_BASE_URL=http://localhost:PUERTO`. Para las pruebas de admin define `TEST_ADMIN_EMAIL` y `TEST_ADMIN_PASSWORD` (una cuenta con rol `ADMIN` en esa base). Cada prueba crea sus propios usuarios con un sufijo único, así que no dependen del seed. La suite tarda **más de 10 minutos** por la latencia hacia la base.
+**Cómo correr las pruebas de integración:** lo más rápido es una base Postgres local desechable (la CI usa un Postgres 16 propio): `npx prisma migrate deploy` sobre ella, `npm run build`, levanta la app con `npx next start -p PUERTO` y ejecuta con `TEST_BASE_URL=http://localhost:PUERTO npm run test:api`. Para las pruebas de admin, `TEST_ADMIN_EMAIL` (termina en `@test.amateur`) y `TEST_ADMIN_PASSWORD` definidos, y la cuenta se crea con `node scripts/crear-admin-de-prueba.mjs` (necesita `DATABASE_URL` apuntando a localhost: se niega a correr contra cualquier otra base). Cada prueba crea sus propios usuarios con un sufijo único, así que no dependen del seed. Una rama de Neon también sirve, pero es unas 40 veces más lenta.
+
+**Cuando cambies un comportamiento que ya tiene prueba, actualiza la prueba en el mismo PR**: la CI la corre y el PR no se mezcla en rojo.
 
 ## 6. Operación
 
@@ -107,7 +109,7 @@ tests/            integración (contra un servidor) y tests/unit/
 - `prisma` **no lee `.env.local`**: para usarlo, cargarlo antes (`set -a; . ./.env.local; set +a`).
 - `prisma/seed.ts` **borra todo antes de insertar**. Nunca correrlo contra una base con datos reales. Los usuarios del seed tienen un hash inválido: no pueden iniciar sesión, a propósito.
 - **Primer administrador:** registrarse en el sitio y correr `npm run db:make-admin -- correo` contra la base correspondiente.
-- **Integración continua (`.github/workflows/ci.yml`):** cada PR a `main` corre dos verificaciones: **verificar** (`tsc`, `lint:ci`, pruebas unitarias y `build`) y **migraciones** (aplica `prisma/migrations` sobre un Postgres vacío y exige que el resultado sea idéntico a `schema.prisma`). `main` está protegida: no se mezcla sin que ambas estén en verde.
+- **Integración continua (`.github/workflows/ci.yml`):** cada PR a `main` corre tres verificaciones: **verificar** (`tsc`, `lint:ci`, pruebas unitarias y `build`), **migraciones** (aplica `prisma/migrations` sobre un Postgres vacío y exige que el resultado sea idéntico a `schema.prisma`) e **integracion** (levanta la app contra un Postgres desechable y corre las pruebas de la API de punta a punta). `main` se protege exigiendo que estén en verde.
 - **Migraciones (Prisma):** el esquema ya no se aplica con `db push` en producción. Cada cambio de `schema.prisma` lleva su carpeta en `prisma/migrations`:
   1. Edita `schema.prisma` y corre `npm run db:nueva-migracion -- nombre-corto` (compara contra `origin/main` y escribe el SQL; no toca ninguna base). Revísalo y commitéalo en el mismo PR.
   2. Prueba contra la base de pruebas: `npx prisma db push` (o `npm run db:aplicar-migraciones`).
