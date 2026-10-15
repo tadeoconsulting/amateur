@@ -97,6 +97,8 @@ model Sede {
   updatedAt   DateTime @updatedAt
 
   organizer User @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@index([organizerId])
 }
 
 model UserRole {
@@ -143,6 +145,8 @@ model Club {
   lineups             MatchLineup[]
   joinRequests        PlayerJoinRequest[]
   delegateInvitations DelegateInvitation[]
+
+  @@index([ownerId])
 }
 
 model TeamCategory {
@@ -159,6 +163,8 @@ model TeamCategory {
   players PlayerProfile[]
   dtId    String?
   dt      StaffMember?    @relation(fields: [dtId], references: [id])
+
+  @@index([clubId])
 }
 
 model StaffMember {
@@ -173,6 +179,7 @@ model StaffMember {
   categories TeamCategory[]
 
   @@unique([userId, clubId, role])
+  @@index([clubId])
 }
 
 // ─── Players ────────────────────────────────────────────────────
@@ -214,6 +221,7 @@ model PlayerProfile {
   // que haya una sola lo cuida _lib/player-clubs.ts).
   @@unique([userId, clubId])
   @@index([userId])
+  @@index([clubId])
 }
 
 // Una invitación para que una persona reclame un perfil PROVISIONAL (especificación 009, entrega 3): la crea
@@ -299,6 +307,7 @@ model PlayerStats {
   tournament Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, tournamentId])
+  @@index([tournamentId])
 }
 
 model PlayerInvitation {
@@ -313,6 +322,8 @@ model PlayerInvitation {
 
   club    Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
   inviter User @relation(fields: [invitedBy], references: [id])
+
+  @@index([clubId])
 }
 
 // El sentido contrario a PlayerInvitation: acá es el jugador quien pide unirse a un club (lo
@@ -350,6 +361,8 @@ model StaffInvitation {
 
   club    Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
   inviter User @relation(fields: [invitedBy], references: [id])
+
+  @@index([clubId])
 }
 
 // ─── Tournaments ────────────────────────────────────────────────
@@ -447,6 +460,7 @@ model TournamentTeam {
   club       Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
   @@unique([tournamentId, clubId])
+  @@index([clubId])
 }
 
 // Solicitud de un club para entrar a un torneo (kind "request") o invitación del
@@ -522,6 +536,10 @@ model Match {
 
   nextMatch Match?  @relation("MatchBracket", fields: [nextMatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   feedsInto Match[] @relation("MatchBracket")
+
+  @@index([tournamentId, status])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
 }
 
 // Los titulares que un club definió para un partido puntual (ver /club/torneos/:id/titulares).
@@ -567,4 +585,7 @@ model MatchEvent {
   player     PlayerProfile? @relation("EventPlayer", fields: [playerId], references: [id])
   playerIn   PlayerProfile? @relation("SubstitutionIn", fields: [playerInId], references: [id], onDelete: SetNull)
   recordedBy User?          @relation("EventRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([matchId])
+  @@index([playerId])
 }
