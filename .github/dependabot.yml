@@ -1,6 +1,6 @@
 # Actualizaciones de dependencias (auditoría de octubre 2026, hallazgo 3): Dependabot abre un PR por semana con las
 # actualizaciones menores y de parche agrupadas, y uno aparte por cada aviso de seguridad. Las versiones mayores
-# (Next, React, Prisma, TypeScript, ESLint) se actualizan a mano: cambian APIs y piden su propio PR y su prueba.
+# (Next, React, Prisma, TypeScript, ESLint, tipos de Node) se actualizan a mano: cambian APIs y piden su propio PR y su prueba.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -26,6 +26,9 @@ updates:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # Los tipos de Node siguen la versión de Node que corre el proyecto (20): subir su versión mayor no corresponde.
+      - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
