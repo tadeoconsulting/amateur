@@ -32,7 +32,7 @@ En el orden que parece más útil (cada una debería empezar por su especificaci
 
 1. **Tiempo real para espectadores — implementado solo en la ficha del partido.** `/torneos/:id/partidos/:matchId` recibe cada jugada sin recargar, con Ably (ver [004](004-partido-en-vivo.md), sección "Tiempo real"). Falta:
    - Llevarlo a la previa, a "en vivo" del organizador, a la tabla de posiciones, a los goleadores y a la lista de partidos.
-   - **Aprovisionar `ABLY_API_KEY` en Vercel** (Production y Preview): sin ella, todo sigue funcionando, pero nadie recibe nada en vivo. Ver [constitución](constitution.md).
+   - **Aprovisionar `ABLY_API_KEY` en Vercel** (solo Production: los previews no la llevan a propósito): sin ella, todo sigue funcionando, pero nadie recibe nada en vivo. Ver [constitución](constitution.md).
    - **Modelar el costo de Ably contra el Revenue Streams del BMC** antes de acercarse a los picos previstos (100 000 espectadores): a esa escala no es trivial (`docs/arquitectura.md` §8, fuera de este repo).
 2. **Notificaciones — cubre organizador, club y jugador; falta un caso de borde.** `/notificaciones` (organizador) muestra las solicitudes reales de un club pidiendo unirse a un torneo. La invitación de un organizador a un club ya vivía en la pestaña "Solicitudes" de `/club/torneos` (con badge); la de un club a un jugador, en "Mis Equipos" del jugador — ahora ambas tienen badge en su tab del bottom nav, y las invitaciones de staff (DT, delegado, asistente) se ven y se aceptan desde "Equipo" del club, también con badge (`/club/notificaciones` ahora redirige ahí; antes era una pantalla vacía fija). **Falta:** alguien invitado como staff que no tiene ningún club propio no ve la invitación en ningún lado (decisión de producto: se aceptó esa limitación por ahora — ver decisión 12); y el organizador sigue sin badge de conteo en su propia campana.
 3. **Recuperar y cambiar contraseña; inicio con Google.** Hoy los botones existen y no hacen nada.
@@ -56,7 +56,6 @@ Resueltas e implementadas en este ciclo (quedan fuera de esta lista; el detalle 
 
 ### Operación
 - **Integración continua (octubre 2026).** Cada PR corre `tsc`, lint sin empeorar, pruebas unitarias, build, la verificación de migraciones y las pruebas de integración contra un Postgres desechable (`.github/workflows/ci.yml`). **Falta** cubrir con pruebas de integración lo más nuevo: mesa (ventana de horario y permisos), jugadores provisionales, enmascarado de menores, tabla en vivo y las invitaciones de delegado y de perfil.
-- **Los *previews* de Vercel usan la base de producción** (comparten `DATABASE_URL`). Un preview puede leer y escribir datos reales. Conviene una rama de Neon para *Preview*.
 - `app/README.md` es el de la plantilla de Next; no documenta el proyecto.
 
 ### Código
