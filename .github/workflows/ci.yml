@@ -1,0 +1,89 @@
+# Verificaciones automáticas de cada PR (auditoría de octubre 2026, hallazgos 4 y 5). Antes todo esto se corría a mano.
+#
+#  - verificar:   tipos (tsc), lint "sin empeorar", pruebas unitarias y build.
+#  - migraciones: las migraciones de prisma/migrations, aplicadas sobre una base vacía, tienen que dejar EXACTAMENTE el
+#                 esquema de schema.prisma. Si alguien cambia el esquema sin crear su migración, esto falla.
+#
+# No usa ninguna clave ni toca producción: la base de la segunda verificación es un Postgres desechable del propio job.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: app
+
+jobs:
+  verificar:
+    name: verificar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Valores de relleno: el build no se conecta a ninguna base.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-secret-ci-secret-ci-secret-ci-secret-123456
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Tipos (tsc)
+        # PageProps/LayoutProps los genera Next; sin .next (CI limpia) hay que generarlos antes.
+        run: |
+          npx next typegen
+          npx tsc --noEmit
+      - name: Lint (sin agregar problemas nuevos)
+        run: npm run lint:ci
+      - name: Pruebas unitarias
+        run: npm run test:unit
+      - name: Build
+        run: npm run build
+
+  migraciones:
+    name: migraciones
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Aplicar las migraciones sobre una base vacía
+        run: npx prisma migrate deploy
+      - name: El esquema resultante coincide con schema.prisma
+        run: npx prisma migrate diff --from-url "$DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --exit-code

@@ -65,7 +65,7 @@ tests/            integración (contra un servidor) y tests/unit/
 10. **Lo que toca varias tablas va en una transacción**, y los contadores se incrementan de forma atómica (`increment`), nunca leyendo y escribiendo. (Los goles simultáneos se perdían.)
 11. **Un solo nombre por concepto.** Los estados y tipos son listas definidas en un único módulo. (El partido en juego se llamaba `en_curso` y `en_vivo` según la pantalla.)
 12. **Validar en el borde** (`tournament-input.ts`, guards de rutas) con mensajes en español, claros y accionables. Las fechas se validan con un chequeo de ida y vuelta: `new Date("2026-02-31")` no falla, devuelve el 3 de marzo.
-13. **Los cambios de schema son aditivos** (columnas opcionales o con valor por defecto) para no romper producción. Se aplican con `prisma db push`.
+13. **Los cambios de schema son aditivos** (columnas opcionales o con valor por defecto) para no romper producción, y **van con su migración** (`prisma/migrations`): ver "Migraciones" en la sección 6.
 
 ### 4.3 Interfaz
 14. **Nada de datos inventados en pantalla.** Si el dato no existe, no se muestra. Las primeras versiones tenían delegados falsos, links falsos y un "75'" fijo; todos eran mentiras que parecían funcionar.
@@ -81,10 +81,11 @@ tests/            integración (contra un servidor) y tests/unit/
 
 | Comando (desde `app/`) | Qué hace |
 |---|---|
-| `npm run test:unit` | 79 pruebas de lógica pura. Instantáneas, sin servidor ni base. |
-| `npm run test:api` | 125 pruebas de integración contra un servidor en marcha (3 son del bloque `admin` y solo corren si se definen `TEST_ADMIN_EMAIL` y `TEST_ADMIN_PASSWORD`). |
+| `npm run test:unit` | Pruebas de lógica pura (más de 300). Instantáneas, sin servidor ni base. |
+| `npm run test:api` | Pruebas de integración contra un servidor en marcha (tardan unos 17 minutos; no corren en la CI todavía; 5 están desactualizadas, ver pendientes). Las de `admin` solo corren si se definen `TEST_ADMIN_EMAIL` y `TEST_ADMIN_PASSWORD`. |
 | `npx tsc --noEmit` | Tipos. |
-| `npm run lint` | ESLint (hoy: 10 errores y 18 avisos preexistentes, casi todos reglas de React 19). |
+| `npm run lint` | ESLint (hoy: 9 errores y 13 avisos preexistentes, casi todos reglas de React 19). |
+| `npm run lint:ci` | Lo que corre la CI: falla si hay **más** errores o avisos que los de `app/.lint-baseline.json`, y también si hay menos (hay que bajar la línea base en el mismo PR). |
 
 `test:auth` es un alias heredado de `test:api` (ejecutan lo mismo).
 
@@ -106,12 +107,19 @@ tests/            integración (contra un servidor) y tests/unit/
 - `prisma` **no lee `.env.local`**: para usarlo, cargarlo antes (`set -a; . ./.env.local; set +a`).
 - `prisma/seed.ts` **borra todo antes de insertar**. Nunca correrlo contra una base con datos reales. Los usuarios del seed tienen un hash inválido: no pueden iniciar sesión, a propósito.
 - **Primer administrador:** registrarse en el sitio y correr `npm run db:make-admin -- correo` contra la base correspondiente.
+- **Integración continua (`.github/workflows/ci.yml`):** cada PR a `main` corre dos verificaciones: **verificar** (`tsc`, `lint:ci`, pruebas unitarias y `build`) y **migraciones** (aplica `prisma/migrations` sobre un Postgres vacío y exige que el resultado sea idéntico a `schema.prisma`). `main` está protegida: no se mezcla sin que ambas estén en verde.
+- **Migraciones (Prisma):** el esquema ya no se aplica con `db push` en producción. Cada cambio de `schema.prisma` lleva su carpeta en `prisma/migrations`:
+  1. Edita `schema.prisma` y corre `npm run db:nueva-migracion -- nombre-corto` (compara contra `origin/main` y escribe el SQL; no toca ninguna base). Revísalo y commitéalo en el mismo PR.
+  2. Prueba contra la base de pruebas: `npx prisma db push` (o `npm run db:aplicar-migraciones`).
+  3. **Antes de mergear**, aplícalo en producción con la `DIRECT_URL` de producción cargada: `npm run db:aplicar-migraciones`. Es el mismo orden de siempre (la base primero, el código después).
+  4. `npm run db:deriva` (con la `DIRECT_URL` de una base cargada) dice si esa base se parece a `schema.prisma`; sirve para auditar producción.
+  - La migración `0_init` es la línea base: describe el esquema que producción ya tenía. En cada base que ya existía (producción y pruebas) se marca una sola vez como aplicada: `npx prisma migrate resolve --applied 0_init`.
 - **Dependencias:** Dependabot está activo (alertas y actualizaciones de seguridad) y `.github/dependabot.yml` abre cada lunes un PR con las actualizaciones menores y de parche agrupadas. Las versiones **mayores** (Next, React, Prisma, TypeScript, ESLint) se actualizan a mano. Antes de mergear una actualización: `tsc`, lint, pruebas unitarias y `npm run build`. `npm audit --omit=dev` debe quedar en 0; los avisos que quedan en herramientas de desarrollo (lint) no se despliegan.
 - **Despliegue:** Vercel construye desde GitHub con Root Directory `app` y framework Next.js. **Mezclar en `main` despliega producción.** `postinstall` genera el cliente de Prisma.
 
 ## 7. Flujo de trabajo (por confirmar)
 
-- Una rama por funcionalidad, PR contra `main`, mezclado con *merge commit* (no *squash*) para que las ramas apiladas sigan siendo un diff limpio.
-- Un PR no se mezcla sin sus pruebas en verde y sin haber revisado el diff en busca de secretos.
+- Una rama por funcionalidad, PR contra `main` y mezclado con *squash*. No se apilan ramas: si un PR depende de otro, se espera a que el primero esté mezclado (borrar la rama base cierra los PR que dependen de ella).
+- Un PR no se mezcla sin la CI en verde (`verificar` y `migraciones`) y sin haber revisado el diff en busca de secretos y de datos personales reales (el repositorio es público).
 - El PR incluye la especificación que corresponda. Para algo nuevo, primero la especificación y su revisión, después el código.
 - Los mensajes de commit se escriben en inglés y explican el porqué, no solo el qué.
