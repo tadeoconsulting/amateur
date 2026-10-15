@@ -43,7 +43,10 @@ jobs:
           cache-dependency-path: app/package-lock.json
       - run: npm ci
       - name: Tipos (tsc)
-        run: npx tsc --noEmit
+        # PageProps/LayoutProps los genera Next; sin .next (CI limpia) hay que generarlos antes.
+        run: |
+          npx next typegen
+          npx tsc --noEmit
       - name: Lint (sin agregar problemas nuevos)
         run: npm run lint:ci
       - name: Pruebas unitarias
