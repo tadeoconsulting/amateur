@@ -17,7 +17,11 @@ async function ownerWithClub(label) {
 }
 
 const linkOf = async (s) => (await s.owner.client.get(`/api/clubs/${s.clubId}/invite-link`)).data;
-const clubOf = async (client, userId) => (await client.get(`/api/users/${userId}`)).data.playerProfile?.club?.id ?? null;
+// Un jugador puede estar en varios clubes (una ficha por club): `clubOf` es con el que sale hoy
+// (el más antiguo si no eligió otro) y `clubsOf` todos los suyos.
+const clubOf = async (client, userId) => (await client.get(`/api/users/${userId}`)).data.activeClubId ?? null;
+const clubsOf = async (client, userId) =>
+  ((await client.get(`/api/users/${userId}`)).data.playerProfiles ?? []).map((p) => p.clubId).filter(Boolean).sort();
 const register = (body) => new Client().post("/api/auth/register", { password: PASSWORD, firstName: "Nuevo", lastName: "Jugador", ...body });
 
 describe("link del club", () => {
@@ -114,21 +118,20 @@ describe("link del club", () => {
     assert.equal((await new Client().post(`/api/invitations/${token}/accept`, {})).status, 401, "sin sesión");
   });
 
-  test("quien ya está en otro club no se mueve sin confirmarlo", async () => {
+  test("quien ya está en otro club se suma al nuevo sin salir del anterior", async () => {
     const a = await ownerWithClub("lk7a");
     const b = await ownerWithClub("lk7b");
     const p = await newUser("lk7jug");
     assert.equal((await p.client.post(`/api/invitations/${(await linkOf(a)).token}/accept`, {})).status, 200);
 
     const tokenB = (await linkOf(b)).token;
-    const blocked = await p.client.post(`/api/invitations/${tokenB}/accept`, {});
-    assert.equal(blocked.status, 409);
-    assert.equal(blocked.data.currentClub.id, a.clubId);
-    assert.equal(await clubOf(p.client, p.id), a.clubId, "sigue en su club");
-
-    const moved = await p.client.post(`/api/invitations/${tokenB}/accept`, { replace: true });
-    assert.equal(moved.status, 200);
-    assert.equal(await clubOf(p.client, p.id), b.clubId);
+    const joined = await p.client.post(`/api/invitations/${tokenB}/accept`, {});
+    assert.equal(joined.status, 200, JSON.stringify(joined.data));
+    assert.equal(joined.data.joined, true);
+    assert.deepEqual(await clubsOf(p.client, p.id), [a.clubId, b.clubId].sort(), "está en los dos");
+    assert.equal(await clubOf(p.client, p.id), a.clubId, "sigue saliendo con el más antiguo");
+    assert.equal((await b.owner.client.get(`/api/clubs/${b.clubId}/players`)).data.length, 1, "figura en la plantilla del nuevo");
+    assert.equal((await a.owner.client.get(`/api/clubs/${a.clubId}/players`)).data.length, 1, "y sigue en la del anterior");
   });
 
   test("un dueño no puede llevarse a un jugador de otro club", async () => {

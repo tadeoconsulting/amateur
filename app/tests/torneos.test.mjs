@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { Client, RUN, newUser, tomorrow, enrollByInvitation } from "./helpers.mjs";
+import { Client, RUN, newUser, tomorrowDay, enrollByInvitation } from "./helpers.mjs";
 
 // Lo mismo que envía el paso 3 del asistente "Crear torneo".
 const wizardPayload = (overrides = {}) => ({
@@ -223,7 +223,9 @@ describe("equipo temporal", () => {
     });
     assert.equal(r.status, 201, JSON.stringify(r.data));
     assert.equal(r.data.club.isTemporary, true);
-    assert.equal(r.data.club.ownerId, org.id);
+    // La inscripción no devuelve al dueño (no se expone); queda a nombre del organizador.
+    assert.equal(r.data.club.ownerId, undefined);
+    assert.equal((await org.client.get(`/api/clubs/${r.data.club.id}`)).data.ownerId, org.id);
     assert.equal(r.data.club.color, "#1565C0");
 
     const detail = await org.client.get(`/api/tournaments/${t.data.id}`);
@@ -321,14 +323,16 @@ describe("quitar equipos", () => {
     const path = `/api/tournaments/${t.data.id}/teams`;
     await enrollByInvitation(org, t.data.id, a);
     await enrollByInvitation(org, t.data.id, b);
+    assert.equal((await org.client.patch(`/api/tournaments/${t.data.id}`, { status: "en_curso" })).status, 200);
     const m = await org.client.post("/api/matches", {
-      tournamentId: t.data.id, homeTeamId: a.clubId, awayTeamId: b.clubId, date: tomorrow(), time: "18:00",
+      tournamentId: t.data.id, homeTeamId: a.clubId, awayTeamId: b.clubId, date: tomorrowDay(), time: "18:00",
     });
     assert.equal(m.status, 201);
 
     const r = await org.client.del(`${path}/${a.clubId}`);
+    // Con partidos el torneo ya empezó, y esa guarda salta primero que la de "tiene partidos".
     assert.equal(r.status, 409);
-    assert.match(r.data.error, /partidos/);
+    assert.match(r.data.error, /ya empezó|partidos/);
   });
 
   test("sin sesión no se puede quitar nada", async () => {

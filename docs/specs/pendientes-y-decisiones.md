@@ -55,9 +55,8 @@ Resueltas e implementadas en este ciclo (quedan fuera de esta lista; el detalle 
 - La sesión es *stateless*: no se puede invalidar una en particular.
 
 ### Operación
-- **Integración continua parcial (octubre 2026).** Cada PR corre `tsc`, lint sin empeorar, pruebas unitarias, build y la verificación de migraciones (`.github/workflows/ci.yml`). **Falta** correr las pruebas de integración en la CI (corregir antes las 5 desactualizadas y cubrir lo nuevo). Las pruebas de integración necesitan una base desechable (una rama de Neon por ejecución).
+- **Integración continua (octubre 2026).** Cada PR corre `tsc`, lint sin empeorar, pruebas unitarias, build, la verificación de migraciones y las pruebas de integración contra un Postgres desechable (`.github/workflows/ci.yml`). **Falta** cubrir con pruebas de integración lo más nuevo: mesa (ventana de horario y permisos), jugadores provisionales, enmascarado de menores, tabla en vivo y las invitaciones de delegado y de perfil.
 - **Los *previews* de Vercel usan la base de producción** (comparten `DATABASE_URL`). Un preview puede leer y escribir datos reales. Conviene una rama de Neon para *Preview*.
-- **La suite de integración tarda más de 10 minutos** (latencia hacia la base, y cada prueba crea sus usuarios). Se puede paralelizar o reducir la preparación.
 - `app/README.md` es el de la plantilla de Next; no documenta el proyecto.
 
 ### Código

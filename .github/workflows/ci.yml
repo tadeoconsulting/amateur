@@ -3,6 +3,8 @@
 #  - verificar:   tipos (tsc), lint "sin empeorar", pruebas unitarias y build.
 #  - migraciones: las migraciones de prisma/migrations, aplicadas sobre una base vacía, tienen que dejar EXACTAMENTE el
 #                 esquema de schema.prisma. Si alguien cambia el esquema sin crear su migración, esto falla.
+#  - integracion: levanta la app compilada contra un Postgres desechable y corre tests/*.test.mjs (la API de punta a
+#                 punta: permisos, torneos, fixture, partidos en vivo, invitaciones). Sin correo ni Ably: no hay claves.
 #
 # No usa ninguna clave ni toca producción: la base de la segunda verificación es un Postgres desechable del propio job.
 name: CI
@@ -87,3 +89,57 @@ jobs:
         run: npx prisma migrate deploy
       - name: El esquema resultante coincide con schema.prisma
         run: npx prisma migrate diff --from-url "$DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+
+  integracion:
+    name: integracion
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-secret-ci-secret-ci-secret-ci-secret-123456
+      TEST_BASE_URL: http://localhost:3000
+      # Cuenta de administrador que crea el paso siguiente, solo en esta base desechable.
+      TEST_ADMIN_EMAIL: admin-ci@test.amateur
+      TEST_ADMIN_PASSWORD: Passw0rd-de-prueba-admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Aplicar las migraciones
+        run: npx prisma migrate deploy
+      - name: Build
+        run: npm run build
+      - name: Levantar la app
+        run: |
+          nohup npx next start -p 3000 > ../servidor.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:3000/api/auth/me > /dev/null && exit 0
+            sleep 2
+          done
+          echo "La app no levantó en 2 minutos"; cat ../servidor.log; exit 1
+      - name: Crear la cuenta de administrador de prueba
+        run: node scripts/crear-admin-de-prueba.mjs
+      - name: Pruebas de integración
+        run: npm run test:api
+      - name: Registro del servidor (si falló)
+        if: failure()
+        run: tail -n 200 ../servidor.log
