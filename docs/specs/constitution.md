@@ -97,6 +97,19 @@ tests/            integración (contra un servidor) y tests/unit/
 
 **Entornos:** local, preview (una URL por rama, protegida por Vercel) y producción (`amateur-lemon.vercel.app`).
 
+**Los *previews* no tocan nada de producción.** Cada servicio externo tiene su propia configuración en el entorno *Preview* de Vercel:
+
+| Servicio | En producción | En un preview |
+|---|---|---|
+| Base de datos | rama `production` de Neon | rama `preview` de Neon, creada **solo con el esquema** (sin datos: no hay personas reales ni menores). Se llena registrando cuentas de prueba |
+| `AUTH_SECRET` | el de producción | otro distinto: una sesión de un entorno no vale en el otro |
+| Correo (`RESEND_API_KEY`, `EMAIL_FROM`) | activo | sin configurar: ningún correo sale (las invitaciones se comparten por link) |
+| Tiempo real (`ABLY_API_KEY`) | activo | sin configurar: no hay empuje en vivo y no se publica en los canales reales |
+
+- **Las migraciones de un PR se aplican solas a la base de preview** en cada build (`app/scripts/construir-vercel.mjs`, declarado en `app/vercel.json`), así un PR que cambia el esquema se prueba tal cual. Solo lo hace si el entorno tiene `PREVIEW_DATABASE_OK=1` **y** la base tiene la tabla marca `_entorno_preview` (producción no la tiene): un preview mal configurado nunca migra producción. En producción el build es el de siempre (`npm run build`) y el SQL se sigue aplicando a mano, antes del merge.
+- La rama `preview` acumula las migraciones de todos los PR abiertos. Si se ensucia (dos PR con cambios incompatibles, datos raros), se borra y se recrea: `neonctl branches create --project-id spring-darkness-82691326 --name preview --parent production --schema-only`, luego `npx prisma migrate resolve --applied 0_init` y la tabla marca (`CREATE TABLE "_entorno_preview" ("nombre" TEXT PRIMARY KEY); INSERT INTO "_entorno_preview" VALUES ('preview');`) con las URL nuevas en Vercel.
+- Las imágenes subidas desde un preview siguen yendo al almacén de Vercel Blob compartido (aceptado: son archivos, no datos de personas).
+
 **Variables de entorno:**
 
 | Variable | Uso |
