@@ -68,8 +68,12 @@ export async function PATCH(
 
   // El tipo de competencia define el fixture: con partidos ya armados no se cambia (habría que
   // deshacer el fixture primero). El resto de los datos del torneo se editan en cualquier estado.
+  // En una temporada tampoco: cada etapa tiene el suyo (especificación 012).
   if (typeof parsed.data.format === "string") {
-    const current = await prisma.tournament.findUnique({ where: { id }, select: { format: true, _count: { select: { matches: true } } } });
+    const current = await prisma.tournament.findUnique({ where: { id }, select: { format: true, seasonId: true, _count: { select: { matches: true } } } });
+    if (current && current.format !== parsed.data.format && current.seasonId) {
+      return Response.json({ error: "El torneo es parte de una temporada: no se puede cambiar el tipo de competencia" }, { status: 409 });
+    }
     if (current && current.format !== parsed.data.format && current._count.matches > 0) {
       return Response.json({ error: "El torneo ya tiene partidos: no se puede cambiar el tipo de competencia" }, { status: 409 });
     }
@@ -139,6 +143,15 @@ export async function DELETE(
   }
 
   if (!(await canManageTournament(auth.user, id))) return forbidden();
+  // Un torneo de una temporada no se elimina suelto: la tabla General perdería sus partidos sin aviso.
+  // Primero se elimina la temporada, que lo desvincula (especificación 012, decisión E).
+  const inSeason = await prisma.tournament.findUnique({ where: { id }, select: { season: { select: { name: true } } } });
+  if (inSeason?.season) {
+    return Response.json(
+      { error: `El torneo es parte de la temporada "${inSeason.season.name}": elimina la temporada primero` },
+      { status: 409 }
+    );
+  }
   try {
     await prisma.tournament.update({ where: { id }, data: { deletedAt: new Date() } });
     return Response.json({ success: true });

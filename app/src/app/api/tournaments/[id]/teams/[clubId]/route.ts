@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, canManageTournament, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { compareByLastName, isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
 import { OPEN_STATUSES } from "@/_lib/tournament-labels";
+import { seasonTeamsLock } from "@/_lib/season-server";
 
 /**
  * La página pública de un club dentro de un torneo (`/{organizador}/{torneo}/equipo/{club}`): el club, su grupo y su
@@ -114,6 +115,8 @@ export async function DELETE(
   if (!OPEN_STATUSES.includes(tournament.status)) {
     return Response.json({ error: "El torneo ya empezó: no se pueden quitar equipos" }, { status: 409 });
   }
+  const seasonLock = await seasonTeamsLock(id);
+  if (seasonLock) return Response.json({ error: seasonLock }, { status: 409 });
 
   const matches = await prisma.match.count({
     where: { tournamentId: id, OR: [{ homeTeamId: clubId }, { awayTeamId: clubId }] },

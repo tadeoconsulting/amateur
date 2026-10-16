@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
       logoUrl: t.logoUrl,
       organizerId: t.organizerId,
       deletedAt: t.deletedAt,
+      seasonId: t.seasonId,
+      seasonStage: t.seasonStage,
       organizer: t.organizer,
     }))
   );
