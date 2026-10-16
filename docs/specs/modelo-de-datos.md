@@ -67,12 +67,18 @@ Club ──< PlayerInvitation                (invitaciones personales)
 | `location` | texto libre: la sede ("nombre, dirección"). **No existe una entidad Sede.** |
 | `playoffTeams` | Solo `liga`: cuántos de la tabla pasan a llaves (2, 4, 8 o 16); `null` = la liga termina con la tabla. Se puede cambiar hasta que el cuadro esté armado. Con llaves, la liga no se da por terminada hasta jugarse el cuadro, y la tabla solo cuenta los partidos de la liga (no los `decisive`). |
 | `modality`, `gender`, `minutesPerHalf`, `playersPerTeam`, `assignDelegates`, `registrationFee`, `refereeFee`, `rules` | Datos del asistente. Todos opcionales; los torneos anteriores no los tienen. |
+| `seasonId` / `seasonStage` | Temporada a la que pertenece y en qué etapa: `apertura`, `clausura` o `final` (único por `(seasonId, seasonStage)`); los dos `null` fuera de una temporada. Un torneo de temporada no se elimina suelto ni cambia de tipo de competencia (`409`), y sus equipos quedan fijos desde que existe el Clausura. Ver [012](012-temporadas.md). |
 
 Ciclo de vida: `inscripcion` → `en_curso` (al generar el fixture) → `finalizado` (al terminar su último partido). Detalle en [003](003-fixture.md) y [004](004-partido-en-vivo.md).
 
 **Llaves en una liga**: cuando todos los partidos de la liga están finalizados, `POST /api/tournaments/:id/fixture` con `{ mode: "bracket" }` arma el cuadro con los primeros `playoffTeams` de la tabla. Sin más datos, los cruces son automáticos (el mejor contra el peor); con `pairs: [[a, b], …]` los cruces son los que eligió el organizador, entre los clasificados.
 
 Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemplaza al viejo en sus torneos y en los partidos que todavía lo usaban (`PATCH /api/sedes/:id`); un partido con una sede puesta a mano no se toca.
+
+### Season
+- Una temporada al estilo Liga 1 ([012](012-temporadas.md)): agrupa la Apertura, el Clausura y la fase final de un organizador. `finalFormat`: `llaves`, `liguilla` o `ninguna`; `finalTeams`: cuántos de la General clasifican (`null` con `ninguna`).
+- `slug` único por `(organizerId, slug)` y compartido con los torneos: torneos y temporadas del mismo organizador nunca repiten tramo.
+- La tabla General, los campeones y el estado **no se guardan**: salen de sus torneos. `deletedAt`: eliminarla la oculta y desvincula sus torneos (no los borra).
 
 ### TournamentTeam
 - Único por `(tournamentId, clubId)`. `groupName` solo aplica a torneos de formato `grupos`.

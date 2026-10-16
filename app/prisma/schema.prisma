@@ -51,6 +51,7 @@ model User {
   // sin relación a propósito: si ya no es de sus equipos, se ignora y se usa el primero.
   activeClubId                String?
   tournaments                 Tournament[]         @relation("TournamentOrganizer")
+  seasons                     Season[]
   staffRoles                  StaffMember[]
   invitations                 PlayerInvitation[]
   staffInvitations            StaffInvitation[]
@@ -410,7 +411,13 @@ model Tournament {
   groupsAdvancePerGroup Int? // solo "copa": cuántos pasan de cada grupo (2, 3 o 4); null = 2
   playoffTeams          Int? // solo "liga": cuántos de la tabla pasan a llaves (2, 4, 8 o 16); null = sin llaves
 
+  // Temporada a la que pertenece (especificación 012) y en qué etapa: "apertura" | "clausura" | "final".
+  // Los dos null fuera de una temporada.
+  seasonId    String?
+  seasonStage String?
+
   organizer   User                @relation("TournamentOrganizer", fields: [organizerId], references: [id])
+  season      Season?             @relation(fields: [seasonId], references: [id], onDelete: SetNull)
   teams       TournamentTeam[]
   requests    TournamentRequest[]
   matches     Match[]
@@ -419,6 +426,32 @@ model Tournament {
   sponsors    TournamentSponsor[]
 
   @@unique([organizerId, slug])
+  // Una sola Apertura, un solo Clausura y una sola fase final por temporada.
+  @@unique([seasonId, seasonStage])
+}
+
+// Una temporada al estilo Liga 1 (especificación 012): agrupa torneos independientes (Apertura,
+// Clausura y fase final) jugados por los mismos equipos. La tabla General, los campeones y el
+// estado no se guardan: salen de los torneos.
+model Season {
+  id          String    @id @default(cuid())
+  name        String
+  organizerId String
+  // Segundo tramo de la URL pública (cupamateur.com/{organizerSlug}/{slug}). Comparte el espacio de
+  // nombres con los torneos del organizador: los generadores de slugs revisan las dos tablas.
+  slug        String
+  finalFormat String // "llaves" | "liguilla" | "ninguna"
+  finalTeams  Int? // cuántos de la General pasan a la fase final; null si finalFormat = "ninguna"
+  // Eliminada: se oculta y sus torneos quedan desvinculados (no se borran). Null = activa.
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  organizer   User         @relation(fields: [organizerId], references: [id])
+  tournaments Tournament[]
+
+  @@unique([organizerId, slug])
+  @@index([organizerId])
 }
 
 // Un auspiciador (marca/negocio) que patrocina uno o más torneos. Venta gestionada por el

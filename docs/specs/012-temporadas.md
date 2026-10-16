@@ -1,7 +1,9 @@
 # 012 · Temporadas (formato "Liga 1": Apertura, Clausura y fase final)
 
-**Estado:** 📝 **borrador para revisión.** Se escribe antes de programar; nada de esto está implementado.
+**Estado:** 🚧 **entrega 1 de 3 implementada (modelo y API).** Faltan las pantallas del organizador (entrega 2) y las vistas públicas (entrega 3).
 **Resuelve:** OBS-54 del board "[Amateur] Observaciones" (nuevo formato de torneo tipo Liga 1).
+**Código (entrega 1):** `prisma/schema.prisma` (`Season`, `Tournament.seasonId`/`seasonStage`) y la migración `20261016034928_temporadas`; `src/_lib/season.ts` (lógica pura), `src/_lib/season-server.ts`, `src/_lib/scorers-server.ts` (goleadores compartidos con el torneo); `src/app/api/seasons/**`; y los bloqueos en `src/_lib/enrollment.ts`, `src/_lib/tournament-slug.ts`, `api/tournaments/[id]/route.ts` y `api/tournaments/[id]/teams/[clubId]/route.ts`.
+**Pruebas:** `tests/unit/season.test.mjs` (21, unitarias) y `tests/temporadas.test.mjs` (15, integración).
 **Toca:** [002](002-crear-torneo-y-equipos.md) (torneos del organizador), [003](003-fixture.md) (llaves en una liga), [004](004-partido-en-vivo.md) (tabla de posiciones), [007](007-fixture-eliminacion-copa-relampago.md) (cuadro de eliminación), [008](008-observaciones-octubre-2026.md) (`playoffTeams`, vistas compartibles), [009](009-jugadores-provisionales.md) (fichas de jugador), [modelo-de-datos.md](modelo-de-datos.md).
 
 ## Objetivo
@@ -111,7 +113,7 @@ Campeones de cada fase y de la temporada, tabla General, goleador general y enla
 | Método y ruta | Qué hace | Quién |
 |---|---|---|
 | `POST /api/seasons` | Crea la Temporada con su Apertura (`{name, aperturaId, finalFormat, finalTeams}`) | Organizador dueño de la Apertura, admin |
-| `GET /api/seasons?organizerId=` | Lista temporadas | Organizador, admin |
+| `GET /api/seasons?organizerId=` | Lista temporadas no eliminadas (como `GET /api/tournaments`, la lista es pública) | Público |
 | `GET /api/seasons/:id` | Temporada con sus torneos, estado y campeones | Público |
 | `PATCH /api/seasons/:id` | Nombre; tipo de fase final y clasificados solo antes de generarla (`409` después) | Organizador, admin |
 | `DELETE /api/seasons/:id` | Borrado lógico; desvincula los torneos (decisión E) | Organizador, admin |

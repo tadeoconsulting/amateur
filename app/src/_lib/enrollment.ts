@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/_lib/prisma";
 import { OPEN_STATUSES } from "@/_lib/tournament-labels";
+import { seasonTeamsLock } from "@/_lib/season-server";
 
 /** Un rechazo de negocio (torneo cerrado, sin cupo...) con el código HTTP que le toca. */
 export class EnrollmentError extends Error {
@@ -36,6 +37,8 @@ export async function withOpenTournament<T>(tournamentId: string, fn: (tx: Tx) =
       if (tournament._count.teams >= tournament.maxTeams) {
         throw new EnrollmentError(409, "El torneo ya tiene todos sus equipos");
       }
+      const seasonLock = await seasonTeamsLock(tournamentId, tx);
+      if (seasonLock) throw new EnrollmentError(409, seasonLock);
       return fn(tx);
     },
     // El límite de Prisma (5 s) corre desde que empieza la transacción, esperas del bloqueo
