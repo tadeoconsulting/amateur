@@ -10,7 +10,8 @@ import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { ClubCrest } from "@/_components/club-crest";
 import { ScorersList, StandingsTable } from "@/_components/tournament-results";
 import { Toast } from "@/_components/toast";
-import { SeasonStages, SeasonStatusChip, fieldClass, labelClass } from "../_components/season-ui";
+import { SeasonStages, SeasonStatusChip } from "@/_components/season-stages";
+import { fieldClass, labelClass } from "../_components/season-ui";
 
 function Spinner() {
   return (
@@ -95,7 +96,7 @@ export default function TemporadaPage() {
         <h2 id="etapas" className="mb-1 font-heading text-base font-bold text-text-primary">
           Etapas
         </h2>
-        <SeasonStages season={season} linkTournaments />
+        <SeasonStages season={season} hrefFor={(t) => `/torneos/${t.id}`} />
         <NextStep
           season={season}
           aperturaFinished={apertura?.status === "finalizado"}

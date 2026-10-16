@@ -1,7 +1,19 @@
 // Pruebas de la vista que se comparte de un torneo (src/_lib/share-view.ts, sin servidor ni base de datos).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseView, shareSearch, withView } from "../../src/_lib/share-view.ts";
+import { parseSeasonView, parseView, shareSearch, withSeasonView, withView } from "../../src/_lib/share-view.ts";
+
+test("torneo de temporada: se leen la tabla y los goleadores elegidos, y se ignora lo inválido", () => {
+  assert.deepEqual(parseSeasonView("?vista=resultados&tabla=general&goleadores=general"), { tabla: "general", goleadores: "general" });
+  assert.deepEqual(parseSeasonView("?tabla=otra&goleadores=todos"), { tabla: null, goleadores: null });
+  assert.equal(withSeasonView("vista=resultados&sub=tabla", "tabla", "clausura"), "vista=resultados&sub=tabla&tabla=clausura");
+});
+
+test("el enlace compartido conserva la tabla y los goleadores de temporada, solo en resultados", () => {
+  assert.equal(shareSearch("?tabla=general&goleadores=general&unirme=1", { vista: "resultados", sub: "tabla" }), "vista=resultados&sub=tabla&tabla=general&goleadores=general");
+  assert.equal(shareSearch("?tabla=general", { vista: "equipos" }), "vista=equipos");
+  assert.equal(shareSearch("?tabla=cualquiera", { vista: "resultados", sub: "tabla" }), "vista=resultados&sub=tabla");
+});
 
 test("se lee la vista de la URL y se ignora lo inválido", () => {
   assert.deepEqual(parseView("?vista=resultados&sub=goleadores"), { vista: "resultados", sub: "goleadores" });
