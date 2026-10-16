@@ -6,6 +6,7 @@ import {
   countsForGeneral,
   defaultClausuraName,
   finalOutdated,
+  finalTeamsOptions,
   parseFinalConfig,
   seasonChampion,
   seasonStatus,
@@ -41,6 +42,16 @@ describe("parseFinalConfig", () => {
     assert.equal(parseFinalConfig("liguilla", 11, 10).ok, false);
     assert.equal(parseFinalConfig("llaves", 16, 10).ok, false);
     assert.equal(parseFinalConfig("liguilla", 10, 10).ok, true);
+  });
+
+  test("las opciones del formulario son exactamente las que acepta la validación", () => {
+    assert.deepEqual(finalTeamsOptions("llaves", 10), [2, 4, 8]);
+    assert.deepEqual(finalTeamsOptions("liguilla", 6), [3, 4, 5, 6]);
+    assert.deepEqual(finalTeamsOptions("liguilla", 2), []);
+    assert.deepEqual(finalTeamsOptions("ninguna", 10), []);
+    for (const format of ["llaves", "liguilla"]) {
+      for (const n of finalTeamsOptions(format, 12)) assert.equal(parseFinalConfig(format, n, 12).ok, true, `${format} ${n}`);
+    }
   });
 
   test("formato o número inválidos", () => {

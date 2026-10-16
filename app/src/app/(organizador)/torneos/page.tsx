@@ -1,14 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getTournaments, type TournamentListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
+import { SubTabs } from "@/_components/sub-tabs";
+import { SeasonsList } from "./temporadas/_components/seasons-list";
 
 type FilterTab = "competencia" | "convocatoria" | "finalizados";
+
+// Las temporadas viven acá, en su propia pestaña, y no en la barra de navegación: se usan poco
+// (especificación 012, decisión 10). `?tab=temporadas` abre directo esa pestaña.
+type MainTab = "torneos" | "temporadas";
+const mainTabs: { key: MainTab; label: string }[] = [
+  { key: "torneos", label: "Torneos" },
+  { key: "temporadas", label: "Temporadas" },
+];
 
 const filterMap: Record<FilterTab, string[]> = {
   competencia: ["en_curso"],
@@ -131,13 +141,23 @@ function Spinner() {
 export default function TorneosPage() {
   const { user, loading } = useAuth();
   if (loading || !user) return <Spinner />;
-  return <TorneosContent organizerId={user.id} />;
+  return (
+    <Suspense fallback={<Spinner />}>
+      <TorneosContent organizerId={user.id} />
+    </Suspense>
+  );
 }
 
 function TorneosContent({ organizerId }: { organizerId: string }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<FilterTab>("competencia");
+  const [mainTab, setMainTab] = useState<MainTab>(useSearchParams().get("tab") === "temporadas" ? "temporadas" : "torneos");
   const { data: tournaments, loading } = useApi(() => getTournaments({ organizerId }));
+
+  const changeMainTab = (tab: MainTab) => {
+    setMainTab(tab);
+    router.replace(tab === "temporadas" ? "/torneos?tab=temporadas" : "/torneos", { scroll: false });
+  };
 
   if (loading || !tournaments) return <Spinner />;
 
@@ -194,17 +214,23 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
             </svg>
           </Link>
           <Link
-            href="/crear-torneo"
+            href={mainTab === "temporadas" ? "/torneos/temporadas/nueva" : "/crear-torneo"}
             className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            Crear torneo
+            {mainTab === "temporadas" ? "Crear temporada" : "Crear torneo"}
           </Link>
         </div>
       </div>
 
+      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" className="mb-4" />
+
+      {mainTab === "temporadas" ? (
+        <SeasonsList organizerId={organizerId} />
+      ) : (
+      <>
       {/* Filter tabs */}
       <div className="flex gap-2 px-4 mb-4">
         {tabs.map((tab) => (
@@ -329,6 +355,8 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

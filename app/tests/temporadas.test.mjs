@@ -146,6 +146,9 @@ describe("Clausura", () => {
     assert.equal(clausura.data.name, "Clausura 2026");
     assert.equal(clausura.data.format, "liga");
     assert.equal(clausura.data.seasonStage, "clausura");
+    // Como un torneo nuevo del asistente: listo para "Iniciar torneo" en la pantalla del organizador.
+    assert.equal(clausura.data.status, "inscripcion");
+    assert.deepEqual(clausura.data.season, { id: season.id, name: season.name });
     assert.equal(clausura.data.minutesPerHalf, 25);
     assert.deepEqual(clausura.data.teams.map((t) => t.club.id).sort(), apertura.data.teams.map((t) => t.club.id).sort());
 

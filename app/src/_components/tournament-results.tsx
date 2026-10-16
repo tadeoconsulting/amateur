@@ -23,12 +23,15 @@ import { placeChanges } from "@/_lib/standings";
 export function StandingsTable({
   standings,
   qualifyCount,
+  qualifyLabel = "las llaves",
   compact = false,
   highlightClubIds = [],
   clubHref,
 }: {
   standings: StandingsRow[];
   qualifyCount: number | null;
+  /** A qué clasifican los de verde, para la leyenda ("las llaves"; en una temporada, "la fase final"). */
+  qualifyLabel?: string;
   compact?: boolean;
   highlightClubIds?: string[];
   /** Si se pasa, el equipo de cada fila lleva a su página (partidos, jugadores y resultados). */
@@ -103,7 +106,7 @@ export function StandingsTable({
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 font-body text-xs text-text-secondary">
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-verification" aria-hidden="true" />
-            Clasifica a las llaves (los {qualifyCount} primeros)
+            Clasifica a {qualifyLabel} (los {qualifyCount} primeros)
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-error" aria-hidden="true" />
