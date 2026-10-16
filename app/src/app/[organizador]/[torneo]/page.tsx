@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/_lib/prisma";
 import { ConvocatoriaView } from "@/_components/convocatoria-view";
+import { SeasonPublicView } from "@/_components/season-public-view";
 
 // Página pública de un torneo con su URL con nombre: cupamateur.com/{organizador}/{torneo}
 // (ver _lib/slug.ts). La abre quien recibe el link por WhatsApp, sin cuenta. Las pantallas de la
 // app (/login, /club, /torneos...) tienen ruta propia y ganan sobre esta, y esos nombres no se
 // asignan a ningún organizador (RESERVED_SLUGS).
+//
+// Las temporadas (especificación 012) comparten este segundo tramo con los torneos (los generadores de
+// slugs nunca repiten uno entre las dos tablas): si no hay torneo con ese nombre, se busca una temporada.
 type Params = Promise<{ organizador: string; torneo: string }>;
 
 async function findTournament({ organizador, torneo }: { organizador: string; torneo: string }) {
@@ -18,18 +22,39 @@ async function findTournament({ organizador, torneo }: { organizador: string; to
     .catch(() => null);
 }
 
+async function findSeason({ organizador, torneo }: { organizador: string; torneo: string }) {
+  return prisma.season
+    .findFirst({
+      where: { slug: torneo, deletedAt: null, organizer: { organizerSlug: organizador } },
+      select: { id: true, name: true },
+    })
+    .catch(() => null);
+}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const tournament = await findTournament(await params);
-  if (!tournament) return { title: "Torneo no encontrado · Amateur" };
-  return {
-    title: `${tournament.name} · Amateur`,
-    description: `Sigue ${tournament.name}${tournament.category ? ` (${tournament.category})` : ""} en ${tournament.location}: fixture, tabla y resultados. Inscripción en Amateur.`,
-  };
+  const p = await params;
+  const tournament = await findTournament(p);
+  if (tournament) {
+    return {
+      title: `${tournament.name} · Amateur`,
+      description: `Sigue ${tournament.name}${tournament.category ? ` (${tournament.category})` : ""} en ${tournament.location}: fixture, tabla y resultados. Inscripción en Amateur.`,
+    };
+  }
+  const season = await findSeason(p);
+  if (season) {
+    return {
+      title: `${season.name} · Amateur`,
+      description: `Sigue ${season.name} en Amateur: Apertura, Clausura, tabla General, goleador y campeón de la temporada.`,
+    };
+  }
+  return { title: "Torneo no encontrado · Amateur" };
 }
 
 export default async function TournamentPublicPage({ params }: { params: Params }) {
   const p = await params;
   const tournament = await findTournament(p);
-  if (!tournament) notFound();
-  return <ConvocatoriaView tournamentId={tournament.id} publicPath={`/${p.organizador}/${p.torneo}`} />;
+  if (tournament) return <ConvocatoriaView tournamentId={tournament.id} publicPath={`/${p.organizador}/${p.torneo}`} />;
+  const season = await findSeason(p);
+  if (season) return <SeasonPublicView seasonId={season.id} organizerSlug={p.organizador} />;
+  notFound();
 }

@@ -116,6 +116,13 @@ describe("crear una temporada", () => {
     assert.equal(r.status, 201);
     assert.notEqual(r.data.slug, apertura.slug);
     assert.equal(r.data.slug, `${apertura.slug}-2`);
+
+    // La misma ruta pública sirve a los dos: /{organizador}/{tramo} abre el torneo o la temporada.
+    const base = process.env.TEST_BASE_URL ?? "http://localhost:3000";
+    const page = await fetch(`${base}/${r.data.organizerSlug}/${r.data.slug}`);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), new RegExp(`<title>Liga Slug ${RUN} · Amateur</title>`));
+    assert.equal((await fetch(`${base}/${r.data.organizerSlug}/no-existe-${RUN}`)).status, 404);
   });
 });
 
@@ -148,7 +155,7 @@ describe("Clausura", () => {
     assert.equal(clausura.data.seasonStage, "clausura");
     // Como un torneo nuevo del asistente: listo para "Iniciar torneo" en la pantalla del organizador.
     assert.equal(clausura.data.status, "inscripcion");
-    assert.deepEqual(clausura.data.season, { id: season.id, name: season.name });
+    assert.deepEqual(clausura.data.season, { id: season.id, name: season.name, slug: season.slug });
     assert.equal(clausura.data.minutesPerHalf, 25);
     assert.deepEqual(clausura.data.teams.map((t) => t.club.id).sort(), apertura.data.teams.map((t) => t.club.id).sort());
 

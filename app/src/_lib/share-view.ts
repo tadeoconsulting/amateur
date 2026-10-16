@@ -36,15 +36,48 @@ export function withView(search: string, view: { vista: FanView; sub?: ResultSub
   return params.toString();
 }
 
+// ─── Torneos de una temporada (especificación 012) ──────────────────────────
+// En un torneo de temporada, la tabla y los goleadores tienen pestañas propias: `&tabla=` elige qué tabla
+// (la de cada etapa o la General) y `&goleadores=` si son los del torneo o los de toda la temporada.
+
+export const SEASON_TABLES = ["apertura", "clausura", "final", "general"] as const;
+export type SeasonTable = (typeof SEASON_TABLES)[number];
+export const SEASON_SCORERS = ["torneo", "general"] as const;
+export type SeasonScorers = (typeof SEASON_SCORERS)[number];
+
+/** Las pestañas de temporada que pide una URL; lo inválido se ignora. */
+export function parseSeasonView(search: string): { tabla: SeasonTable | null; goleadores: SeasonScorers | null } {
+  const params = new URLSearchParams(search);
+  const tabla = params.get("tabla");
+  const goleadores = params.get("goleadores");
+  return {
+    tabla: (SEASON_TABLES as readonly string[]).includes(tabla ?? "") ? (tabla as SeasonTable) : null,
+    goleadores: (SEASON_SCORERS as readonly string[]).includes(goleadores ?? "") ? (goleadores as SeasonScorers) : null,
+  };
+}
+
+/** El query con una pestaña de temporada puesta, conservando los demás parámetros. */
+export function withSeasonView(search: string, key: "tabla" | "goleadores", value: string): string {
+  const params = new URLSearchParams(search);
+  params.set(key, value);
+  return params.toString();
+}
+
 /**
- * El query de un enlace para compartir: solo la vista (sección, fecha o ronda, pestaña de resultados),
- * sin nada más — ni `unirme` ni lo de iniciar sesión — para que el enlace sirva a cualquiera.
+ * El query de un enlace para compartir: solo la vista (sección, fecha o ronda, pestaña de resultados y, en
+ * un torneo de temporada, qué tabla y qué goleadores), sin nada más — ni `unirme` ni lo de iniciar sesión —
+ * para que el enlace sirva a cualquiera.
  */
 export function shareSearch(search: string, view: { vista: FanView; sub?: ResultSub | null }): string {
   const source = new URLSearchParams(search);
   const kept = new URLSearchParams();
   kept.set("vista", view.vista);
   if (view.vista === "resultados" && view.sub) kept.set("sub", view.sub);
+  if (view.vista === "resultados") {
+    const season = parseSeasonView(search);
+    if (season.tabla) kept.set("tabla", season.tabla);
+    if (season.goleadores) kept.set("goleadores", season.goleadores);
+  }
   if (view.vista === "fixture") {
     for (const key of ["fecha", "ronda"]) {
       const value = source.get(key);

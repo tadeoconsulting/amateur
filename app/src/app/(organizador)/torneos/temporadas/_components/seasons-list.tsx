@@ -5,7 +5,7 @@ import { getSeasons } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { FINAL_FORMAT_LABEL } from "@/_lib/season";
 import { btnSolid } from "@/_components/button-styles";
-import { SeasonStages, SeasonStatusChip } from "./season-ui";
+import { SeasonStages, SeasonStatusChip } from "@/_components/season-stages";
 
 /** La pestaña "Temporadas" de Mis torneos (especificación 012). */
 export function SeasonsList({ organizerId }: { organizerId: string }) {

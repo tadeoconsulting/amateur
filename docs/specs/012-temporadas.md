@@ -1,10 +1,11 @@
 # 012 · Temporadas (formato "Liga 1": Apertura, Clausura y fase final)
 
-**Estado:** 🚧 **entregas 1 y 2 de 3 implementadas (modelo y API; pantallas del organizador).** Faltan las vistas públicas (entrega 3).
+**Estado:** ✅ **implementada (as-built), en tres entregas:** modelo y API (#134), pantallas del organizador (#135) y vistas públicas.
 **Resuelve:** OBS-54 del board "[Amateur] Observaciones" (nuevo formato de torneo tipo Liga 1).
 **Código (entrega 1):** `prisma/schema.prisma` (`Season`, `Tournament.seasonId`/`seasonStage`) y la migración `20261016034928_temporadas`; `src/_lib/season.ts` (lógica pura), `src/_lib/season-server.ts`, `src/_lib/scorers-server.ts` (goleadores compartidos con el torneo); `src/app/api/seasons/**`; y los bloqueos en `src/_lib/enrollment.ts`, `src/_lib/tournament-slug.ts`, `api/tournaments/[id]/route.ts` y `api/tournaments/[id]/teams/[clubId]/route.ts`.
 **Código (entrega 2):** `(organizador)/torneos/page.tsx` (pestañas Torneos · Temporadas), `(organizador)/torneos/temporadas/` (`nueva/page.tsx`, `[id]/page.tsx`, `_components/seasons-list.tsx` y `season-ui.tsx`), el enlace a la temporada en `(organizador)/torneos/[id]/page.tsx`, `_lib/api.ts` (tipos y llamadas de temporadas) y `qualifyLabel` en `StandingsTable`.
-**Pruebas:** `tests/unit/season.test.mjs` (22, unitarias) y `tests/temporadas.test.mjs` (15, integración). Las pantallas se verificaron a mano en el navegador (celular y escritorio) contra una base local.
+**Código (entrega 3):** `_components/season-results.tsx` (pestañas de temporada en Tabla y Goleadores), `_components/season-public-view.tsx` y `_components/season-stages.tsx`, `app/[organizador]/[torneo]/page.tsx` (torneo o temporada), `_components/convocatoria-view.tsx` y `(organizador)/torneos/[id]/page.tsx` (las pestañas y el enlace a la temporada), `_lib/share-view.ts` (`&tabla=` y `&goleadores=`).
+**Pruebas:** `tests/unit/season.test.mjs` (22, unitarias), `tests/unit/share-view.test.mjs` (pestañas de temporada en la URL) y `tests/temporadas.test.mjs` (15, integración). Las pantallas se verificaron a mano en el navegador (celular y escritorio) contra una base local.
 **Toca:** [002](002-crear-torneo-y-equipos.md) (torneos del organizador), [003](003-fixture.md) (llaves en una liga), [004](004-partido-en-vivo.md) (tabla de posiciones), [007](007-fixture-eliminacion-copa-relampago.md) (cuadro de eliminación), [008](008-observaciones-octubre-2026.md) (`playoffTeams`, vistas compartibles), [009](009-jugadores-provisionales.md) (fichas de jugador), [modelo-de-datos.md](modelo-de-datos.md).
 
 ## Objetivo
@@ -103,15 +104,19 @@ model Tournament {
 - No hay pantalla para editar la temporada todavía (la API ya acepta `PATCH`).
 
 ### Público (fan) y organizador, dentro de cada torneo de la temporada
-- **Resultados → Tabla:** pestañas **Apertura · Clausura · General temporada**. Antes de que exista el Clausura, su pestaña se ve deshabilitada con el texto "Empieza cuando termine la Apertura". En la fase final se muestra su propia tabla (si es liguilla) o su cuadro, más **General temporada**.
-- **Resultados → Goleadores:** pestañas **Del torneo · General temporada**.
-- La pestaña elegida va en la URL, como el resto de la vista compartible (008): `&tabla=apertura|clausura|general` y `&goleadores=torneo|general`. Lo inválido se ignora.
-- Un enlace a la Temporada.
+Un solo componente (`_components/season-results.tsx`: `SeasonTables` y `SeasonScorersTabs`) lo agrega a la página pública del torneo (`ConvocatoriaView`) y a la del organizador. Fuera de una temporada no cambia nada.
+- **Tabla:** pestañas **Apertura · Clausura · General temporada**, abierta en la del propio torneo (que muestra la tabla de siempre). Antes de que exista el Clausura, su pestaña dice "El Clausura empieza cuando termine la Apertura". En la fase final: **Fase final · General temporada**; si la fase final es por llaves, en vez de tabla dice que los cruces están en el fixture.
+- **Goleadores:** pestañas **Del torneo · General temporada**.
+- Las tablas de las otras etapas y la General se actualizan en vivo junto con las del torneo.
+- La pestaña elegida va en la URL, como el resto de la vista compartible (008): `&tabla=apertura|clausura|final|general` y `&goleadores=torneo|general` (`parseSeasonView`, `withSeasonView`), y el enlace de "Compartir" la conserva. Lo inválido se ignora.
+- **Enlace a la Temporada:** en la pública, "Clausura de Temporada 2026 →" en la cabecera; en la del organizador, "Ver temporada".
+- El Clausura y la fase final se muestran con **inscripciones cerradas** (sus equipos son fijos), aunque estén en `inscripcion`.
+- En la pantalla del organizador, la tabla de un torneo de temporada sin llaves no marca clasificados ni descenso (en una temporada nadie desciende).
 
 ### Público, página de la Temporada (`/{organizador}/{temporada}`)
-Campeones de cada fase y de la temporada, tabla General, goleador general y enlaces a los tres torneos.
+La ruta `[organizador]/[torneo]` busca primero un torneo y, si no hay, una temporada con ese tramo (`SeasonPublicView`). Muestra el estado, el campeón de la temporada, la tabla General (con "Clasifica a la fase final"), las etapas con su campeón y enlace a la página pública de cada torneo, y el goleador general. Los equipos enlazan a su página dentro de la Apertura.
 
-## API (propuesta)
+## API
 | Método y ruta | Qué hace | Quién |
 |---|---|---|
 | `POST /api/seasons` | Crea la Temporada con su Apertura (`{name, aperturaId, finalFormat, finalTeams}`) | Organizador dueño de la Apertura, admin |
@@ -135,7 +140,9 @@ Reglas que se agregan a rutas existentes: inscribir o quitar equipos de un torne
 2. **Pantallas del organizador:** pestañas en Torneos, crear temporada, página de la Temporada, Clausura y fase final.
 3. **Vistas públicas:** pestañas de Tabla y Goleadores en cada torneo y la página pública de la Temporada.
 
-## Limitaciones conocidas (previstas)
+## Limitaciones conocidas
+- Las pantallas del club y del jugador muestran cada torneo como siempre, sin las pestañas de temporada (están en la pública y en la del organizador).
+- No hay pantalla para editar una temporada (nombre o fase final): la API lo permite con `PATCH`.
 - Sin descensos, ascensos ni cambios de equipos entre fases.
 - Sin liguilla dentro de una fase: el campeón de una fase es por tabla o por llaves.
 - La fase final no se recalcula si se corrige un partido después de generarla (decisión G).

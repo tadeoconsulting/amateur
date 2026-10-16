@@ -30,6 +30,8 @@ import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
 import { parseView, withView } from "@/_lib/share-view";
 import { ShareViewButton } from "@/_components/share-view-button";
+import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
+import { STAGE_LABEL } from "@/_lib/season";
 
 type Notify = (message: string, tone: "success" | "error") => void;
 type MainTab = "fixture" | "resultados" | "equipos" | "detalles";
@@ -78,10 +80,13 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
   // el comentario en useTournamentRealtime: hay que escuchar los partidos programados desde
   // antes de que arranquen, no solo los que ya están en_curso).
   const watchMatchIds = matches.filter((m) => m.status !== "finalizado").map((m) => m.id);
+  // Las tablas de temporada (otras etapas y la General) se piden aparte: este número les avisa que hay novedades.
+  const [liveVersion, setLiveVersion] = useState(0);
   useTournamentRealtime(watchMatchIds, () => {
     refetchMatches();
     refetchStandings();
     refetchScorers();
+    setLiveVersion((v) => v + 1);
   });
 
   if (error) {
@@ -114,7 +119,9 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
     writeView("resultados", sub);
   }
 
-  const isOpen = OPEN_STATUSES.includes(tournament.status);
+  // El Clausura y la fase final de una temporada nacen con sus equipos y no reciben más (especificación 012).
+  const seasonLocked = tournament.seasonStage === "clausura" || tournament.seasonStage === "final";
+  const isOpen = OPEN_STATUSES.includes(tournament.status) && !seasonLocked;
   const teams = tournament._count.teams;
   const max = tournament.maxTeams;
   const free = max === null ? null : Math.max(0, max - teams);
@@ -155,6 +162,17 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
           <p className="mt-2 font-body text-sm text-brand-200">
             {[tournament.category || "Libre", format].join(" · ")}
           </p>
+          {/* Un torneo de temporada (especificación 012) lleva a la página de la temporada: campeones, General y goleador. */}
+          {tournament.season && tournament.organizer.organizerSlug && (
+            <Link
+              href={`/${tournament.organizer.organizerSlug}/${tournament.season.slug}`}
+              className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-brand-700 px-3 font-heading text-xs font-semibold text-text-invert transition-colors hover:bg-brand-500"
+            >
+              {tournament.seasonStage ? `${STAGE_LABEL[tournament.seasonStage]} de ` : ""}
+              {tournament.season.name}
+              <span aria-hidden="true">→</span>
+            </Link>
+          )}
           </div>
 
           <div className="mt-5 @2xl:mt-0 @2xl:w-80 @2xl:shrink-0">
@@ -305,11 +323,15 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             <div className="@2xl:grid @2xl:grid-cols-5 @2xl:items-start @2xl:gap-8">
               <div className={`mt-4 @2xl:col-span-3 ${resultadosTab === "tabla" ? "" : "hidden @2xl:block"}`}>
                 <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Posiciones</h2>
-                <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
+                <SeasonTables tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+                  <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
+                </SeasonTables>
               </div>
               <div className={`mt-4 @2xl:col-span-2 ${resultadosTab === "goleadores" ? "" : "hidden @2xl:block"}`}>
                 <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Goleadores</h2>
-                <ScorersList scorers={topScorers} clubHref={clubHref} />
+                <SeasonScorersTabs tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+                  <ScorersList scorers={topScorers} clubHref={clubHref} />
+                </SeasonScorersTabs>
               </div>
             </div>
           </div>

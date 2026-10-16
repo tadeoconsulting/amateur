@@ -66,7 +66,7 @@ export interface TournamentDetail {
   /** Temporada a la que pertenece (especificación 012); null fuera de una temporada. */
   seasonId: string | null;
   seasonStage: SeasonStage | null;
-  season: { id: string; name: string } | null;
+  season: { id: string; name: string; slug: string } | null;
   sponsors: SponsorSummary[];
   teams: {
     id: string;
@@ -508,7 +508,17 @@ export interface SeasonSummary {
   status: SeasonStatus;
   createdAt: string;
   teamsCount: number;
-  tournaments: { id: string; name: string; slug: string | null; status: string; format: string; stage: SeasonStage; champion: SeasonClubRef }[];
+  tournaments: {
+    id: string;
+    name: string;
+    slug: string | null;
+    status: string;
+    format: string;
+    /** Cuántos pasan a las llaves de ese torneo (solo una liga); null sin llaves. */
+    playoffTeams: number | null;
+    stage: SeasonStage;
+    champion: SeasonClubRef;
+  }[];
   champion: SeasonClubRef;
   /** Se corrigió un partido después de generar la fase final y la General ya no da los mismos clasificados. */
   finalOutdated: boolean;

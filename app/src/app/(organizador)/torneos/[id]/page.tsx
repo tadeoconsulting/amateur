@@ -33,6 +33,7 @@ import { TeamsList } from "@/_components/teams-list";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { STAGE_LABEL } from "@/_lib/season";
+import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores" | "equipos";
@@ -164,10 +165,13 @@ export default function TournamentDetailPage() {
   // finalizado (no solo en_curso) para enterarse también de que un partido arrancó — hay que
   // estar escuchando su canal desde antes (ver el comentario en useTournamentRealtime).
   const watchMatchIds = (tournamentMatches ?? []).filter((m) => m.status !== "finalizado").map((m) => m.id);
+  // Las tablas de temporada (otras etapas y la General) se piden aparte: este número les avisa que hay novedades.
+  const [liveVersion, setLiveVersion] = useState(0);
   useTournamentRealtime(watchMatchIds, () => {
     refetchMatches();
     refetchStandings();
     refetchScorers();
+    setLiveVersion((v) => v + 1);
   });
 
   if (loadingTournament || !tournament) {
@@ -605,11 +609,16 @@ export default function TournamentDetailPage() {
         // "grupos" (formato legado) conserva el descenso de siempre, ahora por grupo.
         // Una liga con llaves marca a los que clasifican y tampoco tiene descenso.
         const ligaLlaves = tournament.format === "liga" ? tournament.playoffTeams : null;
-        const advanceCount = isCopa ? (tournament.groupsAdvancePerGroup ?? 2) : (ligaLlaves ?? 2);
-        const noDescent = isCopa || ligaLlaves !== null;
+        // En una temporada (especificación 012) nadie desciende, y sin llaves el campeón es el primero:
+        // no se marca a nadie (quién va a la fase final lo dice la tabla General).
+        const plainSeasonTable = tournament.seasonId !== null && ligaLlaves === null && !isCopa;
+        const advanceCount = plainSeasonTable ? 0 : isCopa ? (tournament.groupsAdvancePerGroup ?? 2) : (ligaLlaves ?? 2);
+        const noDescent = isCopa || ligaLlaves !== null || plainSeasonTable;
 
         return (
-          <div className="mt-4 flex flex-col gap-4 px-4 @4xl:mx-auto @4xl:max-w-4xl">
+          <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-4xl">
+          <SeasonTables tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+          <div className="flex flex-col gap-4">
             {hasGroups
               ? [...byGroup.entries()].map(([groupName, rows]) => (
                   <div key={groupName}>
@@ -618,7 +627,7 @@ export default function TournamentDetailPage() {
                   </div>
                 ))
               : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} clubHref={clubHref} />}
-            <div className="flex items-center gap-4 px-1">
+            <div className={`flex items-center gap-4 px-1 ${plainSeasonTable ? "hidden" : ""}`}>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-verification" />
                 <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : ligaLlaves !== null ? "Clasifica a las llaves" : "Clasifica a liguilla"}</span>
@@ -631,6 +640,8 @@ export default function TournamentDetailPage() {
               )}
             </div>
           </div>
+          </SeasonTables>
+          </div>
         );
       })()}
 
@@ -638,6 +649,7 @@ export default function TournamentDetailPage() {
 
       {!isConvocatoria && shownTab === "goleadores" && scorers && (
         <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
+          <SeasonScorersTabs tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
           <div className="overflow-hidden rounded-xl border border-brand-200">
             <table className="w-full text-left text-sm">
               <thead>
@@ -667,6 +679,7 @@ export default function TournamentDetailPage() {
               </tbody>
             </table>
           </div>
+          </SeasonScorersTabs>
         </div>
       )}
 

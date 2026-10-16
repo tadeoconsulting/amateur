@@ -218,6 +218,7 @@ export async function seasonSummary(season: SeasonRecord, db: Db = prisma) {
       slug: t.slug,
       status: t.status,
       format: t.format,
+      playoffTeams: t.playoffTeams,
       stage: t.seasonStage,
       champion: clubRef(championByTournament.get(t.id) ?? null),
     })),
