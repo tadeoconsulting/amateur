@@ -143,7 +143,9 @@ export async function createSeasonTournament(input: {
           location: input.location ?? source.location,
           playoffTeams: stage === "clausura" ? source.playoffTeams : null,
           maxTeams: clubIds.length,
-          status: "draft",
+          // Como un torneo recién creado por el asistente: en la pantalla del organizador queda listo
+          // para "Iniciar torneo" (sus equipos ya están y no se pueden cambiar, ver seasonTeamsLock).
+          status: "inscripcion",
           organizerId: season.organizerId,
           slug: await newTournamentSlug(season.organizerId, input.name, tx),
           seasonId: season.id,

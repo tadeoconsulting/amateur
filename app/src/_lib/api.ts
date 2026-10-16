@@ -1,4 +1,5 @@
 import type { RequestAction, RequestKind, RequestStatus } from "@/_lib/tournament-request";
+import type { FinalFormat, SeasonStage, SeasonStatus } from "@/_lib/season";
 
 const BASE = typeof window !== "undefined" ? "" : "http://localhost:3000";
 
@@ -27,6 +28,9 @@ export interface TournamentListItem {
   logoUrl: string | null;
   organizerId: string;
   organizer: { firstName: string; lastName: string; organizerSlug: string | null };
+  /** Temporada a la que pertenece y en qué etapa (especificación 012); null fuera de una temporada. */
+  seasonId: string | null;
+  seasonStage: SeasonStage | null;
 }
 
 export interface TournamentDetail {
@@ -59,6 +63,10 @@ export interface TournamentDetail {
   /** Segundo tramo de la URL pública; null en torneos anteriores a las URLs con nombre. */
   slug: string | null;
   organizer: { id: string; firstName: string; lastName: string; organizerSlug: string | null };
+  /** Temporada a la que pertenece (especificación 012); null fuera de una temporada. */
+  seasonId: string | null;
+  seasonStage: SeasonStage | null;
+  season: { id: string; name: string } | null;
   sponsors: SponsorSummary[];
   teams: {
     id: string;
@@ -482,4 +490,56 @@ export function createRequest(tournamentId: string, clubId: string) {
     `/api/tournaments/${tournamentId}/requests`,
     { clubId }
   );
+}
+
+// ─── Temporadas (especificación 012) ────────────────────────────────────────
+
+export type SeasonClubRef = { id: string; name: string; shortName: string; logoUrl: string | null; color: string | null } | null;
+
+export interface SeasonSummary {
+  id: string;
+  name: string;
+  slug: string;
+  organizerId: string;
+  organizerSlug: string | null;
+  finalFormat: FinalFormat;
+  /** Cuántos de la General pasan a la fase final; null sin fase final. */
+  finalTeams: number | null;
+  status: SeasonStatus;
+  createdAt: string;
+  teamsCount: number;
+  tournaments: { id: string; name: string; slug: string | null; status: string; format: string; stage: SeasonStage; champion: SeasonClubRef }[];
+  champion: SeasonClubRef;
+  /** Se corrigió un partido después de generar la fase final y la General ya no da los mismos clasificados. */
+  finalOutdated: boolean;
+}
+
+export function getSeasons(params?: Record<string, string>) {
+  const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+  return fetcher<SeasonSummary[]>(`/api/seasons${qs}`);
+}
+
+export function getSeason(id: string) {
+  return fetcher<SeasonSummary>(`/api/seasons/${id}`);
+}
+
+export function getSeasonStandings(id: string) {
+  return fetcher<StandingsRow[]>(`/api/seasons/${id}/standings?live=1`);
+}
+
+export function getSeasonScorers(id: string) {
+  return fetcher<ScorerRow[]>(`/api/seasons/${id}/scorers`);
+}
+
+export function createSeason(body: { name: string; aperturaId: string; finalFormat: FinalFormat; finalTeams: number | null }) {
+  return send<SeasonSummary>("POST", "/api/seasons", body);
+}
+
+/** Crea el Clausura (con la Apertura terminada) o genera la fase final (con el Clausura terminado). */
+export function createSeasonStage(seasonId: string, stage: "clausura" | "final", body: { startDate: string; name?: string }) {
+  return send<{ tournamentId: string; season: SeasonSummary }>("POST", `/api/seasons/${seasonId}/${stage}`, body);
+}
+
+export function deleteSeason(seasonId: string) {
+  return send("DELETE", `/api/seasons/${seasonId}`);
 }

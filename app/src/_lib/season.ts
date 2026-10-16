@@ -18,6 +18,27 @@ export const FINAL_BRACKET_SIZES = [2, 4, 8, 16] as const;
 /** Con 2 una liguilla sería un solo partido: para eso están las llaves. */
 export const MIN_LIGUILLA_TEAMS = 3;
 
+/** Cómo se nombra cada cosa en pantalla. */
+export const STAGE_LABEL: Record<SeasonStage, string> = { apertura: "Apertura", clausura: "Clausura", final: "Fase final" };
+export const FINAL_FORMAT_LABEL: Record<FinalFormat, string> = { llaves: "Llaves", liguilla: "Liguilla", ninguna: "Sin fase final" };
+export const SEASON_STATUS_LABEL: Record<SeasonStatus, string> = {
+  apertura: "En Apertura",
+  clausura: "En Clausura",
+  final_pendiente: "Falta la fase final",
+  final: "En fase final",
+  terminada: "Terminada",
+};
+
+/**
+ * Las opciones de clasificados para el formulario: llaves, los tamaños de cuadro que caben; liguilla,
+ * de 3 al total. `maxTeams` es el tope (el cupo de la Apertura o sus equipos, el mayor).
+ */
+export function finalTeamsOptions(finalFormat: FinalFormat, maxTeams: number): number[] {
+  if (finalFormat === "llaves") return FINAL_BRACKET_SIZES.filter((n) => n <= maxTeams);
+  if (finalFormat === "liguilla") return Array.from({ length: Math.max(0, maxTeams - MIN_LIGUILLA_TEAMS + 1) }, (_, i) => i + MIN_LIGUILLA_TEAMS);
+  return [];
+}
+
 export function isFinalFormat(value: unknown): value is FinalFormat {
   return typeof value === "string" && (FINAL_FORMATS as readonly string[]).includes(value);
 }

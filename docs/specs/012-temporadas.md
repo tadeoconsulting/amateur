@@ -1,9 +1,10 @@
 # 012 · Temporadas (formato "Liga 1": Apertura, Clausura y fase final)
 
-**Estado:** 🚧 **entrega 1 de 3 implementada (modelo y API).** Faltan las pantallas del organizador (entrega 2) y las vistas públicas (entrega 3).
+**Estado:** 🚧 **entregas 1 y 2 de 3 implementadas (modelo y API; pantallas del organizador).** Faltan las vistas públicas (entrega 3).
 **Resuelve:** OBS-54 del board "[Amateur] Observaciones" (nuevo formato de torneo tipo Liga 1).
 **Código (entrega 1):** `prisma/schema.prisma` (`Season`, `Tournament.seasonId`/`seasonStage`) y la migración `20261016034928_temporadas`; `src/_lib/season.ts` (lógica pura), `src/_lib/season-server.ts`, `src/_lib/scorers-server.ts` (goleadores compartidos con el torneo); `src/app/api/seasons/**`; y los bloqueos en `src/_lib/enrollment.ts`, `src/_lib/tournament-slug.ts`, `api/tournaments/[id]/route.ts` y `api/tournaments/[id]/teams/[clubId]/route.ts`.
-**Pruebas:** `tests/unit/season.test.mjs` (21, unitarias) y `tests/temporadas.test.mjs` (15, integración).
+**Código (entrega 2):** `(organizador)/torneos/page.tsx` (pestañas Torneos · Temporadas), `(organizador)/torneos/temporadas/` (`nueva/page.tsx`, `[id]/page.tsx`, `_components/seasons-list.tsx` y `season-ui.tsx`), el enlace a la temporada en `(organizador)/torneos/[id]/page.tsx`, `_lib/api.ts` (tipos y llamadas de temporadas) y `qualifyLabel` en `StandingsTable`.
+**Pruebas:** `tests/unit/season.test.mjs` (22, unitarias) y `tests/temporadas.test.mjs` (15, integración). Las pantallas se verificaron a mano en el navegador (celular y escritorio) contra una base local.
 **Toca:** [002](002-crear-torneo-y-equipos.md) (torneos del organizador), [003](003-fixture.md) (llaves en una liga), [004](004-partido-en-vivo.md) (tabla de posiciones), [007](007-fixture-eliminacion-copa-relampago.md) (cuadro de eliminación), [008](008-observaciones-octubre-2026.md) (`playoffTeams`, vistas compartibles), [009](009-jugadores-provisionales.md) (fichas de jugador), [modelo-de-datos.md](modelo-de-datos.md).
 
 ## Objetivo
@@ -36,7 +37,7 @@ Que un organizador arme una temporada al estilo de la Liga 1 peruana: dos torneo
 ### Ciclo de una temporada
 1. **Crear la Temporada:** nombre, Apertura (un torneo `liga`), tipo de fase final y cuántos clasifican (si no es "ninguna"). Se le asigna su slug público.
 2. **Apertura:** se juega como cualquier liga, con o sin llaves. Su campeón es el primero de su tabla o el ganador de sus llaves.
-3. **Crear el Clausura** (botón en la Temporada, con la Apertura `finalizado`): se crea un torneo `liga` que copia de la Apertura la configuración (modalidad, minutos por tiempo, `playoffTeams`, tiempo extra, bases, sede, categoría) y **los equipos**, en el mismo orden de inscripción. El organizador pone nombre y fecha de inicio (por omisión: "Clausura" + el año de la Apertura) y después genera el fixture como siempre. Los equipos quedan **bloqueados**: inscribir o quitar uno devuelve `409`.
+3. **Crear el Clausura** (botón en la Temporada, con la Apertura `finalizado`): se crea un torneo `liga` que copia de la Apertura la configuración (modalidad, minutos por tiempo, `playoffTeams`, tiempo extra, bases, sede, categoría) y **los equipos**, en el mismo orden de inscripción. El organizador pone nombre y fecha de inicio (por omisión: "Clausura" + el año de la Apertura) y después genera el fixture como siempre. Nace en `inscripcion`, como un torneo nuevo del asistente, para que en su pantalla aparezca "Iniciar torneo" (lo mismo la fase final). Los equipos quedan **bloqueados**: inscribir o quitar uno devuelve `409`, y la pantalla del torneo no muestra "Quitar" ni "Agregar equipo".
 4. **Generar la fase final** (botón en la Temporada, con el Clausura `finalizado`):
    - **Llaves:** se crea un torneo `eliminacion` con los N primeros de la General, cruzados mejor contra peor (`seedLeagueBracket`).
    - **Liguilla:** se crea un torneo `liga` sin llaves con los N primeros, inscritos en el orden de la General.
@@ -95,10 +96,11 @@ model Tournament {
 
 ## Pantallas
 ### Organizador
-- **Torneos** (`/torneos`): dos pestañas, **Torneos · Temporadas** (`?tab=temporadas`, compartible). Temporadas lista las del organizador con su estado (en Apertura, en Clausura, en fase final, terminada) y el botón **Crear temporada**.
-- **Crear temporada:** nombre, Apertura (selector de sus `liga` sin temporada), tipo de fase final y cuántos clasifican (con las opciones válidas según A y B).
-- **Página del torneo:** si es una `liga` sin temporada, botón **Crear temporada con este torneo**. Si pertenece a una, un enlace a la Temporada.
-- **Página de la Temporada:** las tres etapas (Apertura, Clausura, fase final) con su estado y campeón, los botones **Crear Clausura** y **Generar fase final** cuando corresponden, la tabla General, el goleador general y el aviso de la decisión G.
+- **Torneos** (`/torneos`): dos pestañas, **Torneos · Temporadas** (`?tab=temporadas`, compartible). Temporadas lista las del organizador con su estado (En Apertura, En Clausura, Falta la fase final, En fase final, Terminada), sus etapas con el campeón de cada una y el botón **Crear temporada** (que reemplaza a "Crear torneo" en esa pestaña).
+- **Crear temporada** (`/torneos/temporadas/nueva`, con `?apertura=<id>` preseleccionada): nombre, Apertura (sus `liga` sin temporada, en cualquier estado), tipo de fase final y cuántos clasifican. Las opciones de clasificados son las que acepta la API (`finalTeamsOptions`): llaves, 2/4/8/16 hasta el cupo; liguilla, de 3 al cupo.
+- **Página del torneo:** si es una `liga` sin temporada, el enlace **Crear temporada con este torneo**. Si pertenece a una, "Apertura de Temporada 2026 · Ver temporada".
+- **Página de la Temporada** (`/torneos/temporadas/[id]`): campeón de temporada, las etapas (cada una enlaza a su torneo) con su estado y campeón, el formulario de lo que toca (**Crear el Clausura** o **Generar la fase final**, con fecha de inicio y nombre opcional; al crearlo lleva al torneo nuevo) o qué falta para poder hacerlo, la tabla General (en vivo, con "Clasifica a la fase final"), el goleador general, el aviso de la decisión G y **Eliminar temporada** con confirmación.
+- No hay pantalla para editar la temporada todavía (la API ya acepta `PATCH`).
 
 ### Público (fan) y organizador, dentro de cada torneo de la temporada
 - **Resultados → Tabla:** pestañas **Apertura · Clausura · General temporada**. Antes de que exista el Clausura, su pestaña se ve deshabilitada con el texto "Empieza cuando termine la Apertura". En la fase final se muestra su propia tabla (si es liguilla) o su cuadro, más **General temporada**.

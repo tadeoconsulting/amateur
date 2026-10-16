@@ -32,6 +32,7 @@ import { MatchEditor } from "./_components/match-editor";
 import { TeamsList } from "@/_components/teams-list";
 import { BracketView } from "./_components/bracket-view";
 import { formatLabel } from "@/_lib/tournament-labels";
+import { STAGE_LABEL } from "@/_lib/season";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores" | "equipos";
@@ -241,6 +242,8 @@ export default function TournamentDetailPage() {
   const groupMatches = matches.filter((m) => m.groupName !== null);
   const leagueMatches = matches.filter((m) => !m.decisive);
   const hasLigaLlaves = tournament.format === "liga" && tournament.playoffTeams !== null;
+  // El Clausura y la fase final nacen con los equipos de la temporada y no se cambian (especificación 012).
+  const seasonTeamsLocked = tournament.seasonStage === "clausura" || tournament.seasonStage === "final";
   const canBuildBracket =
     !hasBracket &&
     ((tournament.format === "copa" && groupMatches.length > 0 && groupMatches.every((m) => m.status === "finalizado")) ||
@@ -315,6 +318,29 @@ export default function TournamentDetailPage() {
         )}
       </button>
 
+      {/* Temporada (especificación 012): a cuál pertenece, o crear una con esta liga como Apertura. */}
+      {tournament.season ? (
+        <Link
+          href={`/torneos/temporadas/${tournament.season.id}`}
+          className="mx-4 mt-2 flex min-h-11 items-center justify-between gap-2 rounded-xl border border-border-primary px-4 py-2 transition-colors hover:bg-btn-regular"
+        >
+          <span className="min-w-0 truncate font-body text-xs text-text-secondary">
+            {tournament.seasonStage ? STAGE_LABEL[tournament.seasonStage] : "Torneo"} de{" "}
+            <span className="font-heading font-bold text-text-primary">{tournament.season.name}</span>
+          </span>
+          <span className="shrink-0 font-heading text-xs font-bold text-text-primary underline">Ver temporada</span>
+        </Link>
+      ) : (
+        tournament.format === "liga" && (
+          <Link
+            href={`/torneos/temporadas/nueva?apertura=${params.id}`}
+            className="mx-4 mt-2 flex min-h-11 items-center font-heading text-xs font-bold text-text-primary underline"
+          >
+            Crear temporada con este torneo
+          </Link>
+        )
+      )}
+
       {/* Tabs. "Compartir" (solo con el torneo en marcha) va fuera de la fila que se desplaza, para que siempre se vea. */}
       <div className="mt-4 flex items-center gap-1.5 px-4">
         <div className="no-scrollbar flex min-w-0 gap-2 overflow-x-auto">
@@ -384,20 +410,24 @@ export default function TournamentDetailPage() {
                         : "Sin delegado"}
                   </p>
                 </div>
-                <button
-                  onClick={() => removeTeam(team.club.id)}
-                  disabled={removingId === team.club.id}
-                  className="shrink-0 cursor-pointer font-heading text-sm font-bold text-text-secondary underline disabled:opacity-40"
-                >
-                  Quitar
-                </button>
+                {!seasonTeamsLocked && (
+                  <button
+                    onClick={() => removeTeam(team.club.id)}
+                    disabled={removingId === team.club.id}
+                    className="shrink-0 cursor-pointer font-heading text-sm font-bold text-text-secondary underline disabled:opacity-40"
+                  >
+                    Quitar
+                  </button>
+                )}
               </div>
             ))}
           </div>
 
           {teamError && <p className="mt-3 font-body text-sm text-red-600">{teamError}</p>}
 
-          {tournament._count.teams < (tournament.maxTeams ?? Infinity) ? (
+          {seasonTeamsLocked ? (
+            <p className="mt-5 text-center font-body text-sm text-text-secondary">Los equipos son los de la temporada: no se cambian.</p>
+          ) : tournament._count.teams < (tournament.maxTeams ?? Infinity) ? (
             <Link
               href={`/torneos/${params.id}/agregar-equipo`}
               className="mt-5 flex w-full items-center justify-center rounded-lg border border-border-primary py-3.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular"

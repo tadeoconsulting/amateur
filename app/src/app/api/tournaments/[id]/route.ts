@@ -23,6 +23,7 @@ export async function GET(
         orderBy: { groupName: "asc" },
       },
       sponsors: { include: { sponsor: true }, orderBy: { createdAt: "asc" } },
+      season: { select: { id: true, name: true } },
       _count: { select: { matches: true, teams: true } },
     },
   });
