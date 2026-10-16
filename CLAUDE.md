@@ -13,3 +13,7 @@ El usuario puede tener dos o más chats abiertos del mismo proyecto. Antes de ed
 7. **Producción:** no tocar SQL ni datos de producción mientras otro chat prepara un merge. Pedir confirmación explícita.
 
 Si algo de lo anterior no se puede validar, decirlo y preguntar antes de seguir.
+
+## Notion: solo el board de Amateur
+
+Para tareas, pendientes y observaciones del proyecto, consultar únicamente el espacio **Amateur** de Notion (boards "[Amateur] Observaciones", "[Amateur] Tareas" y "[Amateur] Data"). No buscar, leer ni analizar el "[Backlog] General" (Operations) ni otros espacios, aunque aparezcan en los resultados de búsqueda. Si algo parece estar solo ahí, avisar al usuario en vez de abrirlo.
