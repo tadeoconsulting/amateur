@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { computeLiveStandings } from "@/_lib/standings";
 import { matchClock } from "@/_lib/match-live";
+import { publicCacheHeaders } from "@/_lib/public-cache";
 
 export async function GET(
   request: NextRequest,
@@ -49,6 +50,7 @@ export async function GET(
       shortName: club.get(row.clubId)?.shortName ?? "",
       logoUrl: club.get(row.clubId)?.logoUrl ?? null,
       color: club.get(row.clubId)?.color ?? null,
-    }))
+    })),
+    { headers: publicCacheHeaders(request.url) }
   );
 }

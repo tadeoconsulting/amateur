@@ -1,5 +1,6 @@
 import { type NextRequest } from "next/server";
 import { findSeason, seasonGeneral } from "@/_lib/season-server";
+import { publicCacheHeaders } from "@/_lib/public-cache";
 
 /**
  * Tabla General de la temporada: Apertura y Clausura sumados, sin llaves ni fase final. Con `live=1`
@@ -9,5 +10,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const season = await findSeason(id);
   if (!season) return Response.json({ error: "Temporada no encontrada" }, { status: 404 });
-  return Response.json(await seasonGeneral(season, request.nextUrl.searchParams.get("live") === "1"));
+  return Response.json(await seasonGeneral(season, request.nextUrl.searchParams.get("live") === "1"), { headers: publicCacheHeaders(request.url) });
 }

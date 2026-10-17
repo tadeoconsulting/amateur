@@ -13,7 +13,7 @@ export function PublicClubView({ tournamentId, clubId, tournamentPath }: { tourn
         </Link>
       </header>
       <main className="flex-1">
-        <ClubPage tournamentId={tournamentId} clubId={clubId} tournamentPath={tournamentPath} />
+        <ClubPage tournamentId={tournamentId} clubId={clubId} tournamentPath={tournamentPath} pub />
       </main>
     </div>
   );

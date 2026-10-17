@@ -16,9 +16,10 @@ import { ScorersList, StandingsTable } from "@/_components/tournament-results";
  * etapas con enlace a cada torneo, la tabla General y el goleador general. Se comparte igual que un torneo.
  */
 export function SeasonPublicView({ seasonId, organizerSlug }: { seasonId: string; organizerSlug: string }) {
-  const { data: season, error } = useApi(() => getSeason(seasonId));
-  const { data: standings } = useApi(() => getSeasonStandings(seasonId));
-  const { data: scorers } = useApi(() => getSeasonScorers(seasonId));
+  // Pantalla pública (OBS-58): sus lecturas pueden guardarse unos segundos en la caché de borde (`pub`).
+  const { data: season, error } = useApi(() => getSeason(seasonId, { pub: true }));
+  const { data: standings } = useApi(() => getSeasonStandings(seasonId, { pub: true }));
+  const { data: scorers } = useApi(() => getSeasonScorers(seasonId, { pub: true }));
 
   if (error) {
     return (
