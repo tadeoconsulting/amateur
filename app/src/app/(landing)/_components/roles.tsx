@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollReveal } from "./scroll-reveal";
 
 const ROTATE_MS = 10_000;
@@ -57,6 +57,15 @@ export function Roles() {
 
   const role = ROLES[active];
 
+  // En el celular las pestañas son un carrusel: la activa se centra sola (sin mover la página hacia arriba o abajo).
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const list = tabsRef.current;
+    const tab = list?.children[active] as HTMLElement | undefined;
+    if (!list || !tab) return;
+    list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.clientWidth) / 2, behavior: "smooth" });
+  }, [active]);
+
   function choose(i: number) {
     setActive(i);
     setResetKey((k) => k + 1);
@@ -84,7 +93,12 @@ export function Roles() {
           <p className="max-w-[16rem] text-[var(--lc-muted)]">Dentro y fuera de la cancha, cada uno tiene su lugar.</p>
         </ScrollReveal>
 
-        <div role="tablist" aria-label="La plataforma por rol" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div
+          ref={tabsRef}
+          role="tablist"
+          aria-label="La plataforma por rol"
+          className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0"
+        >
           {ROLES.map((r, i) => (
             <button
               key={r.tab}
@@ -99,7 +113,7 @@ export function Roles() {
                 if (e.key === "ArrowRight") choose((i + 1) % ROLES.length);
                 if (e.key === "ArrowLeft") choose((i - 1 + ROLES.length) % ROLES.length);
               }}
-              className={`flex cursor-pointer items-center justify-between rounded-xl border px-5 py-5 text-left text-base transition-colors sm:py-6 ${
+              className={`flex min-w-[10.5rem] shrink-0 snap-center cursor-pointer items-center justify-between gap-4 rounded-xl border px-5 py-5 text-left text-base transition-colors sm:py-6 lg:min-w-0 ${
                 i === active
                   ? "border-[var(--lc-lime)] bg-[var(--lc-lime)] font-semibold text-[var(--lc-ink)]"
                   : "border-[var(--lc-line)] hover:border-[var(--lc-lime)]"
