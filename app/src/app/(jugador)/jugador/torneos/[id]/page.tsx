@@ -13,6 +13,7 @@ import { TournamentLogo } from "@/_components/tournament-logo";
 import { ClubCrest } from "@/_components/club-crest";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
+import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { TeamsList } from "@/_components/teams-list";
 import { ShareViewButton } from "@/_components/share-view-button";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
@@ -152,6 +153,8 @@ export default function JugadorTorneoDetailPage() {
   const clubHref = tournamentDetail ? (clubId: string) => clubPublicPath({ id, slug: tournamentDetail.slug, organizerSlug: tournamentDetail.organizer.organizerSlug }, clubId) : undefined;
   // Cuántos de la tabla pasan a llaves; solo una liga puede tenerlas.
   const llaves = tournamentDetail?.format === "liga" ? (tournamentDetail.playoffTeams ?? null) : null;
+  // Mientras llega el detalle del torneo se muestra como uno suelto; con él, las pestañas de su temporada si tiene.
+  const seasonRef = { seasonId: tournamentDetail?.seasonId ?? null, seasonStage: tournamentDetail?.seasonStage ?? null };
 
   // "Llaves" solo aparece si el torneo tiene cuadro de eliminación armado (antes mostraba un
   // cuadro de ejemplo fijo en cualquier torneo).
@@ -299,15 +302,20 @@ export default function JugadorTorneoDetailPage() {
           </div>
         )}
 
+        {/* En un torneo de temporada (especificación 012), pestañas de cada etapa y de la General. */}
         {shownTab === "Tabla" && (
           <div className="@4xl:mx-auto @4xl:max-w-4xl">
-            <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
+            <SeasonTables tournament={seasonRef} clubHref={clubHref} className="pb-3">
+              <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
+            </SeasonTables>
           </div>
         )}
 
         {shownTab === "Goleadores" && (
           <div className="@4xl:mx-auto @4xl:max-w-3xl">
-            <ScorersList scorers={topScorers} clubHref={clubHref} />
+            <SeasonScorersTabs tournament={seasonRef} clubHref={clubHref} className="pb-3">
+              <ScorersList scorers={topScorers} clubHref={clubHref} />
+            </SeasonScorersTabs>
           </div>
         )}
 

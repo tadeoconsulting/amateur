@@ -16,6 +16,7 @@ import { clubView } from "@/_lib/share-view";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { PillTabs } from "@/_components/pill-tabs";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
+import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
 import { displayShortName } from "@/_lib/short-name";
 import { TeamsList } from "@/_components/teams-list";
@@ -42,10 +43,13 @@ export default function ClubTorneoDetallePage() {
   // estar escuchando el canal de un partido programado desde ANTES de que arranque para
   // enterarse de que arrancó (ver el comentario en useTournamentRealtime).
   const watchMatchIds = (allMatches ?? []).filter((m) => m.status !== "finalizado").map((m) => m.id);
+  // Las tablas de temporada (otras etapas y la General) se piden aparte: este número les avisa que hay novedades.
+  const [liveVersion, setLiveVersion] = useState(0);
   useTournamentRealtime(watchMatchIds, () => {
     refetchMatches();
     refetchStandings();
     refetchScorers();
+    setLiveVersion((v) => v + 1);
   });
 
   if (loadingTournament || !tournament) {
@@ -278,15 +282,20 @@ export default function ClubTorneoDetallePage() {
             ]}
           />
 
+          {/* En un torneo de temporada (especificación 012), pestañas de cada etapa y de la General. */}
           {resultadosSubTab === "tabla" && (
             <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-4xl">
-              <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
+              <SeasonTables tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+                <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
+              </SeasonTables>
             </div>
           )}
 
           {resultadosSubTab === "goleadores" && (
             <div className="mt-4 px-4 @4xl:mx-auto @4xl:max-w-3xl">
-              <ScorersList scorers={topScorers} clubHref={clubHref} />
+              <SeasonScorersTabs tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+                <ScorersList scorers={topScorers} clubHref={clubHref} />
+              </SeasonScorersTabs>
             </div>
           )}
         </>
