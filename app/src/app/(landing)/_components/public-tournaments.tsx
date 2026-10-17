@@ -49,7 +49,7 @@ export function PublicTournaments() {
   if (publicTournaments.length === 0) return null;
 
   return (
-    <section id="torneos" className="px-4 py-20 sm:px-6 sm:py-28">
+    <section id="torneos" className="scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28">
       <div className="mx-auto max-w-7xl">
         <ScrollReveal className="mb-12 max-w-2xl">
           <p className="lc-eyebrow mb-4">En la cancha ahora</p>

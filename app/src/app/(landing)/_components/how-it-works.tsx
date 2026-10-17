@@ -9,7 +9,7 @@ const STEPS = [
 /** La sección clara del lineamiento (como en la referencia): corta el fondo oscuro. */
 export function HowItWorks() {
   return (
-    <section id="como-funciona" className="bg-[var(--lc-paper)] px-4 py-20 text-[var(--lc-ink)] sm:px-6 sm:py-28">
+    <section id="como-funciona" className="scroll-mt-16 bg-[var(--lc-paper)] px-4 py-20 text-[var(--lc-ink)] sm:px-6 sm:py-28">
       <div className="mx-auto max-w-7xl">
         <ScrollReveal className="mb-12 max-w-2xl">
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Cómo funciona</p>
