@@ -113,14 +113,14 @@ export function Roles() {
                 if (e.key === "ArrowRight") choose((i + 1) % ROLES.length);
                 if (e.key === "ArrowLeft") choose((i - 1 + ROLES.length) % ROLES.length);
               }}
-              className={`flex min-w-[10.5rem] shrink-0 snap-center cursor-pointer items-center justify-between gap-4 rounded-xl border px-5 py-5 text-left text-base transition-colors sm:py-6 lg:min-w-0 ${
+              className={`flex shrink-0 snap-center cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-4 text-left text-base transition-colors sm:min-w-[10.5rem] sm:px-5 sm:py-6 lg:min-w-0 ${
                 i === active
                   ? "border-[var(--lc-lime)] bg-[var(--lc-lime)] font-semibold text-[var(--lc-ink)]"
                   : "border-[var(--lc-line)] hover:border-[var(--lc-lime)]"
               }`}
             >
               {r.tab}
-              <span aria-hidden="true">↗</span>
+              <span aria-hidden="true" className="hidden sm:inline">↗</span>
             </button>
           ))}
         </div>
