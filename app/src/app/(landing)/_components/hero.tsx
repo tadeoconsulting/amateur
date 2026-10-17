@@ -9,10 +9,10 @@ export function Hero({ onOpenAuth }: { onOpenAuth: (view: "login" | "register") 
             <span className="lc-live-dot" aria-hidden="true" />
             El fútbol es tuyo
           </p>
-          <h1 className="lc-display text-[clamp(3.5rem,13vw,8.5rem)]">
+          <h1 className="lc-display text-[clamp(3.25rem,11.5vw,7.5rem)]">
             Tu torneo.
             <br />
-            Tu <span className="text-transparent [-webkit-text-stroke:2px_var(--lc-lime)]">cancha</span>
+            Tu <span className="text-transparent [-webkit-text-stroke:2px_var(--lc-lime)]">comunidad</span>
             <span className="text-[var(--lc-lime)]">.</span>
           </h1>
           <p className="mt-8 max-w-md text-lg leading-relaxed text-[var(--lc-muted)]">
