@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { Barlow_Condensed, DM_Sans } from "next/font/google";
+import "./landing.css";
 import { Navbar } from "./navbar";
 import { Hero } from "./hero";
 import { Marquee } from "./marquee";
-import { Features } from "./features";
-import { HowItWorks } from "./how-it-works";
 import { PublicTournaments } from "./public-tournaments";
-import { Stats } from "./stats";
+import { Roles } from "./roles";
+import { HowItWorks } from "./how-it-works";
+import { Effort } from "./effort";
 import { CtaFinal } from "./cta-final";
 import { Footer } from "./footer";
 import { AuthModal } from "./auth-modal";
 import type { ProfileRole } from "@/_lib/profiles";
+
+// Las fuentes del lineamiento de la landing (especificación 013): solo se cargan acá.
+const display = Barlow_Condensed({ variable: "--font-lc-display", subsets: ["latin"], weight: ["600", "700", "800"] });
+const body = DM_Sans({ variable: "--font-lc-body", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export function LandingShell({
   initialAuth,
@@ -31,14 +37,14 @@ export function LandingShell({
   }
 
   return (
-    <div className="min-h-screen bg-surface-primary overflow-x-hidden">
+    <div className={`lc ${display.variable} ${body.variable} min-h-screen overflow-x-hidden`}>
       <Navbar onOpenAuth={openAuth} />
       <Hero onOpenAuth={openAuth} />
       <Marquee />
-      <Features />
-      <HowItWorks />
       <PublicTournaments />
-      <Stats />
+      <Roles />
+      <HowItWorks />
+      <Effort />
       <CtaFinal onOpenAuth={openAuth} />
       <Footer />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} initialView={authView} next={next} initialRoles={initialRoles} />

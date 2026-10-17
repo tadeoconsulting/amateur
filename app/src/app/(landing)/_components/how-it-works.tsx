@@ -1,65 +1,32 @@
 import { ScrollReveal } from "./scroll-reveal";
 
-const steps = [
-  {
-    number: "01",
-    title: "Crea tu torneo",
-    description: "Configura formato, sedes, condiciones y bases. El fixture se genera automáticamente.",
-  },
-  {
-    number: "02",
-    title: "Gestiona en vivo",
-    description: "Registra resultados, tarjetas y sanciones desde el celular. La tabla se actualiza al instante.",
-  },
-  {
-    number: "03",
-    title: "Todo queda registrado",
-    description: "Jugadores, clubes y fans ven el historial completo: goles, stats y trayectoria.",
-  },
+const STEPS = [
+  { number: "01", title: "Crea tu torneo", description: "Configura formato, sedes, condiciones y bases. El fixture se genera automáticamente." },
+  { number: "02", title: "Gestiona en vivo", description: "Registra goles, tarjetas y sanciones desde el celular. La tabla se actualiza al instante." },
+  { number: "03", title: "Todo queda registrado", description: "Jugadores, clubes y fans ven el historial completo: goles, estadísticas y trayectoria." },
 ];
 
+/** La sección clara del lineamiento (como en la referencia): corta el fondo oscuro. */
 export function HowItWorks() {
   return (
-    <section id="como-funciona" className="py-20 sm:py-28 px-4 sm:px-6 bg-surface-secondary text-text-invert relative overflow-hidden">
-      {/* Decorative field center circle */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <svg viewBox="0 0 400 400" className="w-[500px] h-[500px] text-field-green opacity-[0.06]" aria-hidden="true">
-          <circle cx="200" cy="200" r="180" stroke="currentColor" strokeWidth="3" fill="none" />
-          <circle cx="200" cy="200" r="6" fill="currentColor" />
-          <line x1="200" y1="0" x2="200" y2="400" stroke="currentColor" strokeWidth="2" />
-        </svg>
-      </div>
-
-      <div className="max-w-5xl mx-auto relative z-10">
-        <ScrollReveal className="text-center mb-16">
-          <p className="text-sm font-bold text-field-green uppercase tracking-widest mb-3 font-heading">
-            Cómo funciona
-          </p>
-          <h2 className="font-heading text-3xl sm:text-5xl font-bold leading-tight">
-            De la cancha a la pantalla
-            <br className="hidden sm:block" />
-            en 3 pasos
+    <section id="como-funciona" className="scroll-mt-16 bg-[var(--lc-paper)] px-4 py-20 text-[var(--lc-ink)] sm:px-6 sm:py-28">
+      <div className="mx-auto max-w-7xl">
+        <ScrollReveal className="mb-12 max-w-2xl">
+          <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">02 / Cómo funciona</p>
+          <h2 className="lc-display text-5xl sm:text-7xl">
+            De la cancha
+            <br />a la pantalla.
           </h2>
+          <p className="mt-5 opacity-70">Tres pasos. Todo tu torneo conectado.</p>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
-          {steps.map((step, i) => (
-            <ScrollReveal key={step.number} delay={i * 150}>
-              <div className="relative">
-                {/* Connector line (desktop only) */}
-                {i < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[calc(50%+40px)] w-[calc(100%-40px)] border-t-2 border-dashed border-field-green/30" />
-                )}
-
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border-2 border-field-green text-field-green font-heading text-2xl font-bold mb-6">
-                    {step.number}
-                  </div>
-                  <h3 className="font-heading text-xl font-bold mb-3">{step.title}</h3>
-                  <p className="text-sm text-brand-500 font-body leading-relaxed max-w-xs mx-auto">
-                    {step.description}
-                  </p>
-                </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {STEPS.map((s, i) => (
+            <ScrollReveal key={s.number} delay={i * 100}>
+              <div className="h-full rounded-[var(--lc-radius)] border border-[var(--lc-ink)]/15 bg-white/50 p-7">
+                <span className="lc-display text-6xl text-[var(--lc-ink)]/30">{s.number}</span>
+                <h3 className="lc-display mt-4 text-4xl !leading-[1]">{s.title}</h3>
+                <p className="mt-3 opacity-75">{s.description}</p>
               </div>
             </ScrollReveal>
           ))}
