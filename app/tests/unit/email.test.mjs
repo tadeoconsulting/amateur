@@ -2,7 +2,7 @@
 import { test, describe, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { enviarCorreo, isEmailConfigured } from "../../src/_lib/email.ts";
-import { invitacionJugador, invitacionStaff, STAFF_ROLE_LABELS } from "../../src/_lib/email-templates.ts";
+import { bienvenida, invitacionJugador, invitacionStaff, STAFF_ROLE_LABELS } from "../../src/_lib/email-templates.ts";
 
 const realFetch = globalThis.fetch;
 const CORREO = { to: "ana@ejemplo.com", subject: "Asunto", text: "texto", html: "<p>html</p>" };
@@ -114,5 +114,68 @@ describe("plantillas", () => {
 
   test("hay etiqueta para cada rol de staff", () => {
     for (const role of ["delegado", "asistente", "director_tecnico"]) assert.ok(STAFF_ROLE_LABELS[role]);
+  });
+});
+
+describe("correo de bienvenida", () => {
+  const origin = "https://cupamateur.com";
+  const url = (c) => c.text.match(/https:\/\/\S+/)[0];
+
+  test("un organizador: su frase, su botón y su pantalla", () => {
+    const c = bienvenida({ firstName: "Ana", roles: ["ORGANIZADOR"], origin });
+    assert.equal(c.subject, "Te damos la bienvenida a Amateur");
+    assert.ok(c.text.startsWith("Te damos la bienvenida, Ana."));
+    assert.ok(c.text.includes("Como organizador, crea tu primer torneo"));
+    assert.ok(!c.text.includes("Como delegado") && !c.text.includes("Como jugador"));
+    assert.equal(url(c), `${origin}/torneos`);
+    assert.ok(c.html.includes("Crear mi primer torneo"));
+    assert.ok(c.html.includes('href="https://cupamateur.com/torneos"'));
+  });
+
+  test("un delegado y un jugador: cada uno su pantalla", () => {
+    const d = bienvenida({ firstName: "Luis", roles: ["CLUB_OWNER"], origin });
+    assert.equal(url(d), `${origin}/club`);
+    assert.ok(d.text.includes("Como delegado, arma tu equipo") && d.html.includes("Ir a mi equipo"));
+
+    const j = bienvenida({ firstName: "Rosa", roles: ["JUGADOR"], origin });
+    assert.equal(url(j), `${origin}/jugador/torneos`);
+    assert.ok(j.text.includes("Como jugador, sigue tus partidos") && j.html.includes("Ver mis torneos"));
+  });
+
+  test("con un solo perfil se avisa que se puede activar otro; con los tres, no", () => {
+    assert.ok(bienvenida({ firstName: "Ana", roles: ["JUGADOR"], origin }).text.includes("puedes activar otro perfil desde Ajustes"));
+    const all = bienvenida({ firstName: "Ana", roles: ["JUGADOR", "ORGANIZADOR", "CLUB_OWNER"], origin });
+    assert.ok(!all.text.includes("activar otro perfil"));
+  });
+
+  test("con varios perfiles: una frase por perfil, en orden, y un botón que lleva a elegir perfil", () => {
+    const c = bienvenida({ firstName: "Ana", roles: ["JUGADOR", "ORGANIZADOR"], origin });
+    assert.ok(c.text.indexOf("Como organizador") < c.text.indexOf("Como jugador"), "primero el organizador");
+    assert.ok(!c.text.includes("Como delegado"));
+    assert.equal(url(c), `${origin}/seleccion-perfil`);
+    assert.ok(c.html.includes("Entrar a Amateur"));
+  });
+
+  test("sin ningún perfil conocido, igual da la bienvenida y lleva a elegir perfil", () => {
+    const c = bienvenida({ firstName: "Ana", roles: [], origin });
+    assert.ok(!c.text.includes("Como "));
+    assert.ok(!c.text.includes("activar otro perfil"));
+    assert.equal(url(c), `${origin}/seleccion-perfil`);
+  });
+
+  test("el nombre se escapa en el HTML y el texto no lleva marcado", () => {
+    const c = bienvenida({ firstName: '<img src=x onerror="alert(1)">', roles: ["JUGADOR"], origin });
+    assert.ok(!c.html.includes("<img") && c.html.includes("&lt;img"));
+    assert.ok(!/<\/?strong>/.test(c.text), "el texto plano no lleva etiquetas");
+  });
+
+  test("sin nombre no queda una coma suelta", () => {
+    const c = bienvenida({ firstName: "  ", roles: ["JUGADOR"], origin });
+    assert.ok(c.text.startsWith("Te damos la bienvenida.") && c.html.includes("<h1") && !c.html.includes("bienvenida, <"));
+  });
+
+  test("avisa a quien no creó la cuenta que puede ignorarlo", () => {
+    const c = bienvenida({ firstName: "Ana", roles: ["JUGADOR"], origin });
+    assert.ok(c.text.includes("Si no fuiste tú, puedes ignorarlo"));
   });
 });

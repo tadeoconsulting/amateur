@@ -12,6 +12,7 @@ import {
 import { invitationProblem, joinClub, resolveInvitation, type ResolvedInvitation } from "@/_lib/invite";
 import { isRealDate } from "@/_lib/fixture";
 import { SELF_ASSIGNABLE_ROLES } from "@/_lib/roles";
+import { sendWelcomeEmail } from "@/_lib/welcome-email";
 
 const str = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     await createSession(user.id);
+    sendWelcomeEmail({ email: user.email, firstName: user.firstName, roles: user.roles.map((r) => r.role) }, request.nextUrl.origin);
 
     return Response.json(
       {
