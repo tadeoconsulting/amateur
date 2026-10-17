@@ -65,7 +65,7 @@ export function Roles() {
   return (
     <section
       id="plataforma" 
-      className="scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28"
+      className="scroll-mt-28 md:scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}

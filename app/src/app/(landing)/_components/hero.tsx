@@ -2,7 +2,7 @@
 
 export function Hero({ onOpenAuth }: { onOpenAuth: (view: "login" | "register") => void }) {
   return (
-    <section className="relative overflow-hidden px-4 pb-16 pt-28 sm:px-6 lg:pt-36">
+    <section className="relative overflow-hidden px-4 pb-16 pt-36 sm:px-6 sm:pt-28 lg:pt-36">
       <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
           <p className="lc-eyebrow mb-6 flex items-center gap-2">
