@@ -4,7 +4,7 @@ const LINK = "text-sm transition-colors hover:text-[var(--lc-lime)]";
 
 export function Footer() {
   return (
-    <footer className="px-4 pb-10 sm:px-6">
+    <footer className="px-4 pb-24 sm:px-6 md:pb-10">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/" className="flex items-center gap-2.5" aria-label="Amateur">
