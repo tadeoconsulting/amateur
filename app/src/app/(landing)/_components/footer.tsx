@@ -1,46 +1,49 @@
 import Link from "next/link";
 
+const LINK = "text-sm text-[var(--lc-muted)] transition-colors hover:text-[var(--lc-lime)]";
+const HEADING = "mb-3 text-xs font-bold uppercase tracking-[0.16em] text-[var(--lc-white)]";
+
 export function Footer() {
   return (
-    <footer className="bg-surface-primary border-t border-brand-200 py-12 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+    <footer className="border-t border-[var(--lc-line)] px-4 py-12 sm:px-6">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="font-heading text-xl font-bold text-text-primary mb-3">Amateur</p>
-            <p className="text-sm text-text-secondary font-body leading-relaxed">
+            <p className="lc-display mb-3 text-3xl">
+              Amateur<span className="text-[var(--lc-lime)]">.</span>
+            </p>
+            <p className="text-sm leading-relaxed text-[var(--lc-muted)]">
               Plataforma de gestión de torneos de fútbol amateur. Tu esfuerzo ya no queda invisible.
             </p>
           </div>
 
           <div>
-            <p className="text-sm font-bold text-text-primary mb-3 uppercase tracking-wider">Producto</p>
+            <p className={HEADING}>Producto</p>
             <ul className="space-y-2">
-              <li><a href="#features" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Características</a></li>
-              <li><a href="#como-funciona" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Cómo funciona</a></li>
-              <li><a href="#numeros" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Números</a></li>
+              <li><a href="#torneos" className={LINK}>Torneos</a></li>
+              <li><a href="#plataforma" className={LINK}>La plataforma</a></li>
+              <li><a href="#como-funciona" className={LINK}>Cómo funciona</a></li>
             </ul>
           </div>
 
           <div>
-            <p className="text-sm font-bold text-text-primary mb-3 uppercase tracking-wider">Legal</p>
+            <p className={HEADING}>Legal</p>
             <ul className="space-y-2">
-              <li><Link href="/terminos" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Términos y condiciones</Link></li>
-              <li><Link href="/privacidad" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Políticas de privacidad</Link></li>
+              <li><Link href="/terminos" className={LINK}>Términos y condiciones</Link></li>
+              <li><Link href="/privacidad" className={LINK}>Políticas de privacidad</Link></li>
             </ul>
           </div>
 
           <div>
-            <p className="text-sm font-bold text-text-primary mb-3 uppercase tracking-wider">Soporte</p>
+            <p className={HEADING}>Soporte</p>
             <ul className="space-y-2">
-              <li><Link href="/ayuda" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Centro de ayuda</Link></li>
+              <li><Link href="/ayuda" className={LINK}>Centro de ayuda</Link></li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-brand-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-text-secondary">
-            &copy; {new Date().getFullYear()} Amateur. Todos los derechos reservados.
-          </p>
+        <div className="border-t border-[var(--lc-line)] pt-6">
+          <p className="text-xs text-[var(--lc-muted)]">&copy; {new Date().getFullYear()} Amateur. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

@@ -1,6 +1,6 @@
 # 013 · Landing "Tu torneo, tu cancha" (nuevo lineamiento gráfico)
 
-**Estado:** 📝 **propuesta, pendiente de aprobación.** Nada implementado todavía.
+**Estado:** 🚧 **entrega 1 implementada** (estilo y estructura con los datos de hoy); la entrega 2 (En vivo ahora y Match Center real) está pendiente.
 **Origen:** propuesta de landing generada con GPT (referencia visual: `amateur-cancha-mobile.onboardingbbox.chatgpt.site`), que el usuario quiere llevar a la plataforma real, vinculada a los datos de hoy y destacando los torneos.
 **Toca:** la landing pública (`/`), hoy en `src/app/(landing)/_components/*` y `src/app/page.tsx`. No cambia la API ni la base de datos.
 
@@ -74,6 +74,6 @@ Reemplazar la landing actual (clara, verde #00CA81, Lexend/Lato) por el lineamie
 - Unitarias para la lógica pura: elegir el partido del hero (en vivo → último finalizado → ejemplo) y ordenar y limitar los torneos.
 - Verificación visual en el navegador, en celular y escritorio, contra una base local con un partido en vivo y sin ninguno.
 
-## Preguntas abiertas
-1. ¿Se retiran las cifras de mercado de la landing pública? (propuesta: sí)
-2. ¿El hero sin partidos reales muestra la tarjeta de ejemplo, o prefieres solo el texto? (propuesta: ejemplo marcado como ilustrativo)
+## Decisiones de detalle (confirmadas por el usuario, 2026-10-17)
+1. **Se retiran las cifras de mercado** (2000+ torneos, 3.5M deportistas…) de la landing pública.
+2. **El hero sin partidos reales muestra la tarjeta de ejemplo**, marcada como "vista ilustrativa · datos de ejemplo".

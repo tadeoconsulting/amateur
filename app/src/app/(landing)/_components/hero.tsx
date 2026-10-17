@@ -1,85 +1,87 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { FieldSvg, BallSvg } from "./field-svg";
-
 export function Hero({ onOpenAuth }: { onOpenAuth: (view: "login" | "register") => void }) {
-  const ballRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReducedMotion || !ballRef.current) return;
-
-    let frame: number;
-    let t = 0;
-    const animate = () => {
-      t += 0.008;
-      if (ballRef.current) {
-        ballRef.current.style.transform = `translateY(${Math.sin(t) * 12}px) rotate(${t * 15}deg)`;
-      }
-      frame = requestAnimationFrame(animate);
-    };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-      {/* Background field lines */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <FieldSvg className="w-[120%] max-w-[1400px] text-field-green opacity-40" />
-      </div>
-
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-surface-primary via-surface-primary/90 to-field-light/30 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-surface-primary to-transparent pointer-events-none" />
-
-      {/* Floating ball */}
-      <div ref={ballRef} className="absolute top-24 right-[10%] sm:right-[15%] lg:right-[20%]">
-        <BallSvg className="w-16 h-16 sm:w-20 sm:h-20 lg:w-28 lg:h-28 text-field-green" />
-      </div>
-
-      {/* Small decorative balls */}
-      <div className="absolute bottom-32 left-[8%] animate-[float_4s_ease-in-out_infinite]">
-        <BallSvg className="w-8 h-8 text-brand-500 opacity-30" />
-      </div>
-      <div className="absolute top-[40%] left-[5%] animate-[float_5s_ease-in-out_infinite_1s]">
-        <BallSvg className="w-6 h-6 text-field-green opacity-20" />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center">
-        <div className="inline-flex items-center gap-2 bg-field-light text-field-dark text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full mb-6 border border-field-green/20">
-          <span className="w-2 h-2 rounded-full bg-field-green animate-pulse" />
-          Plataforma de fútbol amateur
+    <section className="relative overflow-hidden px-4 pb-16 pt-28 sm:px-6 lg:pt-36">
+      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <p className="lc-eyebrow mb-6 flex items-center gap-2">
+            <span className="lc-live-dot" aria-hidden="true" />
+            El fútbol es tuyo
+          </p>
+          <h1 className="lc-display text-[clamp(3.5rem,13vw,8.5rem)]">
+            Tu torneo.
+            <br />
+            Tu <span className="text-transparent [-webkit-text-stroke:2px_var(--lc-lime)]">cancha</span>
+            <span className="text-[var(--lc-lime)]">.</span>
+          </h1>
+          <p className="mt-8 max-w-md text-lg leading-relaxed text-[var(--lc-muted)]">
+            Crea torneos, gestiona equipos y da seguimiento a cada gol, tarjeta y minuto jugado.{" "}
+            <strong className="font-semibold text-[var(--lc-white)]">Todo en un solo lugar.</strong>
+          </p>
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <button onClick={() => onOpenAuth("register")} className="lc-btn lc-btn-lime">
+              Crear mi torneo gratis <span aria-hidden="true">↗</span>
+            </button>
+            <a href="#como-funciona" className="lc-btn lc-btn-ghost">
+              Así funciona <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+          <p className="mt-4 text-sm text-[var(--lc-muted)]">Sin tarjeta de crédito. Sin complicaciones.</p>
         </div>
 
-        <h1 className="font-heading text-5xl sm:text-6xl lg:text-8xl font-bold text-text-primary leading-[0.95] tracking-tight mb-6">
-          Tu torneo,
-          <br />
-          <span className="text-field-green">tu cancha</span>
-        </h1>
-
-        <p className="text-lg sm:text-xl text-text-secondary max-w-xl mx-auto mb-10 font-body leading-relaxed">
-          Crea torneos, gestiona equipos y da seguimiento a cada gol, tarjeta y minuto jugado.
-          Todo en un solo lugar.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={() => onOpenAuth("register")}
-            className="w-full sm:w-auto text-base font-bold bg-surface-secondary text-text-invert px-8 py-4 rounded-full hover:bg-brand-700 transition-colors cursor-pointer"
-          >
-            Crear mi torneo gratis
-          </button>
-          <a
-            href="#features"
-            className="w-full sm:w-auto text-base font-medium text-text-primary border-2 border-border-primary px-8 py-4 rounded-full hover:bg-brand-900 hover:text-text-invert transition-colors cursor-pointer text-center"
-          >
-            Ver características
-          </a>
-        </div>
+        <MatchCenterExample />
       </div>
     </section>
+  );
+}
+
+/**
+ * La tarjeta "Match Center" del hero. Por ahora es un ejemplo (datos inventados, marcado como tal): la entrega 2 de la
+ * especificación 013 la reemplaza por el partido real en vivo cuando hay uno.
+ */
+function MatchCenterExample() {
+  return (
+    <div className="mx-auto w-full max-w-md lg:max-w-none">
+      <div className="lc-card p-5 sm:p-6">
+        <div className="mb-5 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-[var(--lc-muted)]">
+          <span>Amateur / Match Center</span>
+          <span className="flex items-center gap-2 text-[var(--lc-lime)]">
+            <span className="lc-live-dot" aria-hidden="true" />
+            En vivo
+          </span>
+        </div>
+
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
+          <Team initial="B" name="Barrio FC" />
+          <div>
+            <p className="lc-display text-6xl sm:text-7xl">
+              2<span className="text-[var(--lc-lime)]">:</span>1
+            </p>
+            <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-[var(--lc-muted)]">68′ · 2.º tiempo</p>
+          </div>
+          <Team initial="D" name="Deportivo Sur" />
+        </div>
+
+        <p className="mt-5 flex items-center justify-between rounded-xl border border-[var(--lc-line)] px-4 py-3 text-sm">
+          <span>⚽ Gol · Barrio FC</span>
+          <span className="font-bold text-[var(--lc-lime)]">68′</span>
+        </p>
+      </div>
+      <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-[var(--lc-muted)]">
+        Vista ilustrativa · datos de ejemplo
+      </p>
+    </div>
+  );
+}
+
+function Team({ initial, name }: { initial: string; name: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <span className="lc-display flex h-14 w-14 items-center justify-center rounded-full border border-[var(--lc-line)] bg-[var(--lc-bg)] text-3xl">
+        {initial}
+      </span>
+      <span className="text-sm font-semibold">{name}</span>
+    </div>
   );
 }
