@@ -52,3 +52,12 @@ export function checkDelegateAccept(input: {
   }
   return { ok: true };
 }
+
+/**
+ * El correo con el que se crea la cuenta de quien acepta sin tener sesión: el de la invitación, siempre. Solo un
+ * enlace sin correo (para compartir) deja que la persona escriba el suyo (`bodyEmail`, ya normalizado); null si falta.
+ */
+export function signupEmail(invitationEmail: string | null, bodyEmail: string | null): string | null {
+  const fixed = invitationEmail?.trim().toLowerCase();
+  return fixed ? fixed : bodyEmail;
+}

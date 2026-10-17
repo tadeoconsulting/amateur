@@ -7,6 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner } from "@/_components/spinner";
+import { SwitchAccount } from "@/_components/switch-account";
 
 // Quien recibió una invitación a reclamar su perfil de jugador (especificación 009, entrega 3). Es pública: la
 // abre quien tiene el enlace, sin cuenta todavía. Muestra solo el nombre del perfil y el equipo; para vincularlo
@@ -113,6 +114,7 @@ export default function ReclamarPerfilPage() {
               </Link>
             </section>
           ) : (
+            <>
             <form onSubmit={confirm} className="mt-6 flex flex-col gap-3" noValidate>
               <p className="font-body text-xs text-text-secondary">
                 Entraste como <strong className="text-text-primary">{user.email}</strong>
@@ -145,6 +147,10 @@ export default function ReclamarPerfilPage() {
                 La invitación vence el {new Date(loaded.data.expiresAt).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}.
               </p>
             </form>
+            <div className="mt-6">
+              <SwitchAccount here={here} registerRole="JUGADOR" />
+            </div>
+            </>
           )}
         </>
       )}
