@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { noteLiveVersion } from "@/_lib/live-version";
 
 /**
  * Se suscribe a las novedades de un partido y llama a `onUpdate` cada vez que hay una (sin decir
@@ -28,7 +29,14 @@ export function useMatchRealtime(matchId: string, onUpdate: () => void) {
           autoConnect: true,
         });
         // La promesa de conexión al canal se rechaza si la pantalla se cierra antes de conectar: se ignora.
-        client.channels.get(`match:${matchId}`).subscribe(() => onUpdateRef.current()).catch(() => {});
+        client.channels
+          .get(`match:${matchId}`)
+          .subscribe((message) => {
+            // Primero se anota la versión del aviso: las lecturas públicas que siguen la llevan (ver live-version.ts).
+            noteLiveVersion(message.data);
+            onUpdateRef.current();
+          })
+          .catch(() => {});
       })
       .catch(() => {
         // Sin el paquete o sin red: la ficha se queda con lo que trajo la carga inicial.

@@ -30,10 +30,11 @@ const FALLBACK_COLOR = "#1B1B1B";
  * cómo le fue. Pública: la ven el fan, el jugador, el club y el organizador por igual (los equipos de las tablas
  * llevan acá). `tournamentPath` es la página pública del torneo, a la que vuelve.
  */
-export function ClubPage({ tournamentId, clubId, tournamentPath }: { tournamentId: string; clubId: string; tournamentPath: string }) {
+export function ClubPage({ tournamentId, clubId, tournamentPath, pub = false }: { tournamentId: string; clubId: string; tournamentPath: string; pub?: boolean }) {
   const { data: info, loading, error } = useApi(() => getClubInTournament(tournamentId, clubId));
-  const { data: matchesData, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId }));
-  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId));
+  // En la página pública, los partidos y la tabla pueden guardarse unos segundos en la caché de borde (ver `public-cache.ts`).
+  const { data: matchesData, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId }, { pub }));
+  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId, { pub }));
 
   // La pestaña sale de la URL (`?pestana=jugadores`): un enlace compartido abre donde estaba quien lo compartió.
   const [tab, setTab] = useState<TabKey>(() => {

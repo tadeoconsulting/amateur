@@ -33,17 +33,20 @@ export function SeasonTables({
   clubHref,
   version = 0,
   className,
+  pub = false,
   children,
 }: {
   tournament: SeasonRef;
   clubHref?: (clubId: string) => string;
   version?: number;
   className?: string;
+  /** Pantalla pública: sus lecturas pueden guardarse unos segundos en la caché de borde (ver `public-cache.ts`). */
+  pub?: boolean;
   children: ReactNode;
 }) {
   if (!tournament.seasonId || !tournament.seasonStage) return <>{children}</>;
   return (
-    <SeasonTablesInner seasonId={tournament.seasonId} stage={tournament.seasonStage} clubHref={clubHref} version={version} className={className}>
+    <SeasonTablesInner seasonId={tournament.seasonId} stage={tournament.seasonStage} clubHref={clubHref} version={version} className={className} pub={pub}>
       {children}
     </SeasonTablesInner>
   );
@@ -55,6 +58,7 @@ function SeasonTablesInner({
   clubHref,
   version,
   className,
+  pub,
   children,
 }: {
   seasonId: string;
@@ -62,6 +66,7 @@ function SeasonTablesInner({
   clubHref?: (clubId: string) => string;
   version: number;
   className?: string;
+  pub: boolean;
   children: ReactNode;
 }) {
   // La fase final no mira las tablas de las otras etapas, solo la suya y la General.
@@ -70,7 +75,7 @@ function SeasonTablesInner({
     const fromUrl = typeof window !== "undefined" ? parseSeasonView(window.location.search).tabla : null;
     return fromUrl && keys.includes(fromUrl) ? fromUrl : stage;
   });
-  const { data: season } = useApi(() => getSeason(seasonId));
+  const { data: season } = useApi(() => getSeason(seasonId, { pub }));
   // En la fase final hay equipos de la General que no están en este torneo: su página no existe acá.
   const href = stage === "final" ? undefined : clubHref;
 
@@ -85,11 +90,11 @@ function SeasonTablesInner({
     content = <p className="py-8 text-center font-body text-sm text-text-secondary">La fase final se juega por llaves: los cruces están en el fixture.</p>;
   } else if (value === stage) content = children;
   else if (!season) content = <Spinner />;
-  else if (value === "general") content = <GeneralTable season={season} clubHref={href} version={version} />;
+  else if (value === "general") content = <GeneralTable season={season} clubHref={href} version={version} pub={pub} />;
   else {
     const t = season.tournaments.find((x) => x.stage === value);
     content = t ? (
-      <StageTable tournamentId={t.id} qualifyCount={t.format === "liga" ? t.playoffTeams : null} clubHref={href} version={version} />
+      <StageTable tournamentId={t.id} qualifyCount={t.format === "liga" ? t.playoffTeams : null} clubHref={href} version={version} pub={pub} />
     ) : (
       <p className="py-8 text-center font-body text-sm text-text-secondary">El Clausura empieza cuando termine la Apertura.</p>
     );
@@ -103,15 +108,15 @@ function SeasonTablesInner({
   );
 }
 
-function StageTable({ tournamentId, qualifyCount, clubHref, version }: { tournamentId: string; qualifyCount: number | null; clubHref?: (clubId: string) => string; version: number }) {
-  const { data, refetchSilently } = useApi(() => getStandings(tournamentId));
+function StageTable({ tournamentId, qualifyCount, clubHref, version, pub }: { tournamentId: string; qualifyCount: number | null; clubHref?: (clubId: string) => string; version: number; pub: boolean }) {
+  const { data, refetchSilently } = useApi(() => getStandings(tournamentId, { pub }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (version) refetchSilently(); }, [version]);
   return data ? <StandingsTable standings={data} qualifyCount={qualifyCount} clubHref={clubHref} /> : <Spinner />;
 }
 
-function GeneralTable({ season, clubHref, version }: { season: SeasonSummary; clubHref?: (clubId: string) => string; version: number }) {
-  const { data, refetchSilently } = useApi(() => getSeasonStandings(season.id));
+function GeneralTable({ season, clubHref, version, pub }: { season: SeasonSummary; clubHref?: (clubId: string) => string; version: number; pub: boolean }) {
+  const { data, refetchSilently } = useApi(() => getSeasonStandings(season.id, { pub }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (version) refetchSilently(); }, [version]);
   if (!data) return <Spinner />;
@@ -130,17 +135,20 @@ export function SeasonScorersTabs({
   clubHref,
   version = 0,
   className,
+  pub = false,
   children,
 }: {
   tournament: SeasonRef;
   clubHref?: (clubId: string) => string;
   version?: number;
   className?: string;
+  /** Pantalla pública: sus lecturas pueden guardarse unos segundos en la caché de borde (ver `public-cache.ts`). */
+  pub?: boolean;
   children: ReactNode;
 }) {
   if (!tournament.seasonId) return <>{children}</>;
   return (
-    <SeasonScorersInner seasonId={tournament.seasonId} clubHref={tournament.seasonStage === "final" ? undefined : clubHref} version={version} className={className}>
+    <SeasonScorersInner seasonId={tournament.seasonId} clubHref={tournament.seasonStage === "final" ? undefined : clubHref} version={version} className={className} pub={pub}>
       {children}
     </SeasonScorersInner>
   );
@@ -151,12 +159,14 @@ function SeasonScorersInner({
   clubHref,
   version,
   className,
+  pub,
   children,
 }: {
   seasonId: string;
   clubHref?: (clubId: string) => string;
   version: number;
   className?: string;
+  pub: boolean;
   children: ReactNode;
 }) {
   const [value, setValue] = useState<SeasonScorers>(() => (typeof window !== "undefined" ? parseSeasonView(window.location.search).goleadores : null) ?? "torneo");
@@ -176,13 +186,13 @@ function SeasonScorersInner({
           { key: "general", label: "General temporada" },
         ]}
       />
-      {value === "torneo" ? children : <GeneralScorers seasonId={seasonId} clubHref={clubHref} version={version} />}
+      {value === "torneo" ? children : <GeneralScorers seasonId={seasonId} clubHref={clubHref} version={version} pub={pub} />}
     </div>
   );
 }
 
-function GeneralScorers({ seasonId, clubHref, version }: { seasonId: string; clubHref?: (clubId: string) => string; version: number }) {
-  const { data, refetchSilently } = useApi(() => getSeasonScorers(seasonId));
+function GeneralScorers({ seasonId, clubHref, version, pub }: { seasonId: string; clubHref?: (clubId: string) => string; version: number; pub: boolean }) {
+  const { data, refetchSilently } = useApi(() => getSeasonScorers(seasonId, { pub }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (version) refetchSilently(); }, [version]);
   if (!data) return <Spinner />;

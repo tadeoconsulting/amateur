@@ -5,6 +5,7 @@ import { CLUB_REF_SELECT } from "@/_lib/club-public";
 import { isRealDate } from "@/_lib/fixture";
 import { CLASH_MESSAGE, hasScheduleClash } from "@/_lib/match-schedule";
 import { OPEN_STATUSES } from "@/_lib/tournament-labels";
+import { publicCacheHeaders } from "@/_lib/public-cache";
 
 // "" = hora por definir.
 const TIME_RE = /^(([01]\d|2[0-3]):[0-5]\d)?$/;
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
     orderBy: [{ date: "asc" }, { time: "asc" }],
   });
 
-  return Response.json(matches);
+  // Con `?pub=1` (pantallas públicas) el borde guarda la lista unos segundos; ver `public-cache.ts`.
+  return Response.json(matches, { headers: publicCacheHeaders(request.url) });
 }
 
 /**

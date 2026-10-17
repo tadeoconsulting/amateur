@@ -4,6 +4,8 @@ import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMatches, type MatchEventItem, type MatchListItem } from "@/_lib/api";
+import { withPublicRead } from "@/_lib/public-cache";
+import { getLiveVersion } from "@/_lib/live-version";
 import { roundLabel } from "@/_lib/fixture";
 import { clubPublicPath } from "@/_lib/slug";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
@@ -31,9 +33,12 @@ export function MatchDetail({
   backHref,
   backLabel = "Volver al torneo",
   extra,
+  pub = false,
 }: {
   matchId: string;
   tournamentId: string;
+  /** La ficha pública (la del fan): sus lecturas pueden guardarse unos segundos en la caché de borde (ver `public-cache.ts`). */
+  pub?: boolean;
   /** A dónde vuelve la flecha. Con una función, se arma con el partido (por ejemplo, para caer en su fecha). */
   backHref: string | ((match: MatchListItem) => string);
   backLabel?: string;
@@ -41,13 +46,15 @@ export function MatchDetail({
   extra?: (match: MatchListItem) => React.ReactNode;
 }) {
   const wide = useWideSheet();
+  // En la ficha pública, cada lectura lleva `pub=1` y la versión del último aviso en vivo (se arma al pedir, no al montar).
+  const read = (path: string) => (pub ? withPublicRead(path, getLiveVersion()) : path);
   const { data: match, loading, error, refetchSilently: refetchMatch } = useApi<MatchDetailData>(async () => {
-    const res = await fetch(`/api/matches/${matchId}`);
+    const res = await fetch(read(`/api/matches/${matchId}`));
     if (!res.ok) throw new Error(`API error: ${res.status}`);
     return res.json();
   });
   const { data: events, refetchSilently: refetchEvents } = useApi<MatchEventItem[]>(async () => {
-    const res = await fetch(`/api/matches/${matchId}/events`);
+    const res = await fetch(read(`/api/matches/${matchId}/events`));
     return res.ok ? res.json() : [];
   });
   // Cada vez que llega una novedad, la tabla y la forma de los equipos de la ficha de escritorio también se vuelven a pedir.
@@ -133,7 +140,7 @@ export function MatchDetail({
   // Pantalla ancha: la ficha con la cabecera por colores de los clubes y el contexto al lado.
   if (wide) {
     return (
-      <MatchSheet match={match} tournamentId={tournamentId} backHref={back} backLabel={backLabel} liveVersion={liveVersion}>
+      <MatchSheet match={match} tournamentId={tournamentId} backHref={back} backLabel={backLabel} liveVersion={liveVersion} pub={pub}>
         <div className="-mx-4">{body}</div>
       </MatchSheet>
     );
@@ -185,7 +192,7 @@ export function MatchDetail({
           </p>
         )}
         <p className="mt-3 text-center font-body text-xs text-text-secondary">
-          <PhaseName match={match} />
+          <PhaseName match={match} pub={pub} />
           {[match.groupName, match.location].filter(Boolean).map((part) => ` · ${part}`)}
         </p>
       </div>
@@ -272,13 +279,13 @@ function Timeline({ plays, match }: { plays: MatchEventItem[]; match: MatchListI
  * "Fecha 3", o el nombre de la ronda de un cuadro ("Semifinal", "Final"), que depende de cuántas
  * rondas tiene: por eso, y solo en un partido de eliminación, se piden los demás partidos del torneo.
  */
-function PhaseName({ match }: { match: MatchListItem }) {
+function PhaseName({ match, pub }: { match: MatchListItem; pub: boolean }) {
   if (!match.decisive) return <>{`Fecha ${match.matchday}`}</>;
-  return <BracketRound match={match} />;
+  return <BracketRound match={match} pub={pub} />;
 }
 
-function BracketRound({ match }: { match: MatchListItem }) {
-  const { data: matches } = useApi(() => getMatches({ tournamentId: match.tournamentId }));
+function BracketRound({ match, pub }: { match: MatchListItem; pub: boolean }) {
+  const { data: matches } = useApi(() => getMatches({ tournamentId: match.tournamentId }, { pub }));
   const rounds = (matches ?? []).filter((m) => m.decisive).map((m) => m.matchday);
   return <>{roundLabel(match.matchday, rounds.length ? Math.max(...rounds) : match.matchday)}</>;
 }

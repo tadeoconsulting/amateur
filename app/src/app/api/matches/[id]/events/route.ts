@@ -5,12 +5,16 @@ import { denyResponse, matchAccess } from "@/_lib/mesa-server";
 import { changesScore, EVENT_TYPES, halfForEvent, isEventType, statFor, substitutionError } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
+import { isPublicRead, publicCacheHeaders } from "@/_lib/public-cache";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  // Con `?pub=1` (pantallas públicas, que se guardan en la caché de borde) la cronología es la misma para todos: la
+  // pública, con los menores abreviados y sin quién registró cada jugada. Sin `pub`, como siempre.
+  const pub = isPublicRead(request.url);
 
   const [events, match, viewer] = await Promise.all([
     prisma.matchEvent.findMany({
@@ -22,7 +26,7 @@ export async function GET(
       where: { id },
       select: { tournament: { select: { organizerId: true } }, homeTeam: { select: { id: true, ownerId: true } }, awayTeam: { select: { id: true, ownerId: true } } },
     }),
-    getCurrentUser(),
+    pub ? null : getCurrentUser(),
   ]);
   // Quien gestiona el partido: el admin y el organizador, o una mesa asignada con su ventana abierta (especificación 011).
   const access = viewer ? await matchAccess(viewer, id) : null;
@@ -56,7 +60,8 @@ export async function GET(
       // Quién la registró: solo para quien gestiona el partido (el público no lo ve).
       recordedBy: staffOrMesa && e.recordedBy ? `${e.recordedBy.firstName} ${e.recordedBy.lastName}`.trim() : null,
       scored: e.scored,
-    }))
+    })),
+    { headers: publicCacheHeaders(request.url) }
   );
 }
 

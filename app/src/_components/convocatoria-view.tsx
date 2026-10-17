@@ -34,6 +34,7 @@ import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { STAGE_LABEL } from "@/_lib/season";
 
 type Notify = (message: string, tone: "success" | "error") => void;
+const PUB = { pub: true } as const;
 type MainTab = "fixture" | "resultados" | "equipos" | "detalles";
 type ResultadosSubTab = "tabla" | "goleadores";
 
@@ -56,10 +57,11 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
  */
 export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: string; publicPath: string }) {
   const { user, loading: loadingAuth } = useAuth();
-  const { data: tournament, error, refetch } = useApi(() => getTournament(tournamentId));
-  const { data: matchesData, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: tournamentId }));
-  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId));
-  const { data: scorersData, refetchSilently: refetchScorers } = useApi(() => getScorers(tournamentId));
+  // Es una pantalla pública (OBS-58): sus lecturas pueden guardarse unos segundos en la caché de borde (`pub`).
+  const { data: tournament, error, refetch } = useApi(() => getTournament(tournamentId, PUB));
+  const { data: matchesData, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: tournamentId }, PUB));
+  const { data: standingsData, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId, PUB));
+  const { data: scorersData, refetchSilently: refetchScorers } = useApi(() => getScorers(tournamentId, PUB));
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   // null = todavía no eligió: abre en el fixture, o en los detalles si el torneo aún no tiene partidos
   // (una convocatoria abierta no tiene nada que seguir todavía, sí tiene bases y cupos).
@@ -323,13 +325,13 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             <div className="@2xl:grid @2xl:grid-cols-5 @2xl:items-start @2xl:gap-8">
               <div className={`mt-4 @2xl:col-span-3 ${resultadosTab === "tabla" ? "" : "hidden @2xl:block"}`}>
                 <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Posiciones</h2>
-                <SeasonTables tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+                <SeasonTables tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3" pub>
                   <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
                 </SeasonTables>
               </div>
               <div className={`mt-4 @2xl:col-span-2 ${resultadosTab === "goleadores" ? "" : "hidden @2xl:block"}`}>
                 <h2 className="mb-3 hidden font-heading text-sm font-bold text-text-primary @2xl:block">Goleadores</h2>
-                <SeasonScorersTabs tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3">
+                <SeasonScorersTabs tournament={tournament} clubHref={clubHref} version={liveVersion} className="pb-3" pub>
                   <ScorersList scorers={topScorers} clubHref={clubHref} />
                 </SeasonScorersTabs>
               </div>

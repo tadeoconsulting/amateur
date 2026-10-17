@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { noteLiveVersion } from "@/_lib/live-version";
 
 /**
  * Se suscribe a los partidos de un torneo que todavía pueden tener novedades — programados o
@@ -44,7 +45,14 @@ export function useTournamentRealtime(matchIds: string[], onUpdate: () => void) 
         for (const id of key.split(",")) {
           // subscribe() devuelve la promesa de la conexión al canal; si la pantalla se cierra antes de
           // conectar, se rechaza ("Connection closed") — es esperado, no un error: se ignora.
-          client.channels.get(`match:${id}`).subscribe(() => onUpdateRef.current()).catch(() => {});
+          client.channels
+            .get(`match:${id}`)
+            .subscribe((message) => {
+              // Primero se anota la versión del aviso: las lecturas públicas que siguen la llevan (ver live-version.ts).
+              noteLiveVersion(message.data);
+              onUpdateRef.current();
+            })
+            .catch(() => {});
         }
       })
       .catch(() => {
