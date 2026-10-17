@@ -12,7 +12,7 @@ export function HowItWorks() {
     <section id="como-funciona" className="scroll-mt-16 bg-[var(--lc-paper)] px-4 py-20 text-[var(--lc-ink)] sm:px-6 sm:py-28">
       <div className="mx-auto max-w-7xl">
         <ScrollReveal className="mb-12 max-w-2xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">Cómo funciona</p>
+          <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em]">02 / Cómo funciona</p>
           <h2 className="lc-display text-5xl sm:text-7xl">
             De la cancha
             <br />a la pantalla.
