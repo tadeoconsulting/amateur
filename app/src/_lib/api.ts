@@ -550,6 +550,11 @@ export function createSeasonStage(seasonId: string, stage: "clausura" | "final",
   return send<{ tournamentId: string; season: SeasonSummary }>("POST", `/api/seasons/${seasonId}/${stage}`, body);
 }
 
+/** Edita el nombre y, mientras no exista la fase final, su tipo y cuántos clasifican. */
+export function updateSeason(seasonId: string, body: { name?: string; finalFormat?: FinalFormat; finalTeams?: number | null }) {
+  return send<SeasonSummary>("PATCH", `/api/seasons/${seasonId}`, body);
+}
+
 export function deleteSeason(seasonId: string) {
   return send("DELETE", `/api/seasons/${seasonId}`);
 }

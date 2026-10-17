@@ -5,7 +5,7 @@
 **Código (entrega 1):** `prisma/schema.prisma` (`Season`, `Tournament.seasonId`/`seasonStage`) y la migración `20261016034928_temporadas`; `src/_lib/season.ts` (lógica pura), `src/_lib/season-server.ts`, `src/_lib/scorers-server.ts` (goleadores compartidos con el torneo); `src/app/api/seasons/**`; y los bloqueos en `src/_lib/enrollment.ts`, `src/_lib/tournament-slug.ts`, `api/tournaments/[id]/route.ts` y `api/tournaments/[id]/teams/[clubId]/route.ts`.
 **Código (entrega 2):** `(organizador)/torneos/page.tsx` (pestañas Torneos · Temporadas), `(organizador)/torneos/temporadas/` (`nueva/page.tsx`, `[id]/page.tsx`, `_components/seasons-list.tsx` y `season-ui.tsx`), el enlace a la temporada en `(organizador)/torneos/[id]/page.tsx`, `_lib/api.ts` (tipos y llamadas de temporadas) y `qualifyLabel` en `StandingsTable`.
 **Código (entrega 3):** `_components/season-results.tsx` (pestañas de temporada en Tabla y Goleadores), `_components/season-public-view.tsx` y `_components/season-stages.tsx`, `app/[organizador]/[torneo]/page.tsx` (torneo o temporada), `_components/convocatoria-view.tsx` y `(organizador)/torneos/[id]/page.tsx` (las pestañas y el enlace a la temporada), `_lib/share-view.ts` (`&tabla=` y `&goleadores=`). Después: las mismas pestañas en las pantallas del club y del jugador.
-**Pruebas:** `tests/unit/season.test.mjs` (22, unitarias), `tests/unit/share-view.test.mjs` (pestañas de temporada en la URL) y `tests/temporadas.test.mjs` (15, integración). Las pantallas se verificaron a mano en el navegador (celular y escritorio) contra una base local.
+**Pruebas:** `tests/unit/season.test.mjs` (22, unitarias), `tests/unit/share-view.test.mjs` (pestañas de temporada en la URL) y `tests/temporadas.test.mjs` (18, integración, incluida la edición). Las pantallas se verificaron a mano en el navegador (celular y escritorio) contra una base local.
 **Toca:** [002](002-crear-torneo-y-equipos.md) (torneos del organizador), [003](003-fixture.md) (llaves en una liga), [004](004-partido-en-vivo.md) (tabla de posiciones), [007](007-fixture-eliminacion-copa-relampago.md) (cuadro de eliminación), [008](008-observaciones-octubre-2026.md) (`playoffTeams`, vistas compartibles), [009](009-jugadores-provisionales.md) (fichas de jugador), [modelo-de-datos.md](modelo-de-datos.md).
 
 ## Objetivo
@@ -101,7 +101,7 @@ model Tournament {
 - **Crear temporada** (`/torneos/temporadas/nueva`, con `?apertura=<id>` preseleccionada): nombre, Apertura (sus `liga` sin temporada, en cualquier estado), tipo de fase final y cuántos clasifican. Las opciones de clasificados son las que acepta la API (`finalTeamsOptions`): llaves, 2/4/8/16 hasta el cupo; liguilla, de 3 al cupo.
 - **Página del torneo:** si es una `liga` sin temporada, el enlace **Crear temporada con este torneo**. Si pertenece a una, "Apertura de Temporada 2026 · Ver temporada".
 - **Página de la Temporada** (`/torneos/temporadas/[id]`): campeón de temporada, las etapas (cada una enlaza a su torneo) con su estado y campeón, el formulario de lo que toca (**Crear el Clausura** o **Generar la fase final**, con fecha de inicio y nombre opcional; al crearlo lleva al torneo nuevo) o qué falta para poder hacerlo, la tabla General (en vivo, con "Clasifica a la fase final"), el goleador general, el aviso de la decisión G y **Eliminar temporada** con confirmación.
-- No hay pantalla para editar la temporada todavía (la API ya acepta `PATCH`).
+- **Editar temporada** (`/torneos/temporadas/[id]/editar`, enlace bajo la cabecera de la Temporada): el nombre siempre (el slug no cambia); el tipo de fase final y cuántos clasifican, con las mismas opciones que al crearla, solo mientras no esté generada. Con la fase final generada, esa parte se muestra fija con su motivo. El tope de clasificados es el que valida la API: con el Clausura creado, los equipos de la temporada; antes, el cupo de la Apertura. El formulario de fase final es un componente compartido con "Crear temporada" (`_components/final-phase-fields.tsx`).
 
 ### Fan, organizador, club y jugador, dentro de cada torneo de la temporada
 Un solo componente (`_components/season-results.tsx`: `SeasonTables` y `SeasonScorersTabs`) lo agrega a la página pública del torneo (`ConvocatoriaView`), a la del organizador, a la del club (`(club)/club/torneos/[id]`) y a la del jugador (`(jugador)/jugador/torneos/[id]`). Fuera de una temporada no cambia nada. La del jugador no tiene tiempo real (tampoco lo tenía antes), así que sus tablas de temporada se actualizan al volver a abrir la pestaña.
@@ -141,7 +141,6 @@ Reglas que se agregan a rutas existentes: inscribir o quitar equipos de un torne
 3. **Vistas públicas:** pestañas de Tabla y Goleadores en cada torneo y la página pública de la Temporada.
 
 ## Limitaciones conocidas
-- No hay pantalla para editar una temporada (nombre o fase final): la API lo permite con `PATCH`.
 - Sin descensos, ascensos ni cambios de equipos entre fases.
 - Sin liguilla dentro de una fase: el campeón de una fase es por tabla o por llaves.
 - La fase final no se recalcula si se corrige un partido después de generarla (decisión G).
