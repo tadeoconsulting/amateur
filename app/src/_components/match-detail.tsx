@@ -7,7 +7,7 @@ import { getMatches, type MatchEventItem, type MatchListItem } from "@/_lib/api"
 import { roundLabel } from "@/_lib/fixture";
 import { clubPublicPath } from "@/_lib/slug";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
-import { matchClock } from "@/_lib/match-live";
+import { matchClock, penalTitle } from "@/_lib/match-live";
 import { useApi } from "@/_lib/use-api";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { ClubCrest } from "@/_components/club-crest";
@@ -100,7 +100,7 @@ export function MatchDetail({
   const stale = live && clock.stale;
   const onBreak = live && clock.period === "descanso";
   // La tanda de penales no es una jugada de un jugador: se resume aparte, junto al marcador.
-  const plays = (events ?? []).filter((e) => e.type === "gol" || e.type === "tarjeta_amarilla" || e.type === "tarjeta_roja" || e.type === "sustitucion");
+  const plays = (events ?? []).filter((e) => e.type === "gol" || e.type === "tarjeta_amarilla" || e.type === "tarjeta_roja" || e.type === "sustitucion" || (e.type === "penal" && e.scored != null));
   const byPenalties = match.decisive && finished && match.winnerTeamId !== null && match.homeScore === match.awayScore;
 
   // Lo de adentro es lo mismo en celular y en escritorio; solo cambia el marco (ver abajo).
@@ -195,13 +195,13 @@ export function MatchDetail({
   );
 }
 
-type Play = MatchEventItem & { type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion" };
+type Play = MatchEventItem & { type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion" | "penal" };
 
-const PLAY_LABEL: Record<Play["type"], string> = { gol: "Gol", tarjeta_amarilla: "Tarjeta amarilla", tarjeta_roja: "Tarjeta roja", sustitucion: "Cambio" };
+const PLAY_LABEL: Record<Play["type"], string> = { gol: "Gol", tarjeta_amarilla: "Tarjeta amarilla", tarjeta_roja: "Tarjeta roja", sustitucion: "Cambio", penal: "Penal" };
 
 /** El ícono de una jugada: pelota para el gol, cartulina para las tarjetas. */
-function PlayIcon({ type }: { type: Play["type"] }) {
-  if (type === "gol") {
+function PlayIcon({ type, scored }: { type: Play["type"]; scored?: boolean | null }) {
+  if (type === "gol" || (type === "penal" && scored === true)) {
     return (
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <circle cx="7" cy="7" r="5.25" stroke="currentColor" strokeWidth="1" className="text-text-primary" />
@@ -213,6 +213,14 @@ function PlayIcon({ type }: { type: Play["type"] }) {
     return (
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M3.5 4.5h6L7.5 2.5M10.5 9.5h-6l2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="text-text-primary" />
+      </svg>
+    );
+  }
+  if (type === "penal") {
+    // Atajado o errado: el arco con una cruz, para no confundirlo con un gol.
+    return (
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" className="text-text-secondary" />
       </svg>
     );
   }
@@ -236,10 +244,10 @@ function Timeline({ plays, match }: { plays: MatchEventItem[]; match: MatchListI
               .map((e) => (
                 <div
                   key={e.id}
-                  aria-label={e.type === "sustitucion" ? `Cambio: sale ${e.playerName ?? "un jugador"}${e.playerInName ? `, entra ${e.playerInName}` : ""}` : `${PLAY_LABEL[e.type]} de ${e.playerName ?? "un jugador"}`}
+                  aria-label={e.type === "sustitucion" ? `Cambio: sale ${e.playerName ?? "un jugador"}${e.playerInName ? `, entra ${e.playerInName}` : ""}` : `${e.type === "penal" ? penalTitle(e.scored, e.detail) : PLAY_LABEL[e.type]} de ${e.playerName ?? "un jugador"}`}
                   className="flex items-center gap-1.5"
                 >
-                  {align === "away" && <PlayIcon type={e.type} />}
+                  {align === "away" && <PlayIcon type={e.type} scored={e.scored} />}
                   {e.type === "sustitucion" && !e.playerName && !e.playerInName ? (
                     <span className="font-body text-xs text-text-primary">Cambio</span>
                   ) : e.type === "sustitucion" ? (
@@ -250,7 +258,7 @@ function Timeline({ plays, match }: { plays: MatchEventItem[]; match: MatchListI
                   ) : (
                     <span className="font-body text-xs text-text-primary">{e.playerName ?? "Jugador"}</span>
                   )}
-                  {align === "home" && <PlayIcon type={e.type} />}
+                  {align === "home" && <PlayIcon type={e.type} scored={e.scored} />}
                 </div>
               ));
           return (

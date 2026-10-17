@@ -5,7 +5,7 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, PENAL_OUTCOMES, isEventType, penalFields, penalTitle, type PenalOutcome, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
 import { ClubCrest } from "@/_components/club-crest";
 
@@ -25,7 +25,12 @@ type MatchEvent = {
   playerInName: string | null;
   /** Quién la registró (solo lo ve quien gestiona el partido). */
   recordedBy: string | null;
+  /** Solo en un penal del juego: cómo terminó (null en uno viejo, sin resultado). */
+  scored: boolean | null;
+  detail: string | null;
 };
+
+const PENAL_OUTCOME_LABELS: Record<PenalOutcome, string> = { convertido: "Convertido", atajado: "Atajado", errado: "Errado" };
 
 export default function EnVivoPage() {
   const params = useParams<{ id: string; matchId: string }>();
@@ -61,7 +66,10 @@ export default function EnVivoPage() {
   // Un cambio tiene dos jugadores: primero quien sale (`selectedPlayer`) y después quien entra.
   const [selectedPlayerIn, setSelectedPlayerIn] = useState<string | null>(null);
   const [choosingIn, setChoosingIn] = useState(false);
+  // Un penal es una jugada con resultado: solo el convertido cuenta como gol.
+  const [penalResult, setPenalResult] = useState<PenalOutcome>("convertido");
   const resetPick = () => {
+    setPenalResult("convertido");
     setSelectedPlayer(null);
     setSelectedPlayerIn(null);
     setChoosingIn(false);
@@ -129,6 +137,8 @@ export default function EnVivoPage() {
     playerName: e.playerName,
     playerInName: e.playerInName ?? null,
     recordedBy: e.recordedBy ?? null,
+    scored: e.type === "penal" ? e.scored : null,
+    detail: e.detail,
   }));
 
   const homeScore = match.homeScore ?? 0;
@@ -251,6 +261,7 @@ export default function EnVivoPage() {
       teamId: activeClubId,
       playerId: selectedPlayer,
       ...(isCambio && selectedPlayerIn && { playerInId: selectedPlayerIn }),
+      ...(selectedAction === "penal" && penalFields(penalResult)),
     });
     if (ok) {
       setSelectedAction(null);
@@ -587,6 +598,27 @@ export default function EnVivoPage() {
       ) : selectedAction ? (
         <div className="flex-1 px-4 pb-2">
           <div className="flex flex-col">
+            {selectedAction === "penal" && (
+              <div className="mb-2 px-1 py-2">
+                <p className="mb-2 font-heading text-sm font-bold text-text-primary">¿Cómo terminó el penal?</p>
+                <div className="flex gap-2">
+                  {PENAL_OUTCOMES.map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      onClick={() => setPenalResult(o)}
+                      aria-pressed={penalResult === o}
+                      className={`flex-1 cursor-pointer rounded-lg py-2 font-heading text-xs font-bold transition-colors ${
+                        penalResult === o ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
+                      }`}
+                    >
+                      {PENAL_OUTCOME_LABELS[o]}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 font-body text-xs text-text-secondary">Solo el penal convertido suma al marcador y a los goles del jugador.</p>
+              </div>
+            )}
             {isCambio && (
               <div className="mb-1 flex items-center justify-between gap-3 px-1 py-2">
                 <p className="font-heading text-sm font-bold text-text-primary">{pickingIn ? "¿Quién entra?" : "¿Quién sale?"}</p>
@@ -665,7 +697,7 @@ export default function EnVivoPage() {
         <div className="flex-1 px-4">
           <div className="flex flex-col gap-3">
             {events.map((event, i) => {
-              const isGol = event.type === "gol";
+              const isGol = event.type === "gol" || (event.type === "penal" && event.scored === true);
               // El fondo de un gol es el color del equipo que lo metió (antes siempre azul,
               // sin importar de quién era), para poder distinguir de un vistazo quién anota.
               const teamColor = (event.team === "local" ? match.homeTeam?.color : match.awayTeam?.color) ?? "#1B1B1B";
@@ -754,7 +786,7 @@ export default function EnVivoPage() {
                           </button>
                         )}
                         <span className="font-heading text-sm font-bold">
-                          {isEventType(event.rawType) ? EVENT_TITLES[event.rawType] : "Cambio"}
+                          {event.type === "penal" && event.rawType === "penal" ? penalTitle(event.scored, event.detail) : isEventType(event.rawType) ? EVENT_TITLES[event.rawType] : "Cambio"}
                         </span>
                       </div>
                       <p className={`font-body text-xs ${descStyle}`}>

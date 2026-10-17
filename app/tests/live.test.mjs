@@ -200,6 +200,32 @@ describe("registrar jugadas", () => {
     assert.equal(m.awayScore, 0);
   });
 
+  test("un penal convertido suma como gol; atajado o errado, no; deshacerlo lo revierte", async () => {
+    const s = await liveSetup("lvpenal");
+    await start(s);
+    const p = (minute, scored, detail) =>
+      event(s, { type: "penal", minute, teamId: s.home.id, playerId: s.home.playerId, scored, ...(detail ? { detail } : {}) });
+    assert.equal((await p(10, false)).status, 400, "no convertido necesita atajado o errado");
+    const miss = await p(12, false, "atajado");
+    assert.equal(miss.status, 201);
+    assert.equal((await p(14, false, "errado")).status, 201);
+    let m = await getMatch(s.org.client, s.matchId);
+    assert.equal(m.homeScore, 0);
+    const goal = await p(20, true);
+    assert.equal(goal.status, 201);
+    m = await getMatch(s.org.client, s.matchId);
+    assert.equal(m.homeScore, 1);
+    assert.equal((await playerStats(s.org.client, s.home.playerId))[0].goals, 1);
+
+    assert.equal((await s.org.client.del(`/api/matches/${s.matchId}/events/${goal.data.id}`)).status, 200);
+    m = await getMatch(s.org.client, s.matchId);
+    assert.equal(m.homeScore, 0);
+    assert.equal((await playerStats(s.org.client, s.home.playerId))[0].goals, 0);
+    assert.equal((await s.org.client.del(`/api/matches/${s.matchId}/events/${miss.data.id}`)).status, 200);
+    m = await getMatch(s.org.client, s.matchId);
+    assert.equal(m.homeScore, 0, "borrar un penal atajado no toca el marcador");
+  });
+
   test("cambios y penales se guardan en la crónica sin cambiar el marcador", async () => {
     const s = await liveSetup("lvcron");
     await start(s);
