@@ -6,6 +6,7 @@ import { createSeasonStage, deleteSeason, getSeason, getSeasonScorers, getSeason
 import { useApi } from "@/_lib/use-api";
 import { FINAL_FORMAT_LABEL, STAGE_LABEL } from "@/_lib/season";
 import { BackHeader } from "@/_components/back-header";
+import Link from "next/link";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { ClubCrest } from "@/_components/club-crest";
 import { ScorersList, StandingsTable } from "@/_components/tournament-results";
@@ -71,6 +72,14 @@ export default function TemporadaPage() {
           {season.teamsCount} equipos · Fase final: {FINAL_FORMAT_LABEL[season.finalFormat]}
           {season.finalTeams !== null && ` (clasifican ${season.finalTeams})`}
         </p>
+      </div>
+      <div className="mx-4 mt-2 flex">
+        <Link
+          href={`/torneos/temporadas/${season.id}/editar`}
+          className="flex min-h-11 items-center font-heading text-xs font-bold text-text-primary underline"
+        >
+          Editar temporada
+        </Link>
       </div>
 
       {season.champion && (

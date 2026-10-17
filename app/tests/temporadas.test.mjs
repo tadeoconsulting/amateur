@@ -167,6 +167,54 @@ describe("Clausura", () => {
   });
 });
 
+describe("editar", () => {
+  test("renombrar no cambia el slug; la fase final se cambia mientras no esté generada", async () => {
+    const org = await organizer("edit1");
+    const aperturaId = await leagueWith(org, 4);
+    const season = (await createSeason(org, aperturaId, { finalFormat: "llaves", finalTeams: 4 })).data;
+
+    const renamed = await org.client.patch(`/api/seasons/${season.id}`, { name: `Otra ${RUN}` });
+    assert.equal(renamed.status, 200, JSON.stringify(renamed.data));
+    assert.equal(renamed.data.name, `Otra ${RUN}`);
+    assert.equal(renamed.data.slug, season.slug);
+
+    const liguilla = await org.client.patch(`/api/seasons/${season.id}`, { finalFormat: "liguilla", finalTeams: 3 });
+    assert.equal(liguilla.status, 200, JSON.stringify(liguilla.data));
+    assert.equal(liguilla.data.finalFormat, "liguilla");
+    assert.equal(liguilla.data.finalTeams, 3);
+
+    const ninguna = await org.client.patch(`/api/seasons/${season.id}`, { finalFormat: "ninguna" });
+    assert.equal(ninguna.status, 200);
+    assert.equal(ninguna.data.finalTeams, null);
+
+    assert.equal((await org.client.patch(`/api/seasons/${season.id}`, { finalFormat: "llaves", finalTeams: 3 })).status, 400, "3 no es un cuadro parejo");
+    assert.equal((await org.client.patch(`/api/seasons/${season.id}`, { name: "  " })).status, 400);
+  });
+
+  test("solo su organizador (o un admin)", async () => {
+    const org = await organizer("edit2");
+    const other = await organizer("edit2b");
+    const aperturaId = await leagueWith(org, 4);
+    const season = (await createSeason(org, aperturaId)).data;
+    assert.equal((await other.client.patch(`/api/seasons/${season.id}`, { name: "Ajena" })).status, 403);
+  });
+
+  test("con la fase final generada, solo se cambia el nombre", async () => {
+    const org = await organizer("edit3");
+    const aperturaId = await leagueWith(org, 4);
+    const season = (await createSeason(org, aperturaId, { finalFormat: "llaves", finalTeams: 4 })).data;
+    await playTournament(org, aperturaId);
+    const clausuraId = (await org.client.post(`/api/seasons/${season.id}/clausura`, { startDate: "2026-07-01" })).data.tournamentId;
+    await playTournament(org, clausuraId);
+    assert.equal((await org.client.post(`/api/seasons/${season.id}/final`, { startDate: "2026-12-01" })).status, 201);
+
+    assert.equal((await org.client.patch(`/api/seasons/${season.id}`, { finalFormat: "liguilla", finalTeams: 4 })).status, 409);
+    const renamed = await org.client.patch(`/api/seasons/${season.id}`, { name: `Final ${RUN}` });
+    assert.equal(renamed.status, 200);
+    assert.equal(renamed.data.finalFormat, "llaves");
+  });
+});
+
 describe("eliminar", () => {
   test("un torneo de una temporada no se elimina suelto; borrar la temporada lo desvincula", async () => {
     const org = await organizer("elim1");

@@ -6,16 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createSeason, getTournaments, type TournamentListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { FINAL_FORMATS, FINAL_FORMAT_LABEL, finalTeamsOptions, type FinalFormat } from "@/_lib/season";
+import type { FinalFormat } from "@/_lib/season";
 import { BackHeader } from "@/_components/back-header";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
-import { chipClass, fieldClass, labelClass } from "../_components/season-ui";
-
-const FINAL_FORMAT_HELP: Record<FinalFormat, string> = {
-  llaves: "Eliminación directa entre los mejores de la General: el 1.º contra el último, el 2.º contra el penúltimo...",
-  liguilla: "Todos contra todos entre los mejores de la General; gana el de más puntos.",
-  ninguna: "Gana la temporada quien termine primero en la tabla General.",
-};
+import { fieldClass, labelClass } from "../_components/season-ui";
+import { FinalPhaseFields, validFinalTeams } from "../_components/final-phase-fields";
 
 function Spinner() {
   return (
@@ -56,10 +51,9 @@ function NuevaTemporada({ organizerId }: { organizerId: string }) {
   // Solo una liga que no esté ya en otra temporada puede ser la Apertura (decisión F: en cualquier estado).
   const ligas = tournaments.filter((t) => t.format === "liga" && !t.seasonId);
   const apertura: TournamentListItem | undefined = ligas.find((t) => t.id === aperturaId);
-  const maxTeams = apertura ? Math.max(apertura.maxTeams ?? 0, apertura.teamsCount) : 0;
-  const options = finalTeamsOptions(finalFormat, maxTeams);
+  const maxTeams = apertura ? Math.max(apertura.maxTeams ?? 0, apertura.teamsCount) : null;
   // Si cambia la Apertura o el tipo de fase final, una cantidad que ya no vale se descarta.
-  const teams = finalTeams !== null && options.includes(finalTeams) ? finalTeams : null;
+  const teams = validFinalTeams(finalFormat, finalTeams, maxTeams);
   const needsTeams = finalFormat !== "ninguna";
   const canSave = name.trim().length > 0 && apertura !== undefined && (!needsTeams || teams !== null) && !saving;
 
@@ -141,59 +135,7 @@ function NuevaTemporada({ organizerId }: { organizerId: string }) {
             )}
           </fieldset>
 
-          <fieldset>
-            <legend className={labelClass}>Fase final</legend>
-            <div className="flex flex-col gap-2" role="radiogroup" aria-label="Tipo de fase final">
-              {FINAL_FORMATS.map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  role="radio"
-                  aria-checked={finalFormat === f}
-                  aria-label={`${FINAL_FORMAT_LABEL[f]}. ${FINAL_FORMAT_HELP[f]}`}
-                  onClick={() => setFinalFormat(f)}
-                  className={`flex cursor-pointer items-start justify-between gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
-                    finalFormat === f ? "border-text-primary bg-btn-regular" : "border-border-primary hover:bg-btn-regular"
-                  }`}
-                >
-                  <span>
-                    <span className="block font-heading text-sm font-bold text-text-primary">{FINAL_FORMAT_LABEL[f]}</span>
-                    <span className="block font-body text-xs text-text-secondary">{FINAL_FORMAT_HELP[f]}</span>
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className={`mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 ${finalFormat === f ? "border-text-primary bg-text-primary" : "border-border-primary"}`}
-                  />
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          {needsTeams && (
-            <fieldset>
-              <legend className={labelClass}>Equipos que clasifican de la General</legend>
-              {!apertura ? (
-                <p className="font-body text-sm text-text-secondary">Elige primero la Apertura.</p>
-              ) : options.length === 0 ? (
-                <p className="font-body text-sm text-text-secondary">
-                  La Apertura no tiene equipos suficientes para {finalFormat === "llaves" ? "unas llaves" : "una liguilla"}.
-                </p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Equipos que clasifican">
-                    {options.map((n) => (
-                      <button key={n} type="button" role="radio" aria-checked={teams === n} onClick={() => setFinalTeams(n)} className={chipClass(teams === n)}>
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-2 font-body text-xs text-text-secondary">
-                    {finalFormat === "llaves" ? "Las llaves necesitan un cuadro parejo: 2, 4, 8 o 16." : "Desde 3 hasta el total de equipos."}
-                  </p>
-                </>
-              )}
-            </fieldset>
-          )}
+          <FinalPhaseFields finalFormat={finalFormat} onFormatChange={setFinalFormat} teams={teams} onTeamsChange={setFinalTeams} maxTeams={maxTeams} />
 
           {error && (
             <p role="alert" className="font-body text-sm text-red-600">
