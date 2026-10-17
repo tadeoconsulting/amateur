@@ -1,7 +1,7 @@
 // Pruebas unitarias de src/_lib/delegate-invitation.ts (sin servidor ni base de datos).
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { checkDelegateAccept } from "../../src/_lib/delegate-invitation.ts";
+import { checkDelegateAccept, signupEmail } from "../../src/_lib/delegate-invitation.ts";
 
 const now = new Date("2026-10-10T12:00:00Z");
 const base = {
@@ -53,5 +53,18 @@ describe("aceptar la invitación de delegado", () => {
   test("lo que no tiene arreglo se dice antes que el correo equivocado", () => {
     assert.equal(checkDelegateAccept({ ...base, status: "cancelled", email: "otra@ejemplo.test" }).code, "used");
     assert.equal(checkDelegateAccept({ ...base, email: "otra@ejemplo.test", sessionOwnedClubs: 2 }).code, "wrong_email");
+  });
+});
+
+describe("signupEmail (cuenta nueva al aceptar sin sesión)", () => {
+  test("con correo en la invitación, siempre es ese, aunque se mande otro", () => {
+    assert.equal(signupEmail("Delegado@Ejemplo.test", "otro@ejemplo.test"), "delegado@ejemplo.test");
+    assert.equal(signupEmail("delegado@ejemplo.test", null), "delegado@ejemplo.test");
+  });
+
+  test("un enlace sin correo usa el que escribió la persona; sin ninguno, null", () => {
+    assert.equal(signupEmail(null, "nuevo@ejemplo.test"), "nuevo@ejemplo.test");
+    assert.equal(signupEmail(null, null), null);
+    assert.equal(signupEmail("  ", "nuevo@ejemplo.test"), "nuevo@ejemplo.test");
   });
 });

@@ -10,11 +10,14 @@ import { PageSpinner } from "@/_components/spinner";
 import { SwitchAccount } from "@/_components/switch-account";
 
 // Quien recibió una invitación a ser delegado de un equipo temporal (especificación 009, entrega 4). Es pública: la
-// abre quien tiene el enlace, sin cuenta todavía. Muestra solo el equipo; para aceptar hay que iniciar sesión (o
-// crear la cuenta) y confirmar. Al aceptar, su cuenta pasa a ser la dueña del equipo.
+// abre quien tiene el enlace, sin cuenta todavía. Muestra solo el equipo. Sin sesión, crea su cuenta ahí mismo (nombre,
+// contraseña) y acepta en el mismo paso; con sesión, solo confirma. Al aceptar, su cuenta pasa a ser la dueña del equipo.
 
 type Preview = { clubName: string; clubColor: string | null; clubLogoUrl: string | null; expiresAt: string; emailHint: string | null };
 type Loaded = { ok: true; data: Preview } | { ok: false; error: string; code?: string };
+
+const field =
+  "min-h-12 w-full rounded-lg border border-transparent bg-btn-regular px-3 font-body text-base text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:cursor-not-allowed disabled:text-text-secondary";
 
 export default function InvitacionDelegadoPage() {
   const { token } = useParams<{ token: string }>();
@@ -27,19 +30,38 @@ export default function InvitacionDelegadoPage() {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accountExists, setAccountExists] = useState(false);
   const [done, setDone] = useState(false);
+  // Para crear la cuenta (solo sin sesión).
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const here = `/delegado/invitacion/${token}`;
 
-  async function accept() {
+  async function send(body?: Record<string, string>) {
     setBusy(true);
     setError(null);
-    const res = await fetch(`/api/delegate-invitations/${token}/accept`, { method: "POST" });
-    const body = await res.json().catch(() => ({}));
+    setAccountExists(false);
+    const res = await fetch(`/api/delegate-invitations/${token}/accept`, {
+      method: "POST",
+      ...(body ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
+    });
+    const result = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) return setError(body.error ?? "No se pudo completar. Inténtalo de nuevo.");
+    if (!res.ok) {
+      setAccountExists(result.code === "account_exists");
+      return setError(result.error ?? "No se pudo completar. Inténtalo de nuevo.");
+    }
+    // Sin sesión, la cuenta se acaba de crear y la sesión ya está abierta: se trae para que la página lo sepa
+    // (primero se marca como hecho, para no mostrar un instante "Entraste como…" antes del mensaje final).
     setDone(true);
+    await refresh();
   }
+
+  const hasFixedEmail = loaded?.ok === true && loaded.data.emailHint !== null;
+  const canCreate = firstName.trim().length > 0 && password.length >= 8 && (hasFixedEmail || email.includes("@"));
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-4 pb-10">
@@ -86,23 +108,67 @@ export default function InvitacionDelegadoPage() {
           </section>
 
           {!user ? (
-            <section className="mt-6 flex flex-col gap-3">
-              <p className="font-body text-sm text-text-secondary">
-                {loaded.data.emailHint ? (
-                  <>
-                    Entra o crea tu cuenta con el correo <strong className="text-text-primary">{loaded.data.emailHint}</strong>: la invitación es para ese correo.
-                  </>
-                ) : (
-                  "Entra con tu cuenta, o crea una si todavía no tienes."
-                )}
+            <form
+              className="mt-6 flex flex-col gap-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (canCreate && !busy) void send({ firstName: firstName.trim(), lastName: lastName.trim(), password, ...(hasFixedEmail ? {} : { email: email.trim() }) });
+              }}
+            >
+              <h2 className="font-heading text-base font-bold text-text-primary">Crea tu cuenta para aceptar</h2>
+              <label className="sr-only" htmlFor="del-first">
+                Nombre
+              </label>
+              <input id="del-first" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nombre" autoComplete="given-name" maxLength={80} className={field} />
+              <label className="sr-only" htmlFor="del-last">
+                Apellidos
+              </label>
+              <input id="del-last" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Apellidos" autoComplete="family-name" maxLength={80} className={field} />
+              <label className="sr-only" htmlFor="del-email">
+                Correo electrónico
+              </label>
+              {hasFixedEmail ? (
+                <>
+                  <input id="del-email" type="text" value={loaded.data.emailHint ?? ""} readOnly disabled aria-describedby="del-email-help" className={field} />
+                  <p id="del-email-help" className="-mt-1 font-body text-xs text-text-secondary">
+                    Es el correo al que te llegó la invitación: tu cuenta se crea con él.
+                  </p>
+                </>
+              ) : (
+                <input id="del-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico" autoComplete="email" maxLength={254} className={field} />
+              )}
+              <label className="sr-only" htmlFor="del-password">
+                Contraseña
+              </label>
+              <input
+                id="del-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña (mínimo 8 caracteres)"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={72}
+                className={field}
+              />
+
+              <p role="alert" className="min-h-5 font-body text-sm text-red-700">
+                {error}
               </p>
-              <Link href={`/?auth=login&next=${encodeURIComponent(here)}`} className={btnSolid}>
-                Iniciar sesión
-              </Link>
-              <Link href={`/?auth=register&rol=CLUB_OWNER&next=${encodeURIComponent(here)}`} className={btnOutline}>
-                Crear cuenta
-              </Link>
-            </section>
+              <button type="submit" disabled={!canCreate || busy} className={`${btnSolid} disabled:cursor-not-allowed disabled:opacity-50`}>
+                {busy ? "Creando tu cuenta..." : "Aceptar y crear mi cuenta"}
+              </button>
+              <p className="text-center font-body text-xs text-text-secondary">
+                La invitación vence el {new Date(loaded.data.expiresAt).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}.
+              </p>
+
+              <p className={`border-t border-border-primary pt-4 text-center font-body text-sm ${accountExists ? "text-text-primary" : "text-text-secondary"}`}>
+                ¿Ya tienes cuenta?{" "}
+                <Link href={`/?auth=login&next=${encodeURIComponent(here)}`} className="font-semibold text-text-primary underline">
+                  Inicia sesión
+                </Link>
+              </p>
+            </form>
           ) : (
             <section className="mt-6 flex flex-col gap-3">
               <p className="font-body text-xs text-text-secondary">
@@ -111,7 +177,7 @@ export default function InvitacionDelegadoPage() {
               <p role="alert" className="min-h-5 font-body text-sm text-red-700">
                 {error}
               </p>
-              <button type="button" onClick={() => void accept()} disabled={busy} className={`${btnSolid} disabled:cursor-not-allowed disabled:opacity-50`}>
+              <button type="button" onClick={() => void send()} disabled={busy} className={`${btnSolid} disabled:cursor-not-allowed disabled:opacity-50`}>
                 {busy ? "Aceptando..." : "Aceptar y ser delegado"}
               </button>
               <p className="text-center font-body text-xs text-text-secondary">
