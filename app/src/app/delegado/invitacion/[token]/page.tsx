@@ -7,6 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner } from "@/_components/spinner";
+import { SwitchAccount } from "@/_components/switch-account";
 
 // Quien recibió una invitación a ser delegado de un equipo temporal (especificación 009, entrega 4). Es pública: la
 // abre quien tiene el enlace, sin cuenta todavía. Muestra solo el equipo; para aceptar hay que iniciar sesión (o
@@ -116,6 +117,7 @@ export default function InvitacionDelegadoPage() {
               <p className="text-center font-body text-xs text-text-secondary">
                 La invitación vence el {new Date(loaded.data.expiresAt).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}.
               </p>
+              <SwitchAccount here={here} registerRole="CLUB_OWNER" />
             </section>
           )}
         </>
