@@ -34,11 +34,11 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 | `tarjeta_amarilla` | Amarilla | no | `yellowCards` |
 | `tarjeta_roja` | Roja | no | `redCards` |
 | `sustitucion` | Cambio (`playerId` sale, `playerInId` entra) | no | — |
-| `penal` | Penal | **no** | — |
+| `penal` | Penal (con resultado: convertido, atajado o errado) | **sí, solo si se convirtió** (`scored: true`), +1 al equipo | `goals`, solo si se convirtió |
 
 ### Registrar (`POST /api/matches/:id/events`)
 8. **Solo con el partido `en_curso`** (`409` "inícialo antes de registrar jugadas").
-9. Validaciones (`400`): `type` de la lista (el nombre de la pantalla `amarilla` no es válido); `minute` entero 0–200; `detail` de hasta 200 caracteres; `teamId`, si viene, debe ser uno de los **dos equipos de ese partido**; un `gol` **exige** `teamId`; `playerId` exige `teamId` y el jugador debe **pertenecer a ese equipo**.
+9. Validaciones (`400`): `type` de la lista (el nombre de la pantalla `amarilla` no es válido); `minute` entero 0–200; `detail` de hasta 200 caracteres; `teamId`, si viene, debe ser uno de los **dos equipos de ese partido**; un `gol` **exige** `teamId`; un `penal` lleva su resultado: `scored: true` (convertido) o `scored: false` con `detail` `"atajado"` o `"errado"` (`400` si falta el detail), y entonces también exige `teamId`. Sin `scored` es un penal "a secas" (clientes anteriores) y no cambia nada; `playerId` exige `teamId` y el jugador debe **pertenecer a ese equipo**.
 10. La jugada, el marcador y las estadísticas se guardan **en una transacción**, con incrementos atómicos: seis goles simultáneos dan seis.
 11. Si el marcador estaba en `null`, se pone en 0 antes de sumar.
 
@@ -76,7 +76,7 @@ Implementa el ADR de `docs/arquitectura.md` §7-9 (SSE conceptualmente; en la pr
 - **Sin `ABLY_API_KEY` (por ejemplo en local o en Preview si no se configuró) la app funciona exactamente igual que antes:** la publicación no hace nada y el token da `503`. No es un requisito para desarrollar ni para desplegar.
 
 ## Limitaciones conocidas
-- **Un penal convertido hay que registrarlo como gol.** El botón "Penal" solo deja constancia en la crónica y no cambia el marcador. *Decisión pendiente.*
+- **El penal es una jugada del partido, no necesariamente un gol (OBS-45).** Al registrarlo se elige cómo terminó: *Convertido* suma al marcador y a los goles del jugador (y se ve como un gol); *Atajado* o *Errado* quedan en la crónica sin tocar nada. Deshacerlo revierte lo que aplicó. Los penales viejos, sin resultado, siguen como "¡Penal!" sin efecto. No confundir con la tanda de definición ([007](007-fixture-eliminacion-copa-relampago.md)), que tiene su propio conteo.
 - **Sin alineaciones:** `matchesPlayed` de los goleadores queda en 0 y `assists` no se registra.
 - **Quién gestiona el partido:** el organizador del torneo, el admin y, desde la especificación [011](011-mesa.md), la **mesa** asignada (solo el día de juego, sin reabrir partidos ni tocar el marcador a mano).
 - **Color del estado:** en vivo **rojo**, en el descanso **negro** y finalizado **gris**, en todas las pantallas (barra y reloj de la pantalla en vivo, etiqueta de la ficha, filas de partidos, llaves, cronología). Una sola definición: `_lib/match-tone.ts` (`matchTone`, con pruebas). Un partido por jugarse conserva su color de siempre.

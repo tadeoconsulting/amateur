@@ -62,7 +62,8 @@ export async function GET(
 
 /**
  * Registra una jugada del partido. Solo se puede mientras el partido está en juego.
- * Un gol suma al marcador y a las estadísticas del jugador; las tarjetas, a las suyas.
+ * Un gol suma al marcador y a las estadísticas del jugador; las tarjetas, a las suyas. Un penal es
+ * una jugada con resultado (`scored`): solo si se convirtió suma como gol; atajado o errado queda en la crónica.
  * "penal_definicion" (un intento de la tanda de penales) solo se acepta con el partido en
  * fase "penales", y suma al conteo de penales del equipo (no al marcador) si `scored` es
  * `true`. Todo se guarda junto o no se guarda nada.
@@ -94,6 +95,15 @@ export async function POST(
   if (type === "penal_definicion" && typeof scored !== "boolean") {
     return badRequest("Un intento de la tanda de penales necesita scored (true o false)");
   }
+  // Un penal del juego es una jugada con resultado: convertido (scored true, cuenta como gol) o no (scored false,
+  // con detail "atajado" o "errado"). Sin scored es un penal "a secas", que no cambia nada (clientes anteriores).
+  if (type === "penal" && scored !== undefined && scored !== null) {
+    if (typeof scored !== "boolean") return badRequest("scored debe ser true o false");
+    if (!scored && detail !== "atajado" && detail !== "errado") {
+      return badRequest('Un penal no convertido necesita detail "atajado" o "errado"');
+    }
+  }
+  const penalScored = type === "penal" && typeof scored === "boolean" ? scored : null;
 
   const match = await prisma.match.findUnique({
     where: { id },
@@ -116,7 +126,7 @@ export async function POST(
   if (teamId !== undefined && teamId !== null && teamId !== match.homeTeamId && teamId !== match.awayTeamId) {
     return badRequest("teamId no juega este partido");
   }
-  if ((changesScore(type) || type === "penal_definicion") && teamId !== match.homeTeamId && teamId !== match.awayTeamId) {
+  if ((changesScore(type) || type === "penal_definicion" || penalScored !== null) && teamId !== match.homeTeamId && teamId !== match.awayTeamId) {
     return badRequest("Esta jugada necesita el equipo (teamId)");
   }
   // El jugador tiene que ser del equipo de la jugada, si no se le acreditaría a otro.
@@ -144,15 +154,15 @@ export async function POST(
           playerId: typeof playerId === "string" ? playerId : null,
           playerInId: typeof playerInId === "string" ? playerInId : null,
           teamId: typeof teamId === "string" ? teamId : null,
-          detail: typeof detail === "string" ? detail : null,
+          detail: typeof detail === "string" && !(penalScored === true) ? detail : null,
           phase: match.phase,
           half: halfForEvent(match.period),
           recordedById: auth.user.id,
-          scored: type === "penal_definicion" ? (scored as boolean) : null,
+          scored: type === "penal_definicion" ? (scored as boolean) : penalScored,
         },
       });
 
-      if (changesScore(type)) {
+      if (changesScore(type, penalScored)) {
         const home = teamId === match.homeTeamId;
         // Si el marcador estaba vacío se pone en 0 antes de sumar (NULL + 1 seguiría siendo NULL).
         if (home) {
@@ -171,7 +181,7 @@ export async function POST(
         if (scored === true) await tx.match.update({ where: { id }, data: { [field]: { increment: 1 } } });
       }
 
-      const stat = statFor(type);
+      const stat = statFor(type, penalScored);
       if (stat && typeof playerId === "string") {
         await tx.playerStats.upsert({
           where: { playerId_tournamentId: { playerId, tournamentId: match.tournamentId } },
