@@ -125,8 +125,8 @@ El panel ya era de escritorio (menú lateral y contenido), así que se revisó y
 
 ### Sub-pestañas del club en escritorio
 Las pantallas del club tenían pestañas secundarias con **subrayado** (distintas de las píldoras de las fechas del fixture y de las secciones del torneo). En escritorio —desde 768 px, donde aparece la barra superior— ahora usan **`PillTabs`**, el mismo estilo y comportamiento (teclado con flechas, desplazamiento) que el resto; **en el celular siguen exactamente igual**, con el subrayado.
-- **`SubTabs`** (`_components/sub-tabs.tsx`): un solo componente con las dos presentaciones (subrayado `md:hidden`, píldoras `hidden md:block`). `mobile="equal"` reparte las pestañas en todo el ancho (equipo, jugadores); `mobile="start"` las deja a la izquierda con letra más chica (Libre / Sub 18).
-- Pantallas: Torneos (**Libre / Sub 18**), Equipo (**Categorías / Planilla**), Jugadores (**Masculino / Femenino / Mixto**) y la lista de una categoría (la barra de género de "Sin categoría", que solo aparece con el id fijo `cat-sin`: no existe con datos reales).
+- **`SubTabs`** (`_components/sub-tabs.tsx`): un solo componente con las dos presentaciones (subrayado `md:hidden`, píldoras `hidden md:block`). `mobile="equal"` reparte las pestañas en todo el ancho (equipo, jugadores); `mobile="start"` las deja a la izquierda con letra más chica (las categorías del club).
+- Pantallas: Torneos (pestañas de categoría **dinámicas**: salen de los torneos del club, con "Todas" y solo si hay más de una; ver `_lib/tournament-category.ts`), Equipo (**Categorías / Planilla**), Jugadores (**Masculino / Femenino / Mixto**) y la lista de una categoría (la barra de género de "Sin categoría", que solo aparece con el id fijo `cat-sin`: no existe con datos reales).
 - No se tocaron las pestañas principales de Torneos (*Mis torneos / Solicitudes*, con insignia de pendientes): ya eran botones tipo píldora.
 - Sin lógica nueva ni API: solo presentación; no hay prueba unitaria.
 
