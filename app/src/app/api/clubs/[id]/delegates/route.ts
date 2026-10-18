@@ -50,6 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     role,
     canManage: manages,
     // Un equipo temporal todavía no tiene delegado: no admite co-delegados.
+    isTemporary: club.isTemporary,
     canInvite: manages && !club.isTemporary && coDelegateSlotsLeft(usage.accepted, usage.pending) > 0,
     max: MAX_CO_DELEGATES,
     slotsLeft: coDelegateSlotsLeft(usage.accepted, usage.pending),
