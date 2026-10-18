@@ -14,6 +14,8 @@ import { ClubCrest } from "@/_components/club-crest";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
+import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
+import { watchableMatchIds } from "@/_lib/live-matches";
 import { TeamsList } from "@/_components/teams-list";
 import { ShareViewButton } from "@/_components/share-view-button";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
@@ -133,10 +135,21 @@ export default function JugadorTorneoDetailPage() {
   // Ronda del cuadro que se está viendo; null = la última (la final, o la más avanzada).
   const [llavesRound, setLlavesRound] = useState<number | null>(null);
 
-  const { data: matchesData, loading: loadingMatches } = useApi(() => getMatches({ tournamentId: id }));
-  const { data: standingsData, loading: loadingStandings } = useApi(() => getStandings(id));
-  const { data: scorersData, loading: loadingScorers } = useApi(() => getScorers(id));
+  const { data: matchesData, loading: loadingMatches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId: id }));
+  const { data: standingsData, loading: loadingStandings, refetchSilently: refetchStandings } = useApi(() => getStandings(id));
+  const { data: scorersData, loading: loadingScorers, refetchSilently: refetchScorers } = useApi(() => getScorers(id));
   const { data: tournamentDetail, loading: loadingTournament } = useApi(() => getTournament(id));
+
+  // Tiempo real (OBS-36): antes esta pantalla nunca se enteraba de un gol, ni de que un partido arrancara o terminara,
+  // salvo que se recargara a mano. Escucha los partidos que todavía pueden tener novedades (programados o en juego): al
+  // llegar un aviso vuelve a pedir partidos, tabla y goleadores sin mostrar el spinner de carga. Ver `useTournamentRealtime`.
+  const [liveVersion, setLiveVersion] = useState(0);
+  useTournamentRealtime(watchableMatchIds(matchesData ?? []), () => {
+    refetchMatches();
+    refetchStandings();
+    refetchScorers();
+    setLiveVersion((v) => v + 1); // las tablas de su temporada (otras etapas y la General) se piden aparte
+  });
 
   if (loadingMatches || loadingStandings) {
     return (
@@ -305,7 +318,7 @@ export default function JugadorTorneoDetailPage() {
         {/* En un torneo de temporada (especificación 012), pestañas de cada etapa y de la General. */}
         {shownTab === "Tabla" && (
           <div className="@4xl:mx-auto @4xl:max-w-4xl">
-            <SeasonTables tournament={seasonRef} clubHref={clubHref} className="pb-3">
+            <SeasonTables tournament={seasonRef} clubHref={clubHref} version={liveVersion} className="pb-3">
               <StandingsTable standings={standings} qualifyCount={llaves} clubHref={clubHref} />
             </SeasonTables>
           </div>
@@ -313,7 +326,7 @@ export default function JugadorTorneoDetailPage() {
 
         {shownTab === "Goleadores" && (
           <div className="@4xl:mx-auto @4xl:max-w-3xl">
-            <SeasonScorersTabs tournament={seasonRef} clubHref={clubHref} className="pb-3">
+            <SeasonScorersTabs tournament={seasonRef} clubHref={clubHref} version={liveVersion} className="pb-3">
               <ScorersList scorers={topScorers} clubHref={clubHref} />
             </SeasonScorersTabs>
           </div>
