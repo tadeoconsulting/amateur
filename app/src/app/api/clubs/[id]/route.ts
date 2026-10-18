@@ -1,6 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, canManageClub, forbidden, isAdmin, pick, readJson, requireUser } from "@/_lib/auth";
+import { badRequest, canDoOnClub, canManageClub, forbidden, isAdmin, pick, readJson, requireUser } from "@/_lib/auth";
 import { omitInviteToken } from "@/_lib/club-public";
 import { shortNameError } from "@/_lib/short-name";
 export async function GET(
@@ -35,6 +35,8 @@ export async function GET(
 
 // ownerId no está: un club no cambia de dueño por acá.
 const EDITABLE = ["name", "shortName", "logoUrl", "color", "delegadoNombre", "delegadoTel", "delegadoEmail"] as const;
+// El contacto público del delegado lo cambia solo el principal o un admin, no un co-delegado (especificación 014).
+const CONTACT_FIELDS = ["delegadoNombre", "delegadoTel", "delegadoEmail"] as const;
 
 export async function PATCH(
   request: NextRequest,
@@ -49,8 +51,13 @@ export async function PATCH(
   const body = await readJson(request);
   if (!body) return badRequest();
 
+  const touched = pick(body, EDITABLE);
+  if (CONTACT_FIELDS.some((f) => f in touched) && !(await canDoOnClub(auth.user, id, "edit_contact"))) {
+    return Response.json({ error: "El contacto del delegado lo cambia el delegado principal" }, { status: 403 });
+  }
+
   const data: Record<string, string | null> = {};
-  for (const [key, value] of Object.entries(pick(body, EDITABLE))) {
+  for (const [key, value] of Object.entries(touched)) {
     const required = key === "name" || key === "shortName";
     if (value === null ? required : typeof value !== "string" || (required && !value.trim())) {
       return badRequest(`${key} inválido`);

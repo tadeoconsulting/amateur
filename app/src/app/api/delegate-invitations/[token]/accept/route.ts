@@ -4,6 +4,7 @@ import { prisma } from "@/_lib/prisma";
 import { createSession, getCurrentUser, hashPassword, isAdmin, normalizeEmail, readJson, unauthorized, validatePassword } from "@/_lib/auth";
 import { checkDelegateAccept, signupEmail } from "@/_lib/delegate-invitation";
 import { makeClubOfficial, OfficializeConflict } from "@/_lib/club-official-server";
+import { delegateClubCount } from "@/_lib/club-delegate-server";
 
 const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
 
@@ -35,7 +36,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   // ─── Con sesión: acepta con esa cuenta ───
   if (viewer) {
-    const ownedClubs = await prisma.club.count({ where: { ownerId: viewer.id } });
+    // Dirigir o co-dirigir otro equipo cuenta igual (especificación 014).
+    const ownedClubs = await delegateClubCount(viewer.id);
     const check = checkDelegateAccept({
       status: invitation.status,
       expiresAt: invitation.expiresAt,

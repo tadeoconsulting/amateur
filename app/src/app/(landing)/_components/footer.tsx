@@ -1,46 +1,36 @@
 import Link from "next/link";
 
+const LINK = "text-sm transition-colors hover:text-[var(--lc-lime)]";
+
 export function Footer() {
   return (
-    <footer className="bg-surface-primary border-t border-brand-200 py-12 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-          <div>
-            <p className="font-heading text-xl font-bold text-text-primary mb-3">Amateur</p>
-            <p className="text-sm text-text-secondary font-body leading-relaxed">
-              Plataforma de gestión de torneos de fútbol amateur. Tu esfuerzo ya no queda invisible.
-            </p>
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-text-primary mb-3 uppercase tracking-wider">Producto</p>
-            <ul className="space-y-2">
-              <li><a href="#features" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Características</a></li>
-              <li><a href="#como-funciona" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Cómo funciona</a></li>
-              <li><a href="#numeros" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Números</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-text-primary mb-3 uppercase tracking-wider">Legal</p>
-            <ul className="space-y-2">
-              <li><Link href="/terminos" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Términos y condiciones</Link></li>
-              <li><Link href="/privacidad" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Políticas de privacidad</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-text-primary mb-3 uppercase tracking-wider">Soporte</p>
-            <ul className="space-y-2">
-              <li><Link href="/ayuda" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Centro de ayuda</Link></li>
-            </ul>
-          </div>
+    <footer className="px-4 pb-24 sm:px-6 md:pb-10">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Amateur">
+            <span className="lc-display normal-case flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--lc-lime)] text-2xl italic text-[var(--lc-ink)]">a</span>
+            <span className="text-3xl font-bold tracking-tight">amateur</span>
+          </Link>
+          <nav aria-label="Enlaces" className="flex flex-wrap gap-x-8 gap-y-3">
+            <a href="#torneos" className={LINK}>Torneos</a>
+            <a href="#plataforma" className={LINK}>La plataforma</a>
+            <a href="#como-funciona" className={LINK}>Cómo funciona</a>
+            <Link href="/ayuda" className={LINK}>Centro de ayuda ↗</Link>
+          </nav>
         </div>
 
-        <div className="border-t border-brand-200 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-text-secondary">
-            &copy; {new Date().getFullYear()} Amateur. Todos los derechos reservados.
-          </p>
+        <p className="mt-8 max-w-sm text-sm leading-relaxed text-[var(--lc-muted)]">
+          Plataforma de gestión de torneos de fútbol amateur.
+          <br />
+          Tu esfuerzo ya no queda invisible.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-3 border-t border-[var(--lc-line)] pt-6 text-xs text-[var(--lc-muted)] sm:flex-row sm:items-center sm:justify-between">
+          <p>&copy; {new Date().getFullYear()} Amateur. Todos los derechos reservados.</p>
+          <div className="flex gap-6">
+            <Link href="/terminos" className="hover:text-[var(--lc-lime)]">Términos y condiciones</Link>
+            <Link href="/privacidad" className="hover:text-[var(--lc-lime)]">Políticas de privacidad</Link>
+          </div>
         </div>
       </div>
     </footer>

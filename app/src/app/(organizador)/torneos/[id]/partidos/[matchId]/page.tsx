@@ -25,8 +25,10 @@ function formatShortDate(dateStr: string): string {
 
 type MatchEventRow = {
   id: string;
-  type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion";
+  type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion" | "penal";
   minute: number;
+  scored?: boolean | null;
+  detail?: string | null;
   half?: number | null;
   playerName: string | null;
   playerInName?: string | null;
@@ -90,6 +92,8 @@ export default function MatchDetailPage() {
   // Se resume aparte, más abajo, junto al resultado.
   const eventList = (events ?? [])
     .filter((e) => (e.type as string) !== "penal_definicion")
+    // Un penal viejo, sin resultado, no dice qué pasó: queda fuera de la línea de tiempo.
+    .filter((e) => e.type !== "penal" || e.scored != null)
     .map((e) => ({
       ...e,
       matchId: params.matchId,

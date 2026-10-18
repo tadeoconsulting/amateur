@@ -14,7 +14,9 @@ import { placeChanges } from "@/_lib/standings";
 
 /**
  * `highlightClubIds`: resalta las filas de esos clubes (por ejemplo los dos del partido de la ficha).
- * `compact`: sin las columnas G, E y P (queda #, equipo, PJ, DG y Pts), para el panel lateral de escritorio.
+ * `compact`: sin las columnas G, E, P, GF y GC (queda #, equipo, PJ, DG y Pts), para el panel lateral de escritorio.
+ * En la tabla completa, GF (goles a favor) y GC (goles en contra) salen solo desde la pantalla de escritorio (`md`): en el
+ * celular no caben junto a las demás.
  *
  * `qualifyCount`: cuántos de la tabla pasan a llaves (`playoffTeams`, solo en una liga). Con
  * llaves, del 1.º al N.º va en verde y del N+1 en adelante en rojo; sin ellas, la marca de siempre
@@ -59,6 +61,8 @@ export function StandingsTable({
               {!compact && <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">G</th>}
               {!compact && <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">E</th>}
               {!compact && <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">P</th>}
+              {!compact && <th scope="col" title="Goles a favor" className="hidden px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary md:table-cell"><abbr title="Goles a favor" className="no-underline">GF</abbr></th>}
+              {!compact && <th scope="col" title="Goles en contra" className="hidden px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary md:table-cell"><abbr title="Goles en contra" className="no-underline">GC</abbr></th>}
               <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">DG</th>
               <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">Pts</th>
             </tr>
@@ -91,6 +95,8 @@ export function StandingsTable({
                 {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.won}</td>}
                 {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.drawn}</td>}
                 {!compact && <td className="px-2 py-2.5 text-center text-text-secondary">{row.lost}</td>}
+                {!compact && <td className="hidden px-2 py-2.5 text-center text-text-secondary md:table-cell">{row.goalsFor}</td>}
+                {!compact && <td className="hidden px-2 py-2.5 text-center text-text-secondary md:table-cell">{row.goalsAgainst}</td>}
                 <td className="px-2 py-2.5 text-center text-text-secondary">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td>
                 <td className="px-2 py-2.5 text-center font-heading font-bold text-text-primary">{row.points}<PointsDelta delta={row.pointsDelta} /></td>
               </tr>

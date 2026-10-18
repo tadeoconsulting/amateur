@@ -4,6 +4,7 @@ import { badRequest, canManageClub, canManageTournament, forbidden, getCurrentUs
 import { compareByLastName, isMinorOn, playerIdentity, publicName } from "@/_lib/player-identity";
 import { OPEN_STATUSES } from "@/_lib/tournament-labels";
 import { seasonTeamsLock } from "@/_lib/season-server";
+import { isClubDelegate } from "@/_lib/club-delegate-server";
 
 /**
  * La página pública de un club dentro de un torneo (`/{organizador}/{torneo}/equipo/{club}`): el club, su grupo y su
@@ -19,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     where: { tournamentId: id, clubId, tournament: { deletedAt: null } },
     select: {
       groupName: true,
-      club: { select: { id: true, name: true, shortName: true, logoUrl: true, color: true, ownerId: true } },
+      club: { select: { id: true, name: true, shortName: true, logoUrl: true, color: true } },
       tournament: { select: { id: true, name: true, format: true, playoffTeams: true, slug: true, organizerId: true, organizer: { select: { organizerSlug: true } } } },
     },
   });
@@ -27,7 +28,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const { club, tournament } = enrollment;
 
   const viewer = await getCurrentUser();
-  const seesFull = viewer !== null && (isAdmin(viewer) || viewer.id === tournament.organizerId || viewer.id === club.ownerId);
+  const seesFull =
+    viewer !== null && (isAdmin(viewer) || viewer.id === tournament.organizerId || (await isClubDelegate(viewer.id, clubId)));
   const today = new Date().toISOString().slice(0, 10);
 
   const profiles = await prisma.playerProfile.findMany({

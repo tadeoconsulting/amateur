@@ -62,8 +62,11 @@ export interface Match {
 export interface MatchEvent {
   id: string;
   matchId: string;
-  type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion";
+  type: "gol" | "tarjeta_amarilla" | "tarjeta_roja" | "sustitucion" | "penal";
   minute: number;
+  /** Solo en un penal del juego: ¿se convirtió? (`detail`: "atajado" o "errado" si no). */
+  scored?: boolean | null;
+  detail?: string | null;
   /** En qué tiempo ocurrió (1 o 2); null/ausente en un partido sin tiempos. */
   half?: number | null;
   playerId: string;

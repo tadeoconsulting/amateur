@@ -68,7 +68,7 @@ export async function DELETE(
     await prisma.$transaction(async (tx) => {
       await tx.matchEvent.delete({ where: { id: eventId } });
 
-      if (isEventType(event.type) && changesScore(event.type)) {
+      if (isEventType(event.type) && changesScore(event.type, event.scored)) {
         // where score > 0: el marcador nunca queda negativo, aunque se haya editado a mano.
         if (event.teamId === match.homeTeamId) {
           await tx.match.updateMany({ where: { id, homeScore: { gt: 0 } }, data: { homeScore: { decrement: 1 } } });
@@ -83,7 +83,7 @@ export async function DELETE(
         }
       }
 
-      const stat = isEventType(event.type) ? statFor(event.type) : null;
+      const stat = isEventType(event.type) ? statFor(event.type, event.scored) : null;
       if (stat && event.playerId) {
         await tx.playerStats.updateMany({
           where: { playerId: event.playerId, tournamentId: match.tournamentId, [stat]: { gt: 0 } },

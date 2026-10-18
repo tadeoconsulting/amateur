@@ -1,9 +1,9 @@
 import { MATCH_TONE } from "@/_lib/match-tone";
-import { splitHalves } from "@/_lib/match-live";
+import { penalTitle, splitHalves } from "@/_lib/match-live";
 import type { MatchEvent, MatchStatus } from "@/_lib/types";
 
 function EventIcon({ type }: { type: MatchEvent["type"] }) {
-  if (type === "gol") {
+  if (type === "gol" || type === "penal") {
     return (
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="1.2" />
@@ -82,6 +82,7 @@ export function MatchTimeline({
 
 /** Lo que se lee de una jugada: el jugador, o en un cambio, quién sale y quién entra. */
 function label(event: MatchEvent) {
+  if (event.type === "penal") return `${penalTitle(event.scored, event.detail)}${event.playerName ? ` · ${event.playerName}` : ""}`;
   if (event.type !== "sustitucion") return event.playerName;
   return `Sale ${event.playerName}${event.playerInName ? ` · Entra ${event.playerInName}` : ""}`;
 }
