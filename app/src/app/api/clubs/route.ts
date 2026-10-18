@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, isAdmin, readJson, requireRole, requireUser } from "@/_lib/auth";
 import { shortNameError } from "@/_lib/short-name";
 import { effectiveStatus } from "@/_lib/profile-invitation";
+import { delegateClubWhere } from "@/_lib/club-delegate-server";
 
 type InvitationRow = { email: string | null; status: string; expiresAt: Date; acceptedAt: Date | null; acceptedBy: { firstName: string; lastName: string; email: string } | null };
 
@@ -23,17 +24,21 @@ export async function GET(request: NextRequest) {
   if ("response" in auth) return auth.response;
 
   const ownerId = request.nextUrl.searchParams.get("ownerId");
+  // Los equipos de una persona: los que dirige y aquel del que es co-delegada (especificación 014). `ownerId` sigue
+  // siendo solo los que dirige.
+  const delegateId = request.nextUrl.searchParams.get("delegateId");
   const search = request.nextUrl.searchParams.get("search");
 
   const where: Record<string, unknown> = {};
   if (ownerId) where.ownerId = ownerId;
+  if (delegateId) Object.assign(where, delegateClubWhere(delegateId));
   if (search) where.name = { contains: search, mode: "insensitive" };
   // Los equipos temporales son de quien los creó: solo él los ve, y no salen en la
   // búsqueda de equipos de la comunidad. El panel del admin los pide aparte con
   // `includeTemporary=1` (solo vale para un admin): sin eso, ve todos los clubes menos los de
   // los torneos que cargan los organizadores.
   const includeTemporary = isAdmin(auth.user) && request.nextUrl.searchParams.get("includeTemporary") === "1";
-  if (!includeTemporary && !(ownerId && ownerId === auth.user.id)) where.isTemporary = false;
+  if (!includeTemporary && !((ownerId ?? delegateId) === auth.user.id)) where.isTemporary = false;
 
   const admin = isAdmin(auth.user);
   const clubs = await prisma.club.findMany({
@@ -93,6 +98,11 @@ export async function POST(request: NextRequest) {
 
     // El dueño del club es quien lo crea. Solo un admin puede crearlo a nombre de otro.
     const ownerId = isAdmin(user) && typeof body.ownerId === "string" ? body.ownerId : user.id;
+
+    // Un co-delegado lo es de un solo equipo y no crea otro: un equipo por persona (especificación 014).
+    if (await prisma.clubDelegate.findUnique({ where: { userId: ownerId }, select: { id: true } })) {
+      return Response.json({ error: "Eres co-delegado de otro equipo: cada delegado maneja uno, con su propia cuenta" }, { status: 409 });
+    }
 
     const club = await prisma.club.create({
       data: {

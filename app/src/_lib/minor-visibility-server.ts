@@ -24,6 +24,8 @@ export async function clubsWithFullNames(user: CurrentUser, clubIds: readonly st
       id: { in: ids },
       OR: [
         { ownerId: user.id },
+        // Los co-delegados ven lo mismo que el delegado principal (especificación 014).
+        { coDelegates: { some: { userId: user.id } } },
         { staffMembers: { some: { userId: user.id } } },
         { enrollments: { some: { tournament: { organizerId: user.id, deletedAt: null } } } },
         ...(user.roles.includes(Role.MESA) ? [{ enrollments: { some: { tournament: { mesas: { some: { userId: user.id } }, deletedAt: null } } } }] : []),

@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageTournament, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { isUniqueViolation } from "@/_lib/enrollment";
 import { OPEN_STATUSES } from "@/_lib/tournament-labels";
+import { isClubDelegate } from "@/_lib/club-delegate-server";
 import type { RequestKind } from "@/_lib/tournament-request";
 
 const CLUB_SUMMARY = {
@@ -81,7 +82,8 @@ export async function POST(
 
   // Un admin actúa del lado del organizador.
   const isOrganizerSide = isAdmin(user) || tournament.organizerId === user.id;
-  const isClubSide = club.ownerId === user.id;
+  // El principal y los co-delegados responden por el equipo (especificación 014).
+  const isClubSide = await isClubDelegate(user.id, clubId);
 
   if (!isOrganizerSide && !isClubSide) return forbidden();
   // Un temporal es del organizador que lo creó: no hay con quién ponerse de acuerdo.

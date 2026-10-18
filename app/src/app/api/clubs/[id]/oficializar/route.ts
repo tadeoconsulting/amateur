@@ -34,13 +34,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const owner = await prisma.user.findUnique({
     where: { id: ownerId },
-    select: { id: true, roles: { select: { role: true } }, _count: { select: { ownedClubs: true } } },
+    select: { id: true, roles: { select: { role: true } }, _count: { select: { ownedClubs: true } }, coDelegateOf: { select: { id: true } } },
   });
   if (!owner) return Response.json({ error: "El usuario elegido no existe" }, { status: 404 });
   if (owner.roles.some((r) => r.role === Role.ADMIN)) {
     return badRequest("Una cuenta de administrador no puede ser delegada de un equipo");
   }
-  if (owner._count.ownedClubs > 0) {
+  // Dirigir o co-dirigir otro equipo cuenta igual: un equipo por persona (especificación 014).
+  if (owner._count.ownedClubs > 0 || owner.coDelegateOf !== null) {
     return Response.json(
       { error: "Ese usuario ya dirige un equipo: cada delegado maneja el suyo, con su propia cuenta" },
       { status: 409 }
