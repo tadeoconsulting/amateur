@@ -54,21 +54,22 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
   const [current, setCurrent] = useState<string>("");
 
   useEffect(() => {
-    const sections = ["torneos", "plataforma", "como-funciona"].map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) setCurrent(`#${e.target.id}`);
-      },
-      { rootMargin: "-40% 0px -50% 0px" }
-    );
-    sections.forEach((s) => observer.observe(s));
-    const onScroll = () => {
-      if (window.scrollY < 200) setCurrent("");
+    // Se buscan las secciones en cada scroll, no una sola vez: la de torneos aparece recién cuando cargan los datos.
+    const update = () => {
+      const line = window.innerHeight * 0.4;
+      let found = "";
+      for (const id of ["torneos", "plataforma", "como-funciona"]) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= line) found = `#${id}`;
+      }
+      setCurrent(found);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
     return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
     };
   }, []);
 
