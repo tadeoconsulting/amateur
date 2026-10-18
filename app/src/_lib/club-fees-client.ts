@@ -44,7 +44,7 @@ export type PlayerFeeHistory = {
 export class FeesError extends Error {}
 
 /** Llama a la API de gestión y devuelve el JSON; ante un error lanza `FeesError` con el mensaje que mandó el servidor. */
-export async function feesRequest<T>(method: "GET" | "POST" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> {
+export async function feesRequest<T>(method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(path, {

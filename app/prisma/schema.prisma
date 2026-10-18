@@ -158,6 +158,10 @@ model Club {
   // devuelve el club entero (hay varias, y una es pública) pueda filtrar cuotas.
   feeSettings           ClubFeeSettings?
   fees                  MemberFee[]
+  // Entrenamientos (especificación 015, entrega 2): lugares, horarios semanales, sesiones y asistencia.
+  trainingPlaces        TrainingPlace[]
+  trainingSchedules     TrainingSchedule[]
+  trainingSessions      TrainingSession[]
 
   @@index([ownerId])
 }
@@ -172,10 +176,12 @@ model TeamCategory {
   clubId    String
   createdAt DateTime @default(now())
 
-  club    Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  players PlayerProfile[]
-  dtId    String?
-  dt      StaffMember?    @relation(fields: [dtId], references: [id])
+  club              Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  players           PlayerProfile[]
+  dtId              String?
+  dt                StaffMember?       @relation(fields: [dtId], references: [id])
+  trainingSchedules TrainingSchedule[]
+  trainingSessions  TrainingSession[]
 
   @@index([clubId])
 }
@@ -253,6 +259,7 @@ model PlayerProfile {
   // Cuota propia y primer mes de cobro (especificación 015), en tablas aparte: la deuda de un jugador es privada.
   feeSetting      PlayerFeeSetting?
   fees            MemberFee[]
+  attendances     Attendance[]
 
   // Una ficha por club (el clubId null — la ficha "libre" — queda fuera de esta regla en la base:
   // que haya una sola lo cuida _lib/player-clubs.ts).
@@ -739,4 +746,85 @@ model FeePayment {
   fee MemberFee @relation(fields: [feeId], references: [id], onDelete: Cascade)
 
   @@index([feeId])
+}
+
+// Un lugar de entrenamiento del club (especificación 015): "Colegio Perú Suizo", "Parque de las Américas"... Es del club, no
+// de una persona: el delegado principal y los co-delegados usan la misma lista. Uno con sesiones no se borra: se archiva.
+model TrainingPlace {
+  id         String    @id @default(cuid())
+  clubId     String
+  name       String
+  address    String?
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  club      Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  schedules TrainingSchedule[]
+  sessions  TrainingSession[]
+
+  @@index([clubId])
+}
+
+// Un horario semanal de entrenamiento: de él salen las sesiones. `categoryId` null = todo el club.
+model TrainingSchedule {
+  id          String   @id @default(cuid())
+  clubId      String
+  categoryId  String?
+  // 0 = domingo ... 6 = sábado, como `Date.getDay()`.
+  weekday     Int
+  // "HH:MM" en hora de Perú.
+  startTime   String
+  durationMin Int
+  placeId     String
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  club     Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category TeamCategory?     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  place    TrainingPlace     @relation(fields: [placeId], references: [id])
+  sessions TrainingSession[]
+
+  @@index([clubId])
+}
+
+// Un entrenamiento concreto. Sale de un horario (`scheduleId`) o se crea suelto (null). `startsAt` es el instante real (UTC).
+//   programada   va a ocurrir o ya ocurrió
+//   cancelada    no se hizo: no cuenta para promedios y no se pasa lista
+// `movedManually` evita que editar el horario pise una sesión que el delegado ya movió a mano.
+model TrainingSession {
+  id            String   @id @default(cuid())
+  clubId        String
+  categoryId    String?
+  scheduleId    String?
+  startsAt      DateTime
+  durationMin   Int
+  placeId       String
+  status        String   @default("programada")
+  movedManually Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  club        Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category    TeamCategory?     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  schedule    TrainingSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  place       TrainingPlace     @relation(fields: [placeId], references: [id])
+  attendances Attendance[]
+
+  @@unique([scheduleId, startsAt])
+  @@index([clubId, startsAt])
+}
+
+// La asistencia de un jugador a una sesión: presente, ausente o justificado. Sin fila = sin marcar.
+model Attendance {
+  id         String   @id @default(cuid())
+  sessionId  String
+  playerId   String
+  status     String
+  markedById String
+  markedAt   DateTime @default(now())
+
+  session TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  player  PlayerProfile   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, playerId])
+  @@index([playerId])
 }

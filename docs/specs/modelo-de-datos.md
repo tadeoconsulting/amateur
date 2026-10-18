@@ -114,6 +114,13 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 - `FeePayment`: un abono. **Nunca se borra**: se anula con `voidedAt` y `voidedById`; lo abonado suma los no anulados. Guarda quién lo registró (`createdById`) y la fecha (`paidAt`, automática).
 - Privacidad: la deuda de un jugador no sale de `/api/clubs/:id/gestion/**` (solo delegados y admin).
 
+### TrainingPlace / TrainingSchedule / TrainingSession / Attendance (especificación 015, entrega 2)
+- `TrainingPlace`: un lugar de entrenamiento **del club** (no de una persona). Con horarios o sesiones se archiva (`archivedAt`); sin uso se borra.
+- `TrainingSchedule`: horario semanal (`weekday` 0 a 6, `startTime` HH:MM en hora de Lima, `durationMin`, `placeId`). `categoryId` null = todo el club. `active` false = quitado.
+- `TrainingSession`: un entrenamiento concreto, con `startsAt` en UTC. Sale de un horario (`scheduleId`) o es suelto (null). **Única por `scheduleId, startsAt`** (así generar es idempotente). `status`: `programada` o `cancelada`. `movedManually` evita que editar el horario la pise.
+- `Attendance`: `presente`, `ausente` o `justificado` de un jugador en una sesión, único por `sessionId, playerId`. **Sin fila = sin marcar.** Guarda quién la marcó y cuándo. Se borra en cascada con la sesión o la ficha.
+- Privacidad: la asistencia de un jugador no sale de `/api/clubs/:id/gestion/**` (solo delegados y admin).
+
 ### PlayerInvitation
 - Invitación personal (a un correo). `status`: `pending`, `accepted`, `declined`. Vence a los 7 días. `token` único.
 - El link general del club **no** usa esta tabla (usa `Club.inviteToken`).

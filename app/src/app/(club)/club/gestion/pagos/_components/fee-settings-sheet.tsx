@@ -5,7 +5,7 @@ import { formatSolesAmount, isDueDay, parseCents } from "@/_lib/club-fees";
 import { FeesError, feesRequest } from "@/_lib/club-fees-client";
 import { btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
-import { Sheet } from "./sheet";
+import { Sheet } from "@/_components/sheet";
 
 const inputClass =
   "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +

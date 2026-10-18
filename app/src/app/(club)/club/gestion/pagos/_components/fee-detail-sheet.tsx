@@ -6,7 +6,7 @@ import { FeesError, feesRequest, shortDate, type PlayerFeeHistory } from "@/_lib
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { FeeStatusChip } from "./fee-status";
-import { Sheet } from "./sheet";
+import { Sheet } from "@/_components/sheet";
 
 const inputClass =
   "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-2.5 font-body text-base text-text-primary transition-colors " +

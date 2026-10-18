@@ -6,12 +6,22 @@ import { PageSpinner } from "@/_components/spinner";
 import { MyClubCard } from "../../_components/my-club-card";
 import { ClubSettingsLink } from "../../_components/club-settings-link";
 
-// Gestión del club (especificación 015). Cada módulo aparece cuando está construido: por ahora, Pagos.
+// Gestión del club (especificación 015). Cada módulo aparece cuando está construido: Pagos, Asistencia y Sesiones.
 const modules = [
   {
     href: "/club/gestion/pagos",
     title: "Pagos",
     description: "Cuota mensual de cada jugador y quién ya pagó.",
+  },
+  {
+    href: "/club/gestion/asistencia",
+    title: "Asistencia",
+    description: "Pasar lista en cada entrenamiento y ver los promedios.",
+  },
+  {
+    href: "/club/gestion/sesiones",
+    title: "Sesiones",
+    description: "Días, horarios y lugares de entrenamiento.",
   },
 ];
 
