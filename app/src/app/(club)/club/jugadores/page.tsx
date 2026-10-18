@@ -7,6 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import type { PlayerGender } from "@/_lib/types";
 import { SubTabs } from "@/_components/sub-tabs";
+import { ClubSettingsLink } from "../../_components/club-settings-link";
 
 const genderTabs: { key: PlayerGender; label: string }[] = [
   { key: "masculino", label: "Masculino" },
@@ -86,6 +87,7 @@ function ClubJugadoresContent({ clubId }: { clubId: string }) {
               />
             </svg>
           </Link>
+          <ClubSettingsLink />
         </div>
       </div>
 

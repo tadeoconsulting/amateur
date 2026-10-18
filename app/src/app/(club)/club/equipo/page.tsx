@@ -11,6 +11,7 @@ import type { StaffRole } from "@/_lib/types";
 import { ClubCrest } from "@/_components/club-crest";
 import { SubTabs } from "@/_components/sub-tabs";
 import { DelegatesPanel } from "@/_components/delegates-panel";
+import { ClubSettingsLink } from "../../_components/club-settings-link";
 
 const tabs = ["Categorías", "Planilla", "Delegados"] as const;
 type Tab = (typeof tabs)[number];
@@ -281,6 +282,7 @@ function ClubEquipoContent({
               />
             </svg>
           </Link>
+          <ClubSettingsLink />
         </div>
       </div>
 

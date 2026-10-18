@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { Role } from "@prisma/client";
 import { prisma } from "./prisma";
+import { markFeeStart } from "./club-fees-server";
 
 // Invitaciones a un club. Hay dos clases, las dos identificadas por un token secreto:
 //
@@ -116,5 +117,7 @@ export async function joinClub(
       prisma.playerProfile.create({ data: { userId, clubId, position: position ?? profiles[0]?.position ?? null } }),
     ]);
   }
+  // Desde este mes se le cobra la cuota del club (especificación 015). Nunca hace fallar el ingreso.
+  await markFeeStart(userId, clubId);
   return { joined: true, already: false };
 }

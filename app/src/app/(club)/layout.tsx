@@ -11,7 +11,7 @@ export default function ClubLayout({
 }) {
   const pathname = usePathname();
   const badges = useClubNavBadges();
-  const isDetailView = pathname === "/club" || /^\/club\/torneos\/.+/.test(pathname) || /^\/club\/jugadores\/.+/.test(pathname) || /^\/club\/equipo\/.+/.test(pathname) || /^\/club\/ajustes\/.+/.test(pathname);
+  const isDetailView = pathname === "/club" || /^\/club\/torneos\/.+/.test(pathname) || /^\/club\/jugadores\/.+/.test(pathname) || /^\/club\/equipo\/.+/.test(pathname) || /^\/club\/ajustes\/.+/.test(pathname) || /^\/club\/gestion\/.+/.test(pathname);
   // Escritorio: la pantalla de un torneo es ancha (fixture con la tabla al lado); el resto, una columna
   // cómoda de lectura. En el celular todo sigue en 430 px.
   const wide = /^\/club\/torneos\/[^/]+(\/partido\/[^/]+)?$/.test(pathname);

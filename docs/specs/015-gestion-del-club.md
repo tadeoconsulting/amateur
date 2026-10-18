@@ -1,6 +1,8 @@
 # 015 · Gestión del club (cuotas, asistencia, sesiones y dashboard)
 
-**Estado:** 📝 **propuesta, sin implementar.** Las decisiones de abajo las tomó el usuario el 2026-10-18; los **supuestos** están marcados para confirmar antes de programar.
+**Estado:** 🚧 **Entrega 1 (Pagos) implementada** (ver *Entrega 1 · Pagos, as-built*). Entregas 2 a 4 (sesiones y asistencia, vista del jugador, dashboard) siguen como propuesta. Las decisiones y los supuestos S1 a S9 los confirmó el usuario el 2026-10-18.
+**Código (entrega 1):** `prisma/schema.prisma` (`ClubFeeSettings`, `PlayerFeeSetting`, `MemberFee`, `FeePayment`) y la migración `20261018205051_gestion-pagos`; `src/_lib/club-fees.ts` (reglas puras), `src/_lib/club-fees-server.ts` (generar meses, ingreso al club), `src/_lib/club-gestion-guard.ts`, `src/_lib/club-fees-client.ts`; `src/app/api/clubs/[id]/gestion/**`; pantallas en `src/app/(club)/club/gestion/**` y la pestaña Gestión en `(club)/_components/club-bottom-nav.tsx`.
+**Pruebas (entrega 1):** `tests/unit/club-fees.test.mjs` (31) y `tests/gestion-pagos.test.mjs` (23, integración). Las pantallas se verificaron en un navegador de celular (390 px) y de escritorio contra una base local.
 **Origen:** pedido del usuario (2026-10-18): que el delegado controle a mano qué jugadores pagaron su mensualidad y quiénes asisten a los entrenamientos, y vea métricas de ambas cosas.
 **Toca:** [001](001-autenticacion-y-permisos.md) (permisos del club), [014](014-co-delegados.md) (los co-delegados también gestionan), [005](005-invitaciones.md) (jugadores vinculados a un club), [009](009-jugadores-provisionales.md) (provisionales), [modelo-de-datos.md](modelo-de-datos.md).
 
@@ -34,6 +36,21 @@ Es **control manual**: la plataforma no cobra ni procesa dinero. El delegado reg
 - **S7.** El dashboard lleva las métricas de la sección *Dashboard*.
 - **S8.** "Ajustes" pasa a un **ícono en el encabezado** para dejar lugar a "Gestión" en la barra inferior (hoy: Torneos, Jugadores, Equipo, Ajustes).
 - **S9.** Zona horaria **Perú (UTC-5)**, igual que la mesa ([011](011-mesa.md)).
+
+## Entrega 1 · Pagos, as-built
+Lo que se construyó y en qué se aparta de la propuesta de abajo (que se conserva para las entregas siguientes):
+
+- **Cuotas en tablas propias, no como columnas.** La cuota estándar vive en `ClubFeeSettings` (`monthlyFee`, `dueDay`) y el monto propio y el primer mes en `PlayerFeeSetting` (`monthlyFeeOverride`, `startMonth`, `clubId`). Varias rutas devuelven el club o la ficha enteros (una es pública: la tabla de posiciones usa `include: { club: true }`) y habrían filtrado las cuotas. Con tablas aparte no hay forma de que salgan por descuido, y una prueba (`ninguna lectura del club ni del jugador filtra cuotas`) lo vigila. Sin fila en `ClubFeeSettings` = todavía no hay cuota.
+- **`MemberFee` es única por jugador, club y mes** (`playerId, clubId, month`), no solo por jugador y mes: una ficha libre que pasa a otro club no choca con los meses del club anterior.
+- **Primer mes de cobro.** Al entrar a un club (enlace del club, invitación o `POST /api/clubs/:id/players`) se anota el mes de ingreso (`markFeeStart`). A quien ya estaba antes de existir esta función se le anota el mes en que aparece por primera vez en Pagos. El delegado puede cambiarlo desde el detalle del jugador. Una ficha que se reutiliza para otro club arranca de cero (`PlayerFeeSetting.clubId`).
+- **No se generan meses sin cuota definida.** Con la cuota del club en 0 y sin montos propios no se crean cargos: si se crearan en 0 quedarían congelados cuando el delegado defina la cuota después.
+- **Refinamiento de S1.** Cambiar la cuota **estándar** no toca ningún mes ya generado (como en S1). Cambiar el **monto propio de un jugador** sí ajusta su **mes en curso mientras no tenga abonos** (los anulados no cuentan); con un abono, ese mes se corrige a mano. Sin esto, configurar el club el primer día dejaba a cada jugador con S/ 80 aunque se le pusiera S/ 60 o gratis. La respuesta trae `adjustedCurrentMonth`.
+- **Vencido** se devuelve como `overdue` aparte del estado (`pagado`, `parcial`, `pendiente`, `sin_cuota`); la pantalla muestra "Vencido" y, si es parcial, el saldo.
+- **Un solo cobro por toque.** Marcar pagado lee el saldo con el mes bloqueado (`SELECT … FOR UPDATE`), así dos toques seguidos o dos delegados a la vez cobran una sola vez. Una prueba lo comprueba con cinco pedidos simultáneos.
+- **Todos los importes se calculan en céntimos enteros** (`club-fees.ts`); la API y la base hablan en soles con dos decimales (tope de S/ 10 000).
+- **Rutas** (todas bajo `/api/clubs/:id/gestion`, permiso de delegado principal, co-delegado o admin): `GET/PATCH ajustes`, `GET pagos?mes=AAAA-MM`, `PATCH jugadores/:playerId/cuota`, `GET jugadores/:playerId/historial`, `PATCH cargos/:feeId`, `POST cargos/:feeId/abonos`, `DELETE abonos/:paymentId`. Un jugador sin permiso recibe `403`; un cargo o abono de otro club, `404`.
+- **Pantallas.** Pestaña **Gestión** en la barra inferior del club; **Ajustes** pasó a un ícono de engranaje en el encabezado de Torneos, Jugadores, Equipo y Gestión (en escritorio sigue en la barra superior). `/club/gestion` lista los módulos construidos (por ahora, Pagos). `/club/gestion/pagos`: mes con flechas, recaudado contra esperado, filtros *Todos / Por cobrar / Pagados*, checklist de un toque por jugador, y una hoja de detalle con la cuota propia, los meses, los abonos (también los anulados, con quién y cuándo) y las acciones de cobrar parcial, anular y corregir el monto del mes.
+- **Fuera de esta entrega:** que el jugador vea lo suyo (entrega 3: `GET /api/me/club-progreso`), el dashboard (entrega 4) y los recordatorios (segunda entrega).
 
 ## Cómo se ve (resumen)
 ```

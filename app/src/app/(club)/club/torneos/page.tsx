@@ -17,6 +17,7 @@ import { Toast } from "@/_components/toast";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import { SubTabs } from "@/_components/sub-tabs";
 import { ALL_CATEGORIES, categoriesOf, categoryOf, filterByCategory } from "@/_lib/tournament-category";
+import { ClubSettingsLink } from "../../_components/club-settings-link";
 
 type MainTab = "mis_torneos" | "solicitudes";
 
@@ -80,12 +81,15 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
           </svg>
           <h1 className="font-heading text-xl font-bold text-text-primary">Torneos</h1>
         </div>
-        <Link href="/club/torneos/buscar" className="p-1 text-text-primary">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/club/torneos/buscar" aria-label="Buscar torneo" className="p-1 text-text-primary">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </Link>
+          <ClubSettingsLink />
+        </div>
       </div>
 
       {/* Main tabs */}
