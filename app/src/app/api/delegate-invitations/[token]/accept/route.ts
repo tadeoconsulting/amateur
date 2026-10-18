@@ -4,6 +4,7 @@ import { prisma } from "@/_lib/prisma";
 import { createSession, getCurrentUser, hashPassword, isAdmin, normalizeEmail, readJson, unauthorized, validatePassword } from "@/_lib/auth";
 import { checkDelegateAccept, signupEmail } from "@/_lib/delegate-invitation";
 import { makeClubOfficial, OfficializeConflict } from "@/_lib/club-official-server";
+import { sendWelcomeEmail } from "@/_lib/welcome-email";
 import { delegateClubCount } from "@/_lib/club-delegate-server";
 
 const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
@@ -102,6 +103,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const accepted = await accept(invitation, userId);
   if (accepted.ok) {
     await createSession(userId);
+    // La cuenta se creó acá, sin pasar por el registro: se le da la bienvenida igual (como delegado).
+    sendWelcomeEmail({ email, firstName, roles: [Role.CLUB_OWNER] }, request.nextUrl.origin);
     return accepted;
   }
   // La invitación se usó mientras tanto: no se deja una cuenta suelta que la persona no pidió.

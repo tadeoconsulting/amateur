@@ -136,3 +136,64 @@ export function restablecerContrasena(input: { url: string; minutes: number }): 
   });
   return { subject, text, html };
 }
+
+// ─── Bienvenida (al registrarse) ────────────────────────────────────────────
+
+/** Lo primero que se le cuenta a cada perfil, en el orden en que aparecen en el correo. */
+const WELCOME_ROLES: { role: string; sentence: string; button: string; path: string }[] = [
+  {
+    role: "ORGANIZADOR",
+    sentence: "<strong>Como organizador</strong>, crea tu primer torneo en pocos pasos: define las bases, invita a los equipos y arma el fixture.",
+    button: "Crear mi primer torneo",
+    path: "/torneos",
+  },
+  {
+    role: "CLUB_OWNER",
+    sentence: "<strong>Como delegado</strong>, arma tu equipo: suma a tus jugadores y a tu cuerpo técnico, y pide unirte a los torneos.",
+    button: "Ir a mi equipo",
+    path: "/club",
+  },
+  {
+    role: "JUGADOR",
+    sentence: "<strong>Como jugador</strong>, sigue tus partidos, tus goles y tus torneos en un solo lugar.",
+    button: "Ver mis torneos",
+    path: "/jugador/torneos",
+  },
+];
+
+/**
+ * El correo de bienvenida a quien acaba de crear su cuenta (delegado, jugador y organizador; una cuenta puede tener
+ * varios perfiles). Cuenta en una frase por perfil qué es lo primero que puede hacer y deja un solo botón: la pantalla
+ * de su perfil si tiene uno solo, o la elección de perfil si tiene más. `origin` es la dirección base de la plataforma.
+ */
+export function bienvenida(input: { firstName: string; roles: string[]; origin: string }): Contenido {
+  const { firstName, roles, origin } = input;
+  const own = WELCOME_ROLES.filter((r) => roles.includes(r.role));
+  const only = own.length === 1 ? own[0] : null;
+  const name = firstName.trim();
+  const url = `${origin}${only ? only.path : "/seleccion-perfil"}`;
+  const button = only ? only.button : "Entrar a Amateur";
+  const subject = "Te damos la bienvenida a Amateur";
+  const intro = "Tu cuenta está lista. Amateur es el lugar donde se organizan los torneos de fútbol amateur y se siguen en vivo: fixture, tabla de posiciones y goleadores.";
+  const more = own.length > 0 && own.length < WELCOME_ROLES.length ? "Cuando quieras, puedes activar otro perfil desde Ajustes." : null;
+  const footer = "Recibes este correo porque se creó una cuenta en Amateur con esta dirección. Si no fuiste tú, puedes ignorarlo.";
+
+  const plain = (html: string) => html.replace(/<\/?strong>/g, "");
+  const text = [
+    name ? `Te damos la bienvenida, ${name}.` : "Te damos la bienvenida.",
+    intro,
+    ...own.map((r) => plain(r.sentence)),
+    ...(more ? [more] : []),
+    `${button}: ${url}`,
+    footer,
+  ].join("\n\n");
+
+  const html = layout({
+    title: name ? `Te damos la bienvenida, ${escapeHtml(name)}` : "Te damos la bienvenida",
+    paragraphs: [intro, ...own.map((r) => r.sentence), ...(more ? [more] : [])],
+    buttonLabel: button,
+    url,
+    footer,
+  });
+  return { subject, text, html };
+}
