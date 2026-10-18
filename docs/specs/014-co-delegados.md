@@ -1,8 +1,9 @@
 # 014 · Co-delegados (varios delegados en un mismo equipo)
 
-**Estado:** 🚧 **entrega 1 implementada** (modelo, permisos y API); la entrega 2 (pantallas del delegado y del admin) está pendiente.
+**Estado:** ✅ **implementada (as-built), en dos entregas:** modelo, permisos y API (entrega 1) y pantallas del delegado y del admin (entrega 2).
 **Código (entrega 1):** `prisma/schema.prisma` (`ClubDelegate`, `CoDelegateInvitation`) y la migración `20261018012959_co-delegados`; `src/_lib/club-delegate.ts` (reglas puras), `src/_lib/club-delegate-server.ts` (`clubRoleFor`, `isClubDelegate`, `delegateClubWhere`, aceptar); `canManageClub` y `canDoOnClub` en `src/_lib/auth.ts`; `src/app/api/clubs/[id]/delegates/**`, `src/app/api/clubs/[id]/co-delegate-invitations/**` y `src/app/api/co-delegate-invitations/[token]/**`; y los cambios de comprobación de la sección *Dónde se comprueba*.
-**Pruebas:** `tests/unit/club-delegate.test.mjs` (18) y `tests/co-delegados.test.mjs` (21, integración).
+**Código (entrega 2):** `src/_components/delegates-panel.tsx` (la sección Delegados, compartida por el club y el admin), la pestaña "Delegados" de `(club)/club/equipo/page.tsx`, `src/app/delegado/co-delegado/[token]/page.tsx` (aceptar la invitación), el contacto de solo lectura en `(club)/club/ajustes/perfil/page.tsx` (con `isPrincipal` en `_lib/use-my-club.ts`) y la sección "Delegados del equipo" del modal de edición en `(admin)/admin/clubes/page.tsx`.
+**Pruebas:** `tests/unit/club-delegate.test.mjs` (18) y `tests/co-delegados.test.mjs` (21, integración). Las pantallas se verificaron a mano en el navegador (celular) contra una base local: el principal, un co-delegado, la página de aceptar y el contacto de solo lectura.
 **Origen:** pedido del usuario (2026-10-18): poder sumar co-delegados al mismo equipo, con las mismas funciones que el delegado.
 **Toca:** [001](001-autenticacion-y-permisos.md) (permisos del club), [005](005-invitaciones.md) y [006](006-solicitudes-de-equipos.md) (invitaciones y solicitudes que llegan al delegado), [009](009-jugadores-provisionales.md) (invitación de delegado de un equipo temporal, que **no** cambia), [modelo-de-datos.md](modelo-de-datos.md).
 
@@ -117,7 +118,7 @@ Las solicitudes e invitaciones de torneo y las solicitudes de jugadores se lista
 
 ## Entregas
 1. **Modelo, permisos y API** *(implementada)*: migración, `isClubDelegate`, restricción de contacto en el `PATCH`, invitaciones, aceptar, quitar y salir, y los ~12 cambios de comprobación. Pruebas unitarias y de integración.
-2. **Pantallas del delegado y del admin** *(pendiente)*: sección Delegados, página de aceptar y el contacto de solo lectura.
+2. **Pantallas del delegado y del admin** *(implementada)*: sección Delegados, página de aceptar y el contacto de solo lectura.
 
 ## Pruebas
 - **Unitarias:** `isClubDelegate` (principal, co-delegado, otro club, admin), el tope de 3 con invitaciones pendientes, y las reglas de aceptar (un club por persona, correo distinto, vencida, usada).
