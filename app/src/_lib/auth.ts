@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
 import { prisma } from "./prisma";
+import { canDo, type ClubAction } from "./club-delegate";
+import { clubRoleFor } from "./club-delegate-server";
 import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySessionToken } from "./session";
 
 // ─── Contraseñas ────────────────────────────────────────────────
@@ -142,11 +144,21 @@ export async function canManageTournament(user: CurrentUser, tournamentId: strin
   return tournament !== null && tournament.deletedAt === null && tournament.organizerId === user.id;
 }
 
-/** ¿Es el dueño del club (o admin)? Falso si el club no existe. */
+/**
+ * ¿Puede gestionar el club? Lo hacen el admin, el delegado principal y los co-delegados (especificación 014): planilla,
+ * categorías, jugadores, inscripciones, solicitudes y la identidad del club. Falso si el club no existe.
+ */
 export async function canManageClub(user: CurrentUser, clubId: string) {
-  if (isAdmin(user)) return true;
-  const club = await prisma.club.findUnique({ where: { id: clubId }, select: { ownerId: true } });
-  return club?.ownerId === user.id;
+  return canDoOnClub(user, clubId, "manage");
+}
+
+/**
+ * ¿Puede hacer esta acción sobre el club? Según el rol: el contacto público y los co-delegados, solo el principal y el
+ * admin; eliminar y transferir, solo el admin (ver `club-delegate.ts`). Falso si el club no existe.
+ */
+export async function canDoOnClub(user: CurrentUser, clubId: string, action: ClubAction) {
+  if (isAdmin(user)) return true; // el admin puede todo, exista o no el equipo (las rutas ya devuelven 404 después)
+  return canDo(await clubRoleFor(user.id, false, clubId), action);
 }
 
 /** ¿Puede gestionar el partido? Se decide por el organizador de su torneo. */

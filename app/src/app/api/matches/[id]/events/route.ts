@@ -20,7 +20,7 @@ export async function GET(
     }),
     prisma.match.findUnique({
       where: { id },
-      select: { tournament: { select: { organizerId: true } }, homeTeam: { select: { id: true, ownerId: true } }, awayTeam: { select: { id: true, ownerId: true } } },
+      select: { tournament: { select: { organizerId: true } }, homeTeam: { select: { id: true, ownerId: true, coDelegates: { select: { userId: true } } } }, awayTeam: { select: { id: true, ownerId: true, coDelegates: { select: { userId: true } } } } },
     }),
     getCurrentUser(),
   ]);
@@ -29,13 +29,17 @@ export async function GET(
   const staffOrMesa = access?.ok === true;
   // Un menor de 18 sale abreviado ("Luigui F.") salvo para quien lo gestiona: un admin, el organizador del torneo o el delegado de su club.
   const today = new Date().toISOString().slice(0, 10);
-  const ownerOf = (teamId: string | null) => (teamId && match?.homeTeam?.id === teamId ? match.homeTeam.ownerId : teamId && match?.awayTeam?.id === teamId ? match.awayTeam.ownerId : null);
+  // ¿Es la persona delegada (principal o co-delegada, especificación 014) del equipo de la jugada?
+  const delegateOf = (teamId: string | null, userId: string) => {
+    const team = teamId && match?.homeTeam?.id === teamId ? match.homeTeam : teamId && match?.awayTeam?.id === teamId ? match.awayTeam : null;
+    return team !== null && (team.ownerId === userId || team.coDelegates.some((d) => d.userId === userId));
+  };
 
   // Un jugador sale con su nombre; un menor de 18, abreviado, salvo para quien gestiona (ver arriba).
   const nameFor = (player: (typeof events)[number]["player"], teamId: string | null) => {
     if (!player) return null;
     const who = playerIdentity(player);
-    const manages = staffOrMesa || (viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || viewer.id === ownerOf(teamId)));
+    const manages = staffOrMesa || (viewer !== null && (isAdmin(viewer) || viewer.id === match?.tournament.organizerId || delegateOf(teamId, viewer.id)));
     return publicName(who, !manages && isMinorOn(who.birthDate, today));
   };
 

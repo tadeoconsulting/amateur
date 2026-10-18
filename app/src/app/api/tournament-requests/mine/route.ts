@@ -1,6 +1,7 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { requireUser } from "@/_lib/auth";
+import { delegateClubWhere } from "@/_lib/club-delegate-server";
 
 /**
  * Solicitudes e invitaciones **pendientes** de los clubes de quien tiene la sesión,
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const rows = await prisma.tournamentRequest.findMany({
     where: {
       status: "pending",
-      club: { ownerId: auth.user.id },
+      club: delegateClubWhere(auth.user.id), // el principal y los co-delegados ven las mismas solicitudes
       tournament: { deletedAt: null },
       ...(tournamentId ? { tournamentId } : {}),
     },
