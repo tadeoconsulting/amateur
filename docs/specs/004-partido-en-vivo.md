@@ -57,7 +57,7 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 ## Pantallas
 - **`/torneos/:id/en-vivo/:matchId`:** todo sale de la API (marcador, jugadas, hora de inicio), por lo que **una recarga conserva el estado**. Según el estado:
   - *programado:* botón **Iniciar partido**.
-  - *en curso:* cronómetro desde `startedAt`, selector Local/Visitante, las cinco acciones, lista de jugadores del equipo (opcional), **Guardar jugada**, **Deshacer última jugada** y **Finalizar partido** (confirmación en el mismo lugar, sin ventanas emergentes).
+  - *en curso:* cronómetro desde `startedAt`, selector de equipo (dos botones con el nombre y el color de cada equipo, en lugar de "Local" y "Visitante"), las cinco acciones, lista de jugadores del equipo (opcional), **Guardar jugada**, **Deshacer última jugada** y **Finalizar partido** (confirmación en el mismo lugar, sin ventanas emergentes).
   - *finalizado:* solo lectura y **Reabrir para corregir**.
   - La duración mostrada sale de `2 × minutesPerHalf` (70 si el torneo no la definió). El minuto de cada jugada es el minuto transcurrido al guardarla.
 - **`/torneos/:id/resultado/:matchId`:** marcador y crónica real (inicio, jugadas, final).
