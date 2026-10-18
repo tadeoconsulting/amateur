@@ -41,19 +41,19 @@ export async function markFeeStart(userId: string, clubId: string, now = new Dat
 }
 
 /**
- * Genera los meses de cuota que falten de los jugadores activos del club, desde su primer mes de cobro hasta el mes
+ * Genera los meses de cuota que falten de los jugadores activos del club (o de uno solo, `onlyPlayerId`, cuando es él quien mira), desde su primer mes de cobro hasta el mes
  * actual. Es idempotente (la clave única evita duplicados aunque dos pantallas lo pidan a la vez) y cada mes guarda lo que
  * se debía al crearse, así que cambiar la cuota después no reescribe el pasado.
  *
  * Mientras no haya ninguna cuota definida (la del club en 0 y sin montos propios) no genera meses: quedarían congelados
  * en 0 y la cuota que el delegado defina después no los alcanzaría.
  */
-export async function ensureClubFees(clubId: string, now = new Date()) {
+export async function ensureClubFees(clubId: string, now = new Date(), onlyPlayerId?: string) {
   const current = peruMonth(now);
   const { feeCents } = await clubFeeSettings(clubId);
 
   const players = await prisma.playerProfile.findMany({
-    where: { clubId, status: "activo" },
+    where: { clubId, status: "activo", ...(onlyPlayerId ? { id: onlyPlayerId } : {}) },
     select: {
       id: true,
       feeSetting: { select: { clubId: true, monthlyFeeOverride: true, startMonth: true } },

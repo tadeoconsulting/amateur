@@ -185,3 +185,20 @@ export function relativeDayLabel(date: string, today: string): string {
 
 /** "1 presente", "2 presentes". */
 export const countLabel = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * La asistencia de UN jugador, para que él la vea: sus presentes, ausentes y justificadas, su porcentaje y sus últimas
+ * sesiones realizadas con su marca (null = la sesión se pasó lista pero a él no lo marcaron). Recibe las sesiones más
+ * recientes primero. Una cancelada o una a la que nadie marcó no cuenta. Nunca mira las marcas de otros jugadores.
+ */
+export function playerAttendance(sessions: readonly { sessionId: string; status: string; marks: { playerId: string; status: AttendanceStatus }[] }[], playerId: string, recentCount = 8) {
+  const counts: Counts = { presente: 0, ausente: 0, justificado: 0 };
+  const recent: { sessionId: string; status: AttendanceStatus | null }[] = [];
+  for (const s of sessions) {
+    if (s.status === "cancelada" || s.marks.length === 0) continue;
+    const own = s.marks.find((m) => m.playerId === playerId)?.status ?? null;
+    if (own) counts[own] += 1;
+    if (recent.length < recentCount) recent.push({ sessionId: s.sessionId, status: own });
+  }
+  return { ...counts, percent: attendancePercent(counts), recent };
+}

@@ -11,6 +11,8 @@ import { formatWhenDate } from "@/_lib/match-format";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
 import { ClubSwitcher, type PlayerClub } from "../../_components/club-switcher";
+import { MyClubCard } from "../../_components/my-club-card";
+import { useClubProgress } from "@/_lib/club-progress-client";
 
 type TournamentActivity = {
   id: string;
@@ -122,6 +124,7 @@ function JugadorTorneosContent({
   const { data: matches, loading, refetchSilently } = useApi(() =>
     getMatches(activeClub ? { clubId: activeClub.id } : { playerId: userId })
   );
+  const { clubs: progress } = useClubProgress();
 
   // El minuto del partido en vivo avanza solo; sin sesión de tiempo real el resto de la
   // pantalla se actualiza con la suscripción de abajo.
@@ -146,6 +149,8 @@ function JugadorTorneosContent({
 
   const activity = activityByTournament(matches ?? []);
   const club = activeClub;
+  // Lo de su club (entrenamientos, asistencia y pagos), solo del equipo con el que sale hoy.
+  const clubProgress = progress?.find((p) => p.club.id === club?.id) ?? null;
 
   return (
     <div className="w-full pb-8">
@@ -170,8 +175,14 @@ function JugadorTorneosContent({
         ) : null}
       </div>
 
+      {clubProgress && (
+        <div className="mt-4 px-4">
+          <MyClubCard progress={clubProgress} />
+        </div>
+      )}
+
       {activity.length === 0 ? (
-        <div className="flex flex-col items-center px-6 pt-32 text-center">
+        <div className="flex flex-col items-center px-6 pt-24 text-center">
           <h2 className="font-heading text-lg font-bold text-text-primary">Sin actividad</h2>
           <p className="mt-2 text-sm text-text-secondary">
             {club

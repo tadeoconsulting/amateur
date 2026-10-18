@@ -77,6 +77,7 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | | `GET /api/clubs/:id/delegates` | dueño, co-delegado o ADMIN |
 | | `POST /api/clubs/:id/co-delegate-invitations`, `DELETE` de una invitación o de un co-delegado | dueño del club o ADMIN (un co-delegado puede salirse él mismo) |
 | | `GET/POST /api/co-delegate-invitations/:token`, `/accept` | público el resumen; aceptar con sesión o creando la cuenta |
+| | `GET /api/me/club-progreso` (sus entrenamientos, su asistencia y sus pagos, [015](015-gestion-del-club.md)) | sesión; sin ids, solo lo propio; no se guarda en cachés compartidos |
 | | `/api/clubs/:id/gestion/**` (cuotas, pagos, entrenamientos y asistencia, [015](015-gestion-del-club.md)) | dueño del club, co-delegado o ADMIN; es privado: ni el jugador ni otro club lo ven |
 | | `GET/POST /api/clubs/:id/invite-link`, `GET/POST /:id/invite` | dueño del club |
 | Jugadores | `GET /api/players` | sesión (correo y teléfono solo ADMIN) |

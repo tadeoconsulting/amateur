@@ -10,7 +10,7 @@ import { Toast } from "@/_components/toast";
 import { btnSolid } from "@/_components/button-styles";
 import { FeeDetailSheet } from "./_components/fee-detail-sheet";
 import { FeeSettingsSheet } from "./_components/fee-settings-sheet";
-import { FeeStatusChip } from "./_components/fee-status";
+import { FeeStatusChip } from "@/_components/fee-status";
 
 type Filter = "todos" | "por_cobrar" | "pagados";
 

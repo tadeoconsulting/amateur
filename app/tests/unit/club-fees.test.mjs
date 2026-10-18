@@ -21,6 +21,7 @@ import {
   paidCents,
   parseCents,
   paymentError,
+  paymentProgress,
   peruDate,
   peruMonth,
 } from "../../src/_lib/club-fees.ts";
@@ -235,5 +236,23 @@ describe("textos para la pantalla", () => {
     assert.equal(formatSolesAmount(80), "S/ 80");
     assert.equal(formatSolesAmount(80.5), "S/ 80,50");
     assert.equal(formatSolesAmount(0.1 + 0.2), "S/ 0,30");
+  });
+});
+
+describe("progreso de pagos de un jugador", () => {
+  test("cuenta los meses con cuota pagados, lo que debe y lo ya vencido", () => {
+    const months = [
+      { month: "2026-07", dueCents: 8000, paidCents: 8000 },
+      { month: "2026-08", dueCents: 8000, paidCents: 8000 },
+      { month: "2026-09", dueCents: 8000, paidCents: 3000 },
+      { month: "2026-10", dueCents: 8000, paidCents: 0 },
+    ];
+    const p = paymentProgress(months, 5, "2026-10-04");
+    assert.deepEqual(p, { dueMonths: 4, paidMonths: 2, owedCents: 13000, overdueCents: 5000, overdueMonths: 1 });
+  });
+
+  test("los meses sin cuota no cuentan ni como pagados ni como exigibles", () => {
+    const p = paymentProgress([{ month: "2026-10", dueCents: 0, paidCents: 0 }], 5, "2026-10-30");
+    assert.deepEqual(p, { dueMonths: 0, paidMonths: 0, owedCents: 0, overdueCents: 0, overdueMonths: 0 });
   });
 });

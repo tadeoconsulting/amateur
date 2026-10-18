@@ -15,6 +15,7 @@ import {
   isDuration,
   isTime,
   nextAttendance,
+  playerAttendance,
   scheduleError,
   scheduleStarts,
   timeRange,
@@ -184,4 +185,38 @@ test("countLabel usa el singular con 1", () => {
   assert.equal(countLabel(1, "presente", "presentes"), "1 presente");
   assert.equal(countLabel(0, "presente", "presentes"), "0 presentes");
   assert.equal(countLabel(3, "ausente", "ausentes"), "3 ausentes");
+});
+
+describe("asistencia de un jugador", () => {
+  const mark = (playerId, status) => ({ playerId, status });
+  const sessions = [
+    { sessionId: "s4", status: "programada", marks: [mark("p1", "presente"), mark("p2", "ausente")] },
+    { sessionId: "s3", status: "cancelada", marks: [mark("p1", "ausente")] },
+    { sessionId: "s2", status: "programada", marks: [] }, // nadie marcó: no se pasó lista
+    { sessionId: "s1", status: "programada", marks: [mark("p2", "presente"), mark("p1", "justificado")] },
+    { sessionId: "s0", status: "programada", marks: [mark("p2", "presente")] }, // a p1 no lo marcaron
+  ];
+
+  test("cuenta solo las marcas propias y no las de otros", () => {
+    const a = playerAttendance(sessions, "p1");
+    assert.deepEqual([a.presente, a.ausente, a.justificado, a.percent], [1, 0, 1, 100]);
+    const b = playerAttendance(sessions, "p2");
+    assert.deepEqual([b.presente, b.ausente, b.justificado, b.percent], [2, 1, 0, 67]);
+  });
+
+  test("las recientes son las sesiones realizadas, con null donde no lo marcaron", () => {
+    const a = playerAttendance(sessions, "p1");
+    assert.deepEqual(a.recent, [
+      { sessionId: "s4", status: "presente" },
+      { sessionId: "s1", status: "justificado" },
+      { sessionId: "s0", status: null },
+    ]);
+  });
+
+  test("respeta el tope de recientes y un jugador sin marcas queda sin porcentaje", () => {
+    assert.equal(playerAttendance(sessions, "p1", 2).recent.length, 2);
+    const none = playerAttendance(sessions, "nadie");
+    assert.equal(none.percent, null);
+    assert.deepEqual([none.presente, none.ausente, none.justificado], [0, 0, 0]);
+  });
 });

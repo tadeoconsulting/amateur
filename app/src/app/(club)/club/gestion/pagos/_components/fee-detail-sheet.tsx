@@ -5,7 +5,7 @@ import { formatSolesAmount, isMonth, monthLabel, parseCents } from "@/_lib/club-
 import { FeesError, feesRequest, shortDate, type PlayerFeeHistory } from "@/_lib/club-fees-client";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
-import { FeeStatusChip } from "./fee-status";
+import { FeeStatusChip } from "@/_components/fee-status";
 import { Sheet } from "@/_components/sheet";
 
 const inputClass =

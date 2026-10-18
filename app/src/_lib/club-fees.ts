@@ -190,3 +190,13 @@ export function monthLabel(month: string): string {
 
 /** "2026-10" → "octubre", para frases como "la cuota de octubre". */
 export const monthName = (month: string) => MONTH_NAMES[Number(month.slice(5, 7)) - 1] ?? month;
+
+/**
+ * El progreso de pagos de UN jugador, para que él lo vea: de los meses con cuota (los sin cuota no cuentan), cuántos tiene
+ * pagados, y lo que debe en total y lo ya vencido.
+ */
+export function paymentProgress(months: readonly FeeMonth[], dueDay: number, today: string) {
+  const withFee = months.filter((m) => m.dueCents > 0);
+  const paidMonths = withFee.filter((m) => feeStatus(m.dueCents, m.paidCents) === "pagado").length;
+  return { dueMonths: withFee.length, paidMonths, ...debtSummary(months, dueDay, today) };
+}
