@@ -34,11 +34,11 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 | `tarjeta_amarilla` | Amarilla | no | `yellowCards` |
 | `tarjeta_roja` | Roja | no | `redCards` |
 | `sustitucion` | Cambio (`playerId` sale, `playerInId` entra) | no | — |
-| `penal` | Penal | **no** | — |
+| `penal` | Penal (con resultado: convertido, atajado o errado) | **sí, solo si se convirtió** (`scored: true`), +1 al equipo | `goals`, solo si se convirtió |
 
 ### Registrar (`POST /api/matches/:id/events`)
 8. **Solo con el partido `en_curso`** (`409` "inícialo antes de registrar jugadas").
-9. Validaciones (`400`): `type` de la lista (el nombre de la pantalla `amarilla` no es válido); `minute` entero 0–200; `detail` de hasta 200 caracteres; `teamId`, si viene, debe ser uno de los **dos equipos de ese partido**; un `gol` **exige** `teamId`; `playerId` exige `teamId` y el jugador debe **pertenecer a ese equipo**.
+9. Validaciones (`400`): `type` de la lista (el nombre de la pantalla `amarilla` no es válido); `minute` entero 0–200; `detail` de hasta 200 caracteres; `teamId`, si viene, debe ser uno de los **dos equipos de ese partido**; un `gol` **exige** `teamId`; un `penal` lleva su resultado: `scored: true` (convertido) o `scored: false` con `detail` `"atajado"` o `"errado"` (`400` si falta el detail), y entonces también exige `teamId`. Sin `scored` es un penal "a secas" (clientes anteriores) y no cambia nada; `playerId` exige `teamId` y el jugador debe **pertenecer a ese equipo**.
 10. La jugada, el marcador y las estadísticas se guardan **en una transacción**, con incrementos atómicos: seis goles simultáneos dan seis.
 11. Si el marcador estaba en `null`, se pone en 0 antes de sumar.
 
@@ -50,14 +50,14 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
 `GET /api/matches/:id/events` (público) devuelve las jugadas ordenadas por minuto y luego por orden de registro, con `playerId`, `playerName`, `teamId` y `detail`. `GET /api/matches/:id` incluye las jugadas, `startedAt` y el torneo con `minutesPerHalf`.
 
 ## Tablas (se calculan al pedirlas, no se guardan)
-- **Posiciones** (`GET /api/tournaments/:id/standings?group=`): cuenta solo partidos `finalizado`. Victoria 3, empate 1, derrota 0. Orden: puntos, diferencia de gol, goles a favor. Un partido en juego **no** cuenta en la tabla oficial (la que usan las llaves y la clasificación).
+- **Posiciones** (`GET /api/tournaments/:id/standings?group=`): cuenta solo partidos `finalizado`. Victoria 3, empate 1, derrota 0. Orden: puntos, diferencia de gol, goles a favor. La tabla pública completa muestra PJ, G, E, P, **GF y GC** (goles a favor y en contra, solo en pantalla de escritorio), DG y Pts; la compacta del panel lateral, solo PJ, DG y Pts. Un partido en juego **no** cuenta en la tabla oficial (la que usan las llaves y la clasificación).
 - **Tabla en vivo** (`…/standings?live=1`, la que piden las pantallas del fan, el jugador, el club y el organizador): suma además los partidos `en_curso` **con el marcador de ese momento, como si terminaran así**. Es una proyección: no se guarda nada, y al finalizar el partido la oficial queda igual a lo que se veía. Cada fila trae su lugar de ahora (`position`), el oficial (`officialPosition`), si juega ahora (`live`) y cuántos puntos le da el marcador de ahora (`pointsDelta`: 3, 1 o 0). En pantalla: aviso "Tabla en vivo", ▲/▼ con los lugares que sube o baja, un punto rojo en los equipos que juegan, "+3" junto a sus puntos y, en la página del club, la etiqueta "En vivo" en su posición. Un partido que quedó en curso sin que nadie lo finalizara (ver `matchClock`) **no** mueve la tabla. Las llaves de una liga con playoffs no entran (como en la oficial). Lógica pura: `computeLiveStandings` y `placeChanges` en `_lib/standings.ts`, con pruebas. Se actualiza solo con el tiempo real (cada gol o cambio de estado).
 - **Goleadores** (`GET /api/tournaments/:id/scorers`): jugadores con al menos un gol, de mayor a menor, según `PlayerStats`.
 
 ## Pantallas
 - **`/torneos/:id/en-vivo/:matchId`:** todo sale de la API (marcador, jugadas, hora de inicio), por lo que **una recarga conserva el estado**. Según el estado:
   - *programado:* botón **Iniciar partido**.
-  - *en curso:* cronómetro desde `startedAt`, selector Local/Visitante, las cinco acciones, lista de jugadores del equipo (opcional), **Guardar jugada**, **Deshacer última jugada** y **Finalizar partido** (confirmación en el mismo lugar, sin ventanas emergentes).
+  - *en curso:* cronómetro desde `startedAt`, selector de equipo (dos botones con el nombre y el color de cada equipo, en lugar de "Local" y "Visitante"), las cinco acciones, lista de jugadores del equipo (opcional), **Guardar jugada**, **Deshacer última jugada** y **Finalizar partido**. Los dos botones van en una barra fija **abajo**, al alcance del pulgar y a todo el ancho (48 px o más de alto): Guardar jugada y, debajo, Finalizar partido, con confirmación en el mismo lugar, sin ventanas emergentes. Un partido decisivo empatado ofrece ahí mismo "Ir a tiempo extra" o "Ir a penales" en lugar de Finalizar. En el descanso y en la tanda de penales la barra queda solo con Finalizar partido.
   - *finalizado:* solo lectura y **Reabrir para corregir**.
   - La duración mostrada sale de `2 × minutesPerHalf` (70 si el torneo no la definió). El minuto de cada jugada es el minuto transcurrido al guardarla.
 - **`/torneos/:id/resultado/:matchId`:** marcador y crónica real (inicio, jugadas, final).
@@ -89,7 +89,7 @@ Un partido con miles de espectadores hace que **cada gol** dispare, por cada uno
 - **Quedó fuera:** `GET /api/tournaments/:id/teams/:clubId` (la ficha del club muestra jugadores y depende de quién mira) y las pantallas con sesión, a propósito.
 
 ## Limitaciones conocidas
-- **Un penal convertido hay que registrarlo como gol.** El botón "Penal" solo deja constancia en la crónica y no cambia el marcador. *Decisión pendiente.*
+- **El penal es una jugada del partido, no necesariamente un gol (OBS-45).** Al registrarlo se elige cómo terminó: *Convertido* suma al marcador y a los goles del jugador (y se ve como un gol); *Atajado* o *Errado* quedan en la crónica sin tocar nada. Deshacerlo revierte lo que aplicó. Los penales viejos, sin resultado, siguen como "¡Penal!" sin efecto. No confundir con la tanda de definición ([007](007-fixture-eliminacion-copa-relampago.md)), que tiene su propio conteo.
 - **Sin alineaciones:** `matchesPlayed` de los goleadores queda en 0 y `assists` no se registra.
 - **Quién gestiona el partido:** el organizador del torneo, el admin y, desde la especificación [011](011-mesa.md), la **mesa** asignada (solo el día de juego, sin reabrir partidos ni tocar el marcador a mano).
 - **Color del estado:** en vivo **rojo**, en el descanso **negro** y finalizado **gris**, en todas las pantallas (barra y reloj de la pantalla en vivo, etiqueta de la ficha, filas de partidos, llaves, cronología). Una sola definición: `_lib/match-tone.ts` (`matchTone`, con pruebas). Un partido por jugarse conserva su color de siempre.

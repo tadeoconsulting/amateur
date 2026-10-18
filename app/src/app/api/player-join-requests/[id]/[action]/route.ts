@@ -1,3 +1,4 @@
+import { isClubDelegate } from "@/_lib/club-delegate-server";
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { isAdmin, requireUser } from "@/_lib/auth";
@@ -26,12 +27,13 @@ export async function POST(
 
   const found = await prisma.playerJoinRequest.findUnique({
     where: { id },
-    select: { id: true, status: true, userId: true, clubId: true, club: { select: { ownerId: true } } },
+    select: { id: true, status: true, userId: true, clubId: true },
   });
   if (!found) return Response.json({ error: "Solicitud no encontrada" }, { status: 404 });
 
+  // Del lado del club responden el principal y los co-delegados (especificación 014).
   const allowed =
-    isAdmin(user) || (action === "cancel" ? found.userId === user.id : found.club.ownerId === user.id);
+    isAdmin(user) || (action === "cancel" ? found.userId === user.id : await isClubDelegate(user.id, found.clubId));
   if (!allowed) return Response.json({ error: "No tienes permiso para esta acción" }, { status: 403 });
 
   if (found.status !== "pending") {

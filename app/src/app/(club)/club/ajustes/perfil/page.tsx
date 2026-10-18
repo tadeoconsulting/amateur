@@ -10,7 +10,7 @@ import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
 
 export default function ClubPerfilPage() {
-  const { club, loading: loadingClub } = useMyClub();
+  const { club, isPrincipal, loading: loadingClub } = useMyClub();
   const [loading, setLoading] = useState(true);
   const [equipo, setEquipo] = useState("");
   const [nombreCorto, setNombreCorto] = useState("");
@@ -57,9 +57,12 @@ export default function ClubPerfilPage() {
           name: equipo.trim(),
           shortName: nombreCorto.trim(),
           color,
-          delegadoNombre: delegadoNombre.trim() || null,
-          delegadoTel: delegadoTel.trim() || null,
-          delegadoEmail: delegadoEmail.trim() || null,
+          // El contacto público del delegado lo cambia solo el principal: a un co-delegado la API se lo rechazaría.
+          ...(isPrincipal && {
+            delegadoNombre: delegadoNombre.trim() || null,
+            delegadoTel: delegadoTel.trim() || null,
+            delegadoEmail: delegadoEmail.trim() || null,
+          }),
         }),
       });
       if (!res.ok) {
@@ -195,13 +198,20 @@ export default function ClubPerfilPage() {
           </div>
         </div>
 
+        {!isPrincipal && (
+          <p role="note" className="rounded-lg bg-btn-regular px-3 py-2 text-sm text-text-primary">
+            Eres co-delegado: el contacto del delegado lo cambia el delegado principal.
+          </p>
+        )}
+
         <div>
           <label className="text-sm text-text-secondary">Nombre del delegado</label>
           <input
             type="text"
             value={delegadoNombre}
             onChange={(e) => setDelegadoNombre(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
+            readOnly={!isPrincipal}
+            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary read-only:text-text-secondary focus:border-brand-900 focus:outline-none"
           />
         </div>
 
@@ -211,7 +221,8 @@ export default function ClubPerfilPage() {
             type="tel"
             value={delegadoTel}
             onChange={(e) => setDelegadoTel(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
+            readOnly={!isPrincipal}
+            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary read-only:text-text-secondary focus:border-brand-900 focus:outline-none"
           />
         </div>
 
@@ -221,7 +232,8 @@ export default function ClubPerfilPage() {
             type="email"
             value={delegadoEmail}
             onChange={(e) => setDelegadoEmail(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
+            readOnly={!isPrincipal}
+            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary read-only:text-text-secondary focus:border-brand-900 focus:outline-none"
           />
         </div>
 

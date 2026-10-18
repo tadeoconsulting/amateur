@@ -16,15 +16,16 @@ import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import { SubTabs } from "@/_components/sub-tabs";
+import { ALL_CATEGORIES, categoriesOf, categoryOf, filterByCategory } from "@/_lib/tournament-category";
 
 type MainTab = "mis_torneos" | "solicitudes";
-type CategoryTab = "libre" | "sub18";
 
 function ClubTorneosContent({ clubId }: { clubId: string }) {
   // ?tab=solicitudes abre directo esa pestaña (por ejemplo, desde "Buscar torneo").
   const initialTab: MainTab = useSearchParams().get("tab") === "solicitudes" ? "solicitudes" : "mis_torneos";
   const [mainTab, setMainTab] = useState<MainTab>(initialTab);
-  const [categoryTab, setCategoryTab] = useState<CategoryTab>("libre");
+  // La categoría elegida en "Mis torneos": las pestañas salen de los torneos del club (ver tournament-category.ts).
+  const [categoryTab, setCategoryTab] = useState<string>(ALL_CATEGORIES);
   const [busy, setBusy] = useState<{ id: string; action: RequestAction } | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   // Antes pedía TODOS los torneos de la plataforma (sin clubId) y filtraba solo por estado, así
@@ -57,6 +58,10 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
   // equipos inscritos de todas formas. Antes exigía en_curso/finalizado, ocultando un torneo
   // donde el club ya fue aceptado pero el organizador aún no dio inicio ("inscripcion").
   const clubTournaments = tournaments.filter((t) => t.status !== "draft");
+  // Con una sola categoría no hay nada que elegir y la barra no se muestra. Si la elegida ya no existe, se ven todas.
+  const categories = categoriesOf(clubTournaments);
+  const activeCategory = categories.includes(categoryTab) ? categoryTab : ALL_CATEGORIES;
+  const visibleTournaments = filterByCategory(clubTournaments, activeCategory);
 
   return (
     <div className="flex min-h-dvh flex-col pb-4">
@@ -115,22 +120,19 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
         </button>
       </div>
 
-      {/* Category sub-tabs */}
-      <SubTabs
-        label="Categoría"
-        mobile="start"
-        value={categoryTab}
-        onChange={setCategoryTab}
-        tabs={[
-          { key: "libre", label: "Libre" },
-          { key: "sub18", label: "Sub 18" },
-        ]}
-      />
-
       {/* Mis torneos content */}
+      {mainTab === "mis_torneos" && categories.length > 1 && (
+        <SubTabs
+          label="Categoría"
+          mobile="start"
+          value={activeCategory}
+          onChange={setCategoryTab}
+          tabs={[{ key: ALL_CATEGORIES, label: "Todas" }, ...categories.map((c) => ({ key: c, label: c }))]}
+        />
+      )}
       {mainTab === "mis_torneos" && (
         <div className="mt-4 flex flex-col gap-3 px-4">
-          {clubTournaments.map((t) => (
+          {visibleTournaments.map((t) => (
             <Link
               key={t.id}
               href={`/club/torneos/${t.id}`}
@@ -155,7 +157,7 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
                 <div className="min-w-0 flex-1">
                   <h3 className="font-heading text-sm font-bold text-text-primary">{t.name}</h3>
                   <p className="mt-0.5 font-body text-xs text-text-secondary">
-                    {t.category || "Libre"} | {new Date(t.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
+                    {categoryOf(t)} | {new Date(t.startDate).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}
                   </p>
                   <div className="mt-2 flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">

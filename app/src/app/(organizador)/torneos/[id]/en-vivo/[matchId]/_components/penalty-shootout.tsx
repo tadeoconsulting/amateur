@@ -43,7 +43,7 @@ function AttemptRow({ attempts, minSlots }: { attempts: Attempt[]; minSlots: num
 /**
  * Tanda de penales (especificación 007): reemplaza al selector de acciones mientras el
  * partido está en fase "penales". Cada intento es un evento `penal_definicion`; el
- * organizador elige el equipo (mismo selector Local/Visitante de arriba) y si convirtió o
+ * organizador elige el equipo (el mismo selector de equipos de arriba) y si convirtió o
  * erró. No hace falta alternar en un orden estricto: se registra lo que realmente pasó.
  */
 export function PenaltyShootout({

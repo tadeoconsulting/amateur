@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
+import { DelegatesPanel } from "@/_components/delegates-panel";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
 import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
@@ -606,6 +607,14 @@ function EditClubModal({
             {/* La contraseña es de quien dirige el club, no del club. En un equipo temporal el "dueño" es el
                 organizador que lo cargó: su contraseña no se restablece desde acá. */}
             <ResetPassword userId={club.ownerId} userLabel={`${club.owner.firstName} ${club.owner.lastName} (${club.isTemporary ? "organizador del equipo temporal" : "delegado de"} ${club.name})`} />
+            {/* Los co-delegados (especificación 014): el admin los suma y los quita igual que el principal. Un equipo
+                temporal todavía no tiene delegado. */}
+            {!club.isTemporary && (
+              <div className="mt-6 border-t border-border-primary pt-4">
+                <h3 className="font-heading text-sm font-bold text-text-primary">Delegados del equipo</h3>
+                <DelegatesPanel clubId={club.id} />
+              </div>
+            )}
           </div>
         )}
 

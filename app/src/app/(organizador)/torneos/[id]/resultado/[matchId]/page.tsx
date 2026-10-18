@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, MATCH_PHASES, isEventType, isMatchPhase, type MatchPhase } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, MATCH_PHASES, isEventType, isMatchPhase, penalTitle, type MatchPhase } from "@/_lib/match-live";
 import { MatchSheet, useWideSheet } from "@/_components/match-sheet";
 import { ClubCrest } from "@/_components/club-crest";
 
@@ -178,11 +178,12 @@ export default function ResultadoPage() {
         const team = isAway ? match.awayTeam?.name ?? "Por definir" : match.homeTeam?.name ?? "Por definir";
         const row: TimelineEvent = {
           minute: `${e.minute}'`,
-          type: ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
-          title: isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
+          // Un penal convertido es un gol: se ve y suena como uno.
+          type: e.type === "penal" && e.scored === true ? "gol" : ACTION_FROM_EVENT_TYPE[e.type] ?? "comentario",
+          title: e.type === "penal" ? penalTitle(e.scored, e.detail) : isEventType(e.type) ? EVENT_TITLES[e.type] : e.type,
           description: e.type === "sustitucion" && e.playerName ? `Sale ${e.playerName}${e.playerInName ? ` · Entra ${e.playerInName}` : ""} - ${team}` : e.playerName ? `${e.playerName} - ${team}` : team,
           teamColor: (isAway ? match.awayTeam?.color : match.homeTeam?.color) ?? "#1B1B1B",
-          detail: e.detail ?? undefined,
+          detail: e.type === "penal" ? undefined : e.detail ?? undefined,
         };
         // El descanso va entre la última jugada del primer tiempo y la primera del segundo.
         const firstOfSecond = phase === "regulacion" && e.half === 2 && list[j - 1]?.half !== 2;

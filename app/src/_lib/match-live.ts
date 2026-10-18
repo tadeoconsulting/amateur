@@ -34,15 +34,41 @@ export type EventType = (typeof EVENT_TYPES)[number];
 
 export const isEventType = (value: unknown): value is EventType => (EVENT_TYPES as readonly unknown[]).includes(value);
 
-/** Solo el gol cambia el marcador. */
-export const changesScore = (type: EventType) => type === "gol";
+/** El gol cambia el marcador; un penal también, pero solo si se convirtió (`scored === true`): un penal atajado o errado
+ * es una jugada del partido, no un gol. Un penal viejo sin resultado (`scored` nulo) nunca sumó nada. */
+export const changesScore = (type: EventType, scored?: boolean | null) => type === "gol" || (type === "penal" && scored === true);
 
-/** Estadística de jugador que sube con cada tipo de evento (null si no cuenta ninguna). */
-export function statFor(type: EventType): "goals" | "yellowCards" | "redCards" | null {
-  if (type === "gol") return "goals";
+/** Estadística de jugador que sube con cada evento (null si no cuenta ninguna). Un penal convertido es gol del que lo patea. */
+export function statFor(type: EventType, scored?: boolean | null): "goals" | "yellowCards" | "redCards" | null {
+  if (type === "gol" || (type === "penal" && scored === true)) return "goals";
   if (type === "tarjeta_amarilla") return "yellowCards";
   if (type === "tarjeta_roja") return "redCards";
   return null;
+}
+
+/** Cómo terminó un penal del juego: convertido (gol), atajado por el arquero o errado (afuera, palo). */
+export const PENAL_OUTCOMES = ["convertido", "atajado", "errado"] as const;
+export type PenalOutcome = (typeof PENAL_OUTCOMES)[number];
+
+/** El resultado de un penal guardado (`scored` + `detail`), o null si es un penal viejo sin resultado. */
+export function penalOutcome(scored: boolean | null | undefined, detail: string | null | undefined): PenalOutcome | null {
+  if (scored === true) return "convertido";
+  if (scored === false) return detail === "atajado" ? "atajado" : "errado";
+  return null;
+}
+
+/** Lo que se guarda de un resultado de penal. */
+export function penalFields(outcome: PenalOutcome): { scored: boolean; detail: string | null } {
+  return outcome === "convertido" ? { scored: true, detail: null } : { scored: false, detail: outcome };
+}
+
+/** Título de la crónica de un penal según cómo terminó. */
+export function penalTitle(scored: boolean | null | undefined, detail: string | null | undefined) {
+  const outcome = penalOutcome(scored, detail);
+  if (outcome === "convertido") return "¡Penal convertido!";
+  if (outcome === "atajado") return "Penal atajado";
+  if (outcome === "errado") return "Penal errado";
+  return EVENT_TITLES.penal;
 }
 
 /** El evento de la pantalla en vivo → el tipo que se guarda. */

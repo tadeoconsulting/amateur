@@ -396,7 +396,7 @@ function JoinPanel({
   onChanged: () => void;
   notify: Notify;
 }) {
-  const { data: clubs } = useApi(() => getClubs({ ownerId: user.id }));
+  const { data: clubs } = useApi(() => getClubs({ delegateId: user.id }));
   const { data: mine, refetch: refetchMine } = useApi(() => getMyRequests({ tournamentId: tournament.id }));
   const [chosen, setChosen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);

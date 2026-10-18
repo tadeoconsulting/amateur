@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 
-export type MyClub = { id: string; name: string; shortName: string; logoUrl: string | null; color: string | null };
+export type MyClub = { id: string; name: string; shortName: string; logoUrl: string | null; color: string | null; ownerId?: string };
 
 /**
- * El club de quien tiene la sesión (si gestiona varios, el primero).
+ * El club de quien tiene la sesión, como delegado principal o co-delegado (si gestiona varios, el primero).
  * `club` es null si todavía no tiene uno; `loading` es true mientras se averigua.
  */
 export function useMyClub() {
@@ -17,7 +17,7 @@ export function useMyClub() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetch(`/api/clubs?ownerId=${user.id}`)
+    fetch(`/api/clubs?delegateId=${user.id}`)
       .then((r) => r.json())
       .then((clubs: MyClub[]) => {
         if (!cancelled) setClub(Array.isArray(clubs) && clubs.length > 0 ? clubs[0] : null);
@@ -31,5 +31,8 @@ export function useMyClub() {
     };
   }, [user]);
 
-  return { club, loading: loadingAuth || (!!user && loadedFor !== user.id) };
+  // El delegado principal es el dueño del club; un co-delegado (especificación 014) gestiona lo mismo, salvo el contacto
+  // público del delegado, que cambia solo el principal.
+  const isPrincipal = !!club && !!user && club.ownerId === user.id;
+  return { club, isPrincipal, loading: loadingAuth || (!!user && loadedFor !== user.id) };
 }

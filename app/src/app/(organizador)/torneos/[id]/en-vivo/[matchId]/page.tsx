@@ -5,7 +5,7 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
-import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, isEventType, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
+import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, PENAL_OUTCOMES, isEventType, penalFields, penalTitle, type PenalOutcome, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
 import { ClubCrest } from "@/_components/club-crest";
 
@@ -25,7 +25,12 @@ type MatchEvent = {
   playerInName: string | null;
   /** Quién la registró (solo lo ve quien gestiona el partido). */
   recordedBy: string | null;
+  /** Solo en un penal del juego: cómo terminó (null en uno viejo, sin resultado). */
+  scored: boolean | null;
+  detail: string | null;
 };
+
+const PENAL_OUTCOME_LABELS: Record<PenalOutcome, string> = { convertido: "Convertido", atajado: "Atajado", errado: "Errado" };
 
 export default function EnVivoPage() {
   const params = useParams<{ id: string; matchId: string }>();
@@ -61,7 +66,10 @@ export default function EnVivoPage() {
   // Un cambio tiene dos jugadores: primero quien sale (`selectedPlayer`) y después quien entra.
   const [selectedPlayerIn, setSelectedPlayerIn] = useState<string | null>(null);
   const [choosingIn, setChoosingIn] = useState(false);
+  // Un penal es una jugada con resultado: solo el convertido cuenta como gol.
+  const [penalResult, setPenalResult] = useState<PenalOutcome>("convertido");
   const resetPick = () => {
+    setPenalResult("convertido");
     setSelectedPlayer(null);
     setSelectedPlayerIn(null);
     setChoosingIn(false);
@@ -129,6 +137,8 @@ export default function EnVivoPage() {
     playerName: e.playerName,
     playerInName: e.playerInName ?? null,
     recordedBy: e.recordedBy ?? null,
+    scored: e.type === "penal" ? e.scored : null,
+    detail: e.detail,
   }));
 
   const homeScore = match.homeScore ?? 0;
@@ -251,6 +261,7 @@ export default function EnVivoPage() {
       teamId: activeClubId,
       playerId: selectedPlayer,
       ...(isCambio && selectedPlayerIn && { playerInId: selectedPlayerIn }),
+      ...(selectedAction === "penal" && penalFields(penalResult)),
     });
     if (ok) {
       setSelectedAction(null);
@@ -320,7 +331,7 @@ export default function EnVivoPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3">
+      <header className="flex items-center px-4 py-3">
         {/* Antes usaba router.back(): deshacía cada paso de navegación (partido → torneo →
             lista...) en vez de ir a un destino fijo, así que finalizar un partido y volver
             atrás dejaba a la persona haciendo varios clics para llegar a Partidos. */}
@@ -334,44 +345,6 @@ export default function EnVivoPage() {
           Volver
         </button>
 
-        {/* Terminar el partido: se pide confirmación en el mismo lugar, sin ventanas emergentes.
-            Un partido decisivo que sigue empatado ofrece pasar de fase en su lugar. */}
-        {live &&
-          (confirmEnd ? (
-            <div className="flex items-center gap-3">
-              <span className="font-body text-xs text-text-secondary">
-                {inFirstHalf ? "¿Finalizar en el 1.er tiempo?" : onBreak ? "¿Finalizar en el descanso?" : "¿Finalizar?"}
-              </span>
-              <button
-                onClick={() => setStatus("finalizado")}
-                disabled={saving}
-                className="cursor-pointer font-heading text-sm font-bold text-text-primary underline disabled:opacity-40"
-              >
-                Sí
-              </button>
-              <button
-                onClick={() => setConfirmEnd(false)}
-                className="cursor-pointer font-heading text-sm font-semibold text-text-secondary underline"
-              >
-                No
-              </button>
-            </div>
-          ) : showPhaseButton ? (
-            <button
-              onClick={advancePhase}
-              disabled={saving}
-              className="cursor-pointer rounded-lg bg-surface-secondary px-3 py-1.5 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
-            >
-              {nextPhaseLabel}
-            </button>
-          ) : (
-            <button
-              onClick={() => setConfirmEnd(true)}
-              className="cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-bold text-text-primary transition-colors hover:bg-btn-regular"
-            >
-              Finalizar partido
-            </button>
-          ))}
       </header>
 
       {/* Match card with scores */}
@@ -526,28 +499,29 @@ export default function EnVivoPage() {
         </button>
       )}
 
-      {/* Team toggle */}
+      {/* Team toggle: cada botón lleva el color y el nombre de su equipo (antes "Local" y "Visitante") */}
       <div className={`mx-4 mb-5 flex gap-3${live && !onBreak ? "" : " hidden"}`}>
-        <button
-          onClick={() => { setActiveTeam("local"); resetPick(); }}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
-            activeTeam === "local"
-              ? "bg-surface-secondary text-text-invert"
-              : "border border-border-primary text-text-primary"
-          }`}
-        >
-          Local
-        </button>
-        <button
-          onClick={() => { setActiveTeam("visitante"); resetPick(); }}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
-            activeTeam === "visitante"
-              ? "bg-surface-secondary text-text-invert"
-              : "border border-border-primary text-text-primary"
-          }`}
-        >
-          Visitante
-        </button>
+        {(
+          [
+            { side: "local", club: match.homeTeam, role: "Local" },
+            { side: "visitante", club: match.awayTeam, role: "Visitante" },
+          ] as const
+        ).map(({ side, club, role }) => (
+          <button
+            key={side}
+            onClick={() => { setActiveTeam(side); resetPick(); }}
+            aria-pressed={activeTeam === side}
+            title={`${club.name} (${role})`}
+            className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 font-heading text-sm font-bold leading-tight transition-colors ${
+              activeTeam === side
+                ? "bg-surface-secondary text-text-invert"
+                : "border border-border-primary text-text-primary"
+            }`}
+          >
+            <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/40" style={{ backgroundColor: club.color || "#6B7280" }} />
+            <span className="line-clamp-2 text-left">{club.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Action icons (no aplican en la tanda de penales: ver PenaltyShootout más abajo) */}
@@ -587,6 +561,27 @@ export default function EnVivoPage() {
       ) : selectedAction ? (
         <div className="flex-1 px-4 pb-2">
           <div className="flex flex-col">
+            {selectedAction === "penal" && (
+              <div className="mb-2 px-1 py-2">
+                <p className="mb-2 font-heading text-sm font-bold text-text-primary">¿Cómo terminó el penal?</p>
+                <div className="flex gap-2">
+                  {PENAL_OUTCOMES.map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      onClick={() => setPenalResult(o)}
+                      aria-pressed={penalResult === o}
+                      className={`flex-1 cursor-pointer rounded-lg py-2 font-heading text-xs font-bold transition-colors ${
+                        penalResult === o ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
+                      }`}
+                    >
+                      {PENAL_OUTCOME_LABELS[o]}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 font-body text-xs text-text-secondary">Solo el penal convertido suma al marcador y a los goles del jugador.</p>
+              </div>
+            )}
             {isCambio && (
               <div className="mb-1 flex items-center justify-between gap-3 px-1 py-2">
                 <p className="font-heading text-sm font-bold text-text-primary">{pickingIn ? "¿Quién entra?" : "¿Quién sale?"}</p>
@@ -665,7 +660,7 @@ export default function EnVivoPage() {
         <div className="flex-1 px-4">
           <div className="flex flex-col gap-3">
             {events.map((event, i) => {
-              const isGol = event.type === "gol";
+              const isGol = event.type === "gol" || (event.type === "penal" && event.scored === true);
               // El fondo de un gol es el color del equipo que lo metió (antes siempre azul,
               // sin importar de quién era), para poder distinguir de un vistazo quién anota.
               const teamColor = (event.team === "local" ? match.homeTeam?.color : match.awayTeam?.color) ?? "#1B1B1B";
@@ -754,7 +749,7 @@ export default function EnVivoPage() {
                           </button>
                         )}
                         <span className="font-heading text-sm font-bold">
-                          {isEventType(event.rawType) ? EVENT_TITLES[event.rawType] : "Cambio"}
+                          {event.type === "penal" && event.rawType === "penal" ? penalTitle(event.scored, event.detail) : isEventType(event.rawType) ? EVENT_TITLES[event.rawType] : "Cambio"}
                         </span>
                       </div>
                       <p className={`font-body text-xs ${descStyle}`}>
@@ -783,19 +778,69 @@ export default function EnVivoPage() {
 
       {error && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
 
-      {/* Bottom button (la tanda de penales tiene sus propios botones, ver PenaltyShootout) */}
-      <div className={`sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3${live && !onBreak && match.phase !== "penales" ? "" : " hidden"}`}>
-        <button
-          onClick={handleSave}
-          className={`w-full cursor-pointer rounded-lg py-3.5 font-heading text-sm font-bold transition-colors ${
-            selectedAction && !waitingIn
-              ? "bg-surface-secondary text-text-invert hover:bg-brand-700"
-              : "bg-surface-secondary/50 text-text-invert/50 cursor-not-allowed"
-          }`}
-        >
-          {goToIn ? "Siguiente: ¿quién entra?" : "Guardar jugada"}
-        </button>
-      </div>
+      {/* Barra de abajo, al alcance del pulgar: guardar la jugada y terminar el partido. Los botones son grandes (48 px o
+          más de alto) y todos a lo ancho. Terminar el partido pide confirmación en el mismo lugar, sin ventanas emergentes;
+          un partido decisivo que sigue empatado ofrece pasar de fase en su lugar. La tanda de penales tiene sus propios
+          botones (ver PenaltyShootout), pero también se puede finalizar desde acá. */}
+      {live && (
+        <div className="sticky bottom-0 bg-surface-primary px-4 pb-6 pt-3">
+          {!onBreak && match.phase !== "penales" && !confirmEnd && (
+            <button
+              onClick={handleSave}
+              className={`min-h-12 w-full cursor-pointer rounded-lg py-3.5 font-heading text-sm font-bold transition-colors ${
+                selectedAction && !waitingIn
+                  ? "bg-surface-secondary text-text-invert hover:bg-brand-700"
+                  : "bg-surface-secondary/50 text-text-invert/50 cursor-not-allowed"
+              }`}
+            >
+              {goToIn ? "Siguiente: ¿quién entra?" : "Guardar jugada"}
+            </button>
+          )}
+
+          {confirmEnd ? (
+            <div className="rounded-xl bg-btn-regular p-4" role="alertdialog" aria-label="Finalizar partido">
+              <p className="text-center font-heading text-sm font-bold text-text-primary">
+                {inFirstHalf ? "¿Finalizar el partido en el 1.er tiempo?" : onBreak ? "¿Finalizar el partido en el descanso?" : "¿Finalizar el partido?"}
+              </p>
+              <p className="mt-1 text-center font-body text-xs text-text-secondary">
+                Quedará {homeScore}-{awayScore}. Podrás reabrirlo para corregir.
+              </p>
+              <div className="mt-3 flex gap-3">
+                <button
+                  onClick={() => setStatus("finalizado")}
+                  disabled={saving}
+                  className="min-h-12 flex-1 cursor-pointer rounded-lg bg-surface-secondary px-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                >
+                  Sí, finalizar
+                </button>
+                <button
+                  onClick={() => setConfirmEnd(false)}
+                  disabled={saving}
+                  className="min-h-12 flex-1 cursor-pointer rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-surface-primary disabled:opacity-40"
+                >
+                  No, seguir
+                </button>
+              </div>
+            </div>
+          ) : showPhaseButton ? (
+            <button
+              onClick={advancePhase}
+              disabled={saving}
+              className="mt-3 min-h-12 w-full cursor-pointer rounded-lg border-2 border-border-primary py-3 font-heading text-base font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-40"
+            >
+              {nextPhaseLabel}
+            </button>
+          ) : (
+            <button
+              onClick={() => setConfirmEnd(true)}
+              disabled={saving}
+              className={`${!onBreak && match.phase !== "penales" ? "mt-3 " : ""}min-h-12 w-full cursor-pointer rounded-lg border-2 border-border-primary py-3 font-heading text-base font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-40`}
+            >
+              Finalizar partido
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

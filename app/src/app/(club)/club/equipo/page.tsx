@@ -10,8 +10,9 @@ import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
 import { ClubCrest } from "@/_components/club-crest";
 import { SubTabs } from "@/_components/sub-tabs";
+import { DelegatesPanel } from "@/_components/delegates-panel";
 
-const tabs = ["Categorías", "Planilla"] as const;
+const tabs = ["Categorías", "Planilla", "Delegados"] as const;
 type Tab = (typeof tabs)[number];
 
 const roleLabels: Record<StaffRole, string> = {
@@ -348,6 +349,9 @@ function ClubEquipoContent({
           </div>
         </>
       )}
+
+      {/* Delegados Tab: el principal y los co-delegados (especificación 014) */}
+      {activeTab === "Delegados" && <DelegatesPanel clubId={clubId} />}
 
       {/* Planilla Tab */}
       {activeTab === "Planilla" && (
