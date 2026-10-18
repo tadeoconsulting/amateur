@@ -1,12 +1,24 @@
 // Pruebas unitarias de src/_lib/realtime.ts (sin servidor ni Ably real).
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { matchChannelName, isRealtimeConfigured, publicarEventoPartido, createMatchViewerToken } from "../../src/_lib/realtime.ts";
+import { avisoDePartido, matchChannelName, isRealtimeConfigured, publicarEventoPartido, createMatchViewerToken } from "../../src/_lib/realtime.ts";
+import { versionOf } from "../../src/_lib/live-version.ts";
 
 describe("nombre de canal", () => {
   test("un partido tiene un canal propio, con prefijo", () => {
     assert.equal(matchChannelName("abc123"), "match:abc123");
     assert.notEqual(matchChannelName("uno"), matchChannelName("otro"));
+  });
+});
+
+describe("el aviso lleva una versión (OBS-58)", () => {
+  test("es solo la hora del servidor, sin datos de la jugada", () => {
+    assert.deepEqual(avisoDePartido(1700000000123), { v: 1700000000123 });
+    assert.deepEqual(Object.keys(avisoDePartido()), ["v"]);
+  });
+
+  test("lo que publica el servidor es lo que lee el navegador", () => {
+    assert.equal(versionOf(avisoDePartido(1700000000123), 5), 1700000000123);
   });
 });
 

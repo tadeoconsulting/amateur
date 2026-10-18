@@ -23,17 +23,24 @@ export function matchChannelName(matchId: string) {
   return `${CHANNEL_PREFIX}${matchId}`;
 }
 
+/** El contenido de un aviso: solo la hora del servidor, como versión. Nada del detalle de la jugada. */
+export function avisoDePartido(now: number = Date.now()) {
+  return { v: now };
+}
+
 /**
  * Avisa a quienes están viendo este partido que hay novedades. No manda el detalle de la
  * jugada: el cliente vuelve a pedir el partido y sus jugadas por GET, que es la única fuente
- * de verdad (docs/arquitectura.md §7). Nunca lanza: una falla de Ably no debe tumbar una
+ * de verdad (docs/arquitectura.md §7). Lleva solo una versión (`v`, la hora del servidor): todos
+ * los espectadores piden sus lecturas con esa misma `v`, así el borde las resuelve con una sola
+ * consulta a la base (ver `public-cache.ts`). Nunca lanza: una falla de Ably no debe tumbar una
  * request que ya persistió el cambio en la base.
  */
 export async function publicarEventoPartido(matchId: string) {
   const ably = getClient();
   if (!ably) return;
   try {
-    await ably.channels.get(matchChannelName(matchId)).publish("update", null);
+    await ably.channels.get(matchChannelName(matchId)).publish("update", avisoDePartido());
   } catch (error) {
     console.error("No se pudo publicar en Ably:", error);
   }

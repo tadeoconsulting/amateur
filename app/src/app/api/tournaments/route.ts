@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { badRequest, getCurrentUser, isAdmin, readJson, requireRole } from "@/_lib/auth";
 import { parseTournamentFields } from "@/_lib/tournament-input";
 import { ensureOrganizerSlug, newTournamentSlug } from "@/_lib/tournament-slug";
+import { isPublicRead, publicCacheHeaders } from "@/_lib/public-cache";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -13,7 +14,9 @@ export async function GET(request: NextRequest) {
   const playerId = searchParams.get("playerId");
 
   // Los torneos eliminados no salen en ninguna lista; solo un admin los pide aparte (?deleted=1).
-  const viewer = await getCurrentUser();
+  // Con `?pub=1` (pantallas públicas, que se guardan en la caché de borde) la lista es la misma para todos.
+  const pub = isPublicRead(request.url);
+  const viewer = pub ? null : await getCurrentUser();
   const onlyDeleted = searchParams.get("deleted") === "1" && viewer !== null && isAdmin(viewer);
   const where: Record<string, unknown> = { deletedAt: onlyDeleted ? { not: null } : null };
   if (organizerId) where.organizerId = organizerId;
@@ -59,7 +62,8 @@ export async function GET(request: NextRequest) {
       seasonId: t.seasonId,
       seasonStage: t.seasonStage,
       organizer: t.organizer,
-    }))
+    })),
+    { headers: publicCacheHeaders(request.url) }
   );
 }
 

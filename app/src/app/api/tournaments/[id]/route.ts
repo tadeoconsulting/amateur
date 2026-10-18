@@ -3,12 +3,16 @@ import { type NextRequest } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { badRequest, canManageTournament, forbidden, getCurrentUser, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { parseTournamentFields } from "@/_lib/tournament-input";
+import { isPublicRead, publicCacheHeaders } from "@/_lib/public-cache";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  // Con `?pub=1` (pantallas públicas, que se guardan en la caché de borde) la lectura es la misma para todos: un
+  // torneo eliminado no existe, tampoco para un admin (que lo ve por su panel, sin `pub`).
+  const pub = isPublicRead(request.url);
 
   const tournament = await prisma.tournament.findUnique({
     where: { id },
@@ -29,7 +33,7 @@ export async function GET(
   });
 
   // Un torneo eliminado es como si no existiera, salvo para un admin (que lo restaura o lo elimina del todo).
-  const viewer = tournament?.deletedAt ? await getCurrentUser() : null;
+  const viewer = tournament?.deletedAt && !pub ? await getCurrentUser() : null;
   if (!tournament || (tournament.deletedAt && !(viewer && isAdmin(viewer)))) {
     return Response.json({ error: "Torneo no encontrado" }, { status: 404 });
   }
@@ -40,12 +44,15 @@ export async function GET(
 
   const { sponsors, ...rest } = tournament;
 
-  return Response.json({
-    ...rest,
-    sponsors: sponsors.map((s) => ({ id: s.sponsor.id, name: s.sponsor.name, logoUrl: s.sponsor.logoUrl, website: s.sponsor.website })),
-    matchesPlayed,
-    totalMatches: tournament._count.matches,
-  });
+  return Response.json(
+    {
+      ...rest,
+      sponsors: sponsors.map((s) => ({ id: s.sponsor.id, name: s.sponsor.name, logoUrl: s.sponsor.logoUrl, website: s.sponsor.website })),
+      matchesPlayed,
+      totalMatches: tournament._count.matches,
+    },
+    { headers: publicCacheHeaders(request.url) }
+  );
 }
 
 // El organizador puede editar los campos que valida parseTournamentFields.

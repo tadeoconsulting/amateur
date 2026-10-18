@@ -35,7 +35,8 @@ function formatDate(dateStr: string) {
  * recién finalizado sigue siendo relevante en vez de desaparecer de golpe.
  */
 export function PublicTournaments() {
-  const { data: tournaments, loading } = useApi(() => getTournaments());
+  // La portada la ve cualquiera: su lista puede guardarse unos segundos en la caché de borde (OBS-58).
+  const { data: tournaments, loading } = useApi(() => getTournaments(undefined, { pub: true }));
 
   // Sin spinner ni estado de error visibles: es una sección de "prueba social" en una landing,
   // no una pantalla funcional — si todavía no carga, o no hay nada que mostrar, se omite entera.

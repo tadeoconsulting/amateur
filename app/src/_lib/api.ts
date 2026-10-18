@@ -1,10 +1,20 @@
 import type { RequestAction, RequestKind, RequestStatus } from "@/_lib/tournament-request";
 import type { FinalFormat, SeasonStage, SeasonStatus } from "@/_lib/season";
+import { withPublicRead } from "@/_lib/public-cache";
+import { getLiveVersion } from "@/_lib/live-version";
 
 const BASE = typeof window !== "undefined" ? "" : "http://localhost:3000";
 
-async function fetcher<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { cache: "no-store" });
+/**
+ * Con `pub: true` la lectura es la de una pantalla pública (la del fan): se pide con `?pub=1`, así el borde puede
+ * guardarla unos segundos, y lleva la versión del último aviso en vivo, así un gol se ve al instante (ver
+ * `public-cache.ts`). Las pantallas con sesión (organizador, club, jugador) no la usan: ven siempre lo último.
+ */
+export type ReadOptions = { pub?: boolean };
+
+async function fetcher<T>(path: string, opts?: ReadOptions): Promise<T> {
+  const url = opts?.pub ? withPublicRead(path, getLiveVersion()) : path;
+  const res = await fetch(`${BASE}${url}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
@@ -270,9 +280,9 @@ export interface UserItem {
   tournamentsCount: number;
 }
 
-export function getTournaments(params?: Record<string, string>) {
+export function getTournaments(params?: Record<string, string>, opts?: ReadOptions) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-  return fetcher<TournamentListItem[]>(`/api/tournaments${qs}`);
+  return fetcher<TournamentListItem[]>(`/api/tournaments${qs}`, opts);
 }
 
 /** "7 vs 7" → "Fútbol 7". Los torneos anteriores al asistente no tienen modalidad. */
@@ -281,18 +291,18 @@ export function modalityLabel(modality: string | null | undefined) {
   return players ? `Fútbol ${players}` : null;
 }
 
-export function getTournament(id: string) {
-  return fetcher<TournamentDetail>(`/api/tournaments/${id}`);
+export function getTournament(id: string, opts?: ReadOptions) {
+  return fetcher<TournamentDetail>(`/api/tournaments/${id}`, opts);
 }
 
-export function getMatches(params?: Record<string, string>) {
+export function getMatches(params?: Record<string, string>, opts?: ReadOptions) {
   const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-  return fetcher<MatchListItem[]>(`/api/matches${qs}`);
+  return fetcher<MatchListItem[]>(`/api/matches${qs}`, opts);
 }
 
-export function getStandings(tournamentId: string) {
+export function getStandings(tournamentId: string, opts?: ReadOptions) {
   // `live=1`: la tabla suma los partidos que se están jugando, con el marcador de ahora (ver la API de standings).
-  return fetcher<StandingsRow[]>(`/api/tournaments/${tournamentId}/standings?live=1`);
+  return fetcher<StandingsRow[]>(`/api/tournaments/${tournamentId}/standings?live=1`, opts);
 }
 
 /** La página pública de un club dentro de un torneo (`GET /api/tournaments/:id/teams/:clubId`). */
@@ -311,8 +321,8 @@ export async function getClubInTournament(tournamentId: string, clubId: string):
   return res.json();
 }
 
-export function getScorers(tournamentId: string) {
-  return fetcher<ScorerRow[]>(`/api/tournaments/${tournamentId}/scorers`);
+export function getScorers(tournamentId: string, opts?: ReadOptions) {
+  return fetcher<ScorerRow[]>(`/api/tournaments/${tournamentId}/scorers`, opts);
 }
 
 export function getClubs(params?: Record<string, string>) {
@@ -529,16 +539,16 @@ export function getSeasons(params?: Record<string, string>) {
   return fetcher<SeasonSummary[]>(`/api/seasons${qs}`);
 }
 
-export function getSeason(id: string) {
-  return fetcher<SeasonSummary>(`/api/seasons/${id}`);
+export function getSeason(id: string, opts?: ReadOptions) {
+  return fetcher<SeasonSummary>(`/api/seasons/${id}`, opts);
 }
 
-export function getSeasonStandings(id: string) {
-  return fetcher<StandingsRow[]>(`/api/seasons/${id}/standings?live=1`);
+export function getSeasonStandings(id: string, opts?: ReadOptions) {
+  return fetcher<StandingsRow[]>(`/api/seasons/${id}/standings?live=1`, opts);
 }
 
-export function getSeasonScorers(id: string) {
-  return fetcher<ScorerRow[]>(`/api/seasons/${id}/scorers`);
+export function getSeasonScorers(id: string, opts?: ReadOptions) {
+  return fetcher<ScorerRow[]>(`/api/seasons/${id}/scorers`, opts);
 }
 
 export function createSeason(body: { name: string; aperturaId: string; finalFormat: FinalFormat; finalTeams: number | null }) {

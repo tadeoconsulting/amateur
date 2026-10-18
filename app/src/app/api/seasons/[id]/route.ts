@@ -3,14 +3,15 @@ import { type NextRequest } from "next/server";
 import { badRequest, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { parseFinalConfig } from "@/_lib/season";
 import { SEASON_SELECT, canManageSeason, findSeason, seasonSummary, stageOf } from "@/_lib/season-server";
+import { publicCacheHeaders } from "@/_lib/public-cache";
 
 const notFound = () => Response.json({ error: "Temporada no encontrada" }, { status: 404 });
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const season = await findSeason(id);
   if (!season) return notFound();
-  return Response.json(await seasonSummary(season));
+  return Response.json(await seasonSummary(season), { headers: publicCacheHeaders(request.url) });
 }
 
 /**

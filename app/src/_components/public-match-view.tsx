@@ -20,6 +20,7 @@ export function PublicMatchView({ tournamentId, matchId, publicPath }: { tournam
       </header>
       <main className="flex-1">
         <MatchDetail
+          pub
           matchId={matchId}
           tournamentId={tournamentId}
           backLabel="Volver al torneo"

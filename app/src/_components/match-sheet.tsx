@@ -35,6 +35,7 @@ export function MatchSheet({
   backHref,
   backLabel,
   liveVersion = 0,
+  pub = false,
   children,
 }: {
   match: MatchListItem;
@@ -43,11 +44,13 @@ export function MatchSheet({
   backLabel: string;
   /** Sube cada vez que llega una novedad en vivo: la forma de los equipos y la tabla se vuelven a pedir. */
   liveVersion?: number;
+  /** La ficha pública (la del fan): sus lecturas pueden guardarse unos segundos en la caché de borde (ver `public-cache.ts`). */
+  pub?: boolean;
   children: React.ReactNode;
 }) {
-  const { data: matches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId }));
-  const { data: standings, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId));
-  const { data: tournament } = useApi(() => getTournament(tournamentId));
+  const { data: matches, refetchSilently: refetchMatches } = useApi(() => getMatches({ tournamentId }, { pub }));
+  const { data: standings, refetchSilently: refetchStandings } = useApi(() => getStandings(tournamentId, { pub }));
+  const { data: tournament } = useApi(() => getTournament(tournamentId, { pub }));
 
   // La suscripción en vivo la tiene la pantalla que monta la ficha (una sola por pantalla); acá solo se reacciona al aviso.
   const seenVersion = useRef(liveVersion);

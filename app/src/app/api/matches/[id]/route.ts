@@ -7,9 +7,10 @@ import { CLASH_MESSAGE, hasScheduleClash } from "@/_lib/match-schedule";
 import { canTransition, canTransitionPeriod, canTransitionPhase, isMatchPeriod, isMatchPhase, isMatchStatus, MATCH_PERIODS, MATCH_PHASES, type MatchPeriod, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { CLUB_REF_SELECT } from "@/_lib/club-public";
+import { publicCacheHeaders } from "@/_lib/public-cache";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -28,7 +29,8 @@ export async function GET(
     return Response.json({ error: "Partido no encontrado" }, { status: 404 });
   }
 
-  return Response.json(match);
+  // Con `?pub=1` (pantallas públicas) el borde guarda el partido unos segundos; ver `public-cache.ts`.
+  return Response.json(match, { headers: publicCacheHeaders(request.url) });
 }
 
 // "" = hora por definir (el partido todavía no tiene día y hora).
