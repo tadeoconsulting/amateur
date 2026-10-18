@@ -1,41 +1,37 @@
 import { ScrollReveal } from "./scroll-reveal";
-import { BallSvg } from "./field-svg";
 
+/** La tarjeta lima del cierre: un solo llamado, con el asterisco de la cinta como marca de agua. */
 export function CtaFinal({ onOpenAuth }: { onOpenAuth: (view: "login" | "register") => void }) {
   return (
-    <section className="py-20 sm:py-28 px-4 sm:px-6 bg-surface-secondary text-text-invert relative overflow-hidden">
-      {/* Decorative balls */}
-      <div className="absolute top-8 left-[10%] motion-safe:animate-[float_5s_ease-in-out_infinite]">
-        <BallSvg className="w-10 h-10 text-field-green opacity-20" />
-      </div>
-      <div className="absolute bottom-12 right-[12%] motion-safe:animate-[float_4s_ease-in-out_infinite_1.5s]">
-        <BallSvg className="w-14 h-14 text-field-green opacity-15" />
-      </div>
+    <section className="px-4 pb-16 sm:px-6 sm:pb-24">
+      <ScrollReveal className="relative mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-[var(--lc-lime)] px-6 py-14 text-[var(--lc-ink)] sm:px-14 sm:py-20">
+        <svg
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute -bottom-10 -right-10 h-64 w-64 text-[var(--lc-ink)]/10 sm:-bottom-16 sm:right-8 sm:h-96 sm:w-96"
+          stroke="currentColor"
+          strokeWidth="6"
+          aria-hidden="true"
+        >
+          <path d="M50 2v96M2 50h96M16 16l68 68M84 16L16 84" />
+        </svg>
 
-      {/* Field lines */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-brand-700/30" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-brand-700/20" />
-      </div>
-
-      <div className="max-w-3xl mx-auto relative z-10 text-center">
-        <ScrollReveal>
-          <h2 className="font-heading text-4xl sm:text-6xl font-bold leading-tight mb-6">
+        <div className="relative">
+          <p className="mb-8 text-xs font-bold uppercase tracking-[0.16em]">El próximo paso lo das tú</p>
+          <h2 className="lc-display text-[clamp(3rem,9vw,6.5rem)]">
             Deja de administrar
             <br />
-            <span className="text-field-green">en WhatsApp</span>
+            en WhatsApp.
           </h2>
-          <p className="text-base sm:text-lg text-brand-500 font-body max-w-lg mx-auto mb-10">
-            Crea tu primer torneo en minutos. Gratis, sin tarjeta de crédito, sin complicaciones.
+          <p className="mt-6 max-w-md text-lg leading-relaxed opacity-80">
+            Crea tu primer torneo en minutos.
+            <br />
+            Gratis, sin tarjeta de crédito, sin complicaciones.
           </p>
-          <button
-            onClick={() => onOpenAuth("register")}
-            className="inline-flex text-base sm:text-lg font-bold bg-field-green text-surface-secondary px-10 py-4 rounded-full hover:bg-field-dark transition-colors cursor-pointer"
-          >
-            Empezar ahora
+          <button onClick={() => onOpenAuth("register")} className="lc-btn mt-9 bg-[var(--lc-ink)] text-[var(--lc-white)] hover:bg-black">
+            Empezar ahora <span aria-hidden="true">↗</span>
           </button>
-        </ScrollReveal>
-      </div>
+        </div>
+      </ScrollReveal>
     </section>
   );
 }

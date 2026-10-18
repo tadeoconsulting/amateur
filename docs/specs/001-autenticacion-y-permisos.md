@@ -73,7 +73,10 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | Clubes | `GET /api/clubs`, `/:id`, `/:id/categories`, `/:id/staff` | sesión |
 | | `GET /api/clubs/:id/players` | sesión (fecha de nacimiento solo el dueño) |
 | | `POST /api/clubs` | rol CLUB_OWNER |
-| | `PATCH /api/clubs/:id`, `POST` categories, staff, players | dueño del club |
+| | `PATCH /api/clubs/:id`, `POST` categories, staff, players | dueño del club o co-delegado (el contacto público del delegado, solo el dueño; ver [014](014-co-delegados.md)) |
+| | `GET /api/clubs/:id/delegates` | dueño, co-delegado o ADMIN |
+| | `POST /api/clubs/:id/co-delegate-invitations`, `DELETE` de una invitación o de un co-delegado | dueño del club o ADMIN (un co-delegado puede salirse él mismo) |
+| | `GET/POST /api/co-delegate-invitations/:token`, `/accept` | público el resumen; aceptar con sesión o creando la cuenta |
 | | `GET/POST /api/clubs/:id/invite-link`, `GET/POST /:id/invite` | dueño del club |
 | Jugadores | `GET /api/players` | sesión (correo y teléfono solo ADMIN) |
 | | `GET /api/players/:id` | sesión (fecha de nacimiento: propio, dueño del club, ADMIN) |

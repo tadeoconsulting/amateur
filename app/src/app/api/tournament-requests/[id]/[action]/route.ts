@@ -4,6 +4,7 @@ import { isAdmin, requireUser } from "@/_lib/auth";
 import { EnrollmentError, isUniqueViolation, withOpenTournament } from "@/_lib/enrollment";
 import { isRequestAction, sideForAction, STATUS_AFTER } from "@/_lib/tournament-request";
 import { CLUB_ENROLLED_SELECT } from "@/_lib/club-public";
+import { isClubDelegate } from "@/_lib/club-delegate-server";
 
 /**
  * Resuelve una solicitud o invitación pendiente:
@@ -31,14 +32,14 @@ export async function POST(
       tournamentId: true,
       clubId: true,
       tournament: { select: { organizerId: true } },
-      club: { select: { ownerId: true } },
     },
   });
   if (!found) return Response.json({ error: "Solicitud no encontrada" }, { status: 404 });
 
   const side = sideForAction(found.kind as "request" | "invite", action);
+  // Del lado del club responden el principal y los co-delegados (especificación 014).
   const allowed =
-    isAdmin(user) || (side === "organizer" ? found.tournament.organizerId === user.id : found.club.ownerId === user.id);
+    isAdmin(user) || (side === "organizer" ? found.tournament.organizerId === user.id : await isClubDelegate(user.id, found.clubId));
   if (!allowed) return Response.json({ error: "No tienes permiso para esta acción" }, { status: 403 });
 
   if (found.status !== "pending") {

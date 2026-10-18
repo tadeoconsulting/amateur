@@ -7,6 +7,9 @@ import {
   isMatchStatus,
   isEventType,
   changesScore,
+  penalOutcome,
+  penalFields,
+  penalTitle,
   statFor,
   liveMinute,
   liveSeconds,
@@ -52,8 +55,30 @@ describe("estados del partido", () => {
 });
 
 describe("eventos", () => {
-  test("solo el gol cambia el marcador", () => {
+  test("solo el gol cambia el marcador; el penal, solo si se convirtió", () => {
     for (const t of EVENT_TYPES) assert.equal(changesScore(t), t === "gol", t);
+    assert.equal(changesScore("penal", true), true);
+    assert.equal(changesScore("penal", false), false);
+    assert.equal(changesScore("penal", null), false, "un penal viejo sin resultado no suma");
+    assert.equal(changesScore("tarjeta_roja", true), false);
+  });
+
+  test("un penal convertido es gol del que lo patea; atajado o errado no", () => {
+    assert.equal(statFor("penal", true), "goals");
+    assert.equal(statFor("penal", false), null);
+    assert.equal(statFor("penal_definicion", true), null);
+  });
+
+  test("el resultado de un penal se guarda y se lee igual", () => {
+    for (const o of ["convertido", "atajado", "errado"]) {
+      const { scored, detail } = penalFields(o);
+      assert.equal(penalOutcome(scored, detail), o);
+    }
+    assert.equal(penalOutcome(null, null), null);
+    assert.equal(penalTitle(true, null), "¡Penal convertido!");
+    assert.equal(penalTitle(false, "atajado"), "Penal atajado");
+    assert.equal(penalTitle(false, "errado"), "Penal errado");
+    assert.equal(penalTitle(null, null), "¡Penal!");
   });
 
   test("qué estadística sube con cada evento", () => {

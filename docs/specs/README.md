@@ -20,6 +20,8 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [010-tiempos-del-partido.md](010-tiempos-del-partido.md) | Finalizar el primer tiempo, descanso con el cronómetro detenido e iniciar el segundo tiempo en el partido en vivo; la cronología pública separa los tiempos con el descanso real |
 | [011-mesa.md](011-mesa.md) | La **mesa**: una cuenta que gestiona el partido en vivo de los torneos que le asigna el organizador o el admin, solo el día de juego (de 1 h antes del primer partido a 1 h después del último), con la jugada firmada por quien la registró |
 | [012-temporadas.md](012-temporadas.md) | **Implementada.** Temporadas al estilo Liga 1: Apertura y Clausura con los mismos equipos, tabla General que suma ambas y fase final (llaves, liguilla o ninguna) con los mejores de la General |
+| [013-landing-cancha.md](013-landing-cancha.md) | Landing "Tu torneo, tu cancha": nuevo lineamiento gráfico (oscuro, lima, tipografía condensada) con los torneos reales destacados. Entrega 1 implementada |
+| [014-co-delegados.md](014-co-delegados.md) | **Propuesta.** Varios delegados en un mismo equipo: el principal y hasta 3 co-delegados con los mismos permisos, salvo eliminar o transferir el club, cambiar el contacto público y gestionar a otros delegados. Se suman por invitación (enlace o correo) |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
 ## Glosario

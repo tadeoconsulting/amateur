@@ -7,7 +7,7 @@ export const SCORER_PLAYER_INCLUDE = {
   player: {
     include: {
       user: { select: { firstName: true, lastName: true, avatarUrl: true, birthDate: true } },
-      club: { select: { name: true, shortName: true, ownerId: true } },
+      club: { select: { name: true, shortName: true, ownerId: true, coDelegates: { select: { userId: true } } } },
     },
   },
 } satisfies Prisma.PlayerStatsInclude;
@@ -23,7 +23,7 @@ export function scorerRows(stats: readonly ScorerStatRow[], organizerId: string 
   return stats.map((s, i) => {
     const who = playerIdentity(s.player);
     // Un menor de 18 sale abreviado ("Luigui F.") salvo para quien lo gestiona: un admin, el organizador o el delegado de su club.
-    const manages = viewer !== null && (isAdmin(viewer) || viewer.id === organizerId || viewer.id === s.player.club?.ownerId);
+    const manages = viewer !== null && (isAdmin(viewer) || viewer.id === organizerId || viewer.id === s.player.club?.ownerId || (s.player.club?.coDelegates.some((d) => d.userId === viewer.id) ?? false));
     const hide = !manages && isMinorOn(who.birthDate, today);
     const name = publicName(who, hide);
     return {
