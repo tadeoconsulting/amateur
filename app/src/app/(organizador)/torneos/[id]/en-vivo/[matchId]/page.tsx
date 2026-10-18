@@ -537,28 +537,29 @@ export default function EnVivoPage() {
         </button>
       )}
 
-      {/* Team toggle */}
+      {/* Team toggle: cada botón lleva el color y el nombre de su equipo (antes "Local" y "Visitante") */}
       <div className={`mx-4 mb-5 flex gap-3${live && !onBreak ? "" : " hidden"}`}>
-        <button
-          onClick={() => { setActiveTeam("local"); resetPick(); }}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
-            activeTeam === "local"
-              ? "bg-surface-secondary text-text-invert"
-              : "border border-border-primary text-text-primary"
-          }`}
-        >
-          Local
-        </button>
-        <button
-          onClick={() => { setActiveTeam("visitante"); resetPick(); }}
-          className={`flex-1 cursor-pointer rounded-lg py-2.5 font-heading text-sm font-bold transition-colors ${
-            activeTeam === "visitante"
-              ? "bg-surface-secondary text-text-invert"
-              : "border border-border-primary text-text-primary"
-          }`}
-        >
-          Visitante
-        </button>
+        {(
+          [
+            { side: "local", club: match.homeTeam, role: "Local" },
+            { side: "visitante", club: match.awayTeam, role: "Visitante" },
+          ] as const
+        ).map(({ side, club, role }) => (
+          <button
+            key={side}
+            onClick={() => { setActiveTeam(side); resetPick(); }}
+            aria-pressed={activeTeam === side}
+            title={`${club.name} (${role})`}
+            className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 font-heading text-sm font-bold leading-tight transition-colors ${
+              activeTeam === side
+                ? "bg-surface-secondary text-text-invert"
+                : "border border-border-primary text-text-primary"
+            }`}
+          >
+            <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full border border-white/40" style={{ backgroundColor: club.color || "#6B7280" }} />
+            <span className="line-clamp-2 text-left">{club.name}</span>
+          </button>
+        ))}
       </div>
 
       {/* Action icons (no aplican en la tanda de penales: ver PenaltyShootout más abajo) */}
