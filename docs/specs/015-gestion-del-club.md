@@ -1,9 +1,11 @@
 # 015 · Gestión del club (cuotas, asistencia, sesiones y dashboard)
 
-**Estado:** 🚧 **Entregas 1 (Pagos), 2 (sesiones y asistencia) y 3 (vista del jugador) implementadas** (ver las secciones *as-built*). La entrega 4 (dashboard) sigue como propuesta. Las decisiones y los supuestos S1 a S9 los confirmó el usuario el 2026-10-18.
+**Estado:** ✅ **Las cuatro entregas están implementadas** (ver las secciones *as-built*): Pagos, sesiones y asistencia, vista del jugador y dashboard. Quedan fuera los recordatorios (segunda entrega, decisión 10). Las decisiones y los supuestos S1 a S9 los confirmó el usuario el 2026-10-18.
 **Código (entrega 1):** `prisma/schema.prisma` (`ClubFeeSettings`, `PlayerFeeSetting`, `MemberFee`, `FeePayment`) y la migración `20261018205051_gestion-pagos`; `src/_lib/club-fees.ts` (reglas puras), `src/_lib/club-fees-server.ts` (generar meses, ingreso al club), `src/_lib/club-gestion-guard.ts`, `src/_lib/club-fees-client.ts`; `src/app/api/clubs/[id]/gestion/**`; pantallas en `src/app/(club)/club/gestion/**` y la pestaña Gestión en `(club)/_components/club-bottom-nav.tsx`.
 **Código (entrega 2):** migración `20261018212409_gestion-entrenamientos` (`TrainingPlace`, `TrainingSchedule`, `TrainingSession`, `Attendance`); `src/_lib/club-training.ts` (reglas puras), `src/_lib/club-training-server.ts` (generar sesiones, lista de jugadores), `src/_lib/club-training-client.ts`; `src/app/api/clubs/[id]/gestion/{lugares,horarios,sesiones,asistencia}/**`; pantallas en `src/app/(club)/club/gestion/{sesiones,asistencia}/**`.
 **Código (entrega 3):** `src/_lib/player-club-progress-server.ts`, `src/app/api/me/club-progreso/route.ts`, `src/_lib/club-progress-client.ts`, `src/app/(jugador)/_components/my-club-card.tsx` y `src/app/(jugador)/jugador/mi-club/page.tsx`; `paymentProgress` en `club-fees.ts` y `playerAttendance` en `club-training.ts` (reglas puras).
+**Código (entrega 4):** `src/_lib/club-dashboard-server.ts`, `src/app/api/clubs/[id]/gestion/dashboard/route.ts` y `src/app/(club)/club/gestion/dashboard/**` (página y `_components/charts.tsx`); `lastMonths`, `rankDelinquents`, `monthShort` y `niceMax` en `club-fees.ts`, y `weekStart`, `weeklyAttendanceTrend`, `sessionCounts` y `sessionPercent` en `club-training.ts` (reglas puras).
+**Pruebas (entrega 4):** nuevas en los dos archivos unitarios y `tests/gestion-dashboard.test.mjs` (14, integración); pantallas y gráficos verificados en un navegador de celular (390 px) y de escritorio.
 **Pruebas (entrega 3):** nuevas en `tests/unit/club-fees.test.mjs` y `club-training.test.mjs`, y `tests/gestion-jugador.test.mjs` (17, integración); pantallas verificadas en un navegador de celular (390 px) con la sesión de un jugador.
 **Pruebas (entrega 2):** `tests/unit/club-training.test.mjs` (25) y `tests/gestion-entrenamientos.test.mjs` (26, integración); pantallas verificadas en un navegador de celular (390 px).
 **Pruebas (entrega 1):** `tests/unit/club-fees.test.mjs` (31) y `tests/gestion-pagos.test.mjs` (23, integración). Las pantallas se verificaron en un navegador de celular (390 px) y de escritorio contra una base local.
@@ -83,6 +85,21 @@ Lo que se construyó y en qué se aparta de la propuesta de abajo:
 - **Pantallas.** En **Actividad** aparece una tarjeta **Mi club** (para el equipo con el que sale hoy): próximo entrenamiento, asistencia y "Debes S/ X" o "Pagos al día". Lleva a `/jugador/mi-club`, con las tres secciones y, si tiene más de un club, un selector. Si el club no definió cuota, dice que todavía no registra cuotas y no inventa ninguna.
 - **El jugador no puede cambiar nada** de esto ni leer lo del club: las rutas `/api/clubs/:id/gestion/**` siguen dando `403` a un jugador (pagos, asistencia, historial y su propia cuota). Una prueba lo recorre.
 - **Fuera de esta entrega:** el dashboard del delegado (entrega 4) y los recordatorios (segunda entrega).
+
+## Entrega 4 · Dashboard, as-built
+Lo que se construyó y en qué se aparta de la propuesta de abajo:
+
+- **Un endpoint, solo del delegado:** `GET /api/clubs/:id/gestion/dashboard?mes=AAAA-MM&categoria=ID` (principal, co-delegado o admin; el jugador recibe `403`, lo suyo está en `/api/me/club-progreso`). Sin `mes` es el mes en curso; un mes mal escrito o futuro, o una categoría de otro club, dan `400`. La respuesta es `private, no-store`.
+- **Qué filtra cada cosa.** El **mes** y la **categoría** filtran todo, con dos excepciones pensadas: **los morosos son la deuda vencida a hoy** (no dependen del mes que se mira) y el **desglose de asistencia por categoría compara a todas** aunque se esté filtrando una. La categoría de un jugador es la de hoy.
+- **Métricas:**
+  - *Recaudado contra esperado del mes* (sobre las cuotas de ese mes, igual que en Pagos), con el conteo de pagados, parciales, pendientes, sin cuota y vencidos, y lo que falta cobrar. Con cuota del club sin definir, o sin cuotas ese mes, muestra "Sin cuotas" en vez de un 100 % falso.
+  - *Cobro por mes*: los últimos 6 meses terminando en el elegido; un mes sin cuotas es un hueco, no un 0.
+  - *Morosos*: de la mayor deuda vencida a la menor (`rankDelinquents`: monto, luego meses de atraso, luego nombre); los 8 primeros con el total y el monto por cobrar. Un jugador gratis o al día no aparece.
+  - *Asistencia*: promedio del club y por categoría del mes (las mismas reglas de la entrega 2), los jugadores de menor asistencia (solo los que no llegan al 100 %) y la **tendencia semanal** de las últimas 12 semanas (lunes a domingo; una semana sin entrenamientos con asistencia es un hueco, no un 0).
+  - *Entrenamientos del mes*: realizados (con alguna marca), cancelados, sin marcar (ya pasó o es hoy y nadie pasó lista) y próximos.
+- **Gráficos hechos a mano en SVG, sin librerías, siguiendo la guía de visualización de datos:** una sola serie en un solo verde (`#009B5F`, validado a 3:1 contra el fondo; el verde de marca `#00CA81` se queda en 2:1), columnas de hasta 24 px con la punta redondeada y la base recta, línea de 2 px con puntos de 8 px y aro del color del fondo, rejilla de un pelo, el texto siempre con los tokens de texto, la leyenda solo donde hay dos lecturas (recaudado y esperado). **Tooltip al pasar, tocar o enfocar con el teclado** y **vista de tabla** en cada gráfico para quien no distingue colores. Las comparaciones por nombre (categorías y jugadores) son barras finas con el valor en la punta.
+- **Pantalla:** `/club/gestion/dashboard` (primera entrada de Gestión). Filtros en una sola fila arriba (mes con flechas y categorías), una cifra grande (lo recaudado), dos chicas (asistencia y morosos) y las secciones de abajo. Cada sección vacía explica cómo llenarla (definir la cuota, pasar lista) con su botón; no hay datos inventados.
+- **Sin migración:** todo se calcula con lo que ya existe.
 
 ## Cómo se ve (resumen)
 ```

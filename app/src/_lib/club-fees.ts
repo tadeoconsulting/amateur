@@ -200,3 +200,35 @@ export function paymentProgress(months: readonly FeeMonth[], dueDay: number, tod
   const paidMonths = withFee.filter((m) => feeStatus(m.dueCents, m.paidCents) === "pagado").length;
   return { dueMonths: withFee.length, paidMonths, ...debtSummary(months, dueDay, today) };
 }
+
+/** Los `count` meses que terminan en `month`, del más antiguo al más reciente ("2026-10", 3 → 2026-08, 2026-09, 2026-10). */
+export function lastMonths(month: string, count: number): string[] {
+  const months = [month];
+  for (let i = 1; i < count; i++) {
+    const first = months[0];
+    const year = Number(first.slice(0, 4));
+    const m = Number(first.slice(5, 7));
+    months.unshift(m === 1 ? `${year - 1}-12` : `${year}-${pad(m - 1)}`);
+  }
+  return months;
+}
+
+/** Los morosos, del que más debe vencido al que menos; a igual monto, más meses de atraso primero y luego por nombre. */
+export function rankDelinquents<T extends { name: string; overdueCents: number; overdueMonths: number }>(players: readonly T[]): T[] {
+  return players
+    .filter((p) => p.overdueCents > 0)
+    .sort((a, b) => b.overdueCents - a.overdueCents || b.overdueMonths - a.overdueMonths || a.name.localeCompare(b.name, "es"));
+}
+
+const SHORT_MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+/** "2026-10" → "oct", para el eje de un gráfico. */
+export const monthShort = (month: string) => SHORT_MONTHS[Number(month.slice(5, 7)) - 1] ?? month;
+
+/** Un tope "redondo" para el eje: 80 → 100, 320 → 400, 1 130 → 1 200. */
+export function niceMax(value: number): number {
+  if (value <= 0) return 100;
+  const magnitude = 10 ** Math.floor(Math.log10(value));
+  for (const step of [1, 2, 3, 4, 5, 6, 8, 10]) if (value <= step * magnitude) return step * magnitude;
+  return 10 * magnitude;
+}

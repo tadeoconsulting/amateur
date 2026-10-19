@@ -6,8 +6,13 @@ import { PageSpinner } from "@/_components/spinner";
 import { MyClubCard } from "../../_components/my-club-card";
 import { ClubSettingsLink } from "../../_components/club-settings-link";
 
-// Gestión del club (especificación 015). Cada módulo aparece cuando está construido: Pagos, Asistencia y Sesiones.
+// Gestión del club (especificación 015). Cada módulo aparece cuando está construido: Dashboard, Pagos, Asistencia y Sesiones.
 const modules = [
+  {
+    href: "/club/gestion/dashboard",
+    title: "Dashboard",
+    description: "Cobro, morosos y asistencia de un vistazo.",
+  },
   {
     href: "/club/gestion/pagos",
     title: "Pagos",

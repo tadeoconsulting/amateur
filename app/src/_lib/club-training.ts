@@ -202,3 +202,52 @@ export function playerAttendance(sessions: readonly { sessionId: string; status:
   }
   return { ...counts, percent: attendancePercent(counts), recent };
 }
+
+/** El porcentaje de asistencia de UNA sesión (presentes sobre presentes más ausentes); null si nadie quedó presente ni ausente. */
+export const sessionPercent = (marks: readonly { status: AttendanceStatus }[]) => attendancePercent(countMarks(marks));
+
+/** El lunes de la semana de una fecha AAAA-MM-DD (las semanas del dashboard van de lunes a domingo). */
+export function weekStart(date: string): string {
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  return addDays(date, -((weekday + 6) % 7));
+}
+
+type DatedSession = { date: string; status: string; marks: readonly { status: AttendanceStatus }[] };
+
+/**
+ * La asistencia semana a semana: las `weeks` semanas (lunes a domingo) que terminan en la de `endDate`, cada una con el
+ * promedio de los porcentajes de sus sesiones realizadas. Una semana sin sesiones realizadas queda con `percent` null (un
+ * hueco en el gráfico, no un 0).
+ */
+export function weeklyAttendanceTrend(sessions: readonly DatedSession[], endDate: string, weeks = 12) {
+  const last = weekStart(endDate);
+  const result: { weekStart: string; percent: number | null; sessions: number }[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = addDays(last, -7 * i);
+    const end = addDays(start, 7);
+    const percents = sessions
+      .filter((s) => s.status !== "cancelada" && s.date >= start && s.date < end)
+      .map((s) => sessionPercent(s.marks))
+      .filter((p): p is number => p !== null);
+    result.push({ weekStart: start, percent: percents.length === 0 ? null : Math.round(percents.reduce((a, b) => a + b, 0) / percents.length), sessions: percents.length });
+  }
+  return result;
+}
+
+/**
+ * Cuántos entrenamientos hubo: realizados (con alguna marca), cancelados, sin marcar (ya pasó o es hoy y nadie pasó lista) y
+ * próximos (de mañana en adelante).
+ */
+export function sessionCounts(sessions: readonly DatedSession[], today: string) {
+  let realizadas = 0;
+  let canceladas = 0;
+  let sinMarcar = 0;
+  let proximas = 0;
+  for (const s of sessions) {
+    if (s.status === "cancelada") canceladas += 1;
+    else if (s.marks.length > 0) realizadas += 1;
+    else if (s.date <= today) sinMarcar += 1;
+    else proximas += 1;
+  }
+  return { realizadas, canceladas, sinMarcar, proximas };
+}

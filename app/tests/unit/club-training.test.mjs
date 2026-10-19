@@ -18,6 +18,10 @@ import {
   playerAttendance,
   scheduleError,
   scheduleStarts,
+  sessionCounts,
+  sessionPercent,
+  weekStart,
+  weeklyAttendanceTrend,
   timeRange,
   toPeru,
 } from "../../src/_lib/club-training.ts";
@@ -218,5 +222,57 @@ describe("asistencia de un jugador", () => {
     const none = playerAttendance(sessions, "nadie");
     assert.equal(none.percent, null);
     assert.deepEqual([none.presente, none.ausente, none.justificado], [0, 0, 0]);
+  });
+});
+
+describe("para el dashboard", () => {
+  const m = (...statuses) => statuses.map((status) => ({ status }));
+  const s = (date, marks, status = "programada") => ({ date, status, marks });
+
+  test("weekStart devuelve el lunes de la semana", () => {
+    assert.equal(weekStart("2026-10-19"), "2026-10-19"); // lunes
+    assert.equal(weekStart("2026-10-18"), "2026-10-12"); // domingo: pertenece a la semana que empezó el lunes 12
+    assert.equal(weekStart("2026-10-22"), "2026-10-19"); // jueves
+    assert.equal(weekStart("2026-01-01"), "2025-12-29"); // cruza el año
+  });
+
+  test("sessionPercent cuenta presentes sobre presentes más ausentes", () => {
+    assert.equal(sessionPercent(m("presente", "presente", "ausente", "justificado")), 67);
+    assert.equal(sessionPercent(m("justificado")), null);
+    assert.equal(sessionPercent([]), null);
+  });
+
+  test("la tendencia semanal promedia las sesiones de cada semana y deja huecos donde no hubo", () => {
+    const sessions = [
+      s("2026-10-13", m("presente", "ausente")), // semana del 12: 50
+      s("2026-10-15", m("presente", "presente")), // semana del 12: 100
+      s("2026-10-20", m("presente", "ausente", "ausente")), // semana del 19: 33
+      s("2026-10-21", m("ausente"), "cancelada"), // cancelada: no cuenta
+      s("2026-10-22", []), // sin marcar: no cuenta
+    ];
+    const t = weeklyAttendanceTrend(sessions, "2026-10-25", 3);
+    assert.deepEqual(t.map((w) => w.weekStart), ["2026-10-05", "2026-10-12", "2026-10-19"]);
+    assert.deepEqual(t.map((w) => w.percent), [null, 75, 33]);
+    assert.deepEqual(t.map((w) => w.sessions), [0, 2, 1]);
+  });
+
+  test("la tendencia siempre trae las semanas pedidas, también sin ninguna sesión", () => {
+    const t = weeklyAttendanceTrend([], "2026-10-18", 12);
+    assert.equal(t.length, 12);
+    assert.ok(t.every((w) => w.percent === null && w.sessions === 0));
+    assert.equal(t[11].weekStart, "2026-10-12");
+  });
+
+  test("sessionCounts separa realizadas, canceladas, sin marcar y próximas", () => {
+    const sessions = [
+      s("2026-10-10", m("presente")),
+      s("2026-10-11", m("ausente", "presente")),
+      s("2026-10-12", [], "cancelada"),
+      s("2026-10-13", []), // pasó y nadie pasó lista
+      s("2026-10-19", []), // hoy sin marcar todavía
+      s("2026-10-21", []), // próxima
+      s("2026-10-14", m("justificado")), // hubo marcas: realizada aunque solo justificadas
+    ];
+    assert.deepEqual(sessionCounts(sessions, "2026-10-19"), { realizadas: 3, canceladas: 1, sinMarcar: 2, proximas: 1 });
   });
 });

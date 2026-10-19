@@ -12,6 +12,10 @@ import {
   isDueDay,
   isMonth,
   isOverdue,
+  lastMonths,
+  monthShort,
+  niceMax,
+  rankDelinquents,
   formatSolesAmount,
   monthLabel,
   monthName,
@@ -255,4 +259,41 @@ describe("progreso de pagos de un jugador", () => {
     const p = paymentProgress([{ month: "2026-10", dueCents: 0, paidCents: 0 }], 5, "2026-10-30");
     assert.deepEqual(p, { dueMonths: 0, paidMonths: 0, owedCents: 0, overdueCents: 0, overdueMonths: 0 });
   });
+});
+
+describe("para el dashboard", () => {
+  test("lastMonths termina en el mes dado y cruza el cambio de año", () => {
+    assert.deepEqual(lastMonths("2026-10", 3), ["2026-08", "2026-09", "2026-10"]);
+    assert.deepEqual(lastMonths("2026-02", 4), ["2025-11", "2025-12", "2026-01", "2026-02"]);
+    assert.deepEqual(lastMonths("2026-10", 1), ["2026-10"]);
+  });
+
+  test("rankDelinquents ordena por monto vencido, luego por meses y luego por nombre, y deja fuera a quien no debe", () => {
+    const list = [
+      { name: "Zoe", overdueCents: 8000, overdueMonths: 1 },
+      { name: "Ana", overdueCents: 8000, overdueMonths: 1 },
+      { name: "Bruno", overdueCents: 16000, overdueMonths: 2 },
+      { name: "Carla", overdueCents: 0, overdueMonths: 0 },
+      { name: "Dante", overdueCents: 8000, overdueMonths: 2 },
+    ];
+    assert.deepEqual(rankDelinquents(list).map((p) => p.name), ["Bruno", "Dante", "Ana", "Zoe"]);
+    assert.deepEqual(rankDelinquents([]), []);
+  });
+});
+
+test("monthShort abrevia el mes para el eje de un gráfico", () => {
+  assert.equal(monthShort("2026-01"), "ene");
+  assert.equal(monthShort("2026-10"), "oct");
+  assert.equal(monthShort("2026-12"), "dic");
+});
+
+test("niceMax da un tope redondo para el eje de un gráfico", () => {
+  assert.equal(niceMax(0), 100);
+  assert.equal(niceMax(80), 80);
+  assert.equal(niceMax(100), 100);
+  assert.equal(niceMax(101), 200);
+  assert.equal(niceMax(320), 400);
+  assert.equal(niceMax(1130), 2000);
+  assert.equal(niceMax(2200), 3000);
+  assert.equal(niceMax(9), 10);
 });
