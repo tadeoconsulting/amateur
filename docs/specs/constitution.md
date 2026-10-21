@@ -69,7 +69,7 @@ tests/            integración (contra un servidor) y tests/unit/
 
 ### 4.3 Interfaz
 14. **Nada de datos inventados en pantalla.** Si el dato no existe, no se muestra. Las primeras versiones tenían delegados falsos, links falsos y un "75'" fijo; todos eran mentiras que parecían funcionar.
-15. **En español**, mobile-first (contenedor de 430 px). El design system está en `design-system/amateur/`.
+15. **En español**, mobile-first (contenedor de 430 px). El design system está en `design-system/amateur/`. Todo campo de contraseña usa `PasswordInput` (`_components/password-input.tsx`, con el ojo para verla u ocultarla), nunca un `<input type="password">` suelto.
 16. Los estados de carga, error y vacío se diseñan, no se dejan al azar. Los errores de la API se muestran, no se tragan.
 
 ### 4.4 Calidad

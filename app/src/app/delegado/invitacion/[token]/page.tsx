@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner } from "@/_components/spinner";
 import { SwitchAccount } from "@/_components/switch-account";
+import { PasswordInput } from "@/_components/password-input";
 
 // Quien recibió una invitación a ser delegado de un equipo temporal (especificación 009, entrega 4). Es pública: la
 // abre quien tiene el enlace, sin cuenta todavía. Muestra solo el equipo. Sin sesión, crea su cuenta ahí mismo (nombre,
@@ -140,9 +141,8 @@ export default function InvitacionDelegadoPage() {
               <label className="sr-only" htmlFor="del-password">
                 Contraseña
               </label>
-              <input
+              <PasswordInput
                 id="del-password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Contraseña (mínimo 8 caracteres)"
