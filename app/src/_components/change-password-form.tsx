@@ -5,6 +5,7 @@ import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
 import { Spinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
+import { PasswordInput } from "@/_components/password-input";
 
 const MIN_LENGTH = 8;
 
@@ -70,16 +71,16 @@ export function ChangePasswordForm() {
 
           <div>
             <label htmlFor="pw-current" className="text-sm text-text-secondary">Contraseña actual</label>
-            <input id="pw-current" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputClass} />
+            <PasswordInput id="pw-current" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputClass} />
           </div>
           <div>
             <label htmlFor="pw-new" className="text-sm text-text-secondary">Nueva contraseña</label>
-            <input id="pw-new" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
+            <PasswordInput id="pw-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
             <p className="mt-1 font-body text-xs text-text-secondary">Al menos {MIN_LENGTH} caracteres.</p>
           </div>
           <div>
             <label htmlFor="pw-confirm" className="text-sm text-text-secondary">Repite la nueva contraseña</label>
-            <input id="pw-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
+            <PasswordInput id="pw-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
           </div>
         </div>
 

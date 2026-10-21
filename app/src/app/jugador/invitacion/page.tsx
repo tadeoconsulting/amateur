@@ -7,6 +7,7 @@ import { BackHeader } from "@/_components/back-header";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
+import { PasswordInput } from "@/_components/password-input";
 
 type Preview = {
   kind: "link" | "email";
@@ -386,15 +387,15 @@ function InvitacionContent() {
             {/* Contraseña */}
             <div>
               <label className="text-sm text-text-secondary">Contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
+                wrapperClassName="mt-1"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 8 caracteres"
                 minLength={8}
                 maxLength={72}
                 autoComplete="new-password"
-                className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
+                className="w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
               />
             </div>
 

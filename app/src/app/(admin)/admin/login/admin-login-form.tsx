@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { safeInternalPath } from "@/_lib/safe-next";
+import { PasswordInput } from "@/_components/password-input";
 
 const input =
   "w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green";
@@ -82,8 +83,7 @@ export function AdminLoginForm({ next }: { next: string | null }) {
             autoComplete="username"
             className={input}
           />
-          <input
-            type="password"
+          <PasswordInput
             placeholder="Contraseña"
             aria-label="Contraseña"
             value={password}

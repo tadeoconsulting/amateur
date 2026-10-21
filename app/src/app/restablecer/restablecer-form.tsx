@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
+import { PasswordInput } from "@/_components/password-input";
 
 const MIN_LENGTH = 8;
 const inputClass = "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-brand-900 focus:outline-none";
@@ -85,11 +86,11 @@ export function RestablecerForm({ token }: { token: string }) {
               )}
               <div>
                 <label htmlFor="rp-new" className="text-sm text-text-secondary">Nueva contraseña</label>
-                <input id="rp-new" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
+                <PasswordInput id="rp-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label htmlFor="rp-confirm" className="text-sm text-text-secondary">Repite la contraseña</label>
-                <input id="rp-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
+                <PasswordInput id="rp-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
               </div>
             </div>
 

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import type { ProfileRole } from "@/lib/profiles";
 import { ProfilePicker } from "./profile-picker";
+import { PasswordInput } from "@/_components/password-input";
 
 type AuthView = "login" | "register";
 
@@ -204,8 +205,7 @@ export function AuthModal({
               autoComplete="email"
               className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
             />
-            <input
-              type="password"
+            <PasswordInput
               placeholder={view === "register" ? "Contraseña (mínimo 8 caracteres)" : "Contraseña"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

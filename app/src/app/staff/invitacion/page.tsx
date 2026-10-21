@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
+import { PasswordInput } from "@/_components/password-input";
 
 type Preview = {
   club: { id: string; name: string; shortName: string; color: string | null; logoUrl: string | null };
@@ -186,8 +187,7 @@ function InvitacionStaffContent() {
             disabled
             className="w-full cursor-not-allowed rounded-lg bg-brand-100 px-4 py-3 text-sm text-text-secondary focus:outline-none"
           />
-          <input
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Contraseña (mínimo 8 caracteres)"
