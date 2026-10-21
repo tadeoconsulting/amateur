@@ -10,7 +10,7 @@ interface StaffInvitationRow {
   token: string;
 }
 
-export const clubNavItems = [
+export const clubNavItems: { href: string; label: string; mobile?: boolean; icon: (active: boolean) => React.ReactNode }[] = [
   {
     href: "/club/torneos",
     label: "Torneos",
@@ -60,8 +60,20 @@ export const clubNavItems = [
     ),
   },
   {
+    href: "/club/gestion",
+    label: "Gestión",
+    icon: (active: boolean) => (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        {active && <path d="M4 20V10M10 20V4M16 20v-7" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />}
+      </svg>
+    ),
+  },
+  {
     href: "/club/ajustes",
     label: "Ajustes",
+    // En el celular Ajustes pasó a un ícono en el encabezado (ClubSettingsLink) para dejarle lugar a Gestión.
+    mobile: false,
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.5" fill={active ? "currentColor" : "none"} />
@@ -119,7 +131,7 @@ export function ClubBottomNav({ badges }: { badges: Record<string, number> }) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-brand-200 bg-surface-primary md:hidden">
       <div className="mx-auto flex max-w-[430px] items-center justify-around py-2">
-        {clubNavItems.map((item) => {
+        {clubNavItems.filter((item) => item.mobile !== false).map((item) => {
           const active = isClubNavActive(item.href, pathname);
           return (
             <Link

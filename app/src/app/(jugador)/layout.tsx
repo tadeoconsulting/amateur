@@ -16,6 +16,8 @@ export default function JugadorLayout({
     /^\/jugador\/torneos\/.+/.test(pathname) ||
     // Mis equipos (¿con qué equipo sales hoy?) y la búsqueda de equipos van sin barra, como en el diseño.
     /^\/jugador\/equipos/.test(pathname) ||
+    // Mi club (entrenamientos, asistencia y pagos): pantalla de detalle con su flecha para volver.
+    /^\/jugador\/mi-club/.test(pathname) ||
     /^\/jugador\/ajustes\/.+/.test(pathname);
   // Escritorio: la pantalla de un torneo es ancha (fixture con la tabla al lado); el resto, una columna
   // cómoda de lectura. La ficha de un partido también es ancha. En el celular todo sigue en 430 px.

@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canManageClub, forbidden, readJson, requireUser } from "@/_lib/auth";
 import { compareByLastName, playerIdentity, visibleIdentity } from "@/_lib/player-identity";
 import { canSeeFullIn, clubsWithFullNames, todayIso } from "@/_lib/minor-visibility-server";
+import { markFeeStart } from "@/_lib/club-fees-server";
 
 export async function GET(
   request: NextRequest,
@@ -109,6 +110,8 @@ export async function POST(
     const profile = existing
       ? await prisma.playerProfile.update({ where: { id: existing.id }, data })
       : await prisma.playerProfile.create({ data: { userId, ...data } });
+    // Desde este mes se le cobra la cuota del club (especificación 015).
+    await markFeeStart(userId, id);
     return Response.json(profile, { status: 201 });
   } catch (error) {
     console.error("Add player error:", error);
