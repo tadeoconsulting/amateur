@@ -13,7 +13,7 @@ export function Footer() {
           </Link>
           <nav aria-label="Enlaces" className="flex flex-wrap gap-x-8 gap-y-3">
             <a href="#torneos" className={LINK}>Torneos</a>
-            <a href="#plataforma" className={LINK}>La plataforma</a>
+            <a href="#plataforma" className={`${LINK} hidden md:inline`}>La plataforma</a>
             <a href="#como-funciona" className={LINK}>Cómo funciona</a>
             <Link href="/ayuda" className={LINK}>Centro de ayuda ↗</Link>
           </nav>
