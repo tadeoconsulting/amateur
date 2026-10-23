@@ -73,8 +73,9 @@ export function Roles() {
 
   return (
     <section
-      id="plataforma" 
-      className="scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28"
+      id="plataforma"
+      // Solo en pantalla de escritorio (md): en el celular es demasiado larga y estorba para navegar la landing.
+      className="hidden scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28 md:block"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}

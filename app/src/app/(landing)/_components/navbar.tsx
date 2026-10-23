@@ -5,7 +5,8 @@ import Link from "next/link";
 
 const ICON = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 
-const LINKS: { href: string; label: string; icon: ReactNode }[] = [
+/** `desktopOnly`: la sección solo existe en pantalla de escritorio (md), así que no va en la barra de abajo del celular. */
+const LINKS: { href: string; label: string; icon: ReactNode; desktopOnly?: boolean }[] = [
   {
     href: "#torneos",
     label: "Torneos",
@@ -17,6 +18,7 @@ const LINKS: { href: string; label: string; icon: ReactNode }[] = [
   },
   {
     href: "#plataforma",
+    desktopOnly: true,
     label: "Plataforma",
     icon: (
       <svg {...ICON}>
@@ -60,7 +62,8 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
       let found = "";
       for (const id of ["torneos", "plataforma", "como-funciona"]) {
         const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= line) found = `#${id}`;
+        // Una sección oculta (La plataforma en el celular) no cuenta: su posición es 0 y marcaría siempre esa.
+        if (el && el.offsetParent !== null && el.getBoundingClientRect().top <= line) found = `#${id}`;
       }
       setCurrent(found);
     };
@@ -105,8 +108,8 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
         aria-label="Secciones"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--lc-line)] bg-[var(--lc-bg)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
       >
-        <ul className="grid grid-cols-4">
-          {[{ href: "#", label: "Inicio", icon: HOME_ICON }, ...LINKS].map((l) => {
+        <ul className="grid grid-cols-3">
+          {[{ href: "#", label: "Inicio", icon: HOME_ICON }, ...LINKS.filter((l) => !l.desktopOnly)].map((l) => {
             const active = (l.href === "#" && current === "") || l.href === current;
             return (
               <li key={l.label}>
