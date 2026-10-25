@@ -74,7 +74,7 @@ export function Roles() {
   return (
     <section
       id="plataforma" 
-      className="scroll-mt-16 px-4 py-20 sm:px-6 sm:py-28"
+      className="scroll-mt-16 px-4 py-14 sm:px-6 sm:py-28"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -130,9 +130,11 @@ export function Roles() {
           role="tabpanel"
           aria-labelledby={`rol-tab-${active}`}
           key={active}
-          className="mt-10 grid gap-10 px-1 lg:grid-cols-2 lg:gap-16 lg:px-6"
+          className="mt-6 grid px-1 md:mt-10 md:gap-10 lg:grid-cols-2 lg:gap-16 lg:px-6"
         >
-          <div>
+          {/* El lema, el título, la bajada y el enlace del rol: solo en escritorio. En el celular ocupan demasiado y quedan
+              las pestañas (que ya dicen el rol) con la lista de lo que hace cada uno. */}
+          <div className="hidden md:block">
             <p className="lc-eyebrow mb-6 !text-[11px]">{role.eyebrow}</p>
             <h3 className="text-4xl font-bold leading-[1.1] sm:text-5xl">
               {role.title[0]}

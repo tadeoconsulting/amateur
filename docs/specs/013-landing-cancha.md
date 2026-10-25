@@ -39,7 +39,7 @@ Reemplazar la landing actual (clara, verde #00CA81, Lexend/Lato) por el lineamie
 3. **Cinta (marquee):** Fixture automático ✳ Estadísticas en vivo ✳ Perfil de jugador ✳ Tabla de posiciones ✳ Control de sanciones.
 4. ~~**En vivo ahora**~~ *(descartada, 2026-10-18)*: iba a mostrar una tarjeta por partido `en_curso` con tiempo real. No se hace; los partidos en vivo se ven en la sección Torneos (estado *En vivo*) y en la ficha de cada torneo.
 5. **Torneos** *(destacada)*: tarjetas de los torneos públicos, los más recientes primero (la misma regla de hoy: no `draft`, orden por inicio, máximo 6), con estado (*En vivo*, *Inscripción abierta*, *Finalizado*), formato, equipos, sede y fechas. Cada una enlaza a la URL pública del torneo.
-6. **La plataforma / Roles:** Organizador, Club, Jugador. **Fan** se conserva con el texto de hoy ("Sigue cada jugada"), reescrito con el nuevo tono, porque la landing actual ya lo promete.
+6. **La plataforma / Roles:** Organizador, Club, Jugador. **Fan** se conserva con el texto de hoy ("Sigue cada jugada"), reescrito con el nuevo tono, porque la landing actual ya lo promete. Son pestañas (una por rol, rotan solas cada 10 s). **En celular** se muestran solo las pestañas y la lista de ítems de cada rol; el lema, el título, la bajada y el enlace del rol quedan solo en escritorio (`md`, 768 px), porque en el celular la sección ocupaba demasiado espacio.
 7. **Cómo funciona:** los tres pasos (Crea tu torneo · Gestiona en vivo · Todo queda registrado), en la sección clara.
 8. **Tu esfuerzo cuenta:** el bloque emocional de la propuesta ("No es solo un partido").
 9. **CTA final:** "DEJA DE ADMINISTRAR EN WHATSAPP" con *Empezar ahora*.
