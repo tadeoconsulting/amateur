@@ -86,6 +86,7 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | Invitaciones | `GET /api/invitations/:token` | — |
 | | `POST /:token/accept`, `/decline`, `GET /api/invitations/mine` | sesión |
 | Admin | `GET /api/admin/stats` | ADMIN |
+| | `GET /api/admin/equipos` | ADMIN (los equipos inscritos en torneos, uno por equipo con sus torneos y organizador; sin contacto del delegado) |
 
 ## Pantallas
 Modal de login y registro en la landing (con contraseña). Al **crear cuenta**, los perfiles se eligen con un desplegable (`profile-picker.tsx`, que lee `src/_lib/profiles.ts`) llamado "¿Cómo vas a usar Amateur?": selección múltiple y **obligatorio** (al menos uno). El login no pregunta nada — no tiene forma de elegir un perfil ahí (existió un "Ingresar como" opcional, se quitó por confuso: `/seleccion-perfil` ya cubre el caso de elegir con cuál entrar).
