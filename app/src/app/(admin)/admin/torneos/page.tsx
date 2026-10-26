@@ -10,6 +10,7 @@ import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
 import { ConfirmDelete } from "../_components/confirm-delete";
 import { TorneosEliminados, type DeletedTournament } from "./_components/eliminados";
+import { TorneosEquipos } from "./_components/equipos";
 
 interface TournamentRow {
   id: string;
@@ -63,7 +64,7 @@ function AdminTorneosContent() {
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<TournamentRow | null>(null);
-  const [vista, setVista] = useState<"activos" | "eliminados">("activos");
+  const [vista, setVista] = useState<"activos" | "eliminados" | "equipos">("activos");
 
   // Se trae todo y se filtra acá: los filtros son de varias opciones a la vez y se combinan.
   const { data: tournaments, loading, refetch } = useApi<TournamentRow[]>(() => fetch("/api/tournaments").then((r) => r.json()));
@@ -133,6 +134,7 @@ function AdminTorneosContent() {
       <div role="tablist" aria-label="Vista de torneos" className="mb-5 flex gap-1 rounded-xl bg-btn-regular p-1 w-fit">
         {([
           { key: "activos", label: "Activos" },
+          { key: "equipos", label: "Equipos" },
           { key: "eliminados", label: `Eliminados${eliminados && eliminados.length > 0 ? ` (${eliminados.length})` : ""}` },
         ] as const).map((v) => (
           <button
@@ -152,6 +154,8 @@ function AdminTorneosContent() {
 
       {vista === "eliminados" ? (
         <TorneosEliminados rows={eliminados ?? []} onChanged={() => { refetchEliminados(); refetch(); }} />
+      ) : vista === "equipos" ? (
+        <TorneosEquipos statusLabels={statusLabels} />
       ) : (
         <>
       {/* Search and filters */}

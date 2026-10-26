@@ -652,7 +652,8 @@ const sortAccessors = {
 function AdminClubesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState("");
+  // `?buscar=` llega desde Admin → Torneos → Equipos ("Ver en Clubes"): abre la lista ya filtrada por ese equipo.
+  const [search, setSearch] = useState(searchParams.get("buscar") ?? "");
   const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
   const [showCreate, setShowCreate] = useState(searchParams.get("crear") === "true");
   const [editingClub, setEditingClub] = useState<ClubRow | null>(null);
