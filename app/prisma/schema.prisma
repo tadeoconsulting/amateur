@@ -828,3 +828,25 @@ model Attendance {
   @@unique([sessionId, playerId])
   @@index([playerId])
 }
+
+// Contenido editable por el admin (especificación 016): el Centro de ayuda, los Términos y condiciones y las
+// Políticas de privacidad. Cada tipo es una lista ordenada de secciones; en Ayuda, cada una es una pregunta con su
+// respuesta y una categoría. Texto plano, sin HTML.
+enum ContentKind {
+  AYUDA
+  TERMINOS
+  POLITICAS
+}
+
+model ContentItem {
+  id          String      @id @default(cuid())
+  kind        ContentKind
+  category    String?
+  title       String      @default("")
+  body        String
+  position    Int
+  updatedAt   DateTime    @updatedAt
+  updatedById String?
+
+  @@unique([kind, position])
+}

@@ -121,6 +121,10 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 - `Attendance`: `presente`, `ausente` o `justificado` de un jugador en una sesión, único por `sessionId, playerId`. **Sin fila = sin marcar.** Guarda quién la marcó y cuándo. Se borra en cascada con la sesión o la ficha.
 - Privacidad: la asistencia de un jugador no sale de `/api/clubs/:id/gestion/**` (solo delegados y admin).
 
+### ContentItem (especificación 016)
+- Una **sección** de un documento editable por el admin: `kind` (`AYUDA`, `TERMINOS` o `POLITICAS`), `category` (solo Ayuda), `title` (la pregunta en Ayuda; opcional en los otros), `body` (texto plano) y `position` (el orden dentro del tipo). **Único por `kind, position`.** Sin llaves hacia otras tablas: `updatedById` guarda quién la editó, sin relación.
+- Un tipo **sin filas** no está vacío: la página pública muestra el texto de partida del código. El admin reemplaza **todas** las secciones de un tipo de una vez (transacción).
+
 ### PlayerInvitation
 - Invitación personal (a un correo). `status`: `pending`, `accepted`, `declined`. Vence a los 7 días. `token` único.
 - El link general del club **no** usa esta tabla (usa `Club.inviteToken`).

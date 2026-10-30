@@ -41,7 +41,7 @@ export function Accordion({
             </button>
             {isOpen && (
               <div className="border-t border-brand-200 px-3 py-3">
-                <p className="font-body text-sm leading-relaxed text-text-secondary">
+                <p className="whitespace-pre-line font-body text-sm leading-relaxed text-text-secondary">
                   {item.answer}
                 </p>
               </div>

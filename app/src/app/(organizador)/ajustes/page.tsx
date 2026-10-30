@@ -7,9 +7,9 @@ const menuItems = [
   { label: "Mi Perfil", href: "/ajustes/perfil" },
   { label: "Mis sedes", href: "/ajustes/sedes" },
   { label: "Cambiar contraseña", href: "/ajustes/contrasena" },
-  { label: "Centro de ayuda", href: "#" },
-  { label: "Términos y condiciones", href: "#" },
-  { label: "Políticas de privacidad", href: "#" },
+  { label: "Centro de ayuda", href: "/ayuda" },
+  { label: "Términos y condiciones", href: "/terminos" },
+  { label: "Políticas de privacidad", href: "/privacidad" },
 ];
 
 export default function AjustesPage() {
