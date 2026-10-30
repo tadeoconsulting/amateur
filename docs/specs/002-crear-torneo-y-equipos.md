@@ -48,10 +48,12 @@ Vive en `/crear-torneo`. Los datos se conservan al ir y volver entre pasos (cont
 | Paso | Obligatorio para continuar |
 |---|---|
 | 1 · Información | nombre, fecha de inicio y sede |
-| 2 · Modalidad | modalidad, tipo de competencia y **al menos 2 equipos**. Género y categoría son opcionales. |
-| 3 · Bases | nada. Minutos, jugadores, delegado, costos y condiciones son opcionales. |
+| 2 · Modalidad | modalidad, tipo de competencia y **al menos 2 equipos**. Género y categoría son opcionales. Aquí ya se puede **crear el torneo**. |
+| 3 · Bases (opcional) | nada. Minutos, jugadores, delegado, costos y condiciones son opcionales. Solo se llega si la persona elige "Establecer las bases (opcional)" en el paso 2. |
 
-"Crear torneo" envía todo con `status: "inscripcion"`, muestra la confirmación con las bases y lleva al torneo nuevo. Un `0` en minutos o jugadores significa "sin definir" (se envía `null`). La sede se guarda como el texto `"nombre, dirección"` en `location`.
+**Las bases son opcionales** (observación 67, octubre 2026): el paso 2 ofrece **"Crear torneo"** (crea con las bases sin definir y lleva directo al torneo) y **"Establecer las bases (opcional)"** (pasa al paso 3). En el paso 3, "Crear torneo" también lleva directo al torneo, sin abrir la pantalla de Bases aparte; "Cancelar" sale sin crear. Las bases se ven y se editan desde el torneo (pestaña *Bases* de la edición).
+
+"Crear torneo" envía todo con `status: "inscripcion"` y lleva al torneo nuevo. Un `0` en minutos o jugadores significa "sin definir" (se envía `null`). La sede se guarda como el texto `"nombre, dirección"` en `location`.
 
 ### Foto del torneo
 En el paso *Información* (al crear y al editar) el organizador puede **subir una foto del torneo** (opcional): se encuadra en un círculo, se sube con `/api/upload` y se guarda como `logoUrl` junto con el resto. "Quitar" la deja sin foto. El admin la sube o cambia desde el formulario del torneo en `/admin/torneos`. La foto se ve en la cabecera del torneo del fan, en la del organizador, en sus listas y en el selector de torneos del jugador; sin foto, el círculo con el trofeo de siempre. Código: `_components/tournament-photo-field.tsx`, `_components/tournament-logo.tsx`.
@@ -98,4 +100,4 @@ Reutiliza los tres pasos de `/crear-torneo`, cargados con lo que el torneo ya ti
 - **"Definir edad"** en la categoría no pregunta la edad.
 - **No hay forma de asignar grupos** desde la interfaz (formato `grupos`): solo por API.
 - **"Editar torneo" tiene un solo acceso en pantalla:** solo aparece en un torneo en convocatoria sin equipos (ver arriba). Con equipos hay que abrir `/torneos/[id]/editar` a mano o usar el panel de admin.
-- **"Omitir este paso"** sale del asistente y descarta lo escrito; no guarda borradores.
+- **"Omitir este paso"** (pasos 1 y 2) y **"Cancelar"** (paso 3) salen del asistente y descartan lo escrito; no guardan borradores.

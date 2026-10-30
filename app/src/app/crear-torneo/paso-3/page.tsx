@@ -47,9 +47,15 @@ export default function CrearTorneoPaso3Page() {
       setError(result.error);
       return;
     }
-    setCreatedId(result.id);
     setTorneoCreado(true);
-    setShowBasesList(true);
+    // Al terminar se va al torneo nuevo, que es donde se agregan los equipos. Las bases ya no se muestran
+    // aparte: se ven (y se editan) desde el torneo.
+    if (editing) {
+      setCreatedId(result.id);
+      setShowBasesList(true);
+    } else {
+      router.push(`/torneos/${result.id}`);
+    }
   }
 
   function handleAddCondicion(texto: string) {
@@ -82,7 +88,7 @@ export default function CrearTorneoPaso3Page() {
         {/* Titles */}
         {!editing && <p className="font-heading text-sm font-semibold text-text-secondary mb-1">Crea tu primer torneo</p>}
         <h1 className="font-heading text-[22px] font-bold text-text-primary leading-tight mb-6">
-          Establece las bases
+          Establece las bases{!editing && <span className="font-body text-base font-normal text-text-secondary"> (opcional)</span>}
         </h1>
 
         {/* Minutos y jugadores */}
@@ -311,7 +317,7 @@ export default function CrearTorneoPaso3Page() {
             onClick={() => router.push(exitHref)}
             className="w-full py-3 font-heading text-sm font-semibold text-text-primary cursor-pointer"
           >
-            {editing ? "Cancelar" : "Omitir este paso"}
+            Cancelar
           </button>
         </div>
       </div>

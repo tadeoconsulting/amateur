@@ -9,6 +9,7 @@ import { CompetenciaModal } from "../_components/competencia-modal";
 import { useWizard } from "../_components/wizard-context";
 import { EditTabs } from "../_components/edit-tabs";
 import { useEditSave } from "../_components/use-edit-save";
+import { saveWizardTournament } from "../_components/save-tournament";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
@@ -28,8 +29,27 @@ export default function CrearTorneoPaso2Page() {
   // Modalidad, tipo de competencia y al menos 2 equipos: sin eso no se puede armar el torneo.
   const canContinue = modalidad !== "" && tipoCompetencia !== "" && cantidadEquipos >= 2;
 
-  function handleContinuar() {
+  // Las bases (tiempos, costos, condiciones) son opcionales: se puede crear el torneo ya desde este paso, y
+  // solo quien quiere definirlas pasa al paso 3.
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  function handleBases() {
     router.push(`${basePath}/paso-3`);
+  }
+
+  async function handleCrear() {
+    if (creating) return;
+    setCreateError("");
+    setCreating(true);
+    const result = await saveWizardTournament(state, null);
+    if (!result.ok) {
+      setCreating(false);
+      setCreateError(result.error);
+      return;
+    }
+    // Se queda en "creando" hasta que cambia la pantalla: evita crear el torneo dos veces.
+    router.push(`/torneos/${result.id}`);
   }
 
   return (
@@ -177,13 +197,26 @@ export default function CrearTorneoPaso2Page() {
               </button>
             </>
           ) : (
-            <button
-              onClick={handleContinuar}
-              disabled={!canContinue}
-              className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
-            >
-              Continuar
-            </button>
+            <>
+              {createError && <p role="alert" className="font-body text-sm text-red-600">{createError}</p>}
+              <button
+                onClick={handleCrear}
+                disabled={!canContinue || creating}
+                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                {creating ? "Creando..." : "Crear torneo"}
+              </button>
+              <button
+                onClick={handleBases}
+                disabled={!canContinue || creating}
+                className="w-full rounded-lg border border-border-primary py-3.5 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular transition-colors cursor-pointer disabled:opacity-40"
+              >
+                Establecer las bases (opcional)
+              </button>
+              <p className="text-center font-body text-xs text-text-secondary">
+                Tiempos, llaves y costos. Puedes definirlos después desde el torneo.
+              </p>
+            </>
           )}
           <button
             onClick={() => router.push(exitHref)}
