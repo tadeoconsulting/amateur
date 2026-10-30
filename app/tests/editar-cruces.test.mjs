@@ -238,6 +238,51 @@ describe("partidos que ya empezaron y datos inválidos", () => {
   });
 });
 
+describe("el lápiz del partido (PATCH /api/matches/:id) tampoco deja un equipo dos veces en una fecha", () => {
+  test("poner a un equipo que ya juega esa fecha se rechaza con 409 y manda a «Editar cruces»", async () => {
+    const org = await organizer("crpatch");
+    const id = await leagueWithFixture(org);
+    const { matches } = await load(org.client, id);
+    const [a, b] = inDay(matches, 1);
+
+    // El caso real: en el partido A cambio un equipo por uno del partido B, que sigue jugando ahí.
+    const r = await org.client.patch(`/api/matches/${a.id}`, { homeTeamId: a.homeTeamId, awayTeamId: b.homeTeamId });
+    assert.equal(r.status, 409, JSON.stringify(r.data));
+    assert.match(r.data.error, /ya juega en la fecha 1/);
+    assert.match(r.data.error, /Editar cruces/);
+
+    const after = (await load(org.client, id)).matches;
+    assert.deepEqual(after.map(patchOf), matches.map(patchOf), "no cambió nada");
+  });
+
+  test("con 5 equipos se puede poner al que descansa esa fecha", async () => {
+    const org = await organizer("crrest");
+    const id = await leagueWithFixture(org, 5);
+    const { matches } = await load(org.client, id);
+    const day1 = inDay(matches, 1);
+    const playing = new Set(day1.flatMap((m) => [m.homeTeamId, m.awayTeamId]));
+    const resting = [...new Set(matches.flatMap((m) => [m.homeTeamId, m.awayTeamId]))].find((t) => !playing.has(t));
+
+    const r = await org.client.patch(`/api/matches/${day1[0].id}`, { homeTeamId: day1[0].homeTeamId, awayTeamId: resting });
+    assert.equal(r.status, 200, JSON.stringify(r.data));
+  });
+
+  test("reprogramar un partido no se bloquea por un cruce repetido que ya venía de antes", async () => {
+    const org = await organizer("crlegacy");
+    const id = await leagueWithFixture(org);
+    const { matches } = await load(org.client, id);
+    const [a, b] = inDay(matches, 1);
+
+    // Un partido suelto con un equipo que ya juega en la fecha 1 deja un cruce repetido (como los que ya existen).
+    const dup = await org.client.post("/api/matches", { tournamentId: id, homeTeamId: a.homeTeamId, awayTeamId: b.awayTeamId, matchday: 1, date: "2026-10-03", time: "18:00", location: "X" });
+    assert.equal(dup.status, 201, JSON.stringify(dup.data));
+
+    // La pantalla manda siempre los dos equipos aunque solo cambie la hora: debe seguir funcionando.
+    const r = await org.client.patch(`/api/matches/${a.id}`, { homeTeamId: a.homeTeamId, awayTeamId: a.awayTeamId, date: "2026-10-10", time: "19:00", location: "Y" });
+    assert.equal(r.status, 200, JSON.stringify(r.data));
+  });
+});
+
 function byId(list, id) {
   return list.find((m) => m.id === id);
 }

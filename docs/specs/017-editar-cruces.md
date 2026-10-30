@@ -2,7 +2,7 @@
 
 **Estado:** ✅ **Implementada** (octubre 2026). Las decisiones las tomó el usuario el 2026-10-30, respondiendo a las preguntas de diseño.
 **Código:** `src/_lib/fixture-edit.ts` (lógica pura), `src/app/api/tournaments/[id]/fixture/cruces/route.ts`, pantalla `src/app/(organizador)/torneos/[id]/editar-cruces/**`; accesos desde `torneos/[id]/{manual,partidos}`.
-**Pruebas:** `tests/unit/fixture-edit.test.mjs` (19) y `tests/editar-cruces.test.mjs` (10, integración); pantalla verificada en un navegador contra una base local (5 equipos, para ver también el descanso).
+**Pruebas:** `tests/unit/fixture-edit.test.mjs` (19) y `tests/editar-cruces.test.mjs` (13, integración); pantalla verificada en un navegador contra una base local (5 equipos, para ver también el descanso).
 **Origen:** pedido del usuario: tras armar el fixture, poder **mover un partido a otra fecha** y **cambiar un equipo** sin cambiar la cantidad de partidos.
 **Toca:** [003](003-fixture.md) (el fixture y su limitación "los cruces no se editan"), [001](001-autenticacion-y-permisos.md) (ruta nueva).
 
@@ -36,6 +36,12 @@ Corregir un cruce sin rehacer el fixture. Con el modo manual (o el automático) 
 | `PUT` | Cuerpo `{ matches: [{ id, matchday, homeTeamId, awayTeamId, date, time, location }] }` con **solo los que cambiaron**. Valida todo junto y guarda en una transacción. Devuelve `{ updated }`. |
 
 Errores del `PUT`: `400` si el cuerpo está mal formado (fecha o hora inválidas, partidos repetidos, ids que no son de este fixture); `409` si no hay fixture que editar o si la edición rompe una regla (un equipo dos veces en una fecha, cambia la cantidad de partidos de una fecha, toca un partido que ya empezó, equipo de otro grupo, choque de horario). Sin cambios no escribe nada (`updated: 0`).
+
+### El lápiz del partido (`PATCH /api/matches/:id`)
+Esa ruta ya permitía cambiar los dos equipos de un partido que no empezó (el lápiz de cada partido en la pantalla del torneo, `match-editor.tsx`). **No comprobaba la regla de una vez por fecha**, y con ella se llegó a dejar a un equipo en dos partidos de la misma fecha (octubre 2026: Chilón FC y Las Lomas FC, cada uno dos veces en la Fecha 1 de *Liga 1 – Apertura 2026*, y el partido editado con día y hora mientras el otro seguía "Por definir"). Ahora:
+- Si el cambio **mete a un equipo que ya juega en otro partido de esa misma fecha y grupo**, responde `409` con el nombre del equipo y la indicación de usar **«Editar cruces»**, que sí reacomoda el resto de la fecha.
+- Solo cuentan los equipos que **entran** al partido. La pantalla manda siempre los dos equipos aunque solo cambie la hora, así que **reprogramar un partido no se bloquea** por un cruce repetido que ya venía de antes.
+- Quedan fuera de esta regla `POST /api/matches` (agregar un partido suelto) y los fixtures ya guardados: un cruce repetido existente se **arregla con «Editar cruces»**, que lo marca en rojo y no deja guardar hasta resolverlo.
 
 ## Pantalla (`/torneos/:id/editar-cruces`)
 Un borrador en pantalla que se guarda de una vez.
