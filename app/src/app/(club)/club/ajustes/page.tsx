@@ -11,6 +11,7 @@ const menuItems = [
   { label: "Cambiar contraseña", href: "/club/ajustes/contrasena" },
   { label: "Centro de ayuda", href: "/ayuda" },
   { label: "Términos y condiciones", href: "/terminos" },
+  { label: "Políticas de privacidad", href: "/privacidad" },
 ];
 
 function MenuRow({ label, href }: { label: string; href: string }) {

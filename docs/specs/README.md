@@ -23,6 +23,7 @@ Este directorio explica **qué hace la plataforma y por qué**, para que alguien
 | [013-landing-cancha.md](013-landing-cancha.md) | Landing "Tu torneo, tu cancha": nuevo lineamiento gráfico (oscuro, lima, tipografía condensada) con los torneos reales destacados. Implementada; la entrega 2 (partido real en el hero y "En vivo ahora") se descartó |
 | [014-co-delegados.md](014-co-delegados.md) | **Propuesta.** Varios delegados en un mismo equipo: el principal y hasta 3 co-delegados con los mismos permisos, salvo eliminar o transferir el club, cambiar el contacto público y gestionar a otros delegados. Se suman por invitación (enlace o correo) |
 | [015-gestion-del-club.md](015-gestion-del-club.md) | **Implementada completa** (Pagos, sesiones y asistencia, vista del jugador y dashboard); los recordatorios quedan para una segunda entrega. Pestaña "Gestión" del club: control manual de cuotas mensuales por jugador (cuota estándar, monto propio, pagos parciales con trazabilidad), sesiones de entrenamiento con lugares y horarios semanales, asistencia con checklist en el celular y dashboard. El jugador ve su propia asistencia y su deuda |
+| [016-contenido-editable.md](016-contenido-editable.md) | **Implementada.** Centro de ayuda, Términos y condiciones y Políticas de privacidad editables desde el panel de admin, un editor aparte por tipo y comunes a toda la plataforma; texto plano, con el texto de partida de respaldo |
 | [pendientes-y-decisiones.md](pendientes-y-decisiones.md) | Lo que falta, decisiones abiertas y limitaciones conocidas |
 
 ## Glosario
