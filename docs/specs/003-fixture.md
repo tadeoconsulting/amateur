@@ -87,7 +87,7 @@ Acepta `date` (`YYYY-MM-DD`), `time` (`HH:MM`) y `location` (hasta 200).
   - *Automática:* lleva al formulario (`/fixture`); **el fixture se crea al pulsar Guardar**, no antes.
   - *Manual:* crea los cruces sin programar y lleva a `/manual`.
 - **`/torneos/:id/fixture` (formulario):** una pestaña por fecha real (una liga de 4 equipos tiene 3). Las fechas que no se toquen **heredan la anterior una semana después**. Un error de la API lleva a la pestaña de la fecha que falló.
-- **`/torneos/:id/manual`:** cruces por fecha, "Configurar" en cada partido y "Por definir" mientras no tenga hora.
+- **`/torneos/:id/manual`:** cruces por fecha, "Configurar" en cada partido y "Por definir" mientras no tenga hora. Un botón **"Editar cruces"** (también en `/partidos`) lleva a `/torneos/:id/editar-cruces`, [017](017-editar-cruces.md).
 - **`/torneos/:id/configurar/:matchId`:** día (calendario), hora, minuto y sede. Las sedes ofrecidas son la del torneo, la cancha del local y la que ya tenga el partido. Muestra el error de choque.
 - **`/torneos/:id/partidos`:** el fixture por fecha; los partidos sin programar dicen "Por definir" (también en las pantallas de club y jugador).
 - **Detalle del torneo:** botón **"Iniciar torneo"** con 2 equipos o más. En "Ver todos", el botón se habilita con 2 equipos o más.
@@ -96,7 +96,7 @@ Acepta `date` (`YYYY-MM-DD`), `time` (`HH:MM`) y `location` (hasta 200).
 - **Eliminación directa, copa y relámpago no tienen fixture.** Necesitan resolver empates sin penales y rondas que dependen de resultados anteriores (los partidos exigen dos equipos definidos).
 - **Sin sorteo:** el orden es el de inscripción. **Una sola vuelta:** no hay "ida y vuelta".
 - **En sede del torneo se juega de a un partido por horario:** no hay varias canchas simultáneas.
-- **El modo manual solo programa día, hora y sede:** los cruces (quién juega contra quién) no se editan.
+- **El modo manual solo programa día, hora y sede.** Los cruces ya armados se editan aparte, con **"Editar cruces"** (cambiar un equipo y mover un partido de fecha, sin cambiar la cantidad de partidos): ver [017](017-editar-cruces.md).
 - **Regenerar o deshacer el fixture no tiene botón:** existe en la API (`replace`, `DELETE`), pero no en la pantalla.
 - **Asignar grupos** (formato `grupos`) no tiene pantalla.
 - El selector de hora de la pantalla ofrece minutos de 5 en 5; si una hora generada no lo es, se agrega como opción.
