@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { getTournament, getMatches } from "@/_lib/api";
@@ -94,6 +95,18 @@ export default function ManualFixturePage() {
           </svg>
         </div>
       </div>
+
+      {/* Cambiar equipos y mover partidos de fecha (especificación 017). */}
+      {(allMatches ?? []).some((m) => !m.decisive) && (
+        <div className="px-4 pb-3">
+          <Link
+            href={`/torneos/${params.id}/editar-cruces`}
+            className="inline-flex rounded-lg border border-border-primary px-3 py-2 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+          >
+            Editar cruces
+          </Link>
+        </div>
+      )}
 
       {/* Matchday tabs */}
       <div className="flex gap-2 overflow-x-auto px-4 pb-3 no-scrollbar">

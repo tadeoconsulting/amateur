@@ -67,6 +67,7 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | | `GET /api/tournament-requests/mine` | cualquier sesión (solo ve las de sus propios clubes) |
 | | `DELETE /api/tournaments/:id/teams/:clubId` | organizador del torneo o dueño del club que se retira |
 | | `POST/DELETE /api/tournaments/:id/fixture` | organizador del torneo |
+| | `GET/PUT /api/tournaments/:id/fixture/cruces` | organizador del torneo o ADMIN (editar los cruces de un fixture armado, [017](017-editar-cruces.md)) |
 | Partidos | `GET /api/matches`, `/:id`, `/:id/events` | — |
 | | `POST /api/matches` | organizador del torneo |
 | | `PATCH /api/matches/:id`, `POST /:id/events`, `DELETE /:id/events/:eventId` | organizador del torneo del partido |
