@@ -81,6 +81,7 @@ Borra los partidos y el torneo vuelve a `inscripcion` (se pueden agregar equipos
 Acepta `date` (`YYYY-MM-DD`), `time` (`HH:MM`) y `location` (hasta 200).
 - Solo mientras el partido está `programado` (`409` si no).
 - **Choques (`409`):** otro partido del torneo el mismo día y hora con un mismo equipo o en la misma sede (si tiene sede). Un partido no choca consigo mismo.
+- **Cambiar los equipos** (`homeTeamId` y `awayTeamId` juntos): `409` si el equipo que entra ya juega en otro partido de la misma fecha y grupo. Para cambiar un equipo reacomodando la fecha, [017](017-editar-cruces.md).
 
 ## Pantallas
 - **`/torneos/:id/iniciar`:** dos opciones. Si no se puede armar el fixture, en vez de los botones explica el motivo (ya empezó, formato sin soporte, faltan equipos, grupos sin asignar). La confirmación avisa cuántos equipos faltan para completar el cupo y que ya no se podrán agregar ni quitar.

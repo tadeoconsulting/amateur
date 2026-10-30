@@ -119,6 +119,8 @@ export async function PATCH(
     select: {
       status: true,
       tournamentId: true,
+      matchday: true,
+      groupName: true,
       homeTeamId: true,
       awayTeamId: true,
       homeScore: true,
@@ -155,6 +157,31 @@ export async function PATCH(
       where: { tournamentId: current.tournamentId, clubId: { in: [homeTeamId as string, awayTeamId as string] } },
     });
     if (enrolled !== 2) return badRequest("Los dos equipos deben estar inscritos en el torneo");
+
+    // Un equipo juega una sola vez por fecha (especificación 017): no se puede poner a uno que ya juega en otro partido
+    // de esta misma fecha y grupo. Para cambiar un equipo reacomodando el resto de la fecha está "Editar cruces".
+    // Solo cuentan los equipos que entran: la pantalla manda siempre los dos aunque solo cambie la hora, y reprogramar un
+    // partido no debe quedar bloqueado por un cruce repetido que ya venía de antes.
+    const entering = [homeTeamId as string, awayTeamId as string].filter((t) => t !== current.homeTeamId && t !== current.awayTeamId);
+    if (entering.length > 0) {
+      const playingAlready = await prisma.match.findFirst({
+        where: {
+          tournamentId: current.tournamentId,
+          id: { not: id },
+          matchday: current.matchday,
+          groupName: current.groupName,
+          decisive: false,
+          OR: [{ homeTeamId: { in: entering } }, { awayTeamId: { in: entering } }],
+        },
+        select: { homeTeamId: true, homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
+      });
+      if (playingAlready) {
+        const name = entering.includes(playingAlready.homeTeamId ?? "") ? playingAlready.homeTeam?.name : playingAlready.awayTeam?.name;
+        return conflict(
+          `${name ?? "Ese equipo"} ya juega en la fecha ${current.matchday}. Para cambiar un equipo y reacomodar el resto de la fecha usa «Editar cruces».`
+        );
+      }
+    }
     data.homeTeamId = homeTeamId;
     data.awayTeamId = awayTeamId;
   }
