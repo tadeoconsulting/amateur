@@ -39,7 +39,8 @@ Errores del `PUT`: `400` si el cuerpo está mal formado (fecha o hora inválidas
 
 ### El lápiz del partido (`PATCH /api/matches/:id`)
 Esa ruta ya permitía cambiar los dos equipos de un partido que no empezó (el lápiz de cada partido en la pantalla del torneo, `match-editor.tsx`). **No comprobaba la regla de una vez por fecha**, y con ella se llegó a dejar a un equipo en dos partidos de la misma fecha (octubre 2026: Chilón FC y Las Lomas FC, cada uno dos veces en la Fecha 1 de *Liga 1 – Apertura 2026*, y el partido editado con día y hora mientras el otro seguía "Por definir"). Ahora:
-- Si el cambio **mete a un equipo que ya juega en otro partido de esa misma fecha y grupo**, responde `409` con el nombre del equipo y la indicación de usar **«Editar cruces»**, que sí reacomoda el resto de la fecha.
+- Si el cambio **mete a un equipo que ya juega en otro partido de esa misma fecha y grupo**, responde `409` con el nombre del equipo, **contra quién ya juega** ("La Alborada FC ya juega en la fecha 3 (contra Boca Jrs - Animas)…") y la indicación de usar **«Editar cruces»**, que sí reacomoda el resto de la fecha.
+- **La hoja del lápiz (`match-editor.tsx`) ya no cambia equipos al editar:** muestra "Local vs Visitante" como texto fijo con un enlace a «Editar cruces», y el `PATCH` manda solo día, hora y sede. Los selectores de equipo quedan solo para **agregar** un partido nuevo.
 - Solo cuentan los equipos que **entran** al partido. La pantalla manda siempre los dos equipos aunque solo cambie la hora, así que **reprogramar un partido no se bloquea** por un cruce repetido que ya venía de antes.
 - Quedan fuera de esta regla `POST /api/matches` (agregar un partido suelto) y los fixtures ya guardados: un cruce repetido existente se **arregla con «Editar cruces»**, que lo marca en rojo y no deja guardar hasta resolverlo.
 
@@ -51,7 +52,7 @@ Un borrador en pantalla que se guarda de una vez.
 - Si un equipo queda dos veces en una fecha, una alerta roja arriba lo dice con un enlace a esa fecha, y **"Guardar cambios" queda deshabilitado**. Los cruces repetidos salen como aviso amarillo.
 - Debajo de los partidos: **"Descansa: …"** con quién no juega esa fecha.
 - Barra inferior fija: "Guardar cambios (N partidos)" y "Descartar".
-- Accesos: botón **"Editar cruces"** en `/torneos/:id/manual` y en `/torneos/:id/partidos`, visible si hay partidos de liga o grupos.
+- Accesos: botón **"Editar cruces"** en la **pantalla principal del torneo** (pestaña *Partidos*, junto a *Editar torneo*, *Mesa* y *Deshacer fixture*), en `/torneos/:id/manual` y en `/torneos/:id/partidos`, visible si hay partidos de liga o grupos. (Al principio solo estaba en las dos últimas y no se encontraba desde donde se trabaja el torneo.)
 
 ## Fuera de alcance
 - **Reacomodo automático** al mover de fecha (se evaluó una cadena mínima con vista previa; el usuario prefirió el modo manual guiado).

@@ -553,6 +553,12 @@ export default function TournamentDetailPage() {
             <Link href={`/torneos/${params.id}/mesa`} className="font-heading text-xs font-bold text-text-primary underline">
               Mesa
             </Link>
+            {/* Cambiar equipos y mover partidos de fecha sin que nadie juegue dos veces en una fecha (especificación 017). */}
+            {matches.some((m) => !m.decisive) && (
+              <Link href={`/torneos/${params.id}/editar-cruces`} className="font-heading text-xs font-bold text-text-primary underline">
+                Editar cruces
+              </Link>
+            )}
             {matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0) && (
               <button
                 onClick={() => setConfirmUndoFixture(true)}
