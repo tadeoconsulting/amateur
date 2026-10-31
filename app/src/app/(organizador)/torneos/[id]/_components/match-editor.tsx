@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { MatchListItem } from "@/_lib/api";
 
 type TeamOption = { id: string; name: string; groupName: string | null };
@@ -82,7 +83,8 @@ export function MatchEditor({
       // "Por definir": sin hora; el día se conserva (en un partido nuevo, hoy) y la pantalla lo ignora.
       const schedule = { date: tbd ? (match ? match.date.slice(0, 10) : todayYmd()) : date, time: tbd ? "" : time, location: location.trim() };
       if (match) {
-        await send(`/api/matches/${match.id}`, "PATCH", { homeTeamId: homeId, awayTeamId: awayId, ...schedule });
+        // Solo día, hora y sede: los equipos se cambian en «Editar cruces».
+        await send(`/api/matches/${match.id}`, "PATCH", schedule);
         onSaved("Partido actualizado.");
       } else {
         const home = teams.find((t) => t.id === homeId);
@@ -171,14 +173,36 @@ export function MatchEditor({
               )}
             </div>
 
-            <div>
-              <label htmlFor="me-local" className={label}>Local</label>
-              {teamSelect(homeId, setHomeId, awayId, "me-local")}
-            </div>
-            <div>
-              <label htmlFor="me-visita" className={label}>Visitante</label>
-              {teamSelect(awayId, setAwayId, homeId, "me-visita")}
-            </div>
+            {editing ? (
+              // Cambiar un equipo mueve también al otro partido de la fecha (cada equipo juega una vez por fecha),
+              // y eso lo resuelve «Editar cruces» (especificación 017), no esta hoja.
+              <div>
+                <span className={label}>Equipos</span>
+                <p className="font-body text-sm text-text-primary">
+                  {teams.find((t) => t.id === homeId)?.name ?? "Por definir"} vs {teams.find((t) => t.id === awayId)?.name ?? "Por definir"}
+                </p>
+                {!match?.decisive && (
+                  <p className="mt-1 font-body text-xs text-text-secondary">
+                    Para cambiar un equipo o mover el partido a otra fecha usa{" "}
+                    <Link href={`/torneos/${tournamentId}/editar-cruces`} className="font-semibold text-text-primary underline">
+                      Editar cruces
+                    </Link>
+                    : reacomoda el resto de la fecha para que nadie juegue dos veces.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="me-local" className={label}>Local</label>
+                  {teamSelect(homeId, setHomeId, awayId, "me-local")}
+                </div>
+                <div>
+                  <label htmlFor="me-visita" className={label}>Visitante</label>
+                  {teamSelect(awayId, setAwayId, homeId, "me-visita")}
+                </div>
+              </>
+            )}
 
             <label className="flex cursor-pointer items-center gap-2 font-body text-sm text-text-primary">
               <input type="checkbox" checked={tbd} onChange={(e) => setTbd(e.target.checked)} disabled={saving} className="h-4 w-4" />

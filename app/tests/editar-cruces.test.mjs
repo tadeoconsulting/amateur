@@ -248,7 +248,7 @@ describe("el lápiz del partido (PATCH /api/matches/:id) tampoco deja un equipo 
     // El caso real: en el partido A cambio un equipo por uno del partido B, que sigue jugando ahí.
     const r = await org.client.patch(`/api/matches/${a.id}`, { homeTeamId: a.homeTeamId, awayTeamId: b.homeTeamId });
     assert.equal(r.status, 409, JSON.stringify(r.data));
-    assert.match(r.data.error, /ya juega en la fecha 1/);
+    assert.match(r.data.error, /ya juega en la fecha 1 \(contra /);
     assert.match(r.data.error, /Editar cruces/);
 
     const after = (await load(org.client, id)).matches;

@@ -176,9 +176,11 @@ export async function PATCH(
         select: { homeTeamId: true, homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
       });
       if (playingAlready) {
-        const name = entering.includes(playingAlready.homeTeamId ?? "") ? playingAlready.homeTeam?.name : playingAlready.awayTeam?.name;
+        const homeIsIt = entering.includes(playingAlready.homeTeamId ?? "");
+        const name = homeIsIt ? playingAlready.homeTeam?.name : playingAlready.awayTeam?.name;
+        const rival = homeIsIt ? playingAlready.awayTeam?.name : playingAlready.homeTeam?.name;
         return conflict(
-          `${name ?? "Ese equipo"} ya juega en la fecha ${current.matchday}. Para cambiar un equipo y reacomodar el resto de la fecha usa «Editar cruces».`
+          `${name ?? "Ese equipo"} ya juega en la fecha ${current.matchday}${rival ? ` (contra ${rival})` : ""}. Para cambiar un equipo y reacomodar el resto de la fecha usa «Editar cruces».`
         );
       }
     }
