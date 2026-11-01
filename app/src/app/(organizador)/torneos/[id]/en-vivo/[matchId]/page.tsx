@@ -7,6 +7,8 @@ import { useApi } from "@/_lib/use-api";
 import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
 import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, PENAL_OUTCOMES, isEventType, penalFields, penalTitle, type PenalOutcome, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
+import { EditEventSheet, type EventToEdit } from "./_components/edit-event-sheet";
+import { canDeleteEventIn, playerEditable } from "@/_lib/event-edit";
 import { ClubCrest } from "@/_components/club-crest";
 
 
@@ -31,6 +33,14 @@ type MatchEvent = {
 };
 
 const PENAL_OUTCOME_LABELS: Record<PenalOutcome, string> = { convertido: "Convertido", atajado: "Atajado", errado: "Errado" };
+
+/** Cómo se nombra cada jugada que se puede editar con la hoja: en el título y al preguntar si se elimina. */
+const EDIT_TITLES: Record<string, { title: string; deleteLabel: string }> = {
+  gol: { title: "gol", deleteLabel: "este gol" },
+  tarjeta_amarilla: { title: "tarjeta amarilla", deleteLabel: "esta tarjeta amarilla" },
+  tarjeta_roja: { title: "tarjeta roja", deleteLabel: "esta tarjeta roja" },
+  penal: { title: "penal convertido", deleteLabel: "este penal convertido" },
+};
 
 export default function EnVivoPage() {
   const params = useParams<{ id: string; matchId: string }>();
@@ -80,6 +90,8 @@ export default function EnVivoPage() {
   // Edición del minuto de una jugada puntual de la crónica: solo una a la vez.
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [editMinute, setEditMinute] = useState("");
+  // La hoja «Editar jugada» (especificación 018): minuto, jugador y eliminar, de un gol o una tarjeta.
+  const [sheetEventId, setSheetEventId] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -290,6 +302,38 @@ export default function EnVivoPage() {
     if (saving || !Number.isInteger(value) || value < 0) return;
     const ok = await call(`${matchUrl}/events/${eventId}`, "PATCH", { minute: value });
     if (ok) setEditingEventId(null);
+  };
+
+  // Editar una jugada con la hoja (especificación 018): solo las que cuentan en las estadísticas de un jugador (gol, tarjeta o
+  // penal convertido), en juego y también con el partido finalizado. El servidor decide quién puede (la mesa, en su horario).
+  const canEditEvent = (e: MatchEvent) => (live || finished) && playerEditable(e.rawType, e.scored);
+  const sheetEvent = events.find((e) => e.id === sheetEventId);
+  const sheetData: EventToEdit | null =
+    sheetEvent && EDIT_TITLES[sheetEvent.rawType]
+      ? {
+          id: sheetEvent.id,
+          ...EDIT_TITLES[sheetEvent.rawType],
+          affectsScore: sheetEvent.rawType === "gol" || (sheetEvent.rawType === "penal" && sheetEvent.scored === true),
+          teamName: sheetEvent.team === "local" ? match.homeTeam?.name ?? "Local" : match.awayTeam?.name ?? "Visitante",
+          minute: sheetEvent.minute,
+          playerId: sheetEvent.playerId,
+          canChangePlayer: playerEditable(sheetEvent.rawType, sheetEvent.scored),
+          canDelete: canDeleteEventIn(match.status, match.decisive),
+        }
+      : null;
+  const sheetClubId = sheetEvent ? (sheetEvent.team === "local" ? match.homeTeam?.id : match.awayTeam?.id) : undefined;
+  const openSheet = (e: MatchEvent) => {
+    setError("");
+    setEditingEventId(null);
+    setSheetEventId(e.id);
+  };
+  const saveSheet = async (edit: { minute?: number; playerId?: string | null }) => {
+    if (!sheetEvent || saving) return;
+    if (await call(`${matchUrl}/events/${sheetEvent.id}`, "PATCH", edit)) setSheetEventId(null);
+  };
+  const deleteSheet = async () => {
+    if (!sheetEvent || saving) return;
+    if (await call(`${matchUrl}/events/${sheetEvent.id}`, "DELETE")) setSheetEventId(null);
   };
 
   const setPeriod = async (next: MatchPeriod) => {
@@ -759,14 +803,27 @@ export default function EnVivoPage() {
                         {event.recordedBy ? ` · por ${event.recordedBy}` : ""}
                       </p>
                     </div>
-                    {live && editingEventId !== event.id && (
-                      <button
-                        onClick={() => undoEvent(event.id)}
-                        disabled={saving}
-                        className={`shrink-0 cursor-pointer font-body text-xs underline disabled:opacity-40 ${descStyle}`}
-                      >
-                        Deshacer
-                      </button>
+                    {editingEventId !== event.id && (canEditEvent(event) || live) && (
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        {canEditEvent(event) && (
+                          <button
+                            onClick={() => openSheet(event)}
+                            disabled={saving}
+                            className={`cursor-pointer font-body text-xs font-semibold underline disabled:opacity-40 ${descStyle}`}
+                          >
+                            Editar
+                          </button>
+                        )}
+                        {live && (
+                          <button
+                            onClick={() => undoEvent(event.id)}
+                            disabled={saving}
+                            className={`cursor-pointer font-body text-xs underline disabled:opacity-40 ${descStyle}`}
+                          >
+                            Deshacer
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -776,7 +833,21 @@ export default function EnVivoPage() {
         </div>
       )}
 
-      {error && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
+      {error && !sheetData && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
+
+      {sheetData && (
+        <EditEventSheet
+          // Sin `key`, al abrir otra jugada se conservarían el minuto y el jugador de la anterior.
+          key={sheetData.id}
+          event={sheetData}
+          players={sheetClubId ? playersByClub[sheetClubId] ?? [] : []}
+          saving={saving}
+          error={error}
+          onSave={saveSheet}
+          onDelete={deleteSheet}
+          onClose={() => setSheetEventId(null)}
+        />
+      )}
 
       {/* Barra de abajo, al alcance del pulgar: guardar la jugada y terminar el partido. Los botones son grandes (48 px o
           más de alto) y todos a lo ancho. Terminar el partido pide confirmación en el mismo lugar, sin ventanas emergentes;
