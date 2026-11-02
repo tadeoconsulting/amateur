@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth-context";
 import type { ProfileRole } from "@/lib/profiles";
 import { ProfilePicker } from "./profile-picker";
 import { PasswordInput } from "@/_components/password-input";
+import { PasswordRules } from "@/_components/password-rules";
+import { passwordError } from "@/_lib/password-rules";
 
 type AuthView = "login" | "register";
 
@@ -75,6 +77,12 @@ export function AuthModal({
     setError("");
     if (view === "register" && roles.length === 0) {
       setError("Elige al menos un perfil para continuar.");
+      return;
+    }
+    // Al crear la cuenta se avisa antes de salir, con el mismo texto que daría el servidor (al iniciar sesión no se revisa).
+    const weak = view === "register" ? passwordError(password) : null;
+    if (weak) {
+      setError(weak);
       return;
     }
     setLoading(true);
@@ -206,15 +214,15 @@ export function AuthModal({
               className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
             />
             <PasswordInput
-              placeholder={view === "register" ? "Contraseña (mínimo 8 caracteres)" : "Contraseña"}
+              placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={view === "register" ? 8 : undefined}
               maxLength={72}
               autoComplete={view === "register" ? "new-password" : "current-password"}
               className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
             />
+            {view === "register" && <PasswordRules value={password} className="-mt-1 text-text-secondary" />}
 
             {view === "register" && (
               <ProfilePicker

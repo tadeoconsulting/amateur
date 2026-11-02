@@ -7,6 +7,8 @@ import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
 import { PasswordInput } from "@/_components/password-input";
+import { PasswordRules } from "@/_components/password-rules";
+import { passwordError } from "@/_lib/password-rules";
 
 type Preview = {
   club: { id: string; name: string; shortName: string; color: string | null; logoUrl: string | null };
@@ -42,7 +44,7 @@ function InvitacionStaffContent() {
 
   const clubName = preview?.club.name ?? "";
   const roleLabel = preview ? (roleLabels[preview.role] ?? preview.role) : "";
-  const isFormValid = nombre.trim() && apellidos.trim() && password.length >= 8;
+  const isFormValid = nombre.trim() && apellidos.trim() && passwordError(password) === null;
 
   async function accept() {
     if (saving) return;
@@ -190,10 +192,11 @@ function InvitacionStaffContent() {
           <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña (mínimo 8 caracteres)"
-            minLength={8}
+            placeholder="Contraseña"
+            autoComplete="new-password"
             className="w-full rounded-lg bg-brand-100 px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none"
           />
+          <PasswordRules value={password} className="-mt-2 text-text-secondary" />
 
           {error && <p className="font-body text-sm text-red-600">{error}</p>}
 

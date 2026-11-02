@@ -8,6 +8,8 @@ import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
 import { PasswordInput } from "@/_components/password-input";
+import { PasswordRules } from "@/_components/password-rules";
+import { passwordError } from "@/_lib/password-rules";
 
 type Preview = {
   kind: "link" | "email";
@@ -95,7 +97,7 @@ function InvitacionContent() {
   const correoFinal = preview?.kind === "email" && preview.email ? preview.email : correo;
 
   const isFormValid =
-    nombre && apellidos && dni && posicion && dia && mes && anio && sexo && telefono && correoFinal && departamento && password.length >= 8;
+    nombre && apellidos && dni && posicion && dia && mes && anio && sexo && telefono && correoFinal && departamento && passwordError(password) === null;
 
   // Alguien con cuenta y sesión no llena el formulario: solo acepta.
   async function accept() {
@@ -391,12 +393,12 @@ function InvitacionContent() {
                 wrapperClassName="mt-1"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-                minLength={8}
+                placeholder="Contraseña"
                 maxLength={72}
                 autoComplete="new-password"
                 className="w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
               />
+              <PasswordRules value={password} className="text-text-secondary" />
             </div>
 
             {/* Departamento */}
