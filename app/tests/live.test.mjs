@@ -314,20 +314,17 @@ describe("deshacer una jugada", () => {
     assert.equal((await getMatch(s.org.client, s.matchId)).homeScore, 0, "no baja de 0 por borrar dos veces");
   });
 
-  test("con el partido terminado hay que reabrirlo para corregir", async () => {
+  test("con el partido terminado (no decisivo) se puede eliminar una jugada sin reabrirlo (especificación 018)", async () => {
     const s = await liveSetup("lvdel4");
     await start(s);
     const e = await event(s, { type: "gol", minute: 5, teamId: s.home.id });
     await s.org.client.patch(`/api/matches/${s.matchId}`, { status: "finalizado" });
     const path = `/api/matches/${s.matchId}/events/${e.data.id}`;
 
-    const blocked = await s.org.client.del(path);
-    assert.equal(blocked.status, 409);
-    assert.match(blocked.data.error, /Reabre/);
-
-    await start(s); // reabrir
     assert.equal((await s.org.client.del(path)).status, 200);
-    assert.equal((await getMatch(s.org.client, s.matchId)).homeScore, 0);
+    const m = await getMatch(s.org.client, s.matchId);
+    assert.equal(m.homeScore, 0, "el marcador se corrige");
+    assert.equal(m.status, "finalizado", "y el partido sigue finalizado");
   });
 });
 

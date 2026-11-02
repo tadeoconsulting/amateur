@@ -70,7 +70,7 @@ Que cada persona entre con su cuenta y solo pueda ver y cambiar lo que le corres
 | | `GET/PUT /api/tournaments/:id/fixture/cruces` | organizador del torneo o ADMIN (editar los cruces de un fixture armado, [017](017-editar-cruces.md)) |
 | Partidos | `GET /api/matches`, `/:id`, `/:id/events` | — |
 | | `POST /api/matches` | organizador del torneo |
-| | `PATCH /api/matches/:id`, `POST /:id/events`, `DELETE /:id/events/:eventId` | organizador del torneo del partido |
+| | `PATCH /api/matches/:id`, `POST /:id/events`, `PATCH` y `DELETE /:id/events/:eventId` | organizador del torneo del partido (y la mesa asignada, dentro de su horario, [011](011-mesa.md); `PATCH` de una jugada: [018](018-editar-jugadas.md)) |
 | Clubes | `GET /api/clubs`, `/:id`, `/:id/categories`, `/:id/staff` | sesión |
 | | `GET /api/clubs/:id/players` | sesión (fecha de nacimiento solo el dueño) |
 | | `POST /api/clubs` | rol CLUB_OWNER |
