@@ -5,23 +5,18 @@ import { prisma } from "./prisma";
 import { canDo, type ClubAction } from "./club-delegate";
 import { clubRoleFor } from "./club-delegate-server";
 import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySessionToken } from "./session";
+import { passwordError } from "./password-rules";
 
 // ─── Contraseñas ────────────────────────────────────────────────
 
 const BCRYPT_COST = 10;
-export const MIN_PASSWORD_LENGTH = 8;
-// bcrypt ignora todo lo que pase de 72 bytes
-export const MAX_PASSWORD_LENGTH = 72;
+// Las reglas de una contraseña nueva viven en `password-rules.ts` (al menos 8 caracteres y una mayúscula), para que las
+// pantallas avisen con el mismo texto que da el servidor.
+export { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./password-rules";
 
-/** Devuelve un mensaje de error, o null si la contraseña es válida. */
+/** Devuelve un mensaje de error, o null si la contraseña es válida. Solo rige al fijar una contraseña, no al iniciar sesión. */
 export function validatePassword(password: unknown): string | null {
-  if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
-    return `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`;
-  }
-  if (Buffer.byteLength(password, "utf8") > MAX_PASSWORD_LENGTH) {
-    return `La contraseña no puede superar ${MAX_PASSWORD_LENGTH} caracteres`;
-  }
-  return null;
+  return passwordError(password);
 }
 
 export function hashPassword(password: string) {

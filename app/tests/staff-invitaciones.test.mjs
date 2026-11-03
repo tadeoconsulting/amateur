@@ -82,7 +82,7 @@ describe("aceptar una invitación", () => {
     const invite = await s.owner.client.post(`/api/clubs/${s.clubId}/staff-invitations`, { email, role: "director_tecnico" });
 
     const dt = new Client();
-    const register = await dt.post("/api/auth/register", { email, password: "clave-segura-123", firstName: "Nuevo", lastName: "DT" });
+    const register = await dt.post("/api/auth/register", { email, password: "Clave-segura-123", firstName: "Nuevo", lastName: "DT" });
     assert.equal(register.status, 201);
     assert.deepEqual(register.data.roles, ["JUGADOR"]);
 
@@ -113,7 +113,7 @@ describe("aceptar una invitación", () => {
     const invite = await s.owner.client.post(`/api/clubs/${s.clubId}/staff-invitations`, { email, role: "delegado" });
 
     const dt = new Client();
-    await dt.post("/api/auth/register", { email, password: "clave-segura-123", firstName: "X", lastName: "Y" });
+    await dt.post("/api/auth/register", { email, password: "Clave-segura-123", firstName: "X", lastName: "Y" });
     assert.equal((await dt.post(`/api/staff-invitations/${invite.data.token}/accept`, {})).status, 200);
     assert.equal((await dt.post(`/api/staff-invitations/${invite.data.token}/accept`, {})).status, 410);
   });
@@ -129,7 +129,7 @@ describe("rechazar una invitación", () => {
     assert.equal((await otro.client.post(`/api/staff-invitations/${invite.data.token}/decline`)).status, 403);
 
     const dt = new Client();
-    await dt.post("/api/auth/register", { email, password: "clave-segura-123", firstName: "X", lastName: "Y" });
+    await dt.post("/api/auth/register", { email, password: "Clave-segura-123", firstName: "X", lastName: "Y" });
     assert.equal((await dt.post(`/api/staff-invitations/${invite.data.token}/decline`)).status, 200);
     assert.equal((await dt.post(`/api/staff-invitations/${invite.data.token}/accept`, {})).status, 410);
   });
@@ -142,7 +142,7 @@ describe("mis invitaciones", () => {
 
     // La cuenta se crea primero: así "mine" filtra por el correo real de la sesión.
     const dt = new Client();
-    await dt.post("/api/auth/register", { email, password: "clave-segura-123", firstName: "X", lastName: "Y" });
+    await dt.post("/api/auth/register", { email, password: "Clave-segura-123", firstName: "X", lastName: "Y" });
 
     assert.equal((await dt.get("/api/staff-invitations/mine")).data.length, 0);
 

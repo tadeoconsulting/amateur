@@ -6,8 +6,9 @@ import { Toast } from "@/_components/toast";
 import { Spinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
 import { PasswordInput } from "@/_components/password-input";
+import { PasswordRules } from "@/_components/password-rules";
+import { passwordError } from "@/_lib/password-rules";
 
-const MIN_LENGTH = 8;
 
 const inputClass =
   "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-brand-900 focus:outline-none";
@@ -25,7 +26,8 @@ export function ChangePasswordForm() {
     e.preventDefault();
     if (saving) return;
     setError("");
-    if (next.length < MIN_LENGTH) return setError(`La nueva contraseña debe tener al menos ${MIN_LENGTH} caracteres`);
+    const weak = passwordError(next);
+    if (weak) return setError(weak);
     if (next !== confirm) return setError("La confirmación no coincide con la nueva contraseña");
 
     setSaving(true);
@@ -76,7 +78,7 @@ export function ChangePasswordForm() {
           <div>
             <label htmlFor="pw-new" className="text-sm text-text-secondary">Nueva contraseña</label>
             <PasswordInput id="pw-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
-            <p className="mt-1 font-body text-xs text-text-secondary">Al menos {MIN_LENGTH} caracteres.</p>
+            <PasswordRules value={next} className="text-text-secondary" />
           </div>
           <div>
             <label htmlFor="pw-confirm" className="text-sm text-text-secondary">Repite la nueva contraseña</label>

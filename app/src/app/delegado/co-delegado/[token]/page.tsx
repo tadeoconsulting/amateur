@@ -9,6 +9,8 @@ import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner } from "@/_components/spinner";
 import { SwitchAccount } from "@/_components/switch-account";
 import { PasswordInput } from "@/_components/password-input";
+import { PasswordRules } from "@/_components/password-rules";
+import { passwordError } from "@/_lib/password-rules";
 
 // Quien recibió una invitación a ser co-delegado de un equipo (especificación 014). Es pública: la abre quien tiene el
 // enlace, sin cuenta todavía. Muestra solo el equipo y quién invita. Sin sesión, crea su cuenta ahí mismo (nombre,
@@ -63,7 +65,7 @@ export default function InvitacionCoDelegadoPage() {
   }
 
   const hasFixedEmail = loaded?.ok === true && loaded.data.emailHint !== null;
-  const canCreate = firstName.trim().length > 0 && password.length >= 8 && (hasFixedEmail || email.includes("@"));
+  const canCreate = firstName.trim().length > 0 && passwordError(password) === null && (hasFixedEmail || email.includes("@"));
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-4 pb-10">
@@ -146,12 +148,12 @@ export default function InvitacionCoDelegadoPage() {
                 id="del-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña (mínimo 8 caracteres)"
+                placeholder="Contraseña"
                 autoComplete="new-password"
-                minLength={8}
                 maxLength={72}
                 className={field}
               />
+              <PasswordRules value={password} className="text-text-secondary" />
 
               <p role="alert" className="min-h-5 font-body text-sm text-red-700">
                 {error}
