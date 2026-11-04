@@ -184,10 +184,38 @@ export function parseInput(text: string): { rows: RawRow[]; equipo?: string } | 
   return { rows };
 }
 
+/**
+ * De dónde salen los clubes contra los que se busca la columna *Club* (especificación 009, importador):
+ * - `tournament`: los equipos inscritos en un torneo (la forma de siempre).
+ * - `club`: un solo club elegido; todas las filas van ahí, y una fila que nombra a otro club es un problema.
+ * - `all`: todos los clubes de la plataforma; cada fila tiene que nombrar el suyo.
+ */
+export type ClubScope = "tournament" | "club" | "all";
+
+/** El texto de un problema con el club de una fila, según de dónde se buscaron los clubes. */
+export function clubProblemReason(error: "falta" | "no_coincide" | "ambiguo", written: string, scope: ClubScope, chosenClub?: string): string {
+  if (error === "falta") return "Falta el club";
+  if (scope === "club") {
+    return error === "ambiguo"
+      ? `El club "${written}" no se entiende: la fila dice otro club distinto de "${chosenClub}"`
+      : `La fila dice el club "${written}", pero elegiste cargar en "${chosenClub}": corrígela o deja la columna Club vacía`;
+  }
+  if (scope === "all") {
+    return error === "ambiguo"
+      ? `El club "${written}" coincide con más de un club de la plataforma: elige el club en vez de escribirlo en la fila`
+      : `El club "${written}" no coincide con ningún club de la plataforma`;
+  }
+  return error === "ambiguo" ? `El club "${written}" coincide con más de un equipo del torneo` : `El club "${written}" no es un equipo de este torneo`;
+}
+
 export function planImport(input: {
   rows: RawRow[];
   /** Club para las filas que no traen el suyo (el `equipo` del archivo). */
   defaultClub?: string;
+  /** De dónde salen los clubes (por omisión, un torneo). */
+  scope?: ClubScope;
+  /** El nombre del club elegido (`scope: "club"`), para decir cuál era en los mensajes. */
+  chosenClub?: string;
   clubs: ClubRef[];
   /** DNI → equipo, de los provisionales que ya están cargados. */
   existingProvisional: Map<string, string>;
@@ -223,15 +251,11 @@ export function planImport(input: {
     const birthDate = parseBirthDate(r.fechaNacimiento, today);
     if (!birthDate) return fail("La fecha de nacimiento no es válida (usa AAAA-MM-DD)");
 
-    const matched = matchClub(r.club ?? input.defaultClub, clubs);
+    // Una celda de Club en blanco cuenta como "sin club": va al club por omisión (el `equipo` del archivo o el club elegido).
+    const written = typeof r.club === "string" && r.club.trim() === "" ? undefined : r.club;
+    const matched = matchClub(written ?? input.defaultClub, clubs);
     if ("error" in matched) {
-      return fail(
-        matched.error === "falta"
-          ? "Falta el club"
-          : matched.error === "ambiguo"
-            ? `El club "${String(r.club ?? input.defaultClub)}" coincide con más de un equipo del torneo`
-            : `El club "${String(r.club ?? input.defaultClub)}" no es un equipo de este torneo`
-      );
+      return fail(clubProblemReason(matched.error, String(written ?? input.defaultClub), input.scope ?? "tournament", input.chosenClub));
     }
 
     if ((counts.get(dni) ?? 0) > 1) return fail("DNI repetido en el archivo");
