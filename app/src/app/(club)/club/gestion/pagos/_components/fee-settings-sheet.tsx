@@ -19,7 +19,7 @@ export function FeeSettingsSheet({
   onClose,
 }: {
   clubId: string;
-  current: { monthlyFee: number; dueDay: number; defined: boolean };
+  current: { monthlyFee: number; dueDay: number; defined: boolean; locked: boolean };
   onSaved: () => void;
   onClose: () => void;
 }) {
@@ -73,7 +73,9 @@ export function FeeSettingsSheet({
         </div>
         {current.defined && (
           <p className="rounded-lg bg-btn-regular px-3 py-2.5 font-body text-xs text-text-secondary">
-            Hoy la cuota es {formatSolesAmount(current.monthlyFee)}. Si la cambias, el mes en curso y los anteriores conservan su monto; el nuevo se aplica desde el mes siguiente.
+            {current.locked
+              ? `Hoy la cuota es ${formatSolesAmount(current.monthlyFee)}. Ya registraste un cobro: si la cambias, el mes en curso y los anteriores conservan su monto; el nuevo se aplica desde el mes siguiente.`
+              : `Hoy la cuota es ${formatSolesAmount(current.monthlyFee)}. Aún no registraste ningún cobro: puedes cambiarla y se corrige también en los meses ya generados. Después del primer cobro, el cambio solo vale desde el mes siguiente.`}
           </p>
         )}
         {(error || (feeError && fee !== "")) && (

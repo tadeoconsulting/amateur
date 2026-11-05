@@ -3,7 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest } from "@/_lib/auth";
 import { requireClubManager } from "@/_lib/club-gestion-guard";
 import { balanceCents, centsToSoles, collectionSummary, debtSummary, feeStatus, isMonth, isOverdue, paidCents, peruDate, peruMonth } from "@/_lib/club-fees";
-import { asPaymentLike, clubFeeSettings, ensureClubFees, toCents } from "@/_lib/club-fees-server";
+import { asPaymentLike, clubFeeSettings, ensureClubFees, hasFirstCharge, toCents } from "@/_lib/club-fees-server";
 import { compareByLastName, fullName, playerIdentity } from "@/_lib/player-identity";
 
 // La lista de cuotas de un mes (especificación 015): quién pagó, quién debe y cuánto se lleva recaudado. Genera los meses
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     month,
     currentMonth,
     months: monthsAvailable,
-    settings: { monthlyFee: centsToSoles(settings.feeCents), dueDay: settings.dueDay, defined: settings.defined },
+    settings: { monthlyFee: centsToSoles(settings.feeCents), dueDay: settings.dueDay, defined: settings.defined, locked: await hasFirstCharge(id) },
     summary: {
       expected: centsToSoles(collection.expectedCents),
       collected: centsToSoles(collection.collectedCents),

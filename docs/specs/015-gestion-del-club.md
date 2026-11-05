@@ -33,7 +33,8 @@ Es **control manual**: la plataforma no cobra ni procesa dinero. El delegado reg
 | 11 | Ubicación | **Pestaña propia "Gestión"** en la barra del club. |
 
 ### Supuestos (por confirmar; se tomaron por recomendación)
-- **S1.** Si cambia la cuota estándar, **los meses ya generados conservan su monto**; el nuevo aplica desde el mes siguiente.
+- **S1.** Si cambia la cuota estándar, **los meses ya generados conservan su monto**; el nuevo aplica desde el mes siguiente. **Salvo antes del primer cobro** (S1b).
+- **S1b.** **Hasta que el club registre su primer cobro, la cuota estándar se puede corregir y el cambio vale también para los meses ya generados.** Antes, definir S/ 80 y querer S/ 90 dejaba el mes en curso en S/ 80 y parecía que la cuota no se podía editar. El primer cobro es el primer abono que no se anuló (un abono anulado no cuenta); desde ahí vale S1. Al corregir se actualizan solo los meses que tenían la cuota anterior y la heredaban: no se tocan los de un jugador con monto propio ni un mes que el delegado corrigió a mano.
 - **S2.** Todo cuelga de la **ficha del jugador en el club** (`PlayerProfile`), no de la persona. Si un jugador está en dos clubes, cada delegado ve solo lo suyo.
 - **S3.** Los **provisionales** (sin cuenta) entran a cuotas y asistencia como cualquiera; no pueden "ver lo suyo" hasta tener cuenta.
 - **S4.** **Pagos y asistencia los marcan solo los delegados** (principal y co-delegados). El DT y el asistente de la planilla siguen siendo informativos.
@@ -50,7 +51,7 @@ Lo que se construyó y en qué se aparta de la propuesta de abajo (que se conser
 - **`MemberFee` es única por jugador, club y mes** (`playerId, clubId, month`), no solo por jugador y mes: una ficha libre que pasa a otro club no choca con los meses del club anterior.
 - **Primer mes de cobro.** Al entrar a un club (enlace del club, invitación o `POST /api/clubs/:id/players`) se anota el mes de ingreso (`markFeeStart`). A quien ya estaba antes de existir esta función se le anota el mes en que aparece por primera vez en Pagos. El delegado puede cambiarlo desde el detalle del jugador. Una ficha que se reutiliza para otro club arranca de cero (`PlayerFeeSetting.clubId`).
 - **No se generan meses sin cuota definida.** Con la cuota del club en 0 y sin montos propios no se crean cargos: si se crearan en 0 quedarían congelados cuando el delegado defina la cuota después.
-- **Refinamiento de S1.** Cambiar la cuota **estándar** no toca ningún mes ya generado (como en S1). Cambiar el **monto propio de un jugador** sí ajusta su **mes en curso mientras no tenga abonos** (los anulados no cuentan); con un abono, ese mes se corrige a mano. Sin esto, configurar el club el primer día dejaba a cada jugador con S/ 80 aunque se le pusiera S/ 60 o gratis. La respuesta trae `adjustedCurrentMonth`.
+- **Refinamiento de S1.** Cambiar la cuota **estándar** no toca ningún mes ya generado una vez hecho el primer cobro (S1, S1b). Cambiar el **monto propio de un jugador** sí ajusta su **mes en curso mientras no tenga abonos** (los anulados no cuentan); con un abono, ese mes se corrige a mano. Sin esto, configurar el club el primer día dejaba a cada jugador con S/ 80 aunque se le pusiera S/ 60 o gratis. La respuesta trae `adjustedCurrentMonth`.
 - **Vencido** se devuelve como `overdue` aparte del estado (`pagado`, `parcial`, `pendiente`, `sin_cuota`); la pantalla muestra "Vencido" y, si es parcial, el saldo.
 - **Un solo cobro por toque.** Marcar pagado lee el saldo con el mes bloqueado (`SELECT … FOR UPDATE`), así dos toques seguidos o dos delegados a la vez cobran una sola vez. Una prueba lo comprueba con cinco pedidos simultáneos.
 - **Todos los importes se calculan en céntimos enteros** (`club-fees.ts`); la API y la base hablan en soles con dos decimales (tope de S/ 10 000).
@@ -274,7 +275,7 @@ Todo bajo `/api/clubs/:id/gestion/*`, salvo lo del jugador. Permiso base: `canMa
 
 | Método y ruta | Quién | Qué hace |
 |---|---|---|
-| `GET/PATCH /gestion/ajustes` | delegado | Cuota estándar y día de vencimiento |
+| `GET/PATCH /gestion/ajustes` | delegado | Cuota estándar y día de vencimiento. Trae `locked` (ya hubo un primer cobro) y, al guardar, `adjustedMonths` (meses corregidos, S1b) |
 | `GET /gestion/pagos?mes=AAAA-MM` | delegado | Lista de jugadores con su cargo, abonado, saldo y estado; genera los cargos que falten |
 | `PATCH /gestion/jugadores/:playerId/cuota` | delegado | Monto propio y primer mes de cobro |
 | `PATCH /gestion/cargos/:feeId` | delegado | Corrige el monto de un mes |
