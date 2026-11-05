@@ -21,8 +21,23 @@ interface ReviewRow {
   reason: string | null;
 }
 
+interface ClubOption {
+  id: string;
+  name: string;
+  shortName: string;
+  isTemporary: boolean;
+}
+
+type Scope = "club" | "tournament" | "all";
+
+const SCOPES: { value: Scope; label: string; hint: string }[] = [
+  { value: "club", label: "Un club", hint: "Todas las filas van al club que elijas, juegue o no en un torneo." },
+  { value: "tournament", label: "Un torneo", hint: "El club de cada fila se busca entre los equipos de ese torneo." },
+  { value: "all", label: "Todos los clubes", hint: "El club de cada fila se busca entre todos los clubes de la plataforma." },
+];
+
 interface Review {
-  tournament: { id: string; name: string };
+  target: { kind: Scope; name: string };
   totals: { rows: number; create: number; loaded: number; problems: number; minors: number; byClub: Record<string, number> };
   rows: ReviewRow[];
 }
@@ -46,12 +61,17 @@ const STATUS = {
 } as const;
 
 /**
- * Importador de jugadores provisionales (especificación 009): el admin elige el torneo, pega las filas de su hoja de
- * cálculo o sube un CSV, revisa fila por fila qué pasaría —con los menores de 18 marcados— y confirma. Nada se
+ * Importador de jugadores provisionales (especificación 009): el admin elige **a dónde cargar** (un club, un torneo o todos
+ * los clubes), pega las filas de su hoja de cálculo o sube un CSV, revisa fila por fila qué pasaría —con los menores de 18
+ * marcados— y confirma. Un jugador pertenece a un club, no a un torneo: no hace falta que el club juegue en ninguno. Nada se
  * guarda mientras haya filas con problemas. Es la misma validación que el script de la terminal.
  */
 export function ImportPlayersModal({ onClose, onImported }: { onClose: () => void; onImported: () => void }) {
   const [step, setStep] = useState<"input" | "review" | "done">("input");
+  const [scope, setScope] = useState<Scope>("club");
+  const [clubs, setClubs] = useState<ClubOption[] | null>(null);
+  const [clubId, setClubId] = useState("");
+  const [clubQuery, setClubQuery] = useState("");
   const [tournaments, setTournaments] = useState<TournamentOption[] | null>(null);
   const [tournamentId, setTournamentId] = useState("");
   const [teams, setTeams] = useState<string[] | null>(null);
@@ -73,16 +93,26 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
     return () => { cancelled = true; };
   }, []);
 
+  // Los clubes que se pueden elegir (oficiales y temporales): una sola vez.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/import-players")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: ClubOption[]) => { if (!cancelled) setClubs(data); })
+      .catch(() => { if (!cancelled) setClubs([]); });
+    return () => { cancelled = true; };
+  }, []);
+
   // Los equipos del torneo elegido, tal como se llaman: es lo que hay que escribir en la columna Club.
   useEffect(() => {
-    if (!tournamentId) return;
+    if (scope !== "tournament" || !tournamentId) return;
     let cancelled = false;
     fetch(`/api/tournaments/${tournamentId}`)
       .then((r) => r.json())
       .then((t: { teams: { club: { name: string } }[] }) => { if (!cancelled) setTeams(t.teams.map((x) => x.club.name).sort((a, b) => a.localeCompare(b, "es"))); })
       .catch(() => { if (!cancelled) setTeams([]); });
     return () => { cancelled = true; };
-  }, [tournamentId]);
+  }, [scope, tournamentId]);
 
   async function onFile(file: File | undefined) {
     if (!file) return;
@@ -103,7 +133,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
     const res = await fetch("/api/admin/import-players", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tournamentId, text, dryRun }),
+      body: JSON.stringify({ scope, ...(scope === "tournament" ? { tournamentId } : {}), ...(scope === "club" ? { clubId } : {}), text, dryRun }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
@@ -125,6 +155,11 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
   const shown = review ? (onlyProblems ? review.rows.filter((r) => r.status === "problem") : review.rows) : [];
 
+  // Sin tildes ni mayúsculas, para que "union" encuentre "Unión".
+  const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const filteredClubs = (clubs ?? []).filter((c) => !clubQuery.trim() || fold(`${c.name} ${c.shortName}`).includes(fold(clubQuery.trim())));
+  const targetChosen = scope === "all" || (scope === "club" && clubId !== "") || (scope === "tournament" && tournamentId !== "");
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div role="dialog" aria-modal="true" aria-label="Importar jugadores" className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl bg-surface-primary shadow-xl">
@@ -132,7 +167,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
           <div>
             <h2 className="font-heading text-lg font-bold text-text-primary">Importar jugadores</h2>
             <p className="font-body text-xs text-text-secondary">
-              {step === "input" ? "Paso 1 de 2 · Elige el torneo y pega o sube las filas" : step === "review" ? "Paso 2 de 2 · Revisa antes de cargar" : "Listo"}
+              {step === "input" ? "Paso 1 de 2 · Elige a dónde cargar y pega o sube las filas" : step === "review" ? "Paso 2 de 2 · Revisa antes de cargar" : "Listo"}
             </p>
           </div>
           <button onClick={onClose} aria-label="Cerrar" className="cursor-pointer p-1 text-text-secondary hover:text-text-primary">
@@ -145,23 +180,74 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
           {step === "input" && (
             <div className="flex flex-col gap-4">
-              <div>
-                <label htmlFor="ip-torneo" className="mb-1 block font-body text-xs font-medium text-text-secondary">Torneo *</label>
-                <select id="ip-torneo" value={tournamentId} onChange={(e) => { setTournamentId(e.target.value); setTeams(null); }} className={`${input} cursor-pointer`} disabled={!tournaments}>
-                  <option value="">{tournaments ? "Elige un torneo" : "Cargando torneos..."}</option>
-                  {(tournaments ?? []).map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}{t.organizer ? ` · ${t.organizer.firstName} ${t.organizer.lastName}` : ""} ({t.teamsCount} equipos)</option>
+              <fieldset>
+                <legend className="mb-1.5 block font-body text-xs font-medium text-text-secondary">Cargar a *</legend>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Cargar a">
+                  {SCOPES.map((s) => (
+                    <label
+                      key={s.value}
+                      className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 font-heading text-sm font-semibold transition-colors ${
+                        scope === s.value ? "border-brand-500 bg-brand-50 text-text-primary" : "border-border-primary text-text-secondary hover:bg-btn-regular"
+                      }`}
+                    >
+                      <input type="radio" name="ip-scope" value={s.value} checked={scope === s.value} onChange={() => setScope(s.value)} className="h-4 w-4 accent-brand-500" />
+                      {s.label}
+                    </label>
                   ))}
-                </select>
-                {teams && teams.length > 0 && (
-                  <div className="mt-2" aria-live="polite">
-                    <p className="font-body text-xs text-text-secondary">En la columna <strong>Club</strong> escribe el equipo tal como se llama aquí:</p>
-                    <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                      {teams.map((name) => <li key={name} className="rounded-full bg-brand-100 px-2.5 py-1 font-body text-xs text-text-primary">{name}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </div>
+                </div>
+                <p className="mt-1.5 font-body text-xs text-text-secondary">{SCOPES.find((s) => s.value === scope)?.hint}</p>
+              </fieldset>
+
+              {scope === "club" && (
+                <div>
+                  <label htmlFor="ip-club-buscar" className="mb-1 block font-body text-xs font-medium text-text-secondary">Club *</label>
+                  <input
+                    id="ip-club-buscar"
+                    type="search"
+                    value={clubQuery}
+                    onChange={(e) => setClubQuery(e.target.value)}
+                    placeholder="Busca un club por su nombre"
+                    className={input}
+                    disabled={!clubs}
+                  />
+                  <label htmlFor="ip-club" className="sr-only">Club elegido</label>
+                  <select id="ip-club" value={clubId} onChange={(e) => setClubId(e.target.value)} className={`${input} mt-2 cursor-pointer`} disabled={!clubs} size={Math.min(Math.max(filteredClubs.length, 2) + 1, 7)}>
+                    <option value="">{clubs ? (filteredClubs.length === 0 ? "Ningún club coincide" : "Elige un club") : "Cargando clubes..."}</option>
+                    {filteredClubs.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}{c.shortName && c.shortName !== c.name ? ` (${c.shortName})` : ""}{c.isTemporary ? " · temporal" : ""}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 font-body text-xs text-text-secondary">
+                    La columna <strong>Club</strong> del archivo puede ir vacía o no estar. Si la llenas, tiene que ser este club.
+                  </p>
+                </div>
+              )}
+
+              {scope === "tournament" && (
+                <div>
+                  <label htmlFor="ip-torneo" className="mb-1 block font-body text-xs font-medium text-text-secondary">Torneo *</label>
+                  <select id="ip-torneo" value={tournamentId} onChange={(e) => { setTournamentId(e.target.value); setTeams(null); }} className={`${input} cursor-pointer`} disabled={!tournaments}>
+                    <option value="">{tournaments ? "Elige un torneo" : "Cargando torneos..."}</option>
+                    {(tournaments ?? []).map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}{t.organizer ? ` · ${t.organizer.firstName} ${t.organizer.lastName}` : ""} ({t.teamsCount} equipos)</option>
+                    ))}
+                  </select>
+                  {teams && teams.length > 0 && (
+                    <div className="mt-2" aria-live="polite">
+                      <p className="font-body text-xs text-text-secondary">En la columna <strong>Club</strong> escribe el equipo tal como se llama aquí:</p>
+                      <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                        {teams.map((name) => <li key={name} className="rounded-full bg-brand-100 px-2.5 py-1 font-body text-xs text-text-primary">{name}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {scope === "all" && (
+                <p className="rounded-lg bg-brand-50 px-4 py-2.5 font-body text-sm text-text-secondary">
+                  En la columna <strong>Club</strong> de cada fila escribe el nombre o la abreviatura del club. Si dos clubes se llaman igual, esa fila saldrá como problema: en ese caso carga ese club con la opción <strong>Un club</strong>.
+                </p>
+              )}
 
               <div>
                 <div className="mb-1 flex items-center justify-between gap-3">
@@ -191,7 +277,9 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
           {step === "review" && review && (
             <div className="flex flex-col gap-4">
-              <p className="font-body text-sm text-text-secondary">Torneo: <strong className="text-text-primary">{review.tournament.name}</strong> · {review.totals.rows} {review.totals.rows === 1 ? "fila" : "filas"} leídas</p>
+              <p className="font-body text-sm text-text-secondary">
+                {review.target.kind === "club" ? "Club" : review.target.kind === "tournament" ? "Torneo" : "Cargando en"}: <strong className="text-text-primary">{review.target.name}</strong> · {review.totals.rows} {review.totals.rows === 1 ? "fila" : "filas"} leídas
+              </p>
 
               <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Resumen">
                 <li className="rounded-lg border border-border-primary p-3"><p className="font-heading text-2xl font-bold text-text-primary">{review.totals.create}</p><p className="font-body text-xs text-text-secondary">para crear</p></li>
@@ -273,7 +361,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
           {step === "input" && (
             <>
               <button onClick={onClose} className={ghost}>Cancelar</button>
-              <button onClick={() => void send(true)} disabled={busy || !tournamentId || !text.trim()} className={solid}>{busy ? "Revisando..." : "Revisar"}</button>
+              <button onClick={() => void send(true)} disabled={busy || !targetChosen || !text.trim()} className={solid}>{busy ? "Revisando..." : "Revisar"}</button>
             </>
           )}
           {step === "review" && review && (

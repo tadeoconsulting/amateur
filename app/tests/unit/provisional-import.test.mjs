@@ -188,3 +188,61 @@ test("lo pegado se lee como JSON o como filas, y lo vacío o roto avisa", async 
   assert.match(parseInput("{no es json").error, /JSON no es válido/);
   assert.match(parseInput('{"jugadores": []}').error, /lista de jugadores/);
 });
+
+// ─── De dónde salen los clubes: un torneo, un club elegido o todos los clubes ─────────────────────────────────────
+
+test("en un club elegido, las filas sin club van a ese club (no hace falta la columna Club)", () => {
+  const plan = run([row({ club: undefined }), row({ club: "", nombres: "Otro", dni: "10000002" })], {
+    clubs: [clubs[0]],
+    scope: "club",
+    chosenClub: "LGK",
+    defaultClub: "LGK",
+  });
+  assert.equal(plan.problems.length, 0);
+  assert.deepEqual(plan.create.map((p) => p.clubId), ["c-lgk", "c-lgk"]);
+});
+
+test("en un club elegido, una fila que nombra a otro club es un problema que lo dice claro", () => {
+  const plan = run([row({ club: "Unión Deportiva Ensenada" })], { clubs: [clubs[0]], scope: "club", chosenClub: "LGK", defaultClub: "LGK" });
+  assert.equal(plan.create.length, 0);
+  assert.match(plan.problems[0].reason, /elegiste cargar en "LGK"/);
+  assert.match(plan.problems[0].reason, /Unión Deportiva Ensenada/);
+});
+
+test("en un club elegido, el club de la fila puede ir escrito por su nombre o su abreviatura", () => {
+  const plan = run([row({ club: "lgk" })], { clubs: [clubs[0]], scope: "club", chosenClub: "LGK", defaultClub: "LGK" });
+  assert.equal(plan.create.length, 1);
+});
+
+test("en todos los clubes, cada fila va al club que nombra, aunque no estén inscritos en ningún torneo", () => {
+  const plan = run([row({ club: "UDE", dni: "10000002" }), row({ club: "LGK" })], { scope: "all" });
+  assert.deepEqual(plan.create.map((p) => p.clubId).sort(), ["c-lgk", "c-ude"]);
+  assert.equal(plan.problems.length, 0);
+});
+
+test("en todos los clubes, la fila tiene que nombrar el suyo, y uno que no existe se dice sin hablar de torneos", () => {
+  const sin = run([row({ club: undefined })], { scope: "all" });
+  assert.equal(sin.problems[0].reason, "Falta el club");
+  const fantasma = run([row({ club: "Fantasma" })], { scope: "all" });
+  assert.match(fantasma.problems[0].reason, /no coincide con ningún club de la plataforma/);
+  assert.doesNotMatch(fantasma.problems[0].reason, /torneo/);
+});
+
+test("en todos los clubes, dos clubes con el mismo nombre son ambiguos y pide elegir el club", () => {
+  const dup = [...clubs, { id: "c-lgk2", name: "LGK", shortName: "LG2" }];
+  const plan = run([row({ club: "LGK" })], { scope: "all", clubs: dup });
+  assert.equal(plan.create.length, 0);
+  assert.match(plan.problems[0].reason, /más de un club de la plataforma/);
+  assert.match(plan.problems[0].reason, /elige el club/);
+});
+
+test("sin indicar de dónde salen los clubes se sigue buscando entre los equipos de un torneo, con los mismos mensajes de siempre", () => {
+  assert.match(run([row({ club: "Fantasma" })]).problems[0].reason, /no es un equipo de este torneo/);
+  const dup = [...clubs, { id: "c-lgk2", name: "LGK", shortName: "LG2" }];
+  assert.match(run([row({ club: "LGK" })], { clubs: dup }).problems[0].reason, /más de un equipo del torneo/);
+});
+
+test("el DNI ya cargado en otro club sigue siendo un problema en cualquier modo", () => {
+  const plan = run([row({ club: "LGK" })], { scope: "all", existingProvisional: new Map([["10000001", "c-ude"]]) });
+  assert.match(plan.problems[0].reason, /otro equipo/);
+});
