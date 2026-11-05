@@ -3,9 +3,10 @@ import { type NextRequest } from "next/server";
 import { badRequest, readJson } from "@/_lib/auth";
 import { requireClubManager } from "@/_lib/club-gestion-guard";
 import { centsToSoles, isDueDay, parseCents } from "@/_lib/club-fees";
-import { clubFeeSettings, fromCents } from "@/_lib/club-fees-server";
+import { applyClubFee, clubFeeSettings, fromCents, hasFirstCharge } from "@/_lib/club-fees-server";
 
-// La cuota mensual estándar del club y su día de vencimiento (especificación 015).
+// La cuota mensual estándar del club y su día de vencimiento (especificación 015). Hasta el primer cobro, cambiar la cuota
+// corrige también los meses ya generados (`adjustedMonths`); `locked` dice que ese primer cobro ya ocurrió.
 
 const view = (s: Awaited<ReturnType<typeof clubFeeSettings>>) => ({ monthlyFee: centsToSoles(s.feeCents), dueDay: s.dueDay, defined: s.defined });
 
@@ -13,7 +14,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const guard = await requireClubManager(id);
   if ("response" in guard) return guard.response;
-  return Response.json(view(await clubFeeSettings(id)));
+  return Response.json({ ...view(await clubFeeSettings(id)), locked: await hasFirstCharge(id) });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -39,5 +40,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const data = { monthlyFee: fromCents(feeCents), dueDay };
   await prisma.clubFeeSettings.upsert({ where: { clubId: id }, create: { clubId: id, ...data }, update: data });
-  return Response.json(view(await clubFeeSettings(id)));
+  const adjustedMonths = await applyClubFee(id, current.feeCents, feeCents);
+  return Response.json({ ...view(await clubFeeSettings(id)), adjustedMonths, locked: await hasFirstCharge(id) });
 }

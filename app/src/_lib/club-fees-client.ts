@@ -27,7 +27,7 @@ export type FeesMonthData = {
   month: string;
   currentMonth: string;
   months: string[];
-  settings: { monthlyFee: number; dueDay: number; defined: boolean };
+  settings: { monthlyFee: number; dueDay: number; defined: boolean; locked: boolean };
   summary: { expected: number; collected: number; percent: number; paid: number; partial: number; pending: number; free: number; overdue: number };
   players: FeeRow[];
 };

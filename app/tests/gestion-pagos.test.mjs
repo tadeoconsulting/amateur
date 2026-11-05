@@ -66,15 +66,76 @@ describe("cuota estándar", () => {
     assert.equal((await s.owner.client.patch(`${base(s)}/ajustes`, "no es un objeto")).status, 400);
   });
 
-  test("cambiar la cuota no reescribe el mes ya generado", async () => {
-    const s = await setup("cam", 1);
-    await setFee(s, 80);
+  test("antes del primer cobro, cambiar la cuota corrige también el mes ya generado", async () => {
+    const s = await setup("cam", 2);
+    const [a, b] = s.members;
+    assert.equal((await setFee(s, 80)).data.locked, false);
     const first = await month(s);
-    assert.equal(first.data.players[0].amount, 80);
-    await setFee(s, 90);
+    assert.equal(first.data.settings.locked, false);
+    assert.equal(rowOf(first, a.playerId).amount, 80);
+    // B tiene un monto propio: la cuota del club no se lo cambia.
+    await s.owner.client.patch(`${base(s)}/jugadores/${b.playerId}/cuota`, { monthlyFee: 60 });
+
+    const changed = await setFee(s, 90);
+    assert.equal(changed.status, 200);
+    assert.equal(changed.data.monthlyFee, 90);
+    assert.equal(changed.data.locked, false);
+    assert.equal(changed.data.adjustedMonths, 1, "solo el mes de A, que heredaba la cuota");
     const after = await month(s);
-    assert.equal(after.data.players[0].amount, 80, "el mes en curso conserva S/ 80");
+    assert.equal(rowOf(after, a.playerId).amount, 90);
+    assert.equal(rowOf(after, b.playerId).amount, 60);
     assert.equal(after.data.settings.monthlyFee, 90);
+
+    // Se puede seguir corrigiendo mientras no haya un cobro.
+    assert.equal((await setFee(s, 100)).data.adjustedMonths, 1);
+    assert.equal(rowOf(await month(s), a.playerId).amount, 100);
+  });
+
+  test("antes del primer cobro, un mes corregido a mano no se pisa", async () => {
+    const s = await setup("man", 2);
+    const [a, b] = s.members;
+    await setFee(s, 80);
+    const feeA = rowOf(await month(s), a.playerId).feeId;
+    assert.equal((await s.owner.client.patch(`${base(s)}/cargos/${feeA}`, { amountDue: 70 })).status, 200);
+
+    assert.equal((await setFee(s, 90)).data.adjustedMonths, 1, "solo el de B");
+    const after = await month(s);
+    assert.equal(rowOf(after, a.playerId).amount, 70);
+    assert.equal(rowOf(after, b.playerId).amount, 90);
+  });
+
+  test("después del primer cobro, cambiar la cuota no reescribe el mes ya generado", async () => {
+    const s = await setup("cob", 2);
+    const [a, b] = s.members;
+    await setFee(s, 80);
+    const feeA = rowOf(await month(s), a.playerId).feeId;
+    assert.equal((await s.owner.client.post(`${base(s)}/cargos/${feeA}/abonos`, {})).status, 201);
+
+    const changed = await setFee(s, 90);
+    assert.equal(changed.status, 200);
+    assert.equal(changed.data.locked, true);
+    assert.equal(changed.data.adjustedMonths, 0);
+    const after = await month(s);
+    assert.equal(rowOf(after, a.playerId).amount, 80, "el mes en curso conserva S/ 80");
+    assert.equal(rowOf(after, b.playerId).amount, 80, "incluso el de quien aún no pagó");
+    assert.equal(after.data.settings.monthlyFee, 90);
+    assert.equal(after.data.settings.locked, true);
+  });
+
+  test("un abono anulado no cuenta como primer cobro", async () => {
+    const s = await setup("anu", 1);
+    await setFee(s, 80);
+    const p = s.members[0];
+    const feeId = rowOf(await month(s), p.playerId).feeId;
+    const paid = await s.owner.client.post(`${base(s)}/cargos/${feeId}/abonos`, {});
+    assert.equal(paid.status, 201, JSON.stringify(paid.data));
+    const detail = await s.owner.client.get(`${base(s)}/jugadores/${p.playerId}/historial`);
+    assert.equal((await s.owner.client.del(`${base(s)}/abonos/${detail.data.months[0].payments[0].id}`)).status, 200);
+
+    const changed = await setFee(s, 95);
+    assert.equal(changed.data.locked, false);
+    assert.equal(changed.data.adjustedMonths, 1);
+    assert.equal(rowOf(await month(s), p.playerId).amount, 95);
   });
 });
 

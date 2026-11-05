@@ -24,6 +24,29 @@ export async function clubFeeSettings(clubId: string) {
   return { feeCents: row ? toCents(row.monthlyFee) : 0, dueDay: row?.dueDay ?? DEFAULT_DUE_DAY, defined: !!row && toCents(row.monthlyFee) > 0 };
 }
 
+/** Si el club ya registró su primer cobro: algún abono que no se anuló, de cualquier mes y jugador. */
+export async function hasFirstCharge(clubId: string) {
+  return (await prisma.feePayment.count({ where: { voidedAt: null, fee: { clubId } } })) > 0;
+}
+
+/**
+ * Cambia la cuota estándar del club. Antes del primer cobro corrige también los meses ya generados que tenían la cuota
+ * anterior y la heredaban (no toca los de un monto propio ni un mes que el delegado corrigió a mano); después del primer
+ * cobro los meses generados conservan su monto (S1). Devuelve cuántos meses corrigió.
+ */
+export async function applyClubFee(clubId: string, previousCents: number, newCents: number) {
+  if (previousCents === newCents || (await hasFirstCharge(clubId))) return 0;
+  const done = await prisma.memberFee.updateMany({
+    where: {
+      clubId,
+      amountDue: fromCents(previousCents),
+      player: { NOT: { feeSetting: { is: { clubId, monthlyFeeOverride: { not: null } } } } },
+    },
+    data: { amountDue: fromCents(newCents) },
+  });
+  return done.count;
+}
+
 /**
  * Anota desde qué mes se le cobra a una ficha que entra a un club (el mes en que entra). Si ya tiene ese dato para ESTE
  * club no lo toca; si es de otro club (una ficha libre que se reutiliza), arranca de cero. Nunca rompe quien llama: unirse
