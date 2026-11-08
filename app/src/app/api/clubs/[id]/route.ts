@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { badRequest, canDoOnClub, canManageClub, forbidden, isAdmin, pick, readJson, requireUser } from "@/_lib/auth";
 import { omitInviteToken } from "@/_lib/club-public";
 import { shortNameError } from "@/_lib/short-name";
+import { cityValidationError, cleanCity } from "@/_lib/club-city";
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,7 +37,7 @@ export async function GET(
 }
 
 // ownerId no está: un club no cambia de dueño por acá.
-const EDITABLE = ["name", "shortName", "logoUrl", "color", "delegadoNombre", "delegadoTel", "delegadoEmail"] as const;
+const EDITABLE = ["name", "shortName", "logoUrl", "color", "city", "delegadoNombre", "delegadoTel", "delegadoEmail"] as const;
 // El contacto público del delegado lo cambia solo el principal o un admin, no un co-delegado (especificación 014).
 const CONTACT_FIELDS = ["delegadoNombre", "delegadoTel", "delegadoEmail"] as const;
 
@@ -65,6 +66,11 @@ export async function PATCH(
       return badRequest(`${key} inválido`);
     }
     data[key] = value as string | null;
+  }
+  if ("city" in data) {
+    const cityError = cityValidationError(data.city);
+    if (cityError) return badRequest(cityError);
+    data.city = cleanCity(data.city);
   }
   if (Object.keys(data).length === 0) return badRequest("No hay campos para actualizar");
   if (data.shortName !== undefined) {

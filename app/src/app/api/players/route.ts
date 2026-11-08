@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
           email: true,
           avatarUrl: true,
           phone: true,
+          department: true, // la «Ciudad» de Admin → Jugadores: solo la ve un admin
           birthDate: true, // solo para decidir si es menor: no sale en la respuesta
         },
       },
@@ -109,8 +110,8 @@ export async function GET(request: NextRequest) {
         user: p.user
           ? showContact
             ? { ...p.user, birthDate: undefined }
-            : { ...p.user, ...seen(p, who), email: null, phone: null, birthDate: undefined }
-          : { firstName: who.firstName, lastName: who.lastName, email: null, avatarUrl: null, phone: null },
+            : { ...p.user, ...seen(p, who), email: null, phone: null, department: undefined, birthDate: undefined }
+          : { firstName: who.firstName, lastName: who.lastName, email: null, avatarUrl: null, phone: null, department: null },
         // DNI y fecha de nacimiento de un provisional: solo el admin (nunca son públicos).
         ...(admin && who.provisional ? { dni: p.dni, birthDate: p.birthDate } : {}),
         ...(admin && who.provisional ? { invitation: summarize(p) } : {}),

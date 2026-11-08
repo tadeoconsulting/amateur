@@ -29,6 +29,8 @@ interface ClubRow {
   isTemporary?: boolean;
   /** Club que el admin creó sin delegado: su dueño es el admin, solo como dueño técnico (especificación 009, entrega 5). */
   withoutDelegate?: boolean;
+  /** La ciudad del club (especificación 009, entrega 6). */
+  city?: string | null;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string; email?: string };
@@ -51,6 +53,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
     name: "",
     shortName: "",
     color: "#E53935",
+    city: "",
     delegadoNombre: "",
     delegadoTel: "",
     delegadoEmail: "",
@@ -94,7 +97,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
     const body =
       delegateMode === "existing"
         ? { ...form, ownerId: selectedOwner!.id }
-        : { name: form.name, shortName: form.shortName, color: form.color, withoutDelegate: true, inviteEmail: typedInvite || undefined };
+        : { name: form.name, shortName: form.shortName, color: form.color, city: form.city, withoutDelegate: true, inviteEmail: typedInvite || undefined };
     const res = await fetch("/api/clubs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -176,6 +179,18 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
                 placeholder="DPU"
               />
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="club-city" className="mb-1 block font-body text-xs font-medium text-text-secondary">Ciudad</label>
+            <input
+              id="club-city"
+              value={form.city}
+              onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+              maxLength={60}
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              placeholder="Ciudad del club"
+            />
           </div>
 
           <div>
@@ -351,6 +366,7 @@ function EditClubModal({
     name: club.name,
     shortName: club.shortName,
     color: club.color || clubColors[0],
+    city: club.city ?? "",
     delegadoNombre: club.delegadoNombre ?? "",
     delegadoTel: club.delegadoTel ?? "",
     delegadoEmail: club.delegadoEmail ?? "",
@@ -452,6 +468,7 @@ function EditClubModal({
         name: form.name.trim(),
         shortName: form.shortName.trim(),
         color: form.color,
+        city: form.city.trim() || null,
         delegadoNombre: form.delegadoNombre || null,
         delegadoTel: form.delegadoTel || null,
         delegadoEmail: form.delegadoEmail || null,
@@ -532,6 +549,18 @@ function EditClubModal({
                 className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
               />
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="club-city" className="mb-1 block font-body text-xs font-medium text-text-secondary">Ciudad</label>
+            <input
+              id="club-city"
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+              maxLength={60}
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              placeholder="Ciudad del club"
+            />
           </div>
 
           <div>
@@ -727,6 +756,7 @@ const ownerName = (c: ClubRow) => `${c.owner.firstName} ${c.owner.lastName}`.tri
 const sortAccessors = {
   club: (c: ClubRow) => c.name,
   short: (c: ClubRow) => c.shortName,
+  city: (c: ClubRow) => c.city ?? "",
   owner: ownerName,
   email: (c: ClubRow) => c.owner.email,
   players: (c: ClubRow) => c.playerCount,
@@ -846,6 +876,7 @@ function AdminClubesContent() {
               <tr className="border-b border-border-primary bg-brand-50">
                 <SortTh label="Club" sortKey="club" sort={sort} onToggle={toggle} />
                 <SortTh label="Abreviatura" sortKey="short" sort={sort} onToggle={toggle} />
+                <SortTh label="Ciudad" sortKey="city" sort={sort} onToggle={toggle} />
                 <SortTh label="Delegado" sortKey="owner" sort={sort} onToggle={toggle} />
                 <SortTh label="Email" sortKey="email" sort={sort} onToggle={toggle} />
                 <SortTh label="Jugadores" sortKey="players" sort={sort} onToggle={toggle} align="center" />
@@ -893,6 +924,9 @@ function AdminClubesContent() {
                     <span className="inline-flex rounded bg-brand-100 px-2 py-0.5 font-heading text-xs font-bold text-text-primary">
                       {displayShortName(club.shortName)}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="whitespace-nowrap font-body text-sm text-text-secondary">{club.city || "—"}</span>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-body text-sm text-text-secondary">
@@ -945,7 +979,7 @@ function AdminClubesContent() {
               ))}
               {filtered?.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
+                  <td colSpan={8} className="px-4 py-12 text-center font-body text-sm text-text-secondary">
                     No se encontraron clubes
                   </td>
                 </tr>

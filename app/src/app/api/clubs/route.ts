@@ -2,6 +2,7 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, isAdmin, normalizeEmail, readJson, requireRole, requireUser } from "@/_lib/auth";
 import { shortNameError } from "@/_lib/short-name";
+import { cityValidationError, cleanCity } from "@/_lib/club-city";
 import { effectiveStatus } from "@/_lib/profile-invitation";
 import { delegateClubWhere } from "@/_lib/club-delegate-server";
 import { createDelegateInvitation } from "@/_lib/delegate-invitation-server";
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
       ownerId: c.ownerId,
       isTemporary: c.isTemporary,
       withoutDelegate: c.withoutDelegate,
+      city: c.city,
       playerCount: c._count.players,
       categoriesCount: c._count.categories,
       // Un club sin delegado tiene de dueño técnico a un admin: su nombre solo lo ve otro admin.
@@ -92,6 +94,8 @@ export async function POST(request: NextRequest) {
     if (!body) return badRequest();
 
     const { name, shortName, color, delegadoNombre, delegadoTel, delegadoEmail } = body;
+    const cityError = cityValidationError(body.city);
+    if (cityError) return badRequest(cityError);
 
     if (typeof name !== "string" || !name.trim() || typeof shortName !== "string" || !shortName.trim()) {
       return badRequest("name y shortName requeridos");
@@ -123,6 +127,7 @@ export async function POST(request: NextRequest) {
         delegadoEmail: typeof delegadoEmail === "string" && delegadoEmail ? delegadoEmail : null,
         ownerId,
         withoutDelegate,
+        city: cleanCity(body.city),
       },
     });
 
