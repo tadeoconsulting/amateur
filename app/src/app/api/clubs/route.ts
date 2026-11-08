@@ -1,9 +1,10 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { badRequest, isAdmin, readJson, requireRole, requireUser } from "@/_lib/auth";
+import { badRequest, isAdmin, normalizeEmail, readJson, requireRole, requireUser } from "@/_lib/auth";
 import { shortNameError } from "@/_lib/short-name";
 import { effectiveStatus } from "@/_lib/profile-invitation";
 import { delegateClubWhere } from "@/_lib/club-delegate-server";
+import { createDelegateInvitation } from "@/_lib/delegate-invitation-server";
 
 type InvitationRow = { email: string | null; status: string; expiresAt: Date; acceptedAt: Date | null; acceptedBy: { firstName: string; lastName: string; email: string } | null };
 
@@ -71,9 +72,11 @@ export async function GET(request: NextRequest) {
       delegadoEmail: c.delegadoEmail,
       ownerId: c.ownerId,
       isTemporary: c.isTemporary,
+      withoutDelegate: c.withoutDelegate,
       playerCount: c._count.players,
       categoriesCount: c._count.categories,
-      owner: c.owner,
+      // Un club sin delegado tiene de dueño técnico a un admin: su nombre solo lo ve otro admin.
+      owner: c.withoutDelegate && !admin ? { firstName: "Sin", lastName: "delegado" } : c.owner,
       ...(admin && { delegateInvitation: summarizeDelegateInvitation(c.delegateInvitations[0]) }),
     }))
   );
@@ -96,11 +99,17 @@ export async function POST(request: NextRequest) {
     const shortError = shortNameError(shortName);
     if (shortError) return badRequest(shortError);
 
-    // El dueño del club es quien lo crea. Solo un admin puede crearlo a nombre de otro.
-    const ownerId = isAdmin(user) && typeof body.ownerId === "string" ? body.ownerId : user.id;
+    // El dueño del club es quien lo crea. Solo un admin puede crearlo a nombre de otro, o sin delegado
+    // (`withoutDelegate`, especificación 009 entrega 5): el admin queda como dueño técnico hasta que alguien acepte la
+    // invitación o él lo oficialice, y el correo opcional (`inviteEmail`) recibe esa invitación.
+    const withoutDelegate = isAdmin(user) && body.withoutDelegate === true;
+    const ownerId = isAdmin(user) && !withoutDelegate && typeof body.ownerId === "string" ? body.ownerId : user.id;
+    const rawInviteEmail = typeof body.inviteEmail === "string" ? body.inviteEmail.trim() : "";
+    const inviteEmail = withoutDelegate && rawInviteEmail ? normalizeEmail(rawInviteEmail) : null;
+    if (withoutDelegate && rawInviteEmail && !inviteEmail) return badRequest("El correo no es válido");
 
     // Un co-delegado lo es de un solo equipo y no crea otro: un equipo por persona (especificación 014).
-    if (await prisma.clubDelegate.findUnique({ where: { userId: ownerId }, select: { id: true } })) {
+    if (!withoutDelegate && (await prisma.clubDelegate.findUnique({ where: { userId: ownerId }, select: { id: true } }))) {
       return Response.json({ error: "Eres co-delegado de otro equipo: cada delegado maneja uno, con su propia cuenta" }, { status: 409 });
     }
 
@@ -113,10 +122,16 @@ export async function POST(request: NextRequest) {
         delegadoTel: typeof delegadoTel === "string" && delegadoTel ? delegadoTel : null,
         delegadoEmail: typeof delegadoEmail === "string" && delegadoEmail ? delegadoEmail : null,
         ownerId,
+        withoutDelegate,
       },
     });
 
-    return Response.json(club, { status: 201 });
+    // Con correo se manda la invitación para ser el delegado; si el correo no sale, el club y la invitación quedan igual.
+    const invited = inviteEmail
+      ? await createDelegateInvitation({ origin: request.nextUrl.origin, admin: user, club: { id: club.id, name: club.name }, email: inviteEmail })
+      : null;
+
+    return Response.json(invited ? { ...club, invitation: { email: inviteEmail, emailed: invited.emailed } } : club, { status: 201 });
   } catch (error) {
     console.error("Create club error:", error);
     return Response.json({ error: "Error al crear club" }, { status: 500 });

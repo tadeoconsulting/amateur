@@ -28,9 +28,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const ownerId = typeof body?.ownerId === "string" ? body.ownerId : "";
   if (!ownerId) return badRequest("ownerId requerido");
 
-  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, isTemporary: true, ownerId: true } });
+  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, isTemporary: true, withoutDelegate: true, ownerId: true } });
   if (!club) return Response.json({ error: "Club no encontrado" }, { status: 404 });
-  if (!club.isTemporary) return Response.json({ error: "Este equipo ya es oficial" }, { status: 409 });
+  if (!club.isTemporary && !club.withoutDelegate) return Response.json({ error: "Este equipo ya es oficial" }, { status: 409 });
 
   const owner = await prisma.user.findUnique({
     where: { id: ownerId },

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           email: true,
           expiresAt: true,
           invitedById: true,
-          club: { select: { name: true, isTemporary: true, _count: { select: { coDelegates: true } } } },
+          club: { select: { name: true, isTemporary: true, withoutDelegate: true, _count: { select: { coDelegates: true } } } },
         },
       })
     : null;
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       sessionEmail,
       sessionIsAdmin,
       sessionClubs,
-      clubIsTemporary: invitation.club.isTemporary,
+      clubIsTemporary: invitation.club.isTemporary || invitation.club.withoutDelegate,
       acceptedCoDelegates: invitation.club._count.coDelegates,
     });
 
