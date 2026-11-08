@@ -120,23 +120,26 @@ model UserRole {
 // ─── Clubs & Teams ──────────────────────────────────────────────
 
 model Club {
-  id             String   @id @default(cuid())
-  name           String
-  shortName      String
-  logoUrl        String?
-  color          String?
-  delegadoNombre String?
-  delegadoTel    String?
-  delegadoEmail  String?
-  ownerId        String
+  id              String   @id @default(cuid())
+  name            String
+  shortName       String
+  logoUrl         String?
+  color           String?
+  delegadoNombre  String?
+  delegadoTel     String?
+  delegadoEmail   String?
+  ownerId         String
   // Equipo temporal creado por un organizador para su torneo (sin delegado ni
   // métricas). No aparece en la búsqueda de equipos de la comunidad.
-  isTemporary    Boolean  @default(false)
+  isTemporary     Boolean  @default(false)
+  // Club que el admin creó sin delegado (especificación 009, entrega 5): `ownerId` es el admin, solo como dueño técnico,
+  // hasta que alguien acepte la invitación o el admin lo oficialice. A diferencia de uno temporal sí sale en la búsqueda.
+  withoutDelegate Boolean  @default(false)
   // Link para compartir por WhatsApp: quien lo abre puede unirse al club como jugador.
   // Es un secreto: se puede revocar generando uno nuevo. null = todavía no se generó.
-  inviteToken    String?  @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  inviteToken     String?  @unique
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   owner                 User                   @relation("ClubOwner", fields: [ownerId], references: [id])
   categories            TeamCategory[]

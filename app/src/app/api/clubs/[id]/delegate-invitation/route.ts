@@ -1,33 +1,29 @@
 import { type NextRequest } from "next/server";
 import { prisma } from "@/_lib/prisma";
 import { badRequest, normalizeEmail, readJson, requireRole } from "@/_lib/auth";
-import { enviarCorreo, type ResultadoCorreo } from "@/_lib/email";
-import { invitacionDelegado } from "@/_lib/email-templates";
-import { newInviteToken } from "@/_lib/invite";
-import { effectiveStatus, PROFILE_INVITE_DAYS } from "@/_lib/profile-invitation";
+import type { ResultadoCorreo } from "@/_lib/email";
+import { createDelegateInvitation, delegateInviteExpiry, delegateInviteLink, sendDelegateInvitationEmail } from "@/_lib/delegate-invitation-server";
+import { effectiveStatus } from "@/_lib/profile-invitation";
 
-// La invitación para que alguien sea el delegado de un equipo temporal (especificación 009, entrega 4). Solo un
+// La invitación para que alguien sea el delegado de un equipo temporal o de un club sin delegado (especificación 009, entregas 4 y 5). Solo un
 // admin. Es un enlace secreto (con o sin correo) que vale 7 días y se usa una vez: el admin lo crea, lo reenvía, le
 // cambia el correo o lo cancela. Quien lo recibe lo acepta en /delegado/invitacion/{token}.
 
-const expiry = () => new Date(Date.now() + PROFILE_INVITE_DAYS * 86_400_000);
-const linkFor = (request: NextRequest, token: string) => `${request.nextUrl.origin}/delegado/invitacion/${token}`;
+const expiry = delegateInviteExpiry;
+const linkFor = (request: NextRequest, token: string) => delegateInviteLink(request.nextUrl.origin, token);
 const WHO = { select: { firstName: true, lastName: true, email: true } } as const;
 
 async function adminAndTemporaryClub(id: string) {
   const auth = await requireRole(); // sin roles en la lista: solo pasa un ADMIN
   if ("response" in auth) return { response: auth.response };
-  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, name: true, isTemporary: true } });
+  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, name: true, isTemporary: true, withoutDelegate: true } });
   if (!club) return { response: Response.json({ error: "Club no encontrado" }, { status: 404 }) };
-  if (!club.isTemporary) return { response: Response.json({ error: "Este equipo ya tiene delegado" }, { status: 409 }) };
+  if (!club.isTemporary && !club.withoutDelegate) return { response: Response.json({ error: "Este equipo ya tiene delegado" }, { status: 409 }) };
   return { admin: auth.user, club };
 }
 
 async function send(request: NextRequest, admin: { firstName: string; lastName: string }, clubName: string, email: string, token: string): Promise<ResultadoCorreo> {
-  return enviarCorreo({
-    to: email,
-    ...invitacionDelegado({ clubName, inviterName: `${admin.firstName} ${admin.lastName}`.trim(), url: linkFor(request, token), days: PROFILE_INVITE_DAYS }),
-  });
+  return sendDelegateInvitationEmail(request.nextUrl.origin, admin, clubName, email, token);
 }
 
 type Row = { id: string; token: string; email: string | null; status: string; expiresAt: Date; acceptedAt: Date | null; acceptedBy: { firstName: string; lastName: string; email: string } | null };
@@ -75,15 +71,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (rawEmail && !email) return badRequest("El correo no es válido");
 
   try {
-    const invitation = await prisma.$transaction(async (tx) => {
-      await tx.delegateInvitation.updateMany({ where: { clubId: id, status: "pending" }, data: { status: "cancelled" } });
-      return tx.delegateInvitation.create({
-        data: { clubId: id, email, token: newInviteToken(), invitedBy: ctx.admin.id, expiresAt: expiry() },
-        include: { acceptedBy: WHO },
-      });
-    });
     // Si el correo no sale (sin proveedor configurado, o falló), la invitación existe igual: el enlace se puede compartir a mano.
-    const emailed = email ? await send(request, ctx.admin, ctx.club.name, email, invitation.token) : null;
+    const { invitation, emailed } = await createDelegateInvitation({ origin: request.nextUrl.origin, admin: ctx.admin, club: ctx.club, email });
     return Response.json({ ...shape(request, invitation), emailed }, { status: 201 });
   } catch (error) {
     console.error("Delegate invitation error:", error);

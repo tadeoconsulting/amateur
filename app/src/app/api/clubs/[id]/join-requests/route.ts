@@ -41,9 +41,9 @@ export async function POST(
   if ("response" in auth) return auth.response;
 
   const { id } = await params;
-  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, isTemporary: true } });
+  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, isTemporary: true, withoutDelegate: true } });
   if (!club) return Response.json({ error: "Club no encontrado" }, { status: 404 });
-  if (club.isTemporary) return Response.json({ error: "Este equipo no acepta solicitudes" }, { status: 409 });
+  if (club.isTemporary || club.withoutDelegate) return Response.json({ error: "Este equipo no acepta solicitudes" }, { status: 409 });
 
   // Un jugador puede estar en varios clubes: solo se frena si ya es de ESTE.
   const alreadyMember = await prisma.playerProfile.findFirst({ where: { userId: auth.user.id, clubId: id }, select: { id: true } });

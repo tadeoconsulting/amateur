@@ -63,8 +63,8 @@ export class CoDelegateConflict extends Error {
 export async function acceptCoDelegateInvitation(invitation: { id: string; clubId: string; invitedById: string }, userId: string) {
   try {
     return await prisma.$transaction(async (tx) => {
-      const club = await tx.club.findUnique({ where: { id: invitation.clubId }, select: { isTemporary: true } });
-      if (!club || club.isTemporary) throw new CoDelegateConflict("Este equipo no admite co-delegados", "temporary", 410);
+      const club = await tx.club.findUnique({ where: { id: invitation.clubId }, select: { isTemporary: true, withoutDelegate: true } });
+      if (!club || club.isTemporary || club.withoutDelegate) throw new CoDelegateConflict("Este equipo no admite co-delegados", "temporary", 410);
 
       const claimed = await tx.coDelegateInvitation.updateMany({
         where: { id: invitation.id, status: "pending", expiresAt: { gt: new Date() } },

@@ -29,8 +29,10 @@ export async function GET(
     return Response.json({ error: "Club no encontrado" }, { status: 404 });
   }
 
-  // Cualquier sesión puede pedir un club por id: su link de invitación (secreto) no sale de acá.
-  return Response.json(omitInviteToken(club));
+  // Cualquier sesión puede pedir un club por id: su link de invitación (secreto) no sale de acá. Un club sin delegado
+  // tiene de dueño técnico a un admin: sus datos personales tampoco salen (solo los ve otro admin).
+  const shown = club.withoutDelegate && !isAdmin(auth.user) ? { ...club, owner: { ...club.owner, firstName: "Sin", lastName: "delegado", phone: null, email: "" } } : club;
+  return Response.json(omitInviteToken(shown));
 }
 
 // ownerId no está: un club no cambia de dueño por acá.

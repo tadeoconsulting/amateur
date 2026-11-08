@@ -20,11 +20,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { user } = auth;
   const { id } = await params;
 
-  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, name: true, isTemporary: true, ownerId: true } });
+  const club = await prisma.club.findUnique({ where: { id }, select: { id: true, name: true, isTemporary: true, withoutDelegate: true, ownerId: true } });
   if (!club) return Response.json({ error: "Club no encontrado" }, { status: 404 });
   const role = await clubRoleFor(user.id, isAdmin(user), id);
   if (!canDo(role, "manage_delegates")) return Response.json({ error: "No tienes permiso para esta acción" }, { status: 403 });
-  if (club.isTemporary) {
+  if (club.isTemporary || club.withoutDelegate) {
     return Response.json({ error: "Este equipo todavía no tiene delegado: no puede tener co-delegados" }, { status: 409 });
   }
 

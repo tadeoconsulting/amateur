@@ -29,6 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     where: { id },
     select: {
       isTemporary: true,
+      withoutDelegate: true,
       owner: { select: { id: true, firstName: true, lastName: true } },
       coDelegates: { orderBy: { createdAt: "asc" }, select: { userId: true, createdAt: true, user: { select: { firstName: true, lastName: true, email: true } } } },
     },
@@ -49,9 +50,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return Response.json({
     role,
     canManage: manages,
-    // Un equipo temporal todavía no tiene delegado: no admite co-delegados.
-    isTemporary: club.isTemporary,
-    canInvite: manages && !club.isTemporary && coDelegateSlotsLeft(usage.accepted, usage.pending) > 0,
+    // Un equipo temporal o un club sin delegado todavía no tiene delegado: no admite co-delegados.
+    isTemporary: club.isTemporary || club.withoutDelegate,
+    canInvite: manages && !club.isTemporary && !club.withoutDelegate && coDelegateSlotsLeft(usage.accepted, usage.pending) > 0,
     max: MAX_CO_DELEGATES,
     slotsLeft: coDelegateSlotsLeft(usage.accepted, usage.pending),
     principal: { userId: club.owner.id, name: `${club.owner.firstName} ${club.owner.lastName}`.trim() },

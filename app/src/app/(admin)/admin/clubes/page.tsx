@@ -27,6 +27,8 @@ interface ClubRow {
   ownerId: string;
   /** Equipo cargado por un organizador para su torneo (sin delegado ni jugadores propios). */
   isTemporary?: boolean;
+  /** Club que el admin creó sin delegado: su dueño es el admin, solo como dueño técnico (especificación 009, entrega 5). */
+  withoutDelegate?: boolean;
   playerCount: number;
   categoriesCount: number;
   owner: { firstName: string; lastName: string; email?: string };
@@ -53,6 +55,10 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
     delegadoTel: "",
     delegadoEmail: "",
   });
+  // El delegado es opcional: o ya tiene cuenta ("existing") o se crea el club sin delegado y se lo invita ("none").
+  const [delegateMode, setDelegateMode] = useState<"existing" | "none">("existing");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [created, setCreated] = useState<string | null>(null);
   const [ownerSearch, setOwnerSearch] = useState("");
   const [ownerResults, setOwnerResults] = useState<UserOption[]>([]);
   const [selectedOwner, setSelectedOwner] = useState<UserOption | null>(null);
@@ -60,7 +66,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (ownerSearch.length < 2) { setOwnerResults([]); return; }
+    if (delegateMode !== "existing" || ownerSearch.length < 2) { setOwnerResults([]); return; }
     const timer = setTimeout(() => {
       fetch(`/api/users?search=${encodeURIComponent(ownerSearch)}`)
         .then((r) => r.json())
@@ -68,30 +74,51 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
         .catch(() => setOwnerResults([]));
     }, 300);
     return () => clearTimeout(timer);
-  }, [ownerSearch]);
+  }, [delegateMode, ownerSearch]);
+
+  const typedInvite = inviteEmail.trim();
+  const inviteInvalid = typedInvite !== "" && !/^\S+@\S+\.\S+$/.test(typedInvite);
 
   const handleSubmit = async () => {
-    if (!form.name || !form.shortName || !selectedOwner) {
-      setError("Nombre, abreviatura y delegado son requeridos");
+    if (!form.name || !form.shortName || (delegateMode === "existing" && !selectedOwner)) {
+      setError(delegateMode === "existing" ? "Nombre, abreviatura y delegado son requeridos" : "Nombre y abreviatura son requeridos");
+      return;
+    }
+    if (delegateMode === "none" && inviteInvalid) {
+      setError("El correo no es válido");
       return;
     }
     setSaving(true);
     setError(null);
 
+    const body =
+      delegateMode === "existing"
+        ? { ...form, ownerId: selectedOwner!.id }
+        : { name: form.name, shortName: form.shortName, color: form.color, withoutDelegate: true, inviteEmail: typedInvite || undefined };
     const res = await fetch("/api/clubs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, ownerId: selectedOwner.id }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       setError(data.error || "Error al crear club");
       setSaving(false);
       return;
     }
 
-    onCreated();
+    if (delegateMode === "existing") return onCreated();
+    // Sin delegado: se dice qué pasó con la invitación antes de cerrar (el correo puede no salir y el enlace se comparte a mano).
+    const data = await res.json().catch(() => ({}));
+    setSaving(false);
+    setCreated(
+      !typedInvite
+        ? "El club se creó sin delegado. Cuando quieras, ábrelo con Editar para invitar a su delegado con un enlace o un correo."
+        : data.invitation?.emailed === "sent"
+          ? `El club se creó sin delegado y la invitación salió a ${typedInvite}.`
+          : `El club se creó sin delegado, pero el correo a ${typedInvite} no salió. Ábrelo con Editar para copiar el enlace de invitación y compartirlo.`
+    );
   };
 
   return (
@@ -106,6 +133,20 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </button>
         </div>
 
+        {created !== null ? (
+          <>
+            <p role="status" className="rounded-lg bg-brand-50 px-4 py-3 font-body text-sm text-text-primary">{created}</p>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={onCreated}
+                className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              >
+                Listo
+              </button>
+            </div>
+          </>
+        ) : (
+        <>
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 font-body text-sm text-red-700">
             {error}
@@ -155,6 +196,27 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <hr className="border-border-primary" />
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Delegado</p>
 
+          <div role="radiogroup" aria-label="Delegado del club" className="grid grid-cols-2 gap-2">
+            {([
+              ["existing", "Ya tiene cuenta", "Elige a un usuario existente"],
+              ["none", "Sin delegado por ahora", "Lo invitas después, con un enlace o un correo"],
+            ] as const).map(([value, label, hint]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={delegateMode === value}
+                onClick={() => { setDelegateMode(value); setError(null); }}
+                className={`cursor-pointer rounded-lg border px-3 py-2.5 text-left transition-colors ${delegateMode === value ? "border-brand-500 bg-brand-50" : "border-border-primary hover:bg-btn-regular"}`}
+              >
+                <span className="block font-heading text-sm font-bold text-text-primary">{label}</span>
+                <span className="block font-body text-xs text-text-secondary">{hint}</span>
+              </button>
+            ))}
+          </div>
+
+          {delegateMode === "existing" ? (
+          <>
           <div>
             <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Delegado del club *</label>
             {selectedOwner ? (
@@ -228,6 +290,24 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
               />
             </div>
           </div>
+          </>
+          ) : (
+          <div>
+            <label htmlFor="club-invite-email" className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo para invitar al delegado (opcional)</label>
+            <input
+              id="club-invite-email"
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
+              placeholder="delegado@club.com"
+              aria-invalid={inviteInvalid}
+            />
+            <p className="mt-1.5 font-body text-xs text-text-secondary">
+              Si lo escribes, se le envía la invitación para ser el delegado; puede ser un correo provisional y se cambia después desde Editar. Si lo dejas vacío, el club se crea sin delegado y lo invitas cuando quieras. Mientras tanto no se puede pedir unirse a este club.
+            </p>
+          </div>
+          )}
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
@@ -245,10 +325,15 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
             {saving ? "Creando..." : "Crear club"}
           </button>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
 }
+
+/** Un equipo temporal o un club que el admin creó sin delegado: todavía no tiene un delegado propio. */
+const needsDelegate = (c: ClubRow) => !!c.isTemporary || !!c.withoutDelegate;
 
 function EditClubModal({
   club,
@@ -285,7 +370,7 @@ function EditClubModal({
 
   useEffect(() => {
     // Sin búsqueda no se pide nada; los resultados viejos no se muestran (ver `ownerSearch.length >= 2` abajo).
-    if (!club.isTemporary || ownerSearch.length < 2) return;
+    if (!needsDelegate(club) || ownerSearch.length < 2) return;
     const timer = setTimeout(() => {
       fetch(`/api/users?search=${encodeURIComponent(ownerSearch)}`)
         .then((r) => r.json())
@@ -293,7 +378,7 @@ function EditClubModal({
         .catch(() => setOwnerResults([]));
     }, 300);
     return () => clearTimeout(timer);
-  }, [club.isTemporary, ownerSearch]);
+  }, [club, ownerSearch]);
 
   const makeOfficial = async () => {
     if (!newOwner || makingOfficial) return;
@@ -500,7 +585,7 @@ function EditClubModal({
           </div>
         </div>
 
-        {club.isTemporary ? (
+        {needsDelegate(club) ? (
           <>
           <div className="mt-6 flex flex-col gap-3 border-t border-border-primary pt-4">
             <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Invitar al delegado</p>
@@ -509,9 +594,9 @@ function EditClubModal({
           <div className="mt-6 flex flex-col gap-3 border-t border-border-primary pt-4">
             <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Oficializar equipo</p>
             <p className="font-body text-sm text-text-secondary">
-              Hoy es un equipo temporal de {club.owner.firstName} {club.owner.lastName}: sirve para su torneo, pero no sale en la búsqueda de
-              equipos ni tiene delegado propio. Al oficializarlo pasa a ser de su delegado, que lo maneja con su propia cuenta, y aparece en
-              la búsqueda. Sigue inscrito en sus torneos.
+              {club.withoutDelegate
+                ? "Este club todavía no tiene delegado: lo manejas tú como administrador. Al oficializarlo pasa a ser de su delegado, que lo maneja con su propia cuenta. Sigue inscrito en sus torneos."
+                : `Hoy es un equipo temporal de ${club.owner.firstName} ${club.owner.lastName}: sirve para su torneo, pero no sale en la búsqueda de equipos ni tiene delegado propio. Al oficializarlo pasa a ser de su delegado, que lo maneja con su propia cuenta, y aparece en la búsqueda. Sigue inscrito en sus torneos.`}
             </p>
             {newOwner ? (
               <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2.5">
@@ -563,8 +648,7 @@ function EditClubModal({
               (confirmOfficial ? (
                 <div className="rounded-lg bg-btn-regular p-3">
                   <p className="font-body text-sm text-text-primary">
-                    ¿Pasar <strong>{club.name}</strong> a {newOwner.firstName} {newOwner.lastName}? El organizador ya no podrá gestionarlo como
-                    equipo suyo.
+                    ¿Pasar <strong>{club.name}</strong> a {newOwner.firstName} {newOwner.lastName}?{club.withoutDelegate ? "" : " El organizador ya no podrá gestionarlo como equipo suyo."}
                   </p>
                   <div className="mt-3 flex gap-2">
                     <button
@@ -787,6 +871,14 @@ function AdminClubesContent() {
                         </div>
                       )}
                       <span className="font-heading text-sm font-semibold text-text-primary">{club.name}</span>
+                      {club.withoutDelegate && (
+                        <span
+                          title="Club creado por un admin, todavía sin delegado"
+                          className="inline-flex rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700"
+                        >
+                          Sin delegado
+                        </span>
+                      )}
                       {club.isTemporary && (
                         <span
                           title="Equipo cargado por un organizador para su torneo"
@@ -804,8 +896,16 @@ function AdminClubesContent() {
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-body text-sm text-text-secondary">
-                      {club.owner.firstName} {club.owner.lastName}
+                      {club.withoutDelegate ? "Sin delegado" : `${club.owner.firstName} ${club.owner.lastName}`}
                     </p>
+                    {/* Un club creado sin delegado: el dueño es el admin; se muestra la invitación en curso, si la hay. */}
+                    {club.withoutDelegate && (
+                      <p className="font-body text-xs text-text-secondary">
+                        Por invitar
+                        {club.delegateInvitation?.status === "pending" && <span className="ml-1 font-semibold text-text-primary">· invitación enviada</span>}
+                        {club.delegateInvitation?.status === "expired" && <span className="ml-1 font-semibold text-amber-700">· invitación vencida</span>}
+                      </p>
+                    )}
                     {/* Un equipo temporal todavía no tiene delegado: figura quien lo cargó (el organizador), hasta oficializarlo. */}
                     {club.isTemporary && (
                       <p className="font-body text-xs text-text-secondary">
@@ -816,7 +916,7 @@ function AdminClubesContent() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="font-body text-sm text-text-secondary">{club.owner.email ?? "—"}</p>
+                    <p className="font-body text-sm text-text-secondary">{club.withoutDelegate ? "—" : club.owner.email ?? "—"}</p>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="font-heading text-sm font-bold text-text-primary">{club.playerCount}</span>
@@ -872,8 +972,8 @@ function AdminClubesContent() {
         >
           <p>
             <strong className="text-text-primary">{deleting.name}</strong>
-            {deleting.isTemporary ? " es un equipo temporal de " : " es de "}
-            {deleting.owner.firstName} {deleting.owner.lastName}
+            {deleting.withoutDelegate ? " es un club sin delegado" : deleting.isTemporary ? " es un equipo temporal de " : " es de "}
+            {deleting.withoutDelegate ? "" : `${deleting.owner.firstName} ${deleting.owner.lastName}`}
             {deleting.playerCount > 0 ? ` y tiene ${deleting.playerCount} ${deleting.playerCount === 1 ? "jugador" : "jugadores"}` : ""}.
           </p>
           <p>

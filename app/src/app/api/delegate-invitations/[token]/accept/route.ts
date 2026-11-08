@@ -30,7 +30,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const invitation = token && token.length <= 100
     ? await prisma.delegateInvitation.findUnique({
         where: { token },
-        select: { id: true, clubId: true, status: true, email: true, expiresAt: true, club: { select: { name: true, isTemporary: true } } },
+        select: { id: true, clubId: true, status: true, email: true, expiresAt: true, club: { select: { name: true, isTemporary: true, withoutDelegate: true } } },
       })
     : null;
   if (!invitation) return Response.json({ error: "La invitación no existe o fue cancelada" }, { status: 404 });
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       sessionEmail: viewer.email,
       sessionIsAdmin: isAdmin(viewer),
       sessionOwnedClubs: ownedClubs,
-      clubIsTemporary: invitation.club.isTemporary,
+      clubIsTemporary: invitation.club.isTemporary || invitation.club.withoutDelegate,
     });
     if (!check.ok) return Response.json({ error: check.message, code: check.code }, { status: check.status });
     return accept(invitation, viewer.id);
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     sessionEmail: email,
     sessionIsAdmin: false,
     sessionOwnedClubs: 0,
-    clubIsTemporary: invitation.club.isTemporary,
+    clubIsTemporary: invitation.club.isTemporary || invitation.club.withoutDelegate,
   });
   if (!check.ok) return Response.json({ error: check.message, code: check.code }, { status: check.status });
 

@@ -13,14 +13,14 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const invitation = await prisma.delegateInvitation.findUnique({
     where: { token },
-    select: { status: true, email: true, expiresAt: true, club: { select: { name: true, color: true, logoUrl: true, isTemporary: true } } },
+    select: { status: true, email: true, expiresAt: true, club: { select: { name: true, color: true, logoUrl: true, isTemporary: true, withoutDelegate: true } } },
   });
   if (!invitation) return Response.json({ error: "La invitación no existe o fue cancelada" }, { status: 404 });
 
   const status = effectiveStatus(invitation.status, invitation.expiresAt, new Date());
   if (status === "expired") return Response.json({ error: "La invitación venció. Pide una nueva a quien te la envió.", code: "expired" }, { status: 410 });
   if (status !== "pending") return Response.json({ error: "Esta invitación ya fue usada o se canceló.", code: "used" }, { status: 410 });
-  if (!invitation.club.isTemporary) return Response.json({ error: "Este equipo ya tiene delegado.", code: "official" }, { status: 410 });
+  if (!invitation.club.isTemporary && !invitation.club.withoutDelegate) return Response.json({ error: "Este equipo ya tiene delegado.", code: "official" }, { status: 410 });
 
   return Response.json({
     clubName: invitation.club.name,

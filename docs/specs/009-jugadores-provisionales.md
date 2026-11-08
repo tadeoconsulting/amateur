@@ -198,6 +198,26 @@ ALTER TABLE "DelegateInvitation" ADD CONSTRAINT "DelegateInvitation_acceptedById
 
 **Verificado a mano** (base de pruebas): crear enlace sin correo y con correo (se normaliza; uno inválido `400`) desde el panel y por API; vista previa anónima; aceptar sin sesión `401`; correo equivocado `403`; aceptar con el correo correcto; reusar el enlace `410`; una cuenta que ya dirige un equipo `409`; una cuenta de admin `400`; carrera de dos cuentas sobre el mismo enlace (una `200`, otra `410`); oficializar a mano cancela la invitación pendiente y crear una invitación sobre un equipo ya oficial `409`; flujo completo en pantalla (enlace → aceptar → "Ir a mi equipo" → `/club` con su torneo). **Falta en producción:** el envío real del correo (Resend).
 
+## Entrega 5 · Crear un club sin delegado (solo admin, implementada)
+
+Hasta ahora **Admin → Clubes → Crear club** exigía elegir un usuario existente como delegado. Ahora el delegado es opcional: el admin puede crear el club **sin delegado** y, si quiere, anotar un **correo (puede ser provisional)** al que se le manda la invitación para serlo.
+
+**Decisiones** (tomadas con el usuario)
+1. **Sin delegado hasta que alguien acepte una invitación.** No se crea ninguna cuenta falsa: el club queda sin delegado y se resuelve con el mismo flujo de la entrega 4 (enlace o correo) o con *Oficializar*.
+2. **El correo es opcional**: si se escribe, se manda la invitación para ser el delegado (se normaliza; uno inválido es `400` y no se crea el club); vacío, solo se crea el club y la invitación se hace después desde *Editar*.
+3. **Visible y usable por los organizadores**: a diferencia de un equipo temporal, sale en la búsqueda de equipos.
+4. **Misma lista que los temporales**: el club entra en Admin → Clubes con la marca **Sin delegado** y se oficializa con el mismo botón.
+
+**Cómo funciona**
+- **Modelo.** `Club.withoutDelegate` (boolean, `false` por omisión; migración aditiva). `ownerId` sigue siendo obligatorio: queda el **admin que lo creó como dueño técnico**, solo hasta que alguien acepte la invitación o el admin lo oficialice.
+- **Crear.** `POST /api/clubs` con `withoutDelegate: true` y, opcional, `inviteEmail`. Solo lo respeta un admin: para cualquier otro la marca se ignora y el club es suyo. Si hay correo, la respuesta trae `invitation: { email, emailed }` (`emailed`: `sent`, `skipped` o `failed`: si el correo no sale, el club y la invitación existen igual y el enlace se comparte a mano desde *Editar*).
+- **Darle delegado.** Aceptar la invitación (con sesión o creando la cuenta en el mismo paso) o *Oficializar* hacen lo mismo que con un equipo temporal: `ownerId` pasa a la cuenta, `withoutDelegate` vuelve a `false`, la cuenta recibe el perfil de delegado y se cancelan las invitaciones vigentes. Las reglas son las de la entrega 4 (no una cuenta de admin, no quien ya dirige otro equipo). `lógica en _lib/club-official-server.ts › makeClubOfficial` y `_lib/delegate-invitation-server.ts › createDelegateInvitation` (compartida con `POST /api/clubs/:id/delegate-invitation`).
+- **Mientras no tiene delegado** no admite solicitudes de jugadores (`409`) ni co-delegados (`409`), como un equipo temporal: no hay quien las apruebe. Los organizadores sí lo ven y lo pueden invitar a sus torneos; mientras no haya delegado, esas invitaciones las atiende el admin.
+- **Privacidad.** Como el dueño técnico es un admin, `GET /api/clubs` y `GET /api/clubs/:id` **no devuelven su nombre, teléfono ni correo** a quien no sea admin: el dueño se muestra como «Sin delegado».
+- **Pantallas.** *Crear club* ofrece **Ya tiene cuenta** (buscar un usuario, como antes) o **Sin delegado por ahora** (correo opcional); al terminar dice qué pasó con la invitación. En la lista, la marca azul **Sin delegado** y «Por invitar · invitación enviada/vencida» en vez del nombre del admin. *Editar* muestra *Invitar al delegado* y *Oficializar equipo*, y no el cambio de contraseña (no hay delegado cuya contraseña cambiar).
+
+**Pruebas** (`tests/club-sin-delegado.test.mjs`, 9): crear sin correo (marca, dueño técnico, sin invitación) y sacar el enlace después; un no-admin no puede crearlo sin delegado; correo válido (normalizado, invitación vigente) e inválido (`400`, no queda un club a medias); aparece en la búsqueda sin los datos del admin; no acepta solicitudes ni co-delegados; aceptar la invitación lo vuelve oficial y vuelve a aceptar solicitudes; oficializar a mano cancela la invitación y no se repite; un admin no puede ser su delegado; crear con delegado existente no cambia.
+
 ## Página pública del club en un torneo (implementada) · menores abreviados
 Cada club tiene su propia página dentro de un torneo: `/{organizador}/{torneo}/equipo/{clubId}` (y `/convocatoria/{id}/equipo/{clubId}`, que redirige a la anterior). Es pública; muestra la **posición del club en la tabla** (solo su fila: lugar dentro de su grupo, puntos y PJ, con enlace a la tabla completa) y tres pestañas (`?pestana=`): **Partidos** (solo los del club), **Jugadores** (nombre, posición, número y goles) y **Resultados** (balance G-E-P y goles a favor/contra).
 - **Los clubes son clickeables** en la tabla de posiciones, la lista de equipos, los goleadores, el fixture, la ficha del partido (cabecera, "últimos partidos" y tarjetas del móvil) y en las pantallas con sesión (jugador, delegado y organizador).
