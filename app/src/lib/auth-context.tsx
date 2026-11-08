@@ -11,6 +11,8 @@ export type AuthUser = {
   firstName: string;
   lastName: string;
   avatarUrl: string | null;
+  /** Falta en la respuesta de iniciar sesión y registrarse; llega con la siguiente consulta de la sesión. */
+  organization?: string | null;
   roles: string[];
 };
 

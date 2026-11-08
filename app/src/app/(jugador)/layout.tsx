@@ -2,7 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { usePendingInvitations } from "@/_lib/use-pending-invitations";
+import { useAuth } from "@/lib/auth-context";
+import { AccountMenu } from "@/_components/account-menu";
+import { MobileTopBar } from "@/_components/mobile-top-bar";
 import { TopNav } from "@/_components/top-nav";
+import { navName } from "@/_lib/nav-identity";
 import { JugadorBottomNav, isJugadorNavActive, jugadorNavItems } from "./_components/jugador-bottom-nav";
 
 export default function JugadorLayout({
@@ -11,6 +15,7 @@ export default function JugadorLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const invitesPending = usePendingInvitations();
   const isDetailView =
     /^\/jugador\/torneos\/.+/.test(pathname) ||
@@ -30,10 +35,14 @@ export default function JugadorLayout({
     badge: item.href === "/jugador/ajustes" ? invitesPending : 0,
   }));
 
+  // Su nombre y apellido (especificación 001).
+  const account = user ? <AccountMenu name={navName("jugador", user)} roleLabel="Jugador" role="JUGADOR" settingsHref="/jugador/ajustes" /> : null;
+
   return (
     <div className="flex min-h-dvh flex-col bg-surface-primary">
-      {/* Escritorio: las secciones van arriba. En el celular, la barra inferior (y solo fuera de las pantallas de detalle). */}
-      <TopNav items={items} homeHref="/jugador/torneos" label="Jugador" />
+      {/* Escritorio: las secciones y la cuenta van arriba. En el celular, una barra fina con la cuenta y la barra inferior (ambas solo fuera de las pantallas de detalle). */}
+      {!isDetailView && <MobileTopBar homeHref="/jugador/torneos" account={account} />}
+      <TopNav items={items} homeHref="/jugador/torneos" label="Jugador" account={account} />
       <main className={`mx-auto w-full max-w-[430px] flex-1 ${wide ? "md:max-w-4xl lg:max-w-6xl" : "md:max-w-2xl"} ${isDetailView ? "" : "pb-24 md:pb-8"}`}>{children}</main>
       {!isDetailView && <JugadorBottomNav invitesPending={invitesPending} />}
     </div>

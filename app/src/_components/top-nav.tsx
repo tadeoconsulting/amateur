@@ -7,7 +7,7 @@ export type TopNavItem = { href: string; label: string; active: boolean; badge?:
  * en la barra inferior de cada rol; acá pasan arriba, a todo el ancho, con la sección activa como
  * píldora oscura (el mismo estilo de las pestañas) y las insignias de pendientes.
  */
-export function TopNav({ items, homeHref, label }: { items: TopNavItem[]; homeHref: string; label: string }) {
+export function TopNav({ items, homeHref, label, account }: { items: TopNavItem[]; homeHref: string; label: string; account?: React.ReactNode }) {
   return (
     <header className="sticky top-0 z-40 hidden border-b border-brand-200 bg-surface-primary md:block">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-8 px-8">
@@ -36,6 +36,7 @@ export function TopNav({ items, homeHref, label }: { items: TopNavItem[]; homeHr
             </Link>
           ))}
         </nav>
+        {account && <div className="ml-auto min-w-0">{account}</div>}
       </div>
     </header>
   );

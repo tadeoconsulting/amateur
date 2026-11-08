@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
+import { useAuth } from "@/lib/auth-context";
 import { useMyClub } from "@/_lib/use-my-club";
 import { getClub } from "@/_lib/api";
 import { AvatarCropper } from "@/_components/avatar-cropper";
@@ -11,6 +12,7 @@ import { SHORT_NAME_MAX } from "@/_lib/short-name";
 
 export default function ClubPerfilPage() {
   const { club, isPrincipal, loading: loadingClub } = useMyClub();
+  const { refresh } = useAuth();
   const [loading, setLoading] = useState(true);
   const [equipo, setEquipo] = useState("");
   const [nombreCorto, setNombreCorto] = useState("");
@@ -71,6 +73,8 @@ export default function ClubPerfilPage() {
         return;
       }
       setToast("Ajustes del club actualizados.");
+      // El nombre del club de la barra superior se vuelve a pedir cuando cambia la sesión: se pone al día sin recargar.
+      void refresh();
     } catch {
       setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
     } finally {

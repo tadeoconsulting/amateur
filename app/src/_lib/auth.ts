@@ -71,6 +71,8 @@ export type CurrentUser = {
   firstName: string;
   lastName: string;
   avatarUrl: string | null;
+  // Para el nombre de la navegación del organizador (especificación 001).
+  organization: string | null;
   roles: Role[];
 };
 
@@ -90,6 +92,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       firstName: true,
       lastName: true,
       avatarUrl: true,
+      organization: true,
       roles: { select: { role: true } },
     },
   });
