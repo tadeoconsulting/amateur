@@ -1,6 +1,7 @@
 // Pruebas unitarias de src/_lib/temp-password.ts (sin servidor ni base de datos).
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { generateTempPassword, TEMP_PASSWORD_LENGTH } from "../../src/_lib/temp-password.ts";
 import { passwordError } from "../../src/_lib/password-rules.ts";
 
@@ -40,4 +41,17 @@ test("la garantía vale también con un largo corto, y las tres clases no quedan
 test("dos contraseñas seguidas no se repiten", () => {
   const seen = new Set(Array.from({ length: 200 }, () => generateTempPassword()));
   assert.equal(seen.size, 200);
+});
+
+// Una contraseña temporal sacada de `randomBytes(...).toString("base64url")` se queda sin mayúscula una de cada ~4000 veces y
+// la validación la rechaza con 400: la CI falló así de vez en cuando al crear un usuario desde el admin. Esto no se puede
+// atrapar con una prueba de integración (es demasiado raro), así que se vigila que todas las rutas que entregan una
+// contraseña temporal usen el generador que siempre cumple la regla.
+test("toda ruta que entrega una contraseña temporal usa generateTempPassword", () => {
+  const routes = ["../../src/app/api/users/route.ts", "../../src/app/api/users/[id]/reset-password/route.ts", "../../src/app/api/tournaments/[id]/mesa/route.ts"];
+  for (const route of routes) {
+    const source = readFileSync(new URL(route, import.meta.url), "utf8");
+    assert.match(source, /generateTempPassword\(\)/, `${route} debe usar generateTempPassword`);
+    assert.doesNotMatch(source, /randomBytes/, `${route} no debe armar la contraseña con randomBytes`);
+  }
 });

@@ -3,7 +3,7 @@ import { adminRolesError } from "@/_lib/admin-roles";
 import { visibleIdentity } from "@/_lib/player-identity";
 import { todayIso } from "@/_lib/minor-visibility-server";
 import { type NextRequest } from "next/server";
-import { randomBytes } from "node:crypto";
+import { generateTempPassword } from "@/_lib/temp-password";
 import { Role } from "@prisma/client";
 import {
   badRequest,
@@ -124,7 +124,8 @@ export async function POST(request: NextRequest) {
     let temporaryPassword: string | undefined;
     let password = body.password;
     if (password === undefined || password === "") {
-      temporaryPassword = randomBytes(12).toString("base64url");
+      // Siempre cumple la regla de toda contraseña nueva (mayúscula, minúscula y número): una al azar sin mayúscula la rechazaría.
+      temporaryPassword = generateTempPassword();
       password = temporaryPassword;
     }
     const passwordError = validatePassword(password);
