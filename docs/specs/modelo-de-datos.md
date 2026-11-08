@@ -37,6 +37,7 @@ Club ──< PlayerInvitation                (invitaciones personales)
 - **Oficializar:** un admin puede pasar un equipo temporal a un delegado con cuenta propia (`POST /api/clubs/:id/oficializar`): cambia el `ownerId`, quita `isTemporary` y da el rol `CLUB_OWNER`. No admite un administrador ni un dueño que ya dirige otro equipo (la app del club trabaja con un equipo por cuenta). El equipo sigue inscrito en sus torneos.
 - **Eliminar un equipo** (`DELETE /api/clubs/:id`, solo un admin): no se puede si tiene partidos en algún torneo (primero hay que eliminar el torneo). Sin partidos se va con sus categorías, staff, invitaciones, solicitudes e inscripciones; sus jugadores quedan sin equipo, con su ficha y su cuenta.
 - `withoutDelegate`: el club lo creó un admin sin delegado (especificación [009](009-jugadores-provisionales.md), entrega 5). `ownerId` es el admin, solo como dueño técnico, hasta que alguien acepte la invitación de delegado o se lo oficialice (entonces vuelve a `false`). Sale en la búsqueda; no admite solicitudes de jugadores ni co-delegados; su dueño técnico no se muestra a quien no es admin.
+- `city`: ciudad del club (texto libre de hasta 60 caracteres, opcional). La edita el delegado o un admin y la ve el admin en Admin → Clubes (especificación [009](009-jugadores-provisionales.md), entrega 6).
 - `inviteToken`: link para compartir; único; `null` hasta que se genera; secreto; rotarlo revoca el anterior.
 - `delegado*`: datos de contacto del delegado del club (texto libre).
 

@@ -16,6 +16,7 @@ export default function ClubPerfilPage() {
   const [loading, setLoading] = useState(true);
   const [equipo, setEquipo] = useState("");
   const [nombreCorto, setNombreCorto] = useState("");
+  const [ciudad, setCiudad] = useState("");
   const [color, setColor] = useState("#CCCCCC");
   const [delegadoNombre, setDelegadoNombre] = useState("");
   const [delegadoTel, setDelegadoTel] = useState("");
@@ -36,6 +37,7 @@ export default function ClubPerfilPage() {
         if (cancelled) return;
         setEquipo(c.name);
         setNombreCorto(c.shortName);
+        setCiudad(c.city ?? "");
         setColor(c.color ?? "#CCCCCC");
         setDelegadoNombre(c.delegadoNombre ?? "");
         setDelegadoTel(c.delegadoTel ?? "");
@@ -58,6 +60,7 @@ export default function ClubPerfilPage() {
         body: JSON.stringify({
           name: equipo.trim(),
           shortName: nombreCorto.trim(),
+          city: ciudad.trim() || null,
           color,
           // El contacto público del delegado lo cambia solo el principal: a un co-delegado la API se lo rechazaría.
           ...(isPrincipal && {
@@ -185,6 +188,18 @@ export default function ClubPerfilPage() {
             value={nombreCorto}
             onChange={(e) => setNombreCorto(e.target.value)}
             maxLength={SHORT_NAME_MAX}
+            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm text-text-secondary">Ciudad</label>
+          <input
+            type="text"
+            value={ciudad}
+            onChange={(e) => setCiudad(e.target.value)}
+            maxLength={60}
+            placeholder="Ciudad del club"
             className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
           />
         </div>

@@ -33,6 +33,8 @@ interface PlayerRow {
     email: string | null;
     avatarUrl: string | null;
     phone: string | null;
+    /** El Departamento de su perfil, que acá se muestra como «Ciudad» (null en un provisional o si no lo puso). */
+    department?: string | null;
   };
   club: { id: string; name: string; shortName: string } | null;
   category: { id: string; name: string; gender: string } | null;
@@ -580,6 +582,7 @@ const sortAccessors = {
   player: (p: PlayerRow) => `${p.user.firstName} ${p.user.lastName}`,
   email: (p: PlayerRow) => p.user.email ?? "",
   club: (p: PlayerRow) => p.club?.name,
+  city: (p: PlayerRow) => p.user.department ?? "",
   category: (p: PlayerRow) => p.category?.name,
   position: (p: PlayerRow) => p.position,
   number: (p: PlayerRow) => p.number,
@@ -703,12 +706,13 @@ export default function AdminJugadoresPage() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border-primary bg-surface-primary">
-          <table className="w-full min-w-[900px] [&_td]:px-2.5 [&_th]:px-2.5">
+          <table className="w-full min-w-[980px] [&_td]:px-2.5 [&_th]:px-2.5">
             <thead>
               <tr className="border-b border-border-primary bg-brand-50">
                 <SortTh label="Jugador" sortKey="player" sort={sort} onToggle={toggle} />
                 <SortTh label="Email" sortKey="email" sort={sort} onToggle={toggle} />
                 <SortTh label="Club" sortKey="club" sort={sort} onToggle={toggle} />
+                <SortTh label="Ciudad" sortKey="city" sort={sort} onToggle={toggle} />
                 <SortTh label="Categoría" sortKey="category" sort={sort} onToggle={toggle} />
                 <SortTh label="Posición" sortKey="position" sort={sort} onToggle={toggle} align="center" />
                 <SortTh label="#" sortKey="number" sort={sort} onToggle={toggle} align="center" />
@@ -766,6 +770,9 @@ export default function AdminJugadoresPage() {
                       ) : (
                         <span className="font-body text-sm text-text-secondary italic">Sin club</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="whitespace-nowrap font-body text-sm text-text-secondary">{player.user.department || "—"}</span>
                     </td>
                     <td className="px-4 py-3">
                       {player.category ? (

@@ -218,6 +218,22 @@ Hasta ahora **Admin → Clubes → Crear club** exigía elegir un usuario existe
 
 **Pruebas** (`tests/club-sin-delegado.test.mjs`, 9): crear sin correo (marca, dueño técnico, sin invitación) y sacar el enlace después; un no-admin no puede crearlo sin delegado; correo válido (normalizado, invitación vigente) e inválido (`400`, no queda un club a medias); aparece en la búsqueda sin los datos del admin; no acepta solicitudes ni co-delegados; aceptar la invitación lo vuelve oficial y vuelve a aceptar solicitudes; oficializar a mano cancela la invitación y no se repite; un admin no puede ser su delegado; crear con delegado existente no cambia.
 
+## Entrega 6 · Ciudad del club y del jugador en el admin (solo admin, implementada)
+
+El admin pidió ver la **sede** de cada club y de cada jugador en sus tablas; con el usuario se aclaró que «sede» es la **ciudad**.
+
+**Decisiones** (tomadas con el usuario)
+1. **Ciudad del club: un campo nuevo en el club.** Los clubes no tenían ninguna. Las que ya existen quedan en «—» hasta llenarlas.
+2. **Ciudad del jugador: el Departamento que ya elige en su perfil** (`User.department`), mostrado tal cual como «Ciudad». Un jugador provisional (sin cuenta) o que no lo puso queda en «—».
+3. Con una sola ciudad por club o jugador no hay nada que abreviar (no aplica «la primera y +N»).
+
+**Cómo funciona**
+- **Modelo.** `Club.city` (texto, opcional; migración aditiva). Texto libre de hasta 60 caracteres, sin espacios sobrantes; vacío = sin ciudad. Reglas puras en `_lib/club-city.ts` (`cityValidationError`, `cleanCity`).
+- **API.** `POST /api/clubs` y `PATCH /api/clubs/:id` aceptan `city` (la puede cambiar quien gestiona el club: el delegado, un co-delegado o un admin; uno demasiado largo o que no es texto es `400`). `GET /api/clubs` y `GET /api/clubs/:id` la devuelven. `GET /api/players` agrega `user.department` **solo para un admin**; para cualquier otra sesión no sale (es un dato personal).
+- **Pantallas.** Admin → Clubes: columna **Ciudad** (ordenable) entre *Abreviatura* y *Delegado*, y el campo en *Crear club* (con o sin delegado) y en *Editar*. Admin → Jugadores: columna **Ciudad** (ordenable) después de *Club*. En los ajustes del club (delegado) hay un campo **Ciudad** junto al nombre corto.
+
+**Pruebas:** `tests/unit/club-city.test.mjs` (4) y `tests/ciudad.test.mjs` (6): la ciudad al crear (recortada, en la lista y el detalle), sin ciudad = `null`, cambiarla y borrarla, larga o no texto `400`, otro usuario `403`, un admin la pone con y sin delegado, y el departamento del jugador solo lo ve un admin.
+
 ## Página pública del club en un torneo (implementada) · menores abreviados
 Cada club tiene su propia página dentro de un torneo: `/{organizador}/{torneo}/equipo/{clubId}` (y `/convocatoria/{id}/equipo/{clubId}`, que redirige a la anterior). Es pública; muestra la **posición del club en la tabla** (solo su fila: lugar dentro de su grupo, puntos y PJ, con enlace a la tabla completa) y tres pestañas (`?pestana=`): **Partidos** (solo los del club), **Jugadores** (nombre, posición, número y goles) y **Resultados** (balance G-E-P y goles a favor/contra).
 - **Los clubes son clickeables** en la tabla de posiciones, la lista de equipos, los goleadores, el fixture, la ficha del partido (cabecera, "últimos partidos" y tarjetas del móvil) y en las pantallas con sesión (jugador, delegado y organizador).

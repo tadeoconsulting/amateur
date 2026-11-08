@@ -231,6 +231,7 @@ export interface ClubDetail {
   shortName: string;
   logoUrl: string | null;
   color: string | null;
+  city: string | null;
   delegadoNombre: string | null;
   delegadoTel: string | null;
   delegadoEmail: string | null;
