@@ -31,7 +31,7 @@ const departamentos = [
 type BottomSheetType = "posicion" | "departamento" | null;
 
 export default function JugadorPerfilPage() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -101,6 +101,8 @@ export default function JugadorPerfilPage() {
         return;
       }
       setToast("Perfil actualizado correctamente.");
+      // El nombre de la barra superior sale de la sesión: se pone al día sin recargar.
+      void refresh();
     } catch {
       setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
     } finally {

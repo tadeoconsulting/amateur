@@ -7,7 +7,7 @@ import { getUser } from "@/_lib/api";
 import { Toast } from "@/_components/toast";
 
 export default function PerfilPage() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const [loading, setLoading] = useState(true);
   const [nombre, setNombre] = useState("");
   const [organizacion, setOrganizacion] = useState("");
@@ -55,6 +55,8 @@ export default function PerfilPage() {
         return;
       }
       setToast("Perfil actualizado correctamente.");
+      // El nombre de la barra superior sale de la sesión: se pone al día sin recargar.
+      void refresh();
     } catch {
       setError("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.");
     } finally {

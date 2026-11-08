@@ -87,6 +87,22 @@ describe("registro y login", () => {
     assert.equal(me.data.user.passwordHash, undefined);
   });
 
+  test("la sesión trae la organización, para el nombre de la navegación del organizador", async () => {
+    const c = new Client();
+    const email = `org-${RUN}@test.amateur`;
+    const r = await c.post("/api/auth/register", { email, password: PASSWORD, firstName: "Luz", lastName: "Prueba", roles: ["ORGANIZADOR"] });
+    assert.equal(r.status, 201);
+    assert.equal(r.data.organization, null);
+    assert.equal((await c.get("/api/auth/me")).data.user.organization, null);
+
+    assert.equal((await c.patch(`/api/users/${r.data.id}`, { organization: "Liga Prueba Norte" })).status, 200);
+    assert.equal((await c.get("/api/auth/me")).data.user.organization, "Liga Prueba Norte");
+
+    const again = await new Client().post("/api/auth/login", { email, password: PASSWORD });
+    assert.equal(again.status, 200);
+    assert.equal(again.data.organization, "Liga Prueba Norte");
+  });
+
   test("al registrarse se eligen uno o varios perfiles y se guardan exactamente esos", async () => {
     const two = await new Client().post("/api/auth/register", {
       email: `perfiles-${RUN}@test.amateur`,

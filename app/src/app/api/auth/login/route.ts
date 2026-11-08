@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
       firstName: user.firstName,
       lastName: user.lastName,
       avatarUrl: user.avatarUrl,
+      organization: user.organization,
       roles: user.roles.map((r) => r.role),
       hasPlayerProfile: user.playerProfiles.length > 0,
     });

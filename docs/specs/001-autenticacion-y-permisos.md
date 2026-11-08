@@ -96,6 +96,15 @@ Modal de login y registro en la landing (con contraseña). Al **crear cuenta**, 
 
 `/seleccion-perfil` activa el rol elegido; los tres "Cerrar sesión" (organizador, club, jugador) cierran la sesión; el contexto `useAuth()` expone `user`, `loading`, `login(email, password, next?)`, `register({ name, email, password, roles }, next?)`, `logout`, `addRole`, `refresh`.
 
+### Nombre y cuenta en la navegación principal
+
+Quien tiene la sesión ve **su nombre en la navegación principal** del organizador, el jugador y el delegado (no en modales ni diálogos, ni en Admin, Mesa o la portada). Es un botón con la inicial y el nombre que abre un **menú de cuenta**: *Mi perfil y ajustes*, *Cambiar a …* (otro de sus perfiles, solo si tiene más de uno) y *Cerrar sesión*.
+
+- **Qué nombre.** Organizador: el de su **organización** (`User.organization`), o su nombre y apellido si no la puso. Delegado: el nombre de **su club**, o el suyo mientras no tiene uno. Jugador: nombre y apellido. La regla vive en `_lib/nav-identity.ts` (pura, con pruebas unitarias).
+- **Dónde.** Escritorio (desde 768 px): a la derecha de la barra superior (`TopNav`). Celular: una **barra superior fina** (`MobileTopBar`, «Amateur» y la cuenta) en las pantallas principales; en las de detalle (con flecha para volver) no va, como tampoco la barra inferior. Los nombres largos se recortan con puntos suspensivos.
+- **Datos.** `/api/auth/me` y las respuestas de login y registro incluyen `organization` (la de registro, `null`). Al guardar el perfil (organizador, jugador) o los ajustes del club se llama a `refresh()` de `useAuth()`, así el nombre se pone al día sin recargar.
+- **Accesibilidad.** Botón con `aria-haspopup`/`aria-expanded`, menú con `role="menu"`; se cierra con Escape o al tocar afuera.
+
 ## Limitaciones conocidas
 - **Sin límite de intentos** en login ni registro (fuerza bruta). Conviene activar las reglas de límite del firewall de Vercel.
 - **Sin recuperar ni cambiar contraseña.** El enlace "Olvidé mi contraseña" y el botón "Continuar con Google" no hacen nada.

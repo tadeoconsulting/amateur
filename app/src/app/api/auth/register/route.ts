@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         avatarUrl: null,
+        organization: null,
         roles: user.roles.map((r) => r.role),
       },
       { status: 201 }
