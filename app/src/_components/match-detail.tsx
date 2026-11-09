@@ -10,6 +10,7 @@ import { roundLabel } from "@/_lib/fixture";
 import { clubPublicPath } from "@/_lib/slug";
 import { formatWhen, formatWhenSentence } from "@/_lib/match-format";
 import { matchClock, penalTitle } from "@/_lib/match-live";
+import { walkoverNote } from "@/_lib/walkover";
 import { useApi } from "@/_lib/use-api";
 import { useMatchRealtime } from "@/_lib/use-match-realtime";
 import { ClubCrest } from "@/_components/club-crest";
@@ -108,7 +109,7 @@ export function MatchDetail({
   const onBreak = live && clock.period === "descanso";
   // La tanda de penales no es una jugada de un jugador: se resume aparte, junto al marcador.
   const plays = (events ?? []).filter((e) => e.type === "gol" || e.type === "tarjeta_amarilla" || e.type === "tarjeta_roja" || e.type === "sustitucion" || (e.type === "penal" && e.scored != null));
-  const byPenalties = match.decisive && finished && match.winnerTeamId !== null && match.homeScore === match.awayScore;
+  const byPenalties = match.decisive && finished && match.winnerTeamId !== null && match.homeScore === match.awayScore && match.penaltyHomeScore !== null;
 
   // Lo de adentro es lo mismo en celular y en escritorio; solo cambia el marco (ver abajo).
   const body = (
@@ -164,7 +165,7 @@ export function MatchDetail({
               {onBreak ? "Descanso" : stale ? "En juego" : `${clock.minute}' En vivo`}
             </span>
           )}
-          {finished && <span className={`rounded-full px-3 py-1 font-heading text-xs font-bold ${MATCH_TONE.finished.chip}`}>FT · Finalizado</span>}
+          {finished && <span className={`rounded-full px-3 py-1 font-heading text-xs font-bold ${MATCH_TONE.finished.chip}`}>{match.walkover ? "FT · W.O." : "FT · Finalizado"}</span>}
           {scheduled && <span className="rounded-full bg-brand-100 px-3 py-1 font-heading text-xs font-bold text-text-secondary">{formatWhen(match)}</span>}
         </div>
 
@@ -186,6 +187,9 @@ export function MatchDetail({
           <TeamCard team={match.awayTeam} href={clubLink(match.awayTeam?.id)} />
         </div>
 
+        {finished && match.walkover && match.homeTeam && match.awayTeam && (
+          <p className="mt-3 text-center font-body text-xs text-text-secondary">{walkoverNote(match.walkover, match.homeTeam.name, match.awayTeam.name)}</p>
+        )}
         {byPenalties && (
           <p className="mt-3 text-center font-body text-xs text-text-secondary">
             Se definió por penales: {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}

@@ -57,6 +57,39 @@ describe("computeStandings", () => {
   });
 });
 
+describe("computeStandings con W.O. (especificación 019)", () => {
+  const teams = [team("a"), team("b"), team("c")];
+
+  test("un W.O. con ganador cuenta como un 3-0: 3 puntos y los goles entran", () => {
+    const rows = computeStandings(teams, [{ ...played("a", "b", 3, 0), walkover: "home" }]);
+    const a = rows.find((r) => r.clubId === "a");
+    const b = rows.find((r) => r.clubId === "b");
+    assert.deepEqual([a.played, a.won, a.points, a.goalsFor, a.goalsAgainst, a.goalDifference], [1, 1, 3, 3, 0, 3]);
+    assert.deepEqual([b.played, b.lost, b.points, b.goalsFor, b.goalsAgainst, b.goalDifference], [1, 1, 0, 0, 3, -3]);
+  });
+
+  test("un W.O. doble: jugado y perdido por los dos, 0 puntos y 0 goles (no un empate)", () => {
+    const rows = computeStandings(teams, [{ ...played("a", "b", 0, 0), walkover: "both" }]);
+    for (const id of ["a", "b"]) {
+      const r = rows.find((x) => x.clubId === id);
+      assert.deepEqual([r.played, r.won, r.drawn, r.lost, r.points, r.goalsFor, r.goalsAgainst], [1, 0, 0, 1, 0, 0, 0], id);
+    }
+    assert.equal(rows.find((x) => x.clubId === "c").played, 0, "un tercero no juega");
+  });
+
+  test("un 0-0 jugado sigue siendo un empate de 1 punto (solo el W.O. doble difiere)", () => {
+    const rows = computeStandings(teams, [played("a", "b", 0, 0)]);
+    assert.equal(rows.find((x) => x.clubId === "a").points, 1);
+    assert.equal(rows.find((x) => x.clubId === "b").drawn, 1);
+  });
+
+  test("el W.O. doble se mezcla bien con otros partidos", () => {
+    const rows = computeStandings(teams, [{ ...played("a", "b", 0, 0), walkover: "both" }, played("b", "c", 2, 1), played("a", "c", 1, 0)]);
+    const pts = Object.fromEntries(rows.map((r) => [r.clubId, r.points]));
+    assert.deepEqual(pts, { a: 3, b: 3, c: 0 });
+  });
+});
+
 describe("computeLiveStandings (la tabla en vivo)", () => {
   const teams = [team("a"), team("b"), team("c"), team("d")];
   // Oficial: a 3 pts (le ganó a c), b y d 0... c 0. Termina a, luego el resto por diferencia de gol.

@@ -16,6 +16,8 @@ programado ──iniciar──▶ en_curso ──finalizar──▶ finalizado
     └────────── cargar resultado directo ──────────▶ finalizado
 ```
 
+> El resultado directo, el **W.O.** y la carga de jugadas **a mano** (sin cronómetro) se ofrecen desde la pantalla del partido, antes de iniciarlo: ver [019](019-actualizar-partido-finalizado.md).
+
 1. **Un solo nombre para "en juego": `en_curso`.** (`en_vivo` no existe como estado; solo es una etiqueta de un componente visual.)
 2. Transiciones permitidas: `programado → en_curso | finalizado`; `en_curso → finalizado | programado` (solo si no tiene jugadas); `finalizado → en_curso` (reabrir para corregir). `finalizado → programado` da `409`. Repetir el estado actual es inofensivo.
 3. **Al empezar** se guarda `startedAt` y el marcador arranca **0–0**. Reabrir un partido conserva el `startedAt` original.

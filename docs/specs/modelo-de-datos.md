@@ -100,6 +100,8 @@ Si el organizador **edita una sede** (nombre o dirección), el texto nuevo reemp
 | `matchday` | Número de fecha, desde 1 |
 | `startedAt` | Se fija al empezar; de ahí sale el cronómetro |
 | `finishedAt` | Se fija al finalizar y se borra al reabrir; de ahí sale el cierre de la ventana de la mesa ([011](011-mesa.md)) |
+| `walkover` | W.O. ([019](019-actualizar-partido-finalizado.md)): nulo si se jugó; `home` o `away` = quien se presentó (gana 3-0); `both` = no se presentó ninguno (0-0, 0 puntos para los dos). El marcador lo pone el servidor y `walkover: null` lo deshace |
+| `manualEntry` | Las jugadas se cargan a mano, con el minuto escrito y sin cronómetro ni tiempos: el partido queda `en_curso` con `startedAt` y `period` nulos ([019](019-actualizar-partido-finalizado.md)) |
 | `period`, `firstHalfEndedAt`, `secondHalfStartedAt` | Los dos tiempos ([010](010-tiempos-del-partido.md)): `primer_tiempo`, `descanso`, `segundo_tiempo`; `null` en un partido sin empezar o que empezó antes de que existieran los tiempos |
 
 ### MatchEvent
