@@ -145,6 +145,10 @@ export interface MatchListItem {
   nextMatchSlot: "home" | "away" | null;
   penaltyHomeScore: number | null;
   penaltyAwayScore: number | null;
+  /** W.O. (especificación 019): "home" o "away" = quien se presentó (gana 3-0), "both" = no se presentó ninguno; null = se jugó. */
+  walkover?: "home" | "away" | "both" | null;
+  /** Las jugadas se cargan a mano, con el minuto escrito y sin cronómetro (especificación 019). */
+  manualEntry?: boolean;
 }
 
 /** Jugada tal como la devuelve GET /api/matches/:id/events. */

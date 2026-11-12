@@ -30,7 +30,7 @@ export async function GET(
       ...(tournament?.format === "liga" ? { decisive: false } : {}),
       ...(group ? { groupName: group } : {}),
     },
-    select: { status: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, startedAt: true, period: true, firstHalfEndedAt: true, secondHalfStartedAt: true },
+    select: { status: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, walkover: true, startedAt: true, period: true, firstHalfEndedAt: true, secondHalfStartedAt: true },
   });
   // Un partido que quedó "en curso" sin que nadie lo finalizara (se da por olvidado, ver matchClock) no mueve la tabla.
   const now = Date.now();

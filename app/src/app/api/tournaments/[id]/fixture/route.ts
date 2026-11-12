@@ -263,7 +263,7 @@ async function handleLigaBracket(tournament: TournamentForFixture, id: string, b
 
   const existing = await prisma.match.findMany({
     where: { tournamentId: id },
-    select: { id: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, decisive: true, status: true, _count: { select: { events: true } } },
+    select: { id: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, walkover: true, decisive: true, status: true, _count: { select: { events: true } } },
   });
   const leagueMatches = existing.filter((m) => !m.decisive);
   const bracketMatches = existing.filter((m) => m.decisive);
@@ -338,7 +338,7 @@ async function handleCopaFixture(tournament: TournamentForFixture, id: string, b
 
     const finishedGroupMatches = await prisma.match.findMany({
       where: { tournamentId: id, groupName: { not: null } },
-      select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, groupName: true },
+      select: { homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, walkover: true, groupName: true },
     });
     const standings = computeStandings(
       tournament.teams.map((t) => ({ clubId: t.clubId, groupName: t.groupName })),

@@ -5,6 +5,7 @@ import { denyResponse, matchAccess } from "@/_lib/mesa-server";
 import { isRealDate, isTbd, penaltyWinner } from "@/_lib/fixture";
 import { CLASH_MESSAGE, hasScheduleClash } from "@/_lib/match-schedule";
 import { canTransition, canTransitionPeriod, canTransitionPhase, isMatchPeriod, isMatchPhase, isMatchStatus, MATCH_PERIODS, MATCH_PHASES, type MatchPeriod, type MatchPhase, type MatchStatus } from "@/_lib/match-live";
+import { directResultProblem, isWalkover, walkoverScore } from "@/_lib/walkover";
 import { publicarEventoPartido } from "@/_lib/realtime";
 import { CLUB_REF_SELECT } from "@/_lib/club-public";
 import { publicCacheHeaders } from "@/_lib/public-cache";
@@ -58,6 +59,13 @@ const conflict = (error: string) => Response.json({ error }, { status: 409 });
  * "penales" (ver especificación 007) antes de poder finalizarlo. Al finalizar con un
  * ganador, si el partido tiene `nextMatchId`, se completa automáticamente el slot que le
  * toca en el partido siguiente.
+ *
+ * Actualizar un partido que ya se jugó (especificación 019), solo el organizador o el admin:
+ * - `walkover` ("home" | "away" | "both"): W.O. Pasa el partido sin empezar a `finalizado` con el marcador del servidor
+ *   (3-0 para quien se presentó, 0-0 si no se presentó ninguno). `walkover: null` lo deshace (vuelve a `programado`).
+ * - `manualEntry: true` (con `status: "en_curso"`): las jugadas se cargan a mano, sin cronómetro ni tiempos.
+ * - `status: "finalizado"` con `homeScore` y `awayScore` desde `programado`: solo el marcador. En un empate de un cuadro
+ *   de eliminación hace falta `winnerTeamId` y admite `penaltyHomeScore` y `penaltyAwayScore`.
  */
 export async function PATCH(
   request: NextRequest,
@@ -78,7 +86,10 @@ export async function PATCH(
   if (isMesa && Object.keys(body).some((k) => !["status", "period", "phase"].includes(k))) {
     return forbidden();
   }
-  const { homeScore, awayScore, status, phase, period, date, time, location, homeTeamId, awayTeamId } = body;
+  const { homeScore, awayScore, status, phase, period, date, time, location, homeTeamId, awayTeamId, walkover, manualEntry } = body;
+  const bodyWinner: unknown = body.winnerTeamId;
+  const bodyPenaltyHome: unknown = body.penaltyHomeScore;
+  const bodyPenaltyAway: unknown = body.penaltyAwayScore;
 
   if ((homeScore !== undefined && !isScore(homeScore)) || (awayScore !== undefined && !isScore(awayScore))) {
     return badRequest("El marcador debe ser un entero mayor o igual a 0");
@@ -93,6 +104,19 @@ export async function PATCH(
   if (period !== undefined && !isMatchPeriod(period)) {
     return badRequest(`period debe ser uno de: ${MATCH_PERIODS.join(", ")}`);
   }
+
+  // W.O. y carga a mano (especificación 019).
+  if (walkover !== undefined && walkover !== null && !isWalkover(walkover)) {
+    return badRequest('walkover debe ser "home", "away", "both" o null');
+  }
+  if (walkover !== undefined && Object.keys(body).some((k) => k !== "walkover")) {
+    return badRequest("El W.O. se manda solo: el marcador y el estado los pone el sistema");
+  }
+  if (manualEntry !== undefined && manualEntry !== true) return badRequest("manualEntry solo puede ser true");
+  if (manualEntry === true && status !== "en_curso") return badRequest('manualEntry necesita status "en_curso"');
+  const penaltyOk = (v: unknown) => v === undefined || v === null || (Number.isInteger(v) && (v as number) >= 0);
+  if (!penaltyOk(bodyPenaltyHome) || !penaltyOk(bodyPenaltyAway)) return badRequest("Los penales deben ser enteros mayores o iguales a 0");
+  if (bodyWinner !== undefined && bodyWinner !== null && typeof bodyWinner !== "string") return badRequest("winnerTeamId inválido");
 
   // Programación del partido: día (YYYY-MM-DD), hora (HH:MM, 24 h) y sede.
   const scheduling = date !== undefined || time !== undefined || location !== undefined;
@@ -138,6 +162,8 @@ export async function PATCH(
       nextMatchSlot: true,
       penaltyHomeScore: true,
       penaltyAwayScore: true,
+      walkover: true,
+      manualEntry: true,
       _count: { select: { events: true } },
       tournament: { select: { format: true, playoffTeams: true } },
     },
@@ -216,6 +242,9 @@ export async function PATCH(
   }
 
   // ─── Marcador ───
+  if (current.walkover !== null && (homeScore !== undefined || awayScore !== undefined)) {
+    return conflict("El marcador de un W.O. no se edita: deshaz el W.O. para cargar otro resultado");
+  }
   if (homeScore !== undefined) data.homeScore = homeScore as number | null;
   if (awayScore !== undefined) data.awayScore = awayScore as number | null;
 
@@ -263,7 +292,35 @@ export async function PATCH(
 
   // ─── Estado ───
   const from = current.status as MatchStatus;
-  const to = status as MatchStatus | undefined;
+  // Un W.O. pasa solo a `finalizado` y deshacerlo vuelve a `programado` (no es un cambio de estado cualquiera).
+  const settingWalkover = typeof walkover === "string";
+  const undoingWalkover = walkover === null;
+  if (settingWalkover) {
+    if (current.walkover !== null) return conflict("Este partido ya está marcado como W.O.");
+    if (from !== "programado" || current._count.events > 0) return conflict("Solo se marca W.O. un partido que todavía no empezó");
+    if (isTbd(current)) return conflict("Los equipos de este partido todavía no están definidos");
+    if (current.decisive && walkover === "both") return conflict("En un cuadro de eliminación alguien tiene que avanzar: no puede ser W.O. de los dos");
+    const wo = walkoverScore(walkover as "home" | "away" | "both");
+    data.homeScore = wo.home;
+    data.awayScore = wo.away;
+    data.walkover = walkover;
+  }
+  if (undoingWalkover && current.walkover === null) return conflict("Este partido no es un W.O.");
+  if (manualEntry === true && (from !== "programado" || current._count.events > 0)) {
+    return conflict("Solo se cargan las jugadas a mano de un partido que todavía no empezó");
+  }
+  if (current.walkover !== null && status === "en_curso") {
+    return conflict("Un W.O. no se reabre como partido en juego: deshaz el W.O.");
+  }
+  if ((bodyWinner !== undefined && bodyWinner !== null) || (bodyPenaltyHome != null) || (bodyPenaltyAway != null)) {
+    if (from !== "programado" || status !== "finalizado") {
+      return badRequest("Quién avanza y los penales solo se mandan al cargar el resultado de un partido sin empezar");
+    }
+    if (bodyWinner !== undefined && bodyWinner !== null && bodyWinner !== current.homeTeamId && bodyWinner !== current.awayTeamId) {
+      return badRequest("winnerTeamId no juega este partido");
+    }
+  }
+  const to = (settingWalkover ? "finalizado" : undoingWalkover ? "programado" : status) as MatchStatus | undefined;
   // La mesa inicia el partido y lo finaliza; reabrirlo, volverlo a "programado" o cargar el resultado directo es del organizador.
   if (isMesa && to !== undefined && to !== from && !((from === "programado" && to === "en_curso") || (from === "en_curso" && to === "finalizado"))) {
     return forbidden();
@@ -289,14 +346,17 @@ export async function PATCH(
 
   let winnerTeamId: string | null | undefined;
   if (to !== undefined && to !== from) {
-    if (!canTransition(from, to)) return conflict(`No se puede pasar un partido de ${from} a ${to}`);
+    if (!undoingWalkover && !canTransition(from, to)) return conflict(`No se puede pasar un partido de ${from} a ${to}`);
 
     if (to === "en_curso") {
-      data.startedAt = current.startedAt ?? new Date();
+      // Las jugadas a mano no llevan cronómetro: sin `startedAt` ni tiempos (especificación 019), tampoco al reabrir.
+      const manual = manualEntry === true || current.manualEntry;
+      if (manualEntry === true) data.manualEntry = true;
+      if (!manual) data.startedAt = current.startedAt ?? new Date();
       data.finishedAt = null;
       // Un partido que nunca empezó estrena los tiempos; uno que ya había empezado (antes de que
       // existieran) o que se reabre conserva el tiempo en que quedó.
-      if (current.period === null && current.startedAt === null) data.period = "primer_tiempo";
+      if (!manual && current.period === null && current.startedAt === null) data.period = "primer_tiempo";
       if (current.homeScore === null && data.homeScore === undefined) data.homeScore = 0;
       if (current.awayScore === null && data.awayScore === undefined) data.awayScore = 0;
       if (reopeningDecided) { data.winnerTeamId = null; winnerTeamId = null; }
@@ -310,8 +370,26 @@ export async function PATCH(
         const awayFinal = (data.awayScore as number | null | undefined) ?? current.awayScore ?? 0;
         const currentPhase = (data.phase as MatchPhase | undefined) ?? (current.phase as MatchPhase);
 
+        if (from === "programado") {
+          // Resultado cargado directo (o W.O.): sin tanda en vivo, quién avanza y los penales se mandan con el marcador.
+          const problem = directResultProblem({
+            decisive: true,
+            homeScore: homeFinal,
+            awayScore: awayFinal,
+            winner: bodyWinner === current.homeTeamId ? "home" : bodyWinner === current.awayTeamId ? "away" : null,
+            penaltyHome: bodyPenaltyHome as number | null | undefined,
+            penaltyAway: bodyPenaltyAway as number | null | undefined,
+          });
+          if (problem) return conflict(problem);
+        }
+
         if (homeFinal !== awayFinal) {
           winnerTeamId = homeFinal > awayFinal ? current.homeTeamId : current.awayTeamId;
+        } else if (from === "programado") {
+          winnerTeamId = bodyWinner as string;
+          data.phase = "penales";
+          if (bodyPenaltyHome != null) data.penaltyHomeScore = bodyPenaltyHome as number;
+          if (bodyPenaltyAway != null) data.penaltyAwayScore = bodyPenaltyAway as number;
         } else if (currentPhase !== "penales") {
           return conflict("Este partido no puede terminar empatado: pasa a tiempo extra o a penales");
         } else {
@@ -329,6 +407,8 @@ export async function PATCH(
       }
     } else if (to === "programado") {
       if (current._count.events > 0) return conflict("El partido ya tiene jugadas registradas: no se puede volver a programado");
+      data.walkover = null;
+      data.manualEntry = false;
       data.startedAt = null;
       data.finishedAt = null;
       data.period = null;
@@ -343,6 +423,18 @@ export async function PATCH(
   }
 
   if (Object.keys(data).length === 0) return badRequest("No hay campos para actualizar");
+  // Un resultado directo de un partido que admite empate (o con ganador) no lleva quién avanza ni penales.
+  if (!current.decisive && to === "finalizado" && from === "programado") {
+    const problem = directResultProblem({
+      decisive: false,
+      homeScore: 0,
+      awayScore: 1,
+      winner: bodyWinner === current.homeTeamId ? "home" : bodyWinner === current.awayTeamId ? "away" : null,
+      penaltyHome: bodyPenaltyHome as number | null | undefined,
+      penaltyAway: bodyPenaltyAway as number | null | undefined,
+    });
+    if (problem) return conflict(problem);
+  }
   // Un partido terminado no puede quedar con el marcador vacío (las tablas lo ignorarían).
   if (data.homeScore === null || data.awayScore === null) {
     if ((data.status ?? current.status) === "finalizado") return badRequest("Un partido finalizado necesita marcador");

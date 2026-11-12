@@ -8,6 +8,8 @@ import type { MatchDetail, MatchEventItem, PlayerListItem } from "@/_lib/api";
 import { ACTION_FROM_EVENT_TYPE, EVENT_TITLES, EVENT_TYPE_FROM_ACTION, PENAL_OUTCOMES, isEventType, penalFields, penalTitle, type PenalOutcome, formatLiveFor, matchClock, halfMinutes, matchDurationMinutes, PERIOD_LABELS, type MatchPeriod, type MatchPhase } from "@/_lib/match-live";
 import { PenaltyShootout } from "./_components/penalty-shootout";
 import { EditEventSheet, type EventToEdit } from "./_components/edit-event-sheet";
+import { UpdateFinishedMatchSheet, type DirectResult } from "./_components/update-finished-match-sheet";
+import { walkoverNote, type Walkover } from "@/_lib/walkover";
 import { canDeleteEventIn, playerEditable } from "@/_lib/event-edit";
 import { ClubCrest } from "@/_components/club-crest";
 
@@ -92,6 +94,9 @@ export default function EnVivoPage() {
   const [editMinute, setEditMinute] = useState("");
   // La hoja «Editar jugada» (especificación 018): minuto, jugador y eliminar, de un gol o una tarjeta.
   const [sheetEventId, setSheetEventId] = useState<string | null>(null);
+  // «Actualizar partido finalizado» (especificación 019) y, en las jugadas a mano, el minuto que se escribe.
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [manualMinute, setManualMinute] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
@@ -120,6 +125,8 @@ export default function EnVivoPage() {
 
   const live = match.status === "en_curso";
   const finished = match.status === "finalizado";
+  // Las jugadas se cargan a mano: sin cronómetro, cada una con el minuto que se escribe (especificación 019).
+  const manual = live && match.manualEntry === true;
   // El cronómetro cuenta desde el inicio real; fuera de juego se detiene en 0, y si el partido
   // se quedó en vivo sin finalizar se detiene donde se da por colgado (ver isStale).
   const minutesPerHalf = match.tournament.minutesPerHalf;
@@ -266,10 +273,12 @@ export default function EnVivoPage() {
   const handleSave = async () => {
     if (!selectedAction || saving || waitingIn) return;
     if (goToIn) return setChoosingIn(true);
+    const typedMinute = /^\d{1,3}$/.test(manualMinute.trim()) ? Number(manualMinute) : null;
+    if (manual && (typedMinute === null || typedMinute > 200)) return setError("Escribe el minuto de la jugada (de 0 a 200)");
     const ok = await call(`${matchUrl}/events`, "POST", {
       type: EVENT_TYPE_FROM_ACTION[selectedAction],
       // El servidor no acepta más de 200 (ver api/matches/[id]/events).
-      minute: Math.min(minutes, 200),
+      minute: manual ? (typedMinute as number) : Math.min(minutes, 200),
       teamId: activeClubId,
       playerId: selectedPlayer,
       ...(isCambio && selectedPlayerIn && { playerInId: selectedPlayerIn }),
@@ -278,6 +287,7 @@ export default function EnVivoPage() {
     if (ok) {
       setSelectedAction(null);
       resetPick();
+      setManualMinute("");
     }
   };
 
@@ -335,6 +345,12 @@ export default function EnVivoPage() {
     if (!sheetEvent || saving) return;
     if (await call(`${matchUrl}/events/${sheetEvent.id}`, "DELETE")) setSheetEventId(null);
   };
+
+  // «Actualizar partido finalizado» (especificación 019): cada camino es un PATCH del partido.
+  const startManual = () => call(matchUrl, "PATCH", { status: "en_curso", manualEntry: true });
+  const saveDirectResult = (result: DirectResult) => call(matchUrl, "PATCH", { status: "finalizado", ...result });
+  const saveWalkover = (walkover: Walkover) => call(matchUrl, "PATCH", { walkover });
+  const undoWalkover = () => call(matchUrl, "PATCH", { walkover: null });
 
   const setPeriod = async (next: MatchPeriod) => {
     if (saving) return;
@@ -417,10 +433,12 @@ export default function EnVivoPage() {
 
           <div className="text-right">
             <p className={`font-heading text-sm font-bold ${MATCH_TONE[tone].text}`}>
-              {minutes}:{seconds.toString().padStart(2, "0")}&quot;
+              {manual ? "Manual" : match.walkover ? "W.O." : <>{minutes}:{seconds.toString().padStart(2, "0")}&quot;</>}
             </p>
             <p className="font-body text-xs text-text-secondary">
-              {match.decisive && match.phase !== "regulacion"
+              {manual
+                ? "Carga manual"
+                : match.decisive && match.phase !== "regulacion"
                 ? match.phase === "tiempo_extra"
                   ? "Tiempo extra"
                   : "Penales"
@@ -510,25 +528,38 @@ export default function EnVivoPage() {
           >
             Iniciar partido
           </button>
+          {/* Un partido que ya se jugó (o no se jugó): jugadas a mano, solo el marcador o W.O. No lo ve la mesa. */}
+          {!inMesa && (
+            <button
+              onClick={() => { setError(""); setUpdateOpen(true); }}
+              disabled={saving}
+              className="mt-3 w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-surface-primary disabled:opacity-40"
+            >
+              Actualizar partido finalizado
+            </button>
+          )}
         </div>
       )}
       {finished && (
         <div className="mx-4 mb-5 rounded-xl bg-btn-regular px-4 py-4 text-center">
-          <p className={match.decisive && match.winnerTeamId && homeScore === awayScore ? "mb-1 font-heading text-sm font-bold text-text-primary" : "mb-3 font-heading text-sm font-bold text-text-primary"}>
-            Partido finalizado
+          <p className={(match.decisive && match.winnerTeamId && homeScore === awayScore && match.penaltyHomeScore !== null) || match.walkover ? "mb-1 font-heading text-sm font-bold text-text-primary" : "mb-3 font-heading text-sm font-bold text-text-primary"}>
+            {match.walkover ? "Partido finalizado · W.O." : "Partido finalizado"}
           </p>
-          {match.decisive && match.winnerTeamId && homeScore === awayScore && (
+          {match.walkover && match.homeTeam && match.awayTeam && (
+            <p className="mb-3 font-body text-xs text-text-secondary">{walkoverNote(match.walkover, match.homeTeam.name, match.awayTeam.name)}</p>
+          )}
+          {match.decisive && match.winnerTeamId && homeScore === awayScore && match.penaltyHomeScore !== null && (
             <p className="mb-3 font-body text-xs text-text-secondary">
               Se definió por penales: {match.penaltyHomeScore ?? 0}-{match.penaltyAwayScore ?? 0}
             </p>
           )}
           {!inMesa && (
             <button
-              onClick={() => setStatus("en_curso")}
+              onClick={() => (match.walkover ? undoWalkover() : setStatus("en_curso"))}
               disabled={saving}
               className="cursor-pointer font-heading text-sm font-semibold text-text-primary underline disabled:opacity-40"
             >
-              Reabrir para corregir
+              {match.walkover ? "Deshacer W.O." : "Reabrir para corregir"}
             </button>
           )}
         </div>
@@ -605,6 +636,21 @@ export default function EnVivoPage() {
       ) : selectedAction ? (
         <div className="flex-1 px-4 pb-2">
           <div className="flex flex-col">
+            {manual && (
+              <div className="mb-2 px-1 py-2">
+                <label htmlFor="manual-minute" className="mb-1.5 block font-heading text-sm font-bold text-text-primary">Minuto de la jugada</label>
+                <input
+                  id="manual-minute"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={3}
+                  value={manualMinute}
+                  onChange={(e) => setManualMinute(e.target.value)}
+                  placeholder="Por ejemplo 35"
+                  className="w-full rounded border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
+                />
+              </div>
+            )}
             {selectedAction === "penal" && (
               <div className="mb-2 px-1 py-2">
                 <p className="mb-2 font-heading text-sm font-bold text-text-primary">¿Cómo terminó el penal?</p>
@@ -833,7 +879,21 @@ export default function EnVivoPage() {
         </div>
       )}
 
-      {error && !sheetData && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
+      {error && !sheetData && !updateOpen && <p className="mx-4 mb-2 font-body text-sm text-red-600">{error}</p>}
+
+      {updateOpen && match.homeTeam && match.awayTeam && (
+        <UpdateFinishedMatchSheet
+          home={{ id: match.homeTeam.id, name: match.homeTeam.name }}
+          away={{ id: match.awayTeam.id, name: match.awayTeam.name }}
+          decisive={match.decisive}
+          saving={saving}
+          error={error}
+          onManual={startManual}
+          onScore={saveDirectResult}
+          onWalkover={saveWalkover}
+          onClose={() => setUpdateOpen(false)}
+        />
+      )}
 
       {sheetData && (
         <EditEventSheet

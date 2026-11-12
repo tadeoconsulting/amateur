@@ -82,7 +82,7 @@ export async function seasonGeneral(season: { tournaments: SeasonTournament[] },
     db.match.findMany({
       where: { tournamentId: { in: phases.map((t) => t.id) }, decisive: false, status: live ? { in: ["finalizado", "en_curso"] } : "finalizado" },
       select: {
-        status: true, decisive: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true,
+        status: true, decisive: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, walkover: true,
         startedAt: true, period: true, firstHalfEndedAt: true, secondHalfStartedAt: true,
         tournament: { select: { minutesPerHalf: true } },
       },
@@ -175,7 +175,7 @@ async function championOf(t: SeasonTournament, db: Db): Promise<string | null> {
     db.tournamentTeam.findMany({ where: { tournamentId: t.id }, select: { clubId: true } }),
     db.match.findMany({
       where: { tournamentId: t.id, status: "finalizado" },
-      select: { status: true, decisive: true, nextMatchId: true, winnerTeamId: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true },
+      select: { status: true, decisive: true, nextMatchId: true, winnerTeamId: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, walkover: true },
     }),
   ]);
   const standings = computeStandings(teams.map((x) => ({ clubId: x.clubId, groupName: null })), matches.filter(countsForGeneral));

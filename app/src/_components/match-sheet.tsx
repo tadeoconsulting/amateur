@@ -65,7 +65,7 @@ export function MatchSheet({
   const away = match.awayTeam;
   const played = match.status !== "programado";
   const live = match.status === "en_curso";
-  const byPenalties = match.decisive && match.status === "finalizado" && match.winnerTeamId !== null && match.homeScore === match.awayScore;
+  const byPenalties = match.decisive && match.status === "finalizado" && match.winnerTeamId !== null && match.homeScore === match.awayScore && match.penaltyHomeScore !== null;
   const rounds = (matches ?? []).filter((m) => m.decisive).map((m) => m.matchday);
   const phase = match.decisive ? roundLabel(match.matchday, rounds.length ? Math.max(...rounds) : match.matchday) : `Fecha ${match.matchday}`;
   const qualifyCount = tournament?.format === "liga" ? (tournament.playoffTeams ?? null) : null;
@@ -114,7 +114,7 @@ export function MatchSheet({
                   {match.period === "descanso" ? "Descanso" : "En vivo"}
                 </span>
               ) : match.status === "finalizado" ? (
-                <span className={`inline-flex rounded-full px-2.5 py-1 ${MATCH_TONE.finished.chip}`}>Final</span>
+                <span className={`inline-flex rounded-full px-2.5 py-1 ${MATCH_TONE.finished.chip}`}>{match.walkover ? "W.O." : "Final"}</span>
               ) : (
                 match.time === "" ? UNSCHEDULED_LABEL : "Por jugar"
               )}

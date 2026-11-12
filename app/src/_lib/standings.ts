@@ -7,6 +7,8 @@ export type StandingMatch = {
   awayTeamId: string | null;
   homeScore: number | null;
   awayScore: number | null;
+  /** W.O. (especificación 019): "both" = no se presentó ninguno; los demás valores ya traen su marcador 3-0. */
+  walkover?: string | null;
 };
 
 export type StandingRow = {
@@ -23,7 +25,8 @@ export type StandingRow = {
 };
 
 /**
- * Victoria 3, empate 1, derrota 0. Orden: puntos, diferencia de gol, goles a favor (sin
+ * Victoria 3, empate 1, derrota 0. Un W.O. doble (`walkover: "both"`) cuenta como jugado y perdido por los dos, 0 puntos y
+ * 0 goles (no como un empate, que daría 1 punto a cada uno). Orden: puntos, diferencia de gol, goles a favor (sin
  * enfrentamiento directo). Solo cuentan los partidos con marcador y los dos equipos ya
  * definidos (un partido "por definir" de un cuadro de eliminación no cuenta).
  *
@@ -58,6 +61,11 @@ export function computeStandings(teams: StandingTeam[], matches: StandingMatch[]
 
     home.played++;
     away.played++;
+    if (match.walkover === "both") {
+      home.lost++;
+      away.lost++;
+      continue;
+    }
     home.goalsFor += match.homeScore;
     home.goalsAgainst += match.awayScore;
     away.goalsFor += match.awayScore;

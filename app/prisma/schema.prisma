@@ -617,6 +617,11 @@ model Match {
   secondHalfStartedAt DateTime?
   // Cuándo terminó (pasó a "finalizado"); null mientras no. De ahí sale el cierre de la ventana de la mesa.
   finishedAt          DateTime?
+  // W.O. (especificación 019): null = se jugó. "home" = se presentó el local (gana 3-0), "away" = se presentó el
+  // visitante (gana 3-0) y "both" = no se presentó ninguno (0-0, 0 puntos para los dos).
+  walkover            String?
+  // Las jugadas se cargan a mano, con el minuto escrito, sin cronómetro ni tiempos (especificación 019).
+  manualEntry         Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
