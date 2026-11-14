@@ -137,6 +137,85 @@ function TokenRow({ token }: { token: ColorToken }) {
   );
 }
 
+/** Los tokens que cambian en el tema «Cancha» (especificación 020): [token, claro, cancha]. Salen de globals.css. */
+const canchaTokens: [string, string, string][] = [
+  ["surface-primary", "#FAFAFA", "#101512"],
+  ["surface-alt", "#FDFDFD", "#1b221d"],
+  ["surface-secondary (inversa)", "#1B1B1B", "#c3fa73"],
+  ["text-primary", "#1B1B1B", "#f3f4ed"],
+  ["text-secondary", "#6D6D6D", "#adb5ad"],
+  ["text-invert", "#FAFAFA", "#132016"],
+  ["border-primary", "#1B1B1B", "#344037"],
+  ["border-secondary", "#4D4D4D", "#475449"],
+  ["btn-regular", "#EBEBEB", "#232c26"],
+  ["btn-secondary", "#4D4D4D", "#344037"],
+  ["btn-disabled", "#E5E5E5", "#1b221d"],
+  ["brand-100", "#FDFDFD", "#1b221d"],
+  ["brand-200", "#E5E5E5", "#344037"],
+  ["brand-300", "#EBEBEB", "#232c26"],
+  ["brand-500", "#6D6D6D", "#7c887e"],
+  ["brand-700 (hover de la inversa)", "#4D4D4D", "#d6ff94"],
+  ["ink (texto sobre verde/amarillo)", "#1B1B1B", "#132016"],
+];
+
+function CanchaSection() {
+  return (
+    <section className="mt-14">
+      <h2 className="mb-1 font-heading text-xl font-bold text-text-primary">Sistema Cancha</h2>
+      <p className="max-w-xl font-body text-sm text-text-secondary">
+        El lineamiento de la landing (oscuro, lima, Barlow Condensed y DM Sans) llevado a la app por ámbitos. Se activa con
+        la clase <code className="font-mono text-xs">tema-cancha</code> en el contenedor del ámbito y redefine las variables{" "}
+        <code className="font-mono text-xs">--c-*</code>; hoy lo usa el organizador. La variante{" "}
+        <code className="font-mono text-xs">cancha:</code> sirve para un ajuste que solo vale dentro del tema.
+      </p>
+
+      <div className="mt-6 overflow-x-auto rounded-xl border border-brand-200 bg-white">
+        <table className="w-full min-w-[420px] text-left text-sm">
+          <thead>
+            <tr className="border-b border-brand-200 text-xs font-semibold tracking-[0.08em] text-text-secondary uppercase">
+              <th className="px-3 py-2.5">Token</th>
+              <th className="px-3 py-2.5">Claro (Crono DS)</th>
+              <th className="px-3 py-2.5">Cancha</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-brand-200">
+            {canchaTokens.map(([name, claro, cancha]) => (
+              <tr key={name}>
+                <td className="px-3 py-2 font-body text-text-primary">{name}</td>
+                {[claro, cancha].map((hex) => (
+                  <td key={hex} className="px-3 py-2">
+                    <span className="inline-flex items-center gap-2 font-mono text-xs text-text-secondary">
+                      <span className="h-5 w-5 rounded border border-brand-200" style={{ backgroundColor: hex }} />
+                      {hex}
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 className="mt-8 mb-3 text-xs font-semibold tracking-[0.08em] text-text-secondary uppercase">Vista en vivo</h3>
+      <div className="tema-cancha rounded-2xl border border-border-primary bg-surface-primary p-5">
+        <p className="font-heading text-xl font-bold text-text-primary">Copa Apertura 2026</p>
+        <p className="mt-1 font-body text-sm text-text-secondary">8 equipos · Liga · Estadio Central</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button className="min-h-11 rounded-lg bg-surface-secondary px-4 font-heading text-sm font-bold text-text-invert hover:bg-brand-700">Iniciar partido</button>
+          <button className="min-h-11 rounded-lg border border-border-primary px-4 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular">Editar torneo</button>
+          <span className="inline-flex items-center rounded-full bg-verification px-2.5 py-1 font-heading text-xs font-bold text-ink">En vivo</span>
+          <span className="inline-flex items-center rounded-full bg-yellow px-2.5 py-1 font-heading text-xs font-bold text-ink">Convocatoria</span>
+        </div>
+        <div className="mt-4 rounded-2xl border border-border-primary bg-surface-alt p-4">
+          <p className="font-heading text-2xl font-bold text-surface-secondary">12</p>
+          <p className="font-heading text-xs font-semibold text-text-primary">Partidos jugados</p>
+          <p className="font-body text-[10px] text-text-secondary">Esta temporada</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function ColorPage() {
   return (
     <>
@@ -195,6 +274,8 @@ export default function ColorPage() {
           ))}
         </div>
       </section>
+
+      <CanchaSection />
     </>
   );
 }

@@ -22,14 +22,14 @@ export function ConvocatoriaLinkCard({ path }: { path: string }) {
   }
 
   return (
-    <div className="rounded-2xl bg-[#BEE3F8] p-5">
+    <div className="rounded-2xl bg-tint-blue p-5">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
       <h2 className="mb-2 font-heading text-lg font-bold text-text-primary">Invitar por WhatsApp</h2>
       <p className="mb-5 font-body text-sm leading-snug text-text-primary">
         Comparte este link para que un equipo pida unirse al torneo. Tú decides quién entra desde la pestaña Solicitudes.
       </p>
       <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1 rounded-lg border border-transparent bg-white px-3 py-3">
+        <div className="min-w-0 flex-1 rounded-lg border border-transparent bg-surface-alt px-3 py-3">
           <span className="block truncate font-body text-sm text-text-secondary" aria-label="Link de la convocatoria">
             {url || "Generando link..."}
           </span>

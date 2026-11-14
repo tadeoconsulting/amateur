@@ -1,10 +1,10 @@
 import type { FeeStatus } from "@/_lib/club-fees";
 
 const CONFIG: Record<FeeStatus | "vencido", { label: string; className: string }> = {
-  pagado: { label: "Pagado", className: "bg-verification/20 text-brand-900" },
-  parcial: { label: "Parcial", className: "bg-yellow/50 text-brand-900" },
+  pagado: { label: "Pagado", className: "bg-verification/20 text-text-primary" },
+  parcial: { label: "Parcial", className: "bg-yellow/50 text-text-primary" },
   pendiente: { label: "Pendiente", className: "bg-brand-200 text-text-primary" },
-  vencido: { label: "Vencido", className: "bg-red/20 text-brand-900" },
+  vencido: { label: "Vencido", className: "bg-red/20 text-text-primary" },
   sin_cuota: { label: "Sin cuota", className: "bg-brand-300 text-brand-700" },
 };
 

@@ -57,13 +57,13 @@ function LinkBox({ club }: { club: MyClub }) {
         Comparte este link para que el jugador se una directamente a {club.name}.
       </p>
       <div className="mt-4 flex items-center gap-2">
-        <div className="min-w-0 flex-1 rounded-lg border border-brand-200 bg-white px-3 py-2.5">
+        <div className="min-w-0 flex-1 rounded-lg border border-brand-200 bg-surface-alt px-3 py-2.5">
           <span className="block truncate text-sm text-text-secondary">{url || "Generando link..."}</span>
         </div>
         <button
           onClick={share}
           disabled={!url}
-          className="cursor-pointer rounded-lg bg-brand-900 px-4 py-2.5 text-sm font-semibold text-text-invert disabled:opacity-50"
+          className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2.5 text-sm font-semibold text-text-invert disabled:opacity-50"
         >
           Compartir
         </button>
@@ -95,7 +95,7 @@ function LinkBox({ club }: { club: MyClub }) {
 export function InviteLinkCard() {
   const { club, loading } = useMyClub();
   return (
-    <div className="rounded-xl bg-[#d4e5ff] p-4">
+    <div className="rounded-xl bg-tint-sky p-4">
       <h2 className="font-heading text-lg font-bold text-text-primary">Invitar por WhatsApp</h2>
       {loading ? (
         <p className="mt-2 text-sm text-text-secondary">Cargando...</p>

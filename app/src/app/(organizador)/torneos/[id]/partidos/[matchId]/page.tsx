@@ -175,7 +175,7 @@ export default function MatchDetailPage() {
       {/* Content based on status */}
       {match.status === "programado" && (
         <div className="mt-8 flex flex-col items-center px-4 pb-8">
-          <div className="flex h-64 w-64 items-center justify-center rounded-full bg-brand-100">
+          <div className="flex h-64 w-64 items-center justify-center rounded-full bg-surface-alt">
             <svg width="120" height="120" viewBox="0 0 120 120" fill="none" className="text-brand-300">
               <circle cx="60" cy="60" r="50" stroke="currentColor" strokeWidth="2" />
               <circle cx="60" cy="60" r="20" stroke="currentColor" strokeWidth="1.5" />

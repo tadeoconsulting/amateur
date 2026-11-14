@@ -151,7 +151,7 @@ export function BracketView({
               Arma el cuadro de eliminación con los mejores {tournament.groupsAdvancePerGroup ?? 2} de cada grupo.
             </p>
             {error && (
-              <p role="alert" className="mt-3 font-body text-sm text-brand-900">
+              <p role="alert" className="mt-3 font-body text-sm text-text-primary">
                 {error}
               </p>
             )}

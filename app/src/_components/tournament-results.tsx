@@ -54,7 +54,7 @@ export function StandingsTable({
       <div className="overflow-x-auto rounded-xl border border-border-primary">
         <table className="w-full text-left font-body text-xs">
           <thead>
-            <tr className="border-b border-border-primary bg-brand-100">
+            <tr className="border-b border-border-primary bg-surface-alt">
               <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">#</th>
               <th className="px-2 py-2 font-heading text-[10px] font-semibold text-text-secondary">Equipo</th>
               <th className="px-2 py-2 text-center font-heading text-[10px] font-semibold text-text-secondary">PJ</th>
@@ -132,7 +132,7 @@ export function ScorersList({ scorers, clubHref }: { scorers: ScorerRow[]; clubH
           key={p.playerId}
           className={`flex items-center gap-3 rounded-xl p-3 ${i === 0 ? "border-2 border-yellow bg-yellow/5" : "border border-border-primary"}`}
         >
-          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-yellow text-white" : "bg-brand-200 text-text-secondary"}`}>
+          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-yellow text-ink" : "bg-brand-200 text-text-secondary"}`}>
             {i + 1}
           </div>
           <PlayerAvatar avatarUrl={p.avatarUrl} size="h-8 w-8" iconSize={14} iconClass="text-text-secondary" />

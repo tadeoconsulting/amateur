@@ -14,10 +14,10 @@ import { useAuth } from "@/lib/auth-context";
 
 function IndicadorCard({ value, label, sub }: { value: number; label: string; sub: string }) {
   return (
-    <div className="flex-1 rounded-lg bg-surface-secondary px-3 py-3">
-      <p className="font-heading text-xl font-bold text-text-invert">{value}</p>
-      <p className="font-heading text-xs font-semibold text-text-invert">{label}</p>
-      <p className="font-body text-[10px] text-brand-500">{sub}</p>
+    <div className="flex-1 rounded-lg bg-surface-secondary px-3 py-3 cancha:rounded-2xl cancha:border cancha:border-border-primary cancha:bg-surface-alt">
+      <p className="font-heading text-xl font-bold text-text-invert cancha:text-surface-secondary">{value}</p>
+      <p className="font-heading text-xs font-semibold text-text-invert cancha:text-text-primary">{label}</p>
+      <p className="font-body text-[10px] text-brand-500 cancha:text-text-secondary">{sub}</p>
     </div>
   );
 }

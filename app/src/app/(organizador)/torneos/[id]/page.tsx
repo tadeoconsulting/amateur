@@ -279,12 +279,12 @@ export default function TournamentDetailPage() {
       {/* Tournament card — clickable */}
       <button
         onClick={() => { if (canSwitch) { setSelectedTournamentId(params.id); setShowSelector(true); } }}
-        className={`mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-xl bg-surface-secondary px-4 py-3 text-left transition-opacity ${canSwitch ? "cursor-pointer hover:opacity-90" : "cursor-default"}`}
+        className={`mx-4 mt-2 flex w-[calc(100%-2rem)] items-center gap-3 rounded-xl bg-surface-secondary px-4 py-3 text-left transition-opacity cancha:rounded-2xl cancha:border cancha:border-border-primary cancha:bg-surface-alt ${canSwitch ? "cursor-pointer hover:opacity-90" : "cursor-default"}`}
       >
         {tournament.logoUrl ? (
           <TournamentLogo logoUrl={tournament.logoUrl} />
         ) : (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700 cancha:bg-btn-regular">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
               <path
                 d="M4 2h8v4a4 4 0 01-8 0V2zM3 3H1.5a.5.5 0 00-.5.5v1a2 2 0 002 2H3M13 3h1.5a.5.5 0 01.5.5v1a2 2 0 01-2 2h-.5M6 10v2M10 10v2M5 12h6a1 1 0 011 1v1H4v-1a1 1 0 011-1z"
@@ -298,10 +298,10 @@ export default function TournamentDetailPage() {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-heading text-sm font-bold text-text-invert">
+          <p className="truncate font-heading text-sm font-bold text-text-invert cancha:text-text-primary">
             {tournament.name}
           </p>
-          <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-brand-500">
+          <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-brand-500 cancha:text-text-secondary">
             {isConvocatoria
               ? `${tournament._count.teams}/${tournament.maxTeams || "?"} equipos`
               : `${tournament._count.teams} equipos`} | {formatLabel(tournament.format)} | {tournament.category || "Libre"}
@@ -362,7 +362,7 @@ export default function TournamentDetailPage() {
                   {tab.label}
                   {tab.key === "solicitudes" && pendingRequests > 0 && (
                     <>
-                      <span aria-hidden="true" className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-text-primary">
+                      <span aria-hidden="true" className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-ink">
                         {pendingRequests}
                       </span>
                       <span className="sr-only"> ({pendingRequests} pendientes)</span>

@@ -21,7 +21,7 @@ export function Accordion({
       {items.map((item, i) => {
         const isOpen = openIndex === i;
         return (
-          <div key={i} className="rounded border border-brand-200 bg-white">
+          <div key={i} className="rounded border border-brand-200 bg-surface-alt">
             <button
               onClick={() => setOpenIndex(isOpen ? null : i)}
               className="flex w-full items-center justify-between px-3 py-3 text-left"

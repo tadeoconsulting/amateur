@@ -88,7 +88,7 @@ export default function BuscarJugadorPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ingresa el nombre o apellido"
-            className="w-full rounded-lg border border-brand-200 bg-brand-100 py-3 pl-3 pr-10 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
+            className="w-full rounded-lg border border-brand-200 bg-surface-alt py-3 pl-3 pr-10 text-sm text-text-primary placeholder:text-text-secondary focus:border-border-primary focus:outline-none"
           />
           <svg
             width="18"

@@ -1,13 +1,87 @@
 @import "tailwindcss";
 
+/* Colores y tipografía neutros: cada token lee una variable (--c-*, --f-*) que vale lo de siempre (Crono DS, claro).
+   Un ámbito migrado al sistema "Cancha" (especificación 020) agrega la clase .tema-cancha en su contenedor y redefine
+   las variables de más abajo; lo que está fuera del contenedor no cambia. */
+:root {
+  --c-brand-100: #FDFDFD;
+  --c-brand-200: #E5E5E5;
+  --c-brand-300: #EBEBEB;
+  --c-brand-500: #6D6D6D;
+  --c-brand-700: #4D4D4D;
+  --c-brand-900: #1B1B1B;
+  --c-text-primary: #1B1B1B;
+  --c-text-secondary: #6D6D6D;
+  --c-text-invert: #FAFAFA;
+  --c-surface-primary: #FAFAFA;
+  --c-surface-secondary: #1B1B1B;
+  --c-surface-alt: #FDFDFD;
+  --c-border-primary: #1B1B1B;
+  --c-border-secondary: #4D4D4D;
+  --c-btn-primary: #1B1B1B;
+  --c-btn-secondary: #4D4D4D;
+  --c-btn-regular: #EBEBEB;
+  --c-btn-disabled: #E5E5E5;
+  /* Texto sobre un relleno claro fijo (verde, amarillo): no se invierte con el tema. */
+  --c-ink: #1B1B1B;
+  /* Tarjetas de aviso en pastel (en "Cancha" pasan a tonos oscuros). */
+  --c-tint-green: #C6F6D5;
+  --c-tint-mint: #b5ffd8;
+  --c-tint-yellow: #FEFCBF;
+  --c-tint-blue: #BEE3F8;
+  --c-tint-sky: #d4e5ff;
+  --f-heading: var(--font-lexend);
+  --f-body: var(--font-lato);
+}
+
+/* Sistema "Cancha": el lineamiento de la landing (oscuro, lima, tipografía condensada) llevado a la app.
+   Los valores salen de landing.css (--lc-*). La superficie "inversa" (hoy el fondo del botón principal y de los
+   bloques de énfasis) pasa a ser lima, con texto tinta. */
+.tema-cancha {
+  --c-brand-100: #1b221d;
+  --c-brand-200: #344037;
+  --c-brand-300: #232c26;
+  --c-brand-500: #7c887e;
+  --c-brand-700: #d6ff94;
+  --c-brand-900: #f3f4ed;
+  --c-text-primary: #f3f4ed;
+  --c-text-secondary: #adb5ad;
+  --c-text-invert: #132016;
+  --c-surface-primary: #101512;
+  --c-surface-secondary: #c3fa73;
+  --c-surface-alt: #1b221d;
+  --c-border-primary: #344037;
+  --c-border-secondary: #475449;
+  --c-btn-primary: #c3fa73;
+  --c-btn-secondary: #344037;
+  --c-btn-regular: #232c26;
+  --c-btn-disabled: #1b221d;
+  --c-ink: #132016;
+  --c-tint-green: #1d3526;
+  --c-tint-mint: #1d3526;
+  --c-tint-yellow: #38351c;
+  --c-tint-blue: #1c2b3a;
+  --c-tint-sky: #1c2b3a;
+  --f-heading: var(--font-cancha-display);
+  --f-body: var(--font-cancha-body);
+  background: var(--c-surface-primary);
+  color: var(--c-text-primary);
+  font-family: var(--f-body), var(--font-inter), sans-serif;
+  color-scheme: dark;
+}
+
+/* Variante para ajustes que solo valen dentro del sistema "Cancha" (por ejemplo, un bloque grande de énfasis que en
+   claro es oscuro y en oscuro se ve mejor como tarjeta): `cancha:bg-surface-alt`. No cambia nada fuera del ámbito. */
+@custom-variant cancha (&:where(.tema-cancha *));
+
 @theme inline {
   /* Crono DS — Primitives */
-  --color-brand-100: #FDFDFD;
-  --color-brand-200: #E5E5E5;
-  --color-brand-300: #EBEBEB;
-  --color-brand-500: #6D6D6D;
-  --color-brand-700: #4D4D4D;
-  --color-brand-900: #1B1B1B;
+  --color-brand-100: var(--c-brand-100);
+  --color-brand-200: var(--c-brand-200);
+  --color-brand-300: var(--c-brand-300);
+  --color-brand-500: var(--c-brand-500);
+  --color-brand-700: var(--c-brand-700);
+  --color-brand-900: var(--c-brand-900);
 
   /* Crono DS — Complementary */
   --color-green: #00CA81;
@@ -15,24 +89,30 @@
   --color-red: #FF6363;
 
   /* Crono DS — Semantic: Text */
-  --color-text-primary: #1B1B1B;
-  --color-text-secondary: #6D6D6D;
-  --color-text-invert: #FAFAFA;
+  --color-text-primary: var(--c-text-primary);
+  --color-text-secondary: var(--c-text-secondary);
+  --color-text-invert: var(--c-text-invert);
 
   /* Crono DS — Semantic: Surface */
-  --color-surface-primary: #FAFAFA;
-  --color-surface-secondary: #1B1B1B;
-  --color-surface-alt: #FDFDFD;
+  --color-surface-primary: var(--c-surface-primary);
+  --color-surface-secondary: var(--c-surface-secondary);
+  --color-surface-alt: var(--c-surface-alt);
 
   /* Crono DS — Semantic: Border */
-  --color-border-primary: #1B1B1B;
-  --color-border-secondary: #4D4D4D;
+  --color-border-primary: var(--c-border-primary);
+  --color-border-secondary: var(--c-border-secondary);
 
   /* Crono DS — Semantic: Buttons */
-  --color-btn-primary: #1B1B1B;
-  --color-btn-secondary: #4D4D4D;
-  --color-btn-regular: #EBEBEB;
-  --color-btn-disabled: #E5E5E5;
+  --color-btn-primary: var(--c-btn-primary);
+  --color-btn-secondary: var(--c-btn-secondary);
+  --color-btn-regular: var(--c-btn-regular);
+  --color-btn-disabled: var(--c-btn-disabled);
+  --color-ink: var(--c-ink);
+  --color-tint-green: var(--c-tint-green);
+  --color-tint-mint: var(--c-tint-mint);
+  --color-tint-yellow: var(--c-tint-yellow);
+  --color-tint-blue: var(--c-tint-blue);
+  --color-tint-sky: var(--c-tint-sky);
 
   /* Crono DS — Semantic: Accent */
   --color-error: #FF6363;
@@ -44,8 +124,8 @@
   --color-field-light: #E6FFF5;
 
   --font-sans: var(--font-inter);
-  --font-heading: var(--font-lexend);
-  --font-body: var(--font-lato);
+  --font-heading: var(--f-heading);
+  --font-body: var(--f-body);
 }
 
 body {

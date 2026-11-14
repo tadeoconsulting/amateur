@@ -19,7 +19,7 @@ export function AssignDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
-      <div className="relative w-full max-w-[430px] rounded-t-2xl bg-white px-4 pb-6 pt-6">
+      <div className="relative w-full max-w-[430px] rounded-t-2xl bg-surface-alt px-4 pb-6 pt-6">
         <button
           onClick={onCancel}
           className="absolute right-4 top-6 flex h-6 w-6 items-center justify-center"
@@ -70,7 +70,7 @@ export function AssignDialog({
                 <div
                   className={`flex h-6 w-6 items-center justify-center rounded border-2 transition-colors ${
                     selected === cat.id
-                      ? "border-brand-900 bg-brand-900"
+                      ? "border-border-primary bg-surface-secondary"
                       : "border-brand-400"
                   }`}
                 >
@@ -87,7 +87,7 @@ export function AssignDialog({
         <button
           onClick={() => selected && onConfirm(selected)}
           disabled={!selected}
-          className="mt-4 w-full rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-40"
+          className="mt-4 w-full rounded-xl bg-surface-secondary py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-40"
         >
           Guardar cambios
         </button>

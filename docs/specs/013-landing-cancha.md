@@ -10,7 +10,7 @@ Reemplazar la landing actual (clara, verde #00CA81, Lexend/Lato) por el lineamie
 ## Decisiones (tomadas por el usuario)
 | # | Pregunta | Decisión |
 |---|---|---|
-| 1 | ¿Qué parte adopta el nuevo estilo? | **Solo la landing.** El resto de la app (organizador, club, jugador, vistas públicas) no cambia. |
+| 1 | ¿Qué parte adopta el nuevo estilo? | **Solo la landing.** El resto de la app (organizador, club, jugador, vistas públicas) no cambia. *(Superada el 2026-11-14: el estilo se lleva a la app por ámbitos, ver [020](020-sistema-visual-cancha.md).)* |
 | 2 | ¿Cómo se destacan los torneos? | **Torneos en vivo ahora** (marcador y minuto reales) y **próximos y recientes** (tarjetas de torneo). Sin buscador y sin bloque de tabla/goleadores por ahora. |
 | 3 | ¿Qué torneos se muestran? | **Automático**, sin campo nuevo ni migración: lo que está en vivo y los torneos públicos más recientes. |
 | 4 | ¿Y los textos de la propuesta? | **Se usa su tono** (directo, de barrio, frases cortas en mayúsculas), pero **actualizado a lo que existe hoy**. Lo que la landing actual dice y la propuesta no, se conserva **reescrito con el nuevo tono**. |

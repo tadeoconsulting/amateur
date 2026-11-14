@@ -94,7 +94,7 @@ function SolicitudesContent({ tournaments }: { tournaments: TournamentListItem[]
         <Spinner />
       ) : solicitudes.length === 0 && history.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-alt">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
               <path
                 d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"

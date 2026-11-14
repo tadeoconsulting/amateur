@@ -279,7 +279,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
                     <div className="flex items-center gap-2">
                       <p className="truncate font-heading text-sm font-bold text-text-primary">{t.name}</p>
                       {canStart && (
-                        <span className="shrink-0 rounded-full bg-verification px-2 py-0.5 font-heading text-[10px] font-bold text-text-primary">
+                        <span className="shrink-0 rounded-full bg-verification px-2 py-0.5 font-heading text-[10px] font-bold text-ink">
                           Activo
                         </span>
                       )}

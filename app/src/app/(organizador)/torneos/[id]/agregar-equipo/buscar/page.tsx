@@ -141,7 +141,7 @@ export default function BuscarEquipoPage() {
 
   function renderState(club: ClubListItem) {
     if (enrolled.has(club.id)) {
-      return <span className="inline-flex items-center rounded-full bg-verification/20 px-2.5 py-0.5 text-xs font-medium text-brand-900">Inscrito</span>;
+      return <span className="inline-flex items-center rounded-full bg-verification/20 px-2.5 py-0.5 text-xs font-medium text-text-primary">Inscrito</span>;
     }
     const req = pendingByClub.get(club.id);
     if (req?.kind === "invite") {
