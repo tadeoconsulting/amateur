@@ -8,15 +8,22 @@ import { useEffect, useRef } from "react";
  */
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  // `onClose` suele llegar como función nueva en cada render del padre (p. ej. el que corre un reloj cada segundo).
+  // Se guarda en una ref para que el efecto corra una sola vez: si dependiera de `onClose`, devolvería el foco a la X
+  // cada vez, quitándoselo al campo donde se está escribiendo.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
