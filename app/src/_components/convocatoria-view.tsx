@@ -144,7 +144,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
           Amateur
         </Link>
         <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isOpen ? "bg-yellow/30 text-brand-900" : "bg-brand-300 text-brand-700"}`}
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${isOpen ? "bg-yellow/30 text-text-primary" : "bg-brand-300 text-brand-700"}`}
         >
           {isOpen ? "Inscripciones abiertas" : "Inscripciones cerradas"}
         </span>
@@ -515,7 +515,7 @@ function JoinPanel({
       )}
 
       {enrolledIds.has(club.id) ? (
-        <p role="status" className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-verification/20 font-heading text-sm font-bold text-brand-900">
+        <p role="status" className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-verification/20 font-heading text-sm font-bold text-text-primary">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M3 8.5L6.5 12L13 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

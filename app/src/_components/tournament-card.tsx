@@ -19,7 +19,7 @@ export function TournamentCard({ tournament }: { tournament: Tournament }) {
   return (
     <Link
       href={`/torneos/${tournament.id}`}
-      className="group block rounded-xl border border-brand-200 bg-white p-5 transition-shadow hover:shadow-md"
+      className="group block rounded-xl border border-brand-200 bg-surface-alt p-5 transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">

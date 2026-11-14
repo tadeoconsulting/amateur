@@ -11,7 +11,7 @@ import { passwordError } from "@/_lib/password-rules";
 
 
 const inputClass =
-  "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-brand-900 focus:outline-none";
+  "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-border-primary focus:outline-none";
 
 /** "Cambiar mi contraseña" — la misma pantalla para organizador, club y jugador (POST /api/auth/password). */
 export function ChangePasswordForm() {

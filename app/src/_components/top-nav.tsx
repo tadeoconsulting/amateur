@@ -28,7 +28,7 @@ export function TopNav({ items, homeHref, label, account }: { items: TopNavItem[
               {!!item.badge && (
                 <span
                   aria-label={`${item.badge} pendientes`}
-                  className="inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-text-primary"
+                  className="inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-ink"
                 >
                   {item.badge > 9 ? "9+" : item.badge}
                 </span>

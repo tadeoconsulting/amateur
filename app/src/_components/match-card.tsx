@@ -21,7 +21,7 @@ export function MatchCard({ match }: { match: Match }) {
   return (
     <Link
       href={`/torneos/${match.tournamentId}/partidos/${match.id}`}
-      className="group block rounded-xl border border-brand-200 bg-white p-4 transition-shadow hover:shadow-md"
+      className="group block rounded-xl border border-brand-200 bg-surface-alt p-4 transition-shadow hover:shadow-md"
     >
       <div className="flex items-center justify-between">
         <span className="text-xs text-text-secondary">

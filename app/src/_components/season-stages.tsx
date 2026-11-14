@@ -8,9 +8,9 @@ import { ClubCrest } from "@/_components/club-crest";
 const STATUS_TONE: Record<SeasonStatus, string> = {
   apertura: "bg-brand-200 text-text-primary",
   clausura: "bg-brand-200 text-text-primary",
-  final_pendiente: "bg-yellow text-text-primary",
+  final_pendiente: "bg-yellow text-ink",
   final: "bg-brand-200 text-text-primary",
-  terminada: "bg-verification text-text-primary",
+  terminada: "bg-verification text-ink",
 };
 
 export function SeasonStatusChip({ status }: { status: SeasonStatus }) {
@@ -39,7 +39,7 @@ export function SeasonStages({ season, hrefFor }: { season: SeasonSummary; hrefF
             <span
               aria-hidden="true"
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-heading text-[10px] font-bold ${
-                t?.status === "finalizado" ? "bg-verification text-text-primary" : t ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-secondary"
+                t?.status === "finalizado" ? "bg-verification text-ink" : t ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-secondary"
               }`}
             >
               {SEASON_STAGES.indexOf(stage) + 1}

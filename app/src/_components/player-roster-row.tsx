@@ -32,7 +32,7 @@ export function PlayerRosterRow({
       {action ?? (
         player.provisional ? (
           // Sin cuenta: lo gestiona un admin (especificación 009), así que no tiene casilla para mover ni liberar.
-          <span className="shrink-0 rounded-full bg-brand-100 px-2.5 py-1 font-heading text-xs font-semibold text-text-secondary">Provisional</span>
+          <span className="shrink-0 rounded-full bg-surface-alt px-2.5 py-1 font-heading text-xs font-semibold text-text-secondary">Provisional</span>
         ) : player.status === "en_espera" ? (
           <span className="shrink-0 text-sm font-medium text-text-secondary">En espera</span>
         ) : (
@@ -40,7 +40,7 @@ export function PlayerRosterRow({
             onClick={onToggle}
             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border-2 transition-colors ${
               selected
-                ? "border-brand-900 bg-brand-900"
+                ? "border-border-primary bg-surface-secondary"
                 : "border-brand-400 bg-transparent"
             }`}
           >

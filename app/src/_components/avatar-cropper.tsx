@@ -114,14 +114,14 @@ export function AvatarCropper({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 px-4">
-      <div className="w-full max-w-sm rounded-2xl bg-white p-5">
+      <div className="w-full max-w-sm rounded-2xl bg-surface-alt p-5">
         <h2 className="mb-4 text-center font-heading text-lg font-bold text-text-primary">Foto de perfil</h2>
 
         {!imageUrl ? (
           <div className="flex flex-col items-center gap-4 py-8">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="cursor-pointer rounded-lg bg-brand-900 px-5 py-3 font-heading text-sm font-semibold text-white"
+              className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-3 font-heading text-sm font-semibold text-text-invert"
             >
               Elegir imagen
             </button>
@@ -182,7 +182,7 @@ export function AvatarCropper({
               </button>
               <button
                 onClick={confirmCrop}
-                className="flex-1 cursor-pointer rounded-lg bg-brand-900 py-2.5 font-heading text-sm font-semibold text-white"
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm font-semibold text-text-invert"
               >
                 Usar esta foto
               </button>

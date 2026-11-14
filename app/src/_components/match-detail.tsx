@@ -166,7 +166,7 @@ export function MatchDetail({
             </span>
           )}
           {finished && <span className={`rounded-full px-3 py-1 font-heading text-xs font-bold ${MATCH_TONE.finished.chip}`}>{match.walkover ? "FT · W.O." : "FT · Finalizado"}</span>}
-          {scheduled && <span className="rounded-full bg-brand-100 px-3 py-1 font-heading text-xs font-bold text-text-secondary">{formatWhen(match)}</span>}
+          {scheduled && <span className="rounded-full bg-surface-alt px-3 py-1 font-heading text-xs font-bold text-text-secondary">{formatWhen(match)}</span>}
         </div>
 
         <div className="mt-4 flex items-center justify-between">

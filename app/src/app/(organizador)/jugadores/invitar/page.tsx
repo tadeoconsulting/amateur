@@ -11,7 +11,7 @@ export default function InvitarPage() {
 
       <div className="space-y-4 px-4">
         {/* Search community card */}
-        <div className="rounded-xl bg-[#b5ffd8] p-4">
+        <div className="rounded-xl bg-tint-mint p-4">
           <h2 className="font-heading text-lg font-bold text-text-primary">
             Busca talento en la comunidad
           </h2>
@@ -20,7 +20,7 @@ export default function InvitarPage() {
           </p>
           <Link
             href="/jugadores/buscar"
-            className="mt-4 block rounded-xl border border-brand-900 bg-white py-3 text-center font-heading text-sm font-semibold text-text-primary"
+            className="mt-4 block rounded-xl border border-border-primary bg-surface-alt py-3 text-center font-heading text-sm font-semibold text-text-primary"
           >
             Buscar jugador
           </Link>

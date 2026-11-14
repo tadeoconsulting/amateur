@@ -37,7 +37,7 @@ export default function JugadoresPage() {
 
       {/* Empty state */}
       <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-alt">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-text-secondary">
             <path
               d="M6 4h12v5a6 6 0 01-12 0V4zM5 5H3a1 1 0 00-1 1v1a3 3 0 003 3h.5M19 5h2a1 1 0 011 1v1a3 3 0 01-3 3h-.5M9 14v2M15 14v2M7 16h10a1 1 0 011 1v1H6v-1a1 1 0 011-1z"

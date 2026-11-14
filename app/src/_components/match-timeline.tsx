@@ -51,7 +51,7 @@ export function MatchTimeline({
       <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-brand-200" />
 
       <div className="relative mb-6 flex justify-center">
-        <div className="z-10 h-4 w-4 rounded-full bg-brand-900" />
+        <div className="z-10 h-4 w-4 rounded-full bg-surface-secondary" />
       </div>
 
       {firstHalf.map((event) => (
@@ -61,7 +61,7 @@ export function MatchTimeline({
       {secondHalf.length > 0 && (
         <>
           <div className="relative my-6 flex justify-center">
-            <div className="z-10 rounded bg-white px-4 py-1">
+            <div className="z-10 rounded bg-surface-primary px-4 py-1">
               <span className="font-heading text-lg font-bold text-text-primary">Segundo tiempo</span>
             </div>
           </div>
@@ -72,7 +72,7 @@ export function MatchTimeline({
       )}
 
       <div className="relative mt-8 flex justify-center">
-        <span className={`z-10 rounded bg-white px-3 py-1 text-sm font-medium ${onBreak ? MATCH_TONE.break.text : status === "en_vivo" ? MATCH_TONE.live.text : MATCH_TONE.finished.text}`}>
+        <span className={`z-10 rounded bg-surface-primary px-3 py-1 text-sm font-medium ${onBreak ? MATCH_TONE.break.text : status === "en_vivo" ? MATCH_TONE.live.text : MATCH_TONE.finished.text}`}>
           {onBreak ? "Descanso" : status === "en_vivo" ? "En Vivo" : "Finalizado"}
         </span>
       </div>

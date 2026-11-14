@@ -2,8 +2,8 @@ import type { TournamentStatus, MatchStatus } from "@/_lib/types";
 
 const tournamentStatusConfig: Record<TournamentStatus, { label: string; className: string }> = {
   draft: { label: "Borrador", className: "bg-brand-200 text-text-primary" },
-  inscripcion: { label: "Inscripción", className: "bg-yellow/20 text-brand-900" },
-  en_curso: { label: "En curso", className: "bg-verification/15 text-brand-900" },
+  inscripcion: { label: "Inscripción", className: "bg-yellow/20 text-text-primary" },
+  en_curso: { label: "En curso", className: "bg-verification/15 text-text-primary" },
   finalizado: { label: "Finalizado", className: "bg-brand-300 text-brand-500" },
 };
 
@@ -11,7 +11,7 @@ const matchStatusConfig: Record<MatchStatus, { label: string; className: string 
   programado: { label: "Programado", className: "bg-brand-200 text-text-primary" },
   en_vivo: { label: "En vivo", className: "bg-red/15 text-red" },
   finalizado: { label: "Finalizado", className: "bg-brand-300 text-brand-500" },
-  suspendido: { label: "Suspendido", className: "bg-yellow/20 text-brand-900" },
+  suspendido: { label: "Suspendido", className: "bg-yellow/20 text-text-primary" },
 };
 
 export function TournamentStatusBadge({ status }: { status: TournamentStatus }) {

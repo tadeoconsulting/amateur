@@ -28,7 +28,7 @@ export default function AgregarEquipoPage() {
 
       <div className="flex flex-col gap-4 px-4 mt-2">
         {/* Card 1 — Buscar en la comunidad */}
-        <div className="rounded-2xl bg-[#C6F6D5] p-5">
+        <div className="rounded-2xl bg-tint-green p-5">
           <h2 className="font-heading text-lg font-bold text-text-primary mb-2">
             Busca tu equipo en la comunidad
           </h2>
@@ -44,7 +44,7 @@ export default function AgregarEquipoPage() {
         </div>
 
         {/* Card 2 — Crear equipo temporal */}
-        <div className="rounded-2xl bg-[#FEFCBF] p-5">
+        <div className="rounded-2xl bg-tint-yellow p-5">
           <h2 className="font-heading text-lg font-bold text-text-primary mb-2">
             Crea un equipo temporal
           </h2>

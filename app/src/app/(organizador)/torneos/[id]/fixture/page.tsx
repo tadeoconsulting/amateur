@@ -194,7 +194,7 @@ export default function FixturePage() {
             <p className="font-body text-xs text-text-secondary">
               {tournament._count.teams} equipos | {formatLabel(tournament.format)} | {tournament.category || "Libre"}
               {" "}
-              <span className="inline-flex items-center rounded-full bg-verification px-1.5 py-0.5 text-[10px] font-bold text-text-primary">
+              <span className="inline-flex items-center rounded-full bg-verification px-1.5 py-0.5 text-[10px] font-bold text-ink">
                 Activo
               </span>
             </p>

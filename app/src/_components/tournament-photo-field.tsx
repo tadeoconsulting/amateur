@@ -54,7 +54,7 @@ export function TournamentPhotoField({ value, onChange }: { value: string; onCha
         </div>
       </div>
       {error && (
-        <p role="alert" className="mt-2 font-body text-xs text-brand-900">
+        <p role="alert" className="mt-2 font-body text-xs text-text-primary">
           {error}
         </p>
       )}

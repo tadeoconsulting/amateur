@@ -80,7 +80,7 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-heading font-semibold transition-colors ${
-                active ? "text-text-primary" : "text-text-secondary"
+                active ? "text-text-primary cancha:text-surface-secondary" : "text-text-secondary"
               }`}
             >
               {item.icon(active)}

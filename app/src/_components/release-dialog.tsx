@@ -12,7 +12,7 @@ export function ReleaseDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
-      <div className="relative w-full max-w-[430px] rounded-t-2xl bg-white px-4 pb-6 pt-6">
+      <div className="relative w-full max-w-[430px] rounded-t-2xl bg-surface-alt px-4 pb-6 pt-6">
         <button
           onClick={onCancel}
           className="absolute right-4 top-6 flex h-6 w-6 items-center justify-center"

@@ -190,7 +190,7 @@ function TeamBlock({ team, href }: { team: MatchListItem["homeTeam"]; href?: str
 }
 
 const RESULT_STYLE: Record<FormEntry["result"], { chip: string; label: string }> = {
-  G: { chip: "bg-verification text-text-primary", label: "Ganó" },
+  G: { chip: "bg-verification text-ink", label: "Ganó" },
   E: { chip: "bg-brand-200 text-text-secondary", label: "Empató" },
   P: { chip: "bg-error text-white", label: "Perdió" },
 };

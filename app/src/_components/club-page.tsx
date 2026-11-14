@@ -212,7 +212,7 @@ function PlayersTab({ players }: { players: ClubInTournament["players"] }) {
           <li key={p.id} className="flex items-center gap-3 border-b border-border-primary px-4 py-3 last:border-0">
             <span
               aria-label={p.number != null ? `Número ${p.number}` : undefined}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 font-heading text-xs font-bold tabular-nums text-text-primary"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface-alt font-heading text-xs font-bold tabular-nums text-text-primary"
             >
               {p.number ?? "–"}
             </span>

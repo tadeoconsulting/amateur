@@ -111,7 +111,7 @@ export default function CategoryDetailPage() {
         </div>
         <Link
           href="/jugadores/invitar"
-          className="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-text-invert"
+          className="rounded-lg bg-surface-secondary px-4 py-2 text-sm font-semibold text-text-invert"
         >
           Agregar
         </Link>
@@ -119,7 +119,7 @@ export default function CategoryDetailPage() {
 
       {/* Info banner for sin categoria */}
       {isSinCategoria && (
-        <div className="mx-4 mt-4 rounded-lg bg-brand-100 p-3">
+        <div className="mx-4 mt-4 rounded-lg bg-surface-alt p-3">
           <p className="text-sm text-text-secondary">
             Los jugadores pueden ser movidos a otras categorias o liberados, solo debes seleccionarlos.
           </p>
@@ -145,12 +145,12 @@ export default function CategoryDetailPage() {
 
       {/* Bottom action bar */}
       {(hasSelection || isSinCategoria) && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white px-4 py-4">
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-surface-alt px-4 py-4">
           <div className="mx-auto flex max-w-[430px] gap-3">
             <button
               onClick={handleRelease}
               disabled={!hasSelection}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-900 py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-40"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-surface-secondary py-3.5 font-heading text-sm font-semibold text-text-invert disabled:opacity-40"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M2 8h12M8 2l6 6-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -160,7 +160,7 @@ export default function CategoryDetailPage() {
             <button
               onClick={handleAssign}
               disabled={!hasSelection}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-900 bg-white py-3.5 font-heading text-sm font-semibold text-text-primary disabled:opacity-40"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border-primary bg-surface-alt py-3.5 font-heading text-sm font-semibold text-text-primary disabled:opacity-40"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />

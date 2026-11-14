@@ -28,8 +28,8 @@ function AttemptRow({ attempts, minSlots }: { attempts: Attempt[]; minSlots: num
               a === undefined
                 ? "border-border-primary text-transparent"
                 : a.scored
-                  ? "border-verification bg-verification/20 text-brand-900"
-                  : "border-error bg-error/15 text-brand-900"
+                  ? "border-verification bg-verification/20 text-text-primary"
+                  : "border-error bg-error/15 text-text-primary"
             }`}
           >
             {a === undefined ? "" : a.scored ? "✓" : "✗"}
@@ -96,7 +96,7 @@ export function PenaltyShootout({
       </div>
 
       {decided ? (
-        <p role="status" className="mb-4 rounded-lg bg-verification/15 px-3 py-2.5 text-center font-body text-sm font-semibold text-brand-900">
+        <p role="status" className="mb-4 rounded-lg bg-verification/15 px-3 py-2.5 text-center font-body text-sm font-semibold text-text-primary">
           {decided === "home" ? homeTeam?.name : awayTeam?.name} ya ganó la tanda. Puedes finalizar el partido.
         </p>
       ) : (

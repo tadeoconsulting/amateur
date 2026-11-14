@@ -132,7 +132,7 @@ export function LigaBracketBuilder({
       )}
 
       {error && (
-        <p role="alert" className="font-body text-sm text-brand-900">
+        <p role="alert" className="font-body text-sm text-text-primary">
           {error}
         </p>
       )}
