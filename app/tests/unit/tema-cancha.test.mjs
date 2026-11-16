@@ -106,6 +106,18 @@ test("los tabs usan DM Sans en negrita dentro de «Cancha»", () => {
   }
 });
 
+// Ajustes de tipografía pedidos por el usuario sobre el organizador (2026-11-16): el nombre del torneo y «Volver» en
+// DM Sans, y el menú superior en 16 px. Siempre con la variante `cancha:` para no tocar los otros ámbitos.
+test("el nombre del torneo y «Volver» van en DM Sans, y el menú superior en 16 px", () => {
+  const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/page.tsx", import.meta.url), "utf8");
+  assert.match(pagina, /font-heading text-sm font-bold text-text-invert cancha:font-body/, "nombre del torneo");
+  assert.match(pagina, /font-heading text-sm font-semibold cancha:font-body cancha:font-bold text-text-primary/, "«Volver»");
+  const cabecera = readFileSync(new URL("../../src/_components/tournament-header.tsx", import.meta.url), "utf8");
+  assert.match(cabecera, /font-heading text-sm font-bold text-text-invert cancha:font-body/, "cabecera del torneo");
+  const menu = readFileSync(new URL("../../src/_components/top-nav.tsx", import.meta.url), "utf8");
+  assert.match(menu, /cancha:text-base/, "menú superior a 16 px");
+});
+
 test("el ámbito del organizador aplica el tema y carga las fuentes de la landing", () => {
   const layout = readFileSync(new URL("../../src/app/(organizador)/layout.tsx", import.meta.url), "utf8");
   assert.match(layout, /tema-cancha/);

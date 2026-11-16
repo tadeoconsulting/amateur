@@ -20,7 +20,7 @@ export function TopNav({ items, homeHref, label, account }: { items: TopNavItem[
               key={item.href}
               href={item.href}
               aria-current={item.active ? "page" : undefined}
-              className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 font-heading text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
+              className={`inline-flex min-h-11 items-center gap-2 rounded-lg px-4 font-heading text-sm font-semibold cancha:text-base transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
                 item.active ? "bg-surface-secondary text-text-invert" : "text-text-secondary hover:bg-btn-regular hover:text-text-primary"
               }`}
             >
