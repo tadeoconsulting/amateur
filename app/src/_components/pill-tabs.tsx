@@ -105,7 +105,7 @@ export function PillTabs<K extends string>({
             tabIndex={value === tab.key ? 0 : -1}
             aria-selected={value === tab.key}
             onClick={() => onChange(tab.key)}
-            className={`min-h-11 shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
+            className={`min-h-11 shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
               value === tab.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
             }`}
           >

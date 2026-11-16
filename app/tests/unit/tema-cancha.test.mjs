@@ -86,6 +86,26 @@ test("el tema claro de siempre no cambia (Crono DS)", () => {
   assert.equal(claro["brand-700"], "#4d4d4d");
 });
 
+// Pedido del usuario: los tabs van en DM Sans negrita dentro de «Cancha» (los títulos siguen en Barlow Condensed).
+// La variante `cancha:` deja el tipo de letra de siempre fuera del organizador.
+test("los tabs usan DM Sans en negrita dentro de «Cancha»", () => {
+  const archivos = [
+    "../../src/_components/pill-tabs.tsx",
+    "../../src/_components/category-tabs.tsx",
+    "../../src/_components/sub-tabs.tsx",
+    "../../src/_components/convocatoria-view.tsx",
+    "../../src/app/(organizador)/partidos/page.tsx",
+    "../../src/app/(organizador)/torneos/[id]/page.tsx",
+    "../../src/app/(organizador)/torneos/page.tsx",
+    "../../src/app/(organizador)/torneos/[id]/editar-cruces/page.tsx",
+  ];
+  for (const archivo of archivos) {
+    const source = readFileSync(new URL(archivo, import.meta.url), "utf8");
+    assert.match(source, /cancha:font-bold/, `${archivo} debe poner los tabs en negrita`);
+    if (!archivo.endsWith("sub-tabs.tsx")) assert.match(source, /cancha:font-body/, `${archivo} debe usar la fuente de cuerpo en los tabs`);
+  }
+});
+
 test("el ámbito del organizador aplica el tema y carga las fuentes de la landing", () => {
   const layout = readFileSync(new URL("../../src/app/(organizador)/layout.tsx", import.meta.url), "utf8");
   assert.match(layout, /tema-cancha/);

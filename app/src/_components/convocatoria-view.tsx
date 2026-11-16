@@ -217,7 +217,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             <button
               key={t.key}
               onClick={() => pickTab(t.key)}
-              className={`shrink-0 cursor-pointer rounded-lg px-[7px] py-2 font-heading text-[13px] font-medium transition-colors sm:px-3 ${
+              className={`shrink-0 cursor-pointer rounded-lg px-[7px] py-2 font-heading text-[13px] font-medium cancha:font-body cancha:font-bold transition-colors sm:px-3 ${
                 mainTab === t.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
               }`}
             >

@@ -353,7 +353,7 @@ export default function TournamentDetailPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveConvTab(tab.key)}
-                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${
                     activeConvTab === tab.key
                       ? "bg-surface-secondary text-text-invert"
                       : "border border-border-primary text-text-primary"
@@ -378,7 +378,7 @@ export default function TournamentDetailPage() {
                     // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
                     e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
                   }}
-                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${
                     shownTab === tab.key
                       ? "bg-surface-secondary text-text-invert"
                       : "border border-border-primary text-text-primary"

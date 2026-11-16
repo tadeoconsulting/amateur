@@ -237,7 +237,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
+            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold transition-colors ${
               activeTab === tab.key
                 ? "bg-surface-secondary text-text-invert"
                 : "border border-border-primary text-text-primary"

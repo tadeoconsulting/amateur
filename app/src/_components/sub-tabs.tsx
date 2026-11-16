@@ -39,8 +39,8 @@ export function SubTabs<K extends string>({
               onClick={() => onChange(tab.key)}
               className={
                 mobile === "equal"
-                  ? `flex-1 cursor-pointer py-2.5 text-center text-sm font-medium transition-colors ${active ? "border-b-2 border-border-primary text-text-primary" : "text-text-secondary"}`
-                  : `cursor-pointer pb-2 font-body text-sm transition-colors ${active ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"}`
+                  ? `flex-1 cursor-pointer py-2.5 text-center text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${active ? "border-b-2 border-border-primary text-text-primary" : "text-text-secondary"}`
+                  : `cursor-pointer pb-2 font-body text-sm cancha:font-bold transition-colors ${active ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"}`
               }
             >
               {tab.label}
