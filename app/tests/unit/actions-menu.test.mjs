@@ -103,3 +103,9 @@ test("el encabezado del día en la lista de fechas va a 14 px solo con el tema d
   const fechas = readFileSync(new URL("../../src/_components/fixture-tabs.tsx", import.meta.url), "utf8");
   assert.match(fechas, /<h3 className="[^"]*font-heading text-xs cancha:text-sm font-bold/);
 });
+
+// Los tabs de las fechas («Fecha 1»…) van a 16 px solo en el organizador (2026-11-16); el club, el jugador y el fan siguen en 12 px.
+test("los tabs de las fechas van a 16 px solo con el tema del organizador", () => {
+  const tabs = readFileSync(new URL("../../src/_components/pill-tabs.tsx", import.meta.url), "utf8");
+  assert.match(tabs, /font-heading text-xs cancha:text-base font-semibold/);
+});
