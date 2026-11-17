@@ -226,7 +226,7 @@ export default function IniciarTorneoPage() {
           {tournament.status === "en_curso" && (
             <Link
               href={`/torneos/${params.id}/partidos`}
-              className="flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              className="flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
               Ver fixture
             </Link>

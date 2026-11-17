@@ -64,7 +64,7 @@ function Invitations({ onJoined }: { onJoined: () => void }) {
               <button
                 onClick={() => respond(inv, "accept")}
                 disabled={busy === inv.token}
-                className="flex-1 cursor-pointer rounded bg-surface-secondary py-2 font-heading text-sm font-bold text-text-invert disabled:opacity-50"
+                className="flex-1 cursor-pointer rounded bg-surface-secondary py-2 font-heading text-sm max-md:text-base font-bold text-text-invert disabled:opacity-50"
               >
                 Aceptar
               </button>
@@ -183,7 +183,7 @@ function MyTeams({ userId }: { userId: string }) {
       <div className="mt-6 flex flex-col gap-3 px-4">
         <Link
           href="/jugador/equipos/buscar"
-          className="flex items-center justify-center gap-2 rounded bg-surface-secondary p-3 font-heading text-sm font-bold text-text-invert"
+          className="flex items-center justify-center gap-2 rounded bg-surface-secondary p-3 font-heading text-sm max-md:text-base font-bold text-text-invert"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />

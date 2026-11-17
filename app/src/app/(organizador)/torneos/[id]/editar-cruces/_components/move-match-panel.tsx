@@ -71,7 +71,7 @@ export function MoveMatchPanel({
         <button
           onClick={() => other && onSwap(other)}
           disabled={!other}
-          className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert disabled:cursor-not-allowed disabled:opacity-40"
         >
           Intercambiar
         </button>

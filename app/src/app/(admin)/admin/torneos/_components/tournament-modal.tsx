@@ -469,7 +469,7 @@ export function TournamentModal({
           <button
             onClick={handleSubmit}
             disabled={saving || loading || (editing && !original)}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear torneo"}
           </button>

@@ -118,7 +118,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Creando..." : "Crear sponsor"}
           </button>
@@ -241,7 +241,7 @@ function EditSponsorModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="cursor-pointer self-start rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer self-start rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar datos"}
           </button>
@@ -336,7 +336,7 @@ export default function AdminSponsorsPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

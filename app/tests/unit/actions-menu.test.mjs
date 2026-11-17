@@ -2,7 +2,9 @@
 // (src/_lib/actions-menu.ts) y que la pantalla del torneo use el menú en vez de las acciones sueltas.
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { firstEnabledIndex, lastEnabledIndex, nextEnabledIndex } from "../../src/_lib/actions-menu.ts";
 
 const ok = { disabled: false };
@@ -138,5 +140,25 @@ test("la campana va junto a la cuenta con 16 px y los títulos de las tarjetas a
   for (const ruta of ["app/(organizador)/torneos/page.tsx", "app/(jugador)/jugador/mis-torneos/page.tsx", "app/(jugador)/jugador/torneos/page.tsx"]) {
     assert.match(leer(ruta), /font-heading text-base font-bold text-text-primary">\{t(ournament)?\.name\}/, `título a 16 px: ${ruta}`);
   }
+});
+
+// Los botones principales (fondo lima, letra de títulos en negrita sobre texto invertido) van a 16 px en el celular en toda
+// la app (2026-11-16): `max-md:text-base`, así escritorio no cambia. Un botón nuevo con ese estilo debe llevarlo.
+test("los botones principales llevan max-md:text-base", () => {
+  const raiz = fileURLToPath(new URL("../../src/", import.meta.url));
+  const malos = [];
+  const recorrer = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const ruta = join(dir, e.name);
+      if (e.isDirectory()) recorrer(ruta);
+      else if (e.name.endsWith(".tsx")) {
+        readFileSync(ruta, "utf8").split("\n").forEach((l, i) => {
+          if (l.includes("bg-surface-secondary") && /font-heading text-(xs|sm) font-bold text-text-invert/.test(l) && !l.includes("max-md:text-base")) malos.push(`${ruta.replace(raiz, "")}:${i + 1}`);
+        });
+      }
+    }
+  };
+  recorrer(raiz);
+  assert.deepEqual(malos, [], "botones principales sin 16 px en el celular");
 });
 

@@ -71,7 +71,7 @@ export function MesaTournaments({ user, initial }: { user: { id: string; firstNa
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
         </select>
-        <button type="button" onClick={() => void add()} disabled={busy || !pick} className="min-h-10 shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" onClick={() => void add()} disabled={busy || !pick} className="min-h-10 shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
           Asignar
         </button>
       </div>

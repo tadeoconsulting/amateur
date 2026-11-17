@@ -391,7 +391,7 @@ function EditPlayerModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -550,7 +550,7 @@ function EditProvisionalModal({
 
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={onClose} className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular">Cancelar</button>
-          <button onClick={handleSave} disabled={saving} className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50">
+          <button onClick={handleSave} disabled={saving} className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50">
             {saving ? "Guardando..." : "Guardar"}
           </button>
         </div>
@@ -647,7 +647,7 @@ export default function AdminJugadoresPage() {
         </div>
         <button
           onClick={() => setImporting(true)}
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M4 12v3.5A1.5 1.5 0 005.5 17h9a1.5 1.5 0 001.5-1.5V12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />

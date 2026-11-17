@@ -127,7 +127,7 @@ export default function CrearEquipoPage() {
 
         <button
           onClick={() => router.push(`/torneos/${params.id}`)}
-          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           Volver al torneo
         </button>
@@ -273,7 +273,7 @@ export default function CrearEquipoPage() {
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || saving}
-          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? "Creando..." : "Crear equipo"}
         </button>

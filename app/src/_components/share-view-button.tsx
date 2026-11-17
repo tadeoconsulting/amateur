@@ -68,7 +68,7 @@ export function ShareViewButton({
         aria-label="Compartir esta vista"
         className={
           variant === "solid"
-            ? "inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
+            ? "inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
             : "inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-2 font-heading text-[13px] font-medium text-text-secondary transition-colors hover:bg-btn-regular hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary"
         }
       >

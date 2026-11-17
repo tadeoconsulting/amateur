@@ -130,7 +130,7 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
               type="button"
               onClick={reset}
               disabled={step === "working" || (mode === "custom" && custom.length === 0)}
-              className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {step === "working" ? "Guardando..." : mode === "custom" ? "Guardar contraseña" : "Generar y restablecer"}
             </button>
@@ -158,7 +158,7 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
             <button
               type="button"
               onClick={copy}
-              className="shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              className="shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
               Copiar
             </button>

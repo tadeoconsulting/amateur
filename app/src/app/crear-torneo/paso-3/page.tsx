@@ -309,7 +309,7 @@ export default function CrearTorneoPaso3Page() {
           <button
             onClick={handleCrearTorneo}
             disabled={saving || torneoCreado}
-            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm max-md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
           >
             {saving ? (editing ? "Guardando..." : "Creando...") : editing ? "Guardar cambios" : "Crear torneo"}
           </button>
