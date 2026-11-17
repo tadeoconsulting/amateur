@@ -48,6 +48,8 @@ Acento: lima `#c3fa73` solo para la acción principal, lo «en vivo» y el foco;
 
 **Los tabs van en DM Sans en negrita** (pedido del usuario, 2026-11-16): los tabs de la página del torneo (Partidos, Tabla, Goleadores, Equipos y las fechas), los filtros de Torneos, el selector de estado de Partidos, `PillTabs`, `SubTabs`, `CategoryTabs` y los tabs del editor de cruces. Se hace con `cancha:font-body cancha:font-bold` en cada control, así el tipo de letra de siempre queda fuera del organizador. El menú superior (Torneos, Partidos, Dashboard, Ajustes) **no** es un tab y sigue en Barlow. Regla para lo que venga: un control nuevo con `role="tab"` lleva esas dos clases.
 
+**Menú de la cuenta a 16 px** (pedido del usuario, 2026-11-16): los ítems («Mi perfil y ajustes», «Cerrar sesión») y el encabezado (nombre y rol) pasan de 14/12 px a 16 px con `cancha:text-base` en `account-menu.tsx`; los otros ámbitos no cambian. El botón que abre el menú (el nombre del club en la barra) sigue a 14 px.
+
 ## Lo que no se resuelve con los tokens
 Los colores **sueltos** no siguen el tema y hay que reemplazarlos por tokens dentro del ámbito:
 - `bg-white` (17 usos en el ámbito) → `bg-surface-alt`; `text-white` (29): se queda sobre fotos y superposiciones oscuras; sobre un relleno del tema pasa a `text-text-invert` o `text-text-primary` según el fondo.
