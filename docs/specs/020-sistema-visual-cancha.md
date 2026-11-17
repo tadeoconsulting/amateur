@@ -46,6 +46,8 @@ Acento: lima `#c3fa73` solo para la acción principal, lo «en vivo» y el foco;
 ### Tipografía
 `font-heading` pasa a Barlow Condensed y el cuerpo a DM Sans dentro del ámbito, con las mismas variables indirectas. Las fuentes se cargan una vez con `next/font/google` en el layout del organizador.
 
+**Los tabs van en DM Sans en negrita** (pedido del usuario, 2026-11-16): los tabs de la página del torneo (Partidos, Tabla, Goleadores, Equipos y las fechas), los filtros de Torneos, el selector de estado de Partidos, `PillTabs`, `SubTabs`, `CategoryTabs` y los tabs del editor de cruces. Se hace con `cancha:font-body cancha:font-bold` en cada control, así el tipo de letra de siempre queda fuera del organizador. El menú superior (Torneos, Partidos, Dashboard, Ajustes) **no** es un tab y sigue en Barlow. Regla para lo que venga: un control nuevo con `role="tab"` lleva esas dos clases.
+
 ## Lo que no se resuelve con los tokens
 Los colores **sueltos** no siguen el tema y hay que reemplazarlos por tokens dentro del ámbito:
 - `bg-white` (17 usos en el ámbito) → `bg-surface-alt`; `text-white` (29): se queda sobre fotos y superposiciones oscuras; sobre un relleno del tema pasa a `text-text-invert` o `text-text-primary` según el fondo.

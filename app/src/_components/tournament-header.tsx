@@ -23,7 +23,7 @@ export function TournamentHeader({ tournament }: { tournament: Tournament }) {
         </svg>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-heading text-sm font-bold text-text-invert cancha:text-text-primary">{tournament.name}</p>
+        <p className="font-heading text-sm font-bold text-text-invert cancha:font-body cancha:text-text-primary">{tournament.name}</p>
         <p className="mt-0.5 text-xs text-brand-500 cancha:text-text-secondary">
           {tournament.teamsCount} equipos | {formatLabels[tournament.format] ?? tournament.format}
           {tournament.category ? ` | ${tournament.category}` : ""} | <TournamentStatusBadge status={tournament.status} />

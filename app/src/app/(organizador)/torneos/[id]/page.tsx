@@ -267,7 +267,7 @@ export default function TournamentDetailPage() {
       <header className="px-4 py-3">
         <Link
           href="/torneos"
-          className="flex items-center gap-1 font-heading text-sm font-semibold text-text-primary"
+          className="flex items-center gap-1 font-heading text-sm font-semibold cancha:font-body cancha:font-bold text-text-primary"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -298,7 +298,7 @@ export default function TournamentDetailPage() {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-heading text-sm font-bold text-text-invert cancha:text-text-primary">
+          <p className="truncate font-heading text-sm font-bold text-text-invert cancha:font-body cancha:text-text-primary">
             {tournament.name}
           </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-brand-500 cancha:text-text-secondary">
@@ -353,7 +353,7 @@ export default function TournamentDetailPage() {
                 <button
                   key={tab.key}
                   onClick={() => setActiveConvTab(tab.key)}
-                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${
                     activeConvTab === tab.key
                       ? "bg-surface-secondary text-text-invert"
                       : "border border-border-primary text-text-primary"
@@ -378,7 +378,7 @@ export default function TournamentDetailPage() {
                     // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
                     e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
                   }}
-                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium transition-colors ${
+                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${
                     shownTab === tab.key
                       ? "bg-surface-secondary text-text-invert"
                       : "border border-border-primary text-text-primary"
