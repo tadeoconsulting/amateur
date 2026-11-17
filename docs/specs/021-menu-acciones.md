@@ -31,8 +31,8 @@ La pantalla de un torneo mezcla una acción principal (**Agregar partido**, bot�
 - Tipografía y colores del sistema «Cancha»: DM Sans en negrita, panel con la superficie de las tarjetas y borde de la línea del tema.
 - «Ver temporada» (la tarjeta de una liga que ya está en una temporada) y «Agregar equipo» **no** son acciones secundarias del mismo tipo y no se mueven.
 
-## «Agregar partido» como tab (pedido del usuario, 2026-11-16)
-«Agregar partido» deja de ser un botón lima suelto sobre las fechas y pasa a ser **un tab más, con el ícono «+»**, justo al lado de los tabs (antes de «Acciones»). Se ve en todas las pestañas de un torneo en marcha (no en convocatoria) y, al hacer clic, abre la misma hoja para agregar un partido. En el celular queda solo el «+» (con `aria-label="Agregar partido"`) para que la fila no se desborde.
+## «Agregar partido» como «+» antes de «Fecha 1» (pedido del usuario, 2026-11-16)
+«Agregar partido» deja de ser un botón lima suelto y pasa a ser **un botón con el ícono «+», fijo a la izquierda de la fila de las fechas, antes de «Fecha 1»**: queda siempre a mano aunque la fila se desplace. Al hacer clic abre la misma hoja de siempre para agregar un partido. Solo lo ve el organizador, en la pestaña Partidos de un torneo en marcha (el club y los demás usan la misma lista de fechas sin el «+»). También aparece cuando todavía no hay partidos. En el celular queda solo el «+» (con `aria-label="Agregar partido"`); desde `sm` lleva también el texto. *(Una primera versión lo puso como un tab junto a Partidos · Tabla · Goleadores; se movió a la fila de las fechas.)*
 
 ## Reutilización
 `ActionsMenu` es un componente general (ítems con `label`, `icon`, `href` u `onSelect`, y `tone: "danger"`). Hoy solo lo usa la pantalla de un torneo; otras pantallas con acciones sueltas (club, partido) pueden adoptarlo después.

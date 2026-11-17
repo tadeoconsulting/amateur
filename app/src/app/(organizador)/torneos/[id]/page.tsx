@@ -379,21 +379,6 @@ export default function TournamentDetailPage() {
                 </button>
               ))}
         </div>
-        {/* «Agregar partido» como un tab más, con el +, al lado de los tabs: abre la hoja para agregar uno. En el celular
-            queda solo el ícono para que la fila no se desborde. */}
-        {!isConvocatoria && (
-          <button
-            type="button"
-            onClick={() => setEditor({ match: null })}
-            aria-label="Agregar partido"
-            className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-border-primary px-3.5 py-2.5 font-heading text-sm font-medium text-text-primary transition-colors hover:bg-btn-regular cancha:font-body cancha:font-bold sm:px-5"
-          >
-            <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span className="hidden sm:inline">Agregar partido</span>
-          </button>
-        )}
         <TournamentActions
           tournamentId={params.id}
           title={tournament.name}
@@ -548,8 +533,7 @@ export default function TournamentDetailPage() {
           esta pestaña era una lista plana sin tabs, distinta de como se armó el torneo. */}
       {!isConvocatoria && shownTab === "partidos" && (
         <div className="mt-4">
-          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan (el tab «+ Agregar partido»
-              de arriba) y editar un partido pendiente (el lápiz de cada fila). */}
+          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan (el «+» antes de «Fecha 1») y editar un partido pendiente (el lápiz de cada fila). */}
           {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
           {/* La tabla al lado solo si es una sola tabla: con grupos (copa) una lista mezclada no dice quién clasifica. */}
@@ -561,6 +545,7 @@ export default function TournamentDetailPage() {
             qualifyCount={tournament.format === "liga" ? tournament.playoffTeams : null}
             hrefFor={(m) => `/torneos/${params.id}/${m.status === "finalizado" ? "resultado" : "en-vivo"}/${m.id}`}
             onEdit={(m) => setEditor({ match: m })}
+            onAdd={() => setEditor({ match: null })}
             onViewFullTable={() => setActiveTab("tabla")}
             stickyTop="@4xl:top-20"
           />
