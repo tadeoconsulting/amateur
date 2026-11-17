@@ -38,7 +38,9 @@ El encabezado de cada día de la lista de fechas («Por definir», «Dom 15 Nov�
 
 Otros ajustes de tamaño pedidos el mismo día:
 - **Filtros en píldora** (Competencia / Convocatoria / Finalizados, el selector de estado de Partidos, `CategoryTabs`, los de Convocatoria y los del editor de cruces): **14 px** en el organizador (`cancha:text-sm`).
-- **Barra de abajo del celular** (organizador, club y jugador): las etiquetas pasan de 10 a **12 px**, en todos los ámbitos.
+- **Barra de abajo del celular** (organizador, club y jugador): las etiquetas pasan de 10 a **16 px** (primero se pidió 12 y después 16), en todos los ámbitos.
+- **Título de las tarjetas de torneo** (Mis torneos del organizador y las listas del jugador): **16 px**.
+- **Campana de notificaciones** del organizador: sale de «Mis torneos» y pasa a la barra de arriba (celular y escritorio), **a la izquierda de la cuenta y a 24 px de ella**, con un área clicable de 44 × 44 px.
 
 ## Reutilización
 `ActionsMenu` es un componente general (ítems con `label`, `icon`, `href` u `onSelect`, y `tone: "danger"`). Hoy solo lo usa la pantalla de un torneo; otras pantallas con acciones sueltas (club, partido) pueden adoptarlo después.

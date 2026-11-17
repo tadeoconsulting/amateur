@@ -123,7 +123,20 @@ test("los filtros en píldora van a 14 px en el organizador y la barra de abajo 
   for (const ruta of ["_components/bottom-nav.tsx", "app/(organizador)/_components/bottom-nav.tsx", "app/(club)/_components/club-bottom-nav.tsx"]) {
     const fuente = leer(ruta);
     assert.doesNotMatch(fuente, /text-\[10px\]/, `sin 10 px: ${ruta}`);
-    assert.match(fuente, /text-xs/, `12 px: ${ruta}`);
+    assert.match(fuente, /text-base/, `16 px: ${ruta}`);
+  }
+});
+
+// La campana de notificaciones va en la barra de arriba, a la izquierda de la cuenta y a 24 px (`gap-6`); ya no está en
+// «Mis torneos». El título de las tarjetas de torneo va a 16 px (2026-11-16).
+test("la campana va junto a la cuenta con 24 px y los títulos de las tarjetas a 16 px", () => {
+  const leer = (ruta) => readFileSync(new URL(`../../src/${ruta}`, import.meta.url), "utf8");
+  const layout = leer("app/(organizador)/layout.tsx");
+  assert.match(layout, /<div className="flex items-center gap-6">\s*<NotificationsLink \/>\s*<AccountMenu/, "campana a la izquierda de la cuenta, a 24 px");
+  assert.match(leer("app/(organizador)/_components/notifications-link.tsx"), /size-11/, "área clicable de 44 px");
+  assert.doesNotMatch(leer("app/(organizador)/torneos/page.tsx"), /\/notificaciones/, "ya no hay campana en «Mis torneos»");
+  for (const ruta of ["app/(organizador)/torneos/page.tsx", "app/(jugador)/jugador/mis-torneos/page.tsx", "app/(jugador)/jugador/torneos/page.tsx"]) {
+    assert.match(leer(ruta), /font-heading text-base font-bold text-text-primary">\{t(ournament)?\.name\}/, `título a 16 px: ${ruta}`);
   }
 });
 

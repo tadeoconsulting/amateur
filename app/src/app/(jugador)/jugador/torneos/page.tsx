@@ -213,7 +213,7 @@ function JugadorTorneosContent({
                     </svg>
                   </div>
                 )}
-                <h2 className="min-w-0 flex-1 truncate font-heading text-sm font-bold text-text-primary">{t.name}</h2>
+                <h2 className="min-w-0 flex-1 truncate font-heading text-base font-bold text-text-primary">{t.name}</h2>
                 <Link
                   href={`/jugador/torneos/${t.id}`}
                   className="flex shrink-0 items-center gap-1 font-heading text-sm font-semibold text-text-primary underline"

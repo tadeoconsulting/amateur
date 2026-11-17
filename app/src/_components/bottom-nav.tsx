@@ -27,7 +27,7 @@ export function BottomNav() {
               }`}
             >
               <item.icon active={active} />
-              <span className={`text-xs ${active ? "font-semibold" : "font-medium"}`}>
+              <span className={`text-base ${active ? "font-semibold" : "font-medium"}`}>
                 {item.label}
               </span>
             </Link>
