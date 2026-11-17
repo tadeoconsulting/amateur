@@ -83,7 +83,7 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
 
           <div className="hidden items-center gap-8 md:flex">
             {LINKS.map((l) => (
-              <a key={l.href} href={l.href} className="text-sm font-medium text-[var(--lc-muted)] transition-colors hover:text-[var(--lc-white)]">
+              <a key={l.href} href={l.href} className="font-[family-name:var(--font-lc-display)] text-base font-semibold text-[var(--lc-muted)] transition-colors hover:text-[var(--lc-white)]">
                 {l.label}
               </a>
             ))}
