@@ -67,12 +67,12 @@ test("la pantalla del torneo usa el menú «Acciones» y no las acciones sueltas
   assert.doesNotMatch(page, /text-xs font-bold text-text-primary underline">\s*(Editar torneo|Mesa|Editar cruces)/, "no quedan enlaces sueltos de acciones");
   assert.doesNotMatch(page, /Deshacer fixture\s*<\/button>/, "«Deshacer fixture» ya no es un botón suelto");
   assert.doesNotMatch(acciones, /Agregar partido"/, "«Agregar partido» no está dentro del menú");
-  // «Agregar partido» es un «+» fijo antes de «Fecha 1», en la fila de las fechas (no un botón lima suelto ni en la fila de tabs).
+  // «Agregar partido» es un «+» fijo a la derecha de las fechas, en la fila de las fechas (no un botón lima suelto ni en la fila de tabs).
   assert.match(page, /onAdd=\{\(\) => setEditor\(\{ match: null \}\)\}/, "la pantalla pasa onAdd a la lista de fechas");
   assert.doesNotMatch(page, /aria-label="Agregar partido"/, "ya no hay un «+» en la fila de tabs principales");
   const fechas = readFileSync(new URL("../../src/_components/fixture-tabs.tsx", import.meta.url), "utf8");
   assert.match(fechas, /aria-label="Agregar partido"[\s\S]{0,900}M12 5v14M5 12h14[\s\S]{0,200}Agregar partido<\/span>/, "botón con el ícono +");
-  assert.match(fechas, /\{addButton\}\s*<div className="min-w-0 flex-1">/, "el «+» queda fuera de la barra que se desplaza, antes de la primera fecha");
+  assert.match(fechas, /<\/div>\s*\{addButton\}\s*<\/div>/, "el «+» queda fuera de la barra que se desplaza, a la derecha de las fechas");
   assert.doesNotMatch(page, /bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert[^"]*"\s*>\s*Agregar partido/, "ya no es el botón lima suelto");
   for (const label of ["Compartir", "Editar torneo", "Mesa", "Editar cruces", "Crear temporada con este torneo", "Deshacer fixture"]) {
     assert.ok(acciones.includes(`label: "${label}"`), `falta «${label}» en el menú`);
@@ -95,4 +95,11 @@ test("el botón «Acciones» en el celular muestra solo el ícono", () => {
   assert.match(source, /aria-label=\{label\}/, "el botón conserva su nombre accesible");
   assert.match(source, /className="sm:hidden"/, "el ícono de tres puntos solo en el celular");
   assert.match(source, /<span className="hidden sm:inline">\{label\}<\/span>/, "el texto se oculta en el celular");
+});
+
+// El encabezado del día («Por definir», «Dom 15 Nov») va a 14 px solo en el organizador (2026-11-16): la lista de fechas
+// la comparten el club, el jugador y el fan, que siguen igual.
+test("el encabezado del día en la lista de fechas va a 14 px solo con el tema del organizador", () => {
+  const fechas = readFileSync(new URL("../../src/_components/fixture-tabs.tsx", import.meta.url), "utf8");
+  assert.match(fechas, /<h3 className="[^"]*font-heading text-xs cancha:text-sm font-bold/);
 });

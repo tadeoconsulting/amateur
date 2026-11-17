@@ -33,7 +33,7 @@ export function FixtureTabs({
   highlightClubId?: string;
   /** Si se pasa (el organizador), los partidos que todavía no empezaron muestran un botón para editarlos. */
   onEdit?: (match: MatchListItem) => void;
-  /** Si se pasa (el organizador), un botón «+» queda fijo antes de «Fecha 1» para agregar un partido, siempre a mano. */
+  /** Si se pasa (el organizador), un botón «+» queda fijo a la derecha de la fila de fechas para agregar un partido, siempre a mano. */
   onAdd?: () => void;
   /** La fecha elegida va en la URL (`?fecha=5`, `?ronda=2`): se puede compartir y sobrevive a recargar. */
   syncUrl?: boolean;
@@ -69,7 +69,7 @@ export function FixtureTabs({
   if (matches.length === 0) {
     return (
       <div>
-        {addButton && <div className="px-4">{addButton}</div>}
+        {addButton && <div className="flex justify-end px-4">{addButton}</div>}
         <p className="px-4 py-8 text-center font-body text-sm text-text-secondary">Todavía no hay partidos programados.</p>
       </div>
     );
@@ -80,12 +80,12 @@ export function FixtureTabs({
   return (
     <div>
       {addButton ? (
-        // El «+» va fuera de la barra que se desplaza: queda fijo a la izquierda, antes de «Fecha 1».
-        <div className="flex items-start gap-2 pl-4">
-          {addButton}
+        // El «+» va fuera de la barra que se desplaza: queda fijo a la derecha, después de la última fecha.
+        <div className="flex items-start gap-2 pr-4">
           <div className="min-w-0 flex-1">
-            {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" className="pr-4 pb-3" />}
+            {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" className="pl-4 pb-3" />}
           </div>
+          {addButton}
         </div>
       ) : (
         tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" />
@@ -94,7 +94,7 @@ export function FixtureTabs({
       <div className="flex flex-col gap-4 px-4">
         {sections.map((section) => (
           <section key={section.key} aria-label={section.date ? formatMatchDate(section.date) : UNSCHEDULED_LABEL} className="@container overflow-hidden rounded-xl border border-border-primary">
-            <h3 className="bg-btn-regular px-4 py-2 font-heading text-xs font-bold text-text-primary">
+            <h3 className="bg-btn-regular px-4 py-2 font-heading text-xs cancha:text-sm font-bold text-text-primary">
               {section.date ? formatMatchDate(section.date) : UNSCHEDULED_LABEL}
             </h3>
             {section.matches.map((match, i) => (

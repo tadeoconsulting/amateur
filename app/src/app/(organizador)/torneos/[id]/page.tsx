@@ -533,7 +533,7 @@ export default function TournamentDetailPage() {
           esta pestaña era una lista plana sin tabs, distinta de como se armó el torneo. */}
       {!isConvocatoria && shownTab === "partidos" && (
         <div className="mt-4">
-          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan (el «+» antes de «Fecha 1») y editar un partido pendiente (el lápiz de cada fila). */}
+          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan (el «+» a la derecha de las fechas) y editar un partido pendiente (el lápiz de cada fila). */}
           {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
           {/* La tabla al lado solo si es una sola tabla: con grupos (copa) una lista mezclada no dice quién clasifica. */}

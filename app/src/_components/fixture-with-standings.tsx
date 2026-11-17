@@ -31,7 +31,7 @@ export function FixtureWithStandings({
   highlightClubId?: string;
   /** Si se pasa (el organizador), los partidos por jugar traen un botón para editarlos. */
   onEdit?: (match: MatchListItem) => void;
-  /** Si se pasa (el organizador), el «+» fijo antes de la primera fecha para agregar un partido. */
+  /** Si se pasa (el organizador), el «+» fijo a la derecha de las fechas para agregar un partido. */
   onAdd?: () => void;
   /** Lleva a la tabla completa (y goleadores) de la pantalla. */
   onViewFullTable: () => void;
