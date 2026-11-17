@@ -36,7 +36,7 @@ export function AccountMenu({ name, roleLabel, role, settingsHref }: { name: str
 
   const { mine } = otherProfiles(user?.roles ?? [], role);
   const itemClass =
-    "flex min-h-11 w-full cursor-pointer items-center rounded-lg px-3 text-left font-heading text-sm font-semibold text-text-primary transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-text-primary";
+    "flex min-h-11 w-full cursor-pointer items-center rounded-lg px-3 text-left font-heading text-sm cancha:text-base font-semibold text-text-primary transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-text-primary";
 
   return (
     <div ref={root} className="relative min-w-0">
@@ -61,8 +61,8 @@ export function AccountMenu({ name, roleLabel, role, settingsHref }: { name: str
       {open && (
         <div id={menuId} role="menu" aria-label="Cuenta" className="absolute right-0 top-full z-50 mt-1 w-64 rounded-xl border border-brand-200 bg-surface-primary p-1.5 shadow-lg">
           <div className="border-b border-brand-200 px-3 pb-2.5 pt-2">
-            <p className="truncate font-heading text-sm font-bold text-text-primary">{name}</p>
-            <p className="font-body text-xs text-text-secondary">{roleLabel}</p>
+            <p className="truncate font-heading text-sm cancha:text-base font-bold text-text-primary">{name}</p>
+            <p className="font-body text-xs cancha:text-base text-text-secondary">{roleLabel}</p>
           </div>
           <div className="pt-1.5">
             <Link role="menuitem" href={settingsHref} onClick={() => setOpen(false)} className={itemClass}>

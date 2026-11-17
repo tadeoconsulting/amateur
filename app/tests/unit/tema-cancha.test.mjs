@@ -118,6 +118,14 @@ test("el nombre del torneo y «Volver» van en DM Sans, y el menú superior en 1
   assert.match(menu, /cancha:text-base/, "menú superior a 16 px");
 });
 
+// El menú de la cuenta (ítems y encabezado) va a 16 px en el organizador (2026-11-16), solo con `cancha:`.
+test("el menú de la cuenta va a 16 px en el organizador", () => {
+  const menu = readFileSync(new URL("../../src/_components/account-menu.tsx", import.meta.url), "utf8");
+  assert.match(menu, /font-heading text-sm cancha:text-base font-semibold/, "ítems");
+  assert.match(menu, /font-heading text-sm cancha:text-base font-bold/, "nombre del encabezado");
+  assert.match(menu, /font-body text-xs cancha:text-base/, "rol del encabezado");
+});
+
 test("el ámbito del organizador aplica el tema y carga las fuentes de la landing", () => {
   const layout = readFileSync(new URL("../../src/app/(organizador)/layout.tsx", import.meta.url), "utf8");
   assert.match(layout, /tema-cancha/);
