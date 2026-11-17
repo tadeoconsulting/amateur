@@ -16,22 +16,21 @@ import { Toast } from "@/_components/toast";
  * - `ghost` (por omisión): discreto, junto a las pestañas; en el celular solo el ícono.
  * - `solid`: botón lleno con texto, para una cabecera (el fixture del organizador).
  */
-export function ShareViewButton({
-  title,
-  publicPath,
-  view,
-  search,
-  fixedUrl,
-  variant = "ghost",
-}: {
+type ShareViewOptions = {
   title: string;
   publicPath: string;
   view: ShareView;
   search?: string;
   /** Comparte exactamente este enlace (con `?pestana=...`, por ejemplo), en vez de armarlo con la vista del torneo. */
   fixedUrl?: () => string;
-  variant?: "ghost" | "solid";
-}) {
+};
+
+/**
+ * La lógica de «Compartir», sin botón: `share()` abre el menú de compartir del sistema o copia el enlace, y `toast` es el
+ * aviso que hay que dibujar en algún lugar de la pantalla. La usan `ShareViewButton` y el menú «Acciones» del torneo
+ * (especificación 021).
+ */
+export function useShareView({ title, publicPath, view, search, fixedUrl }: ShareViewOptions) {
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   async function share() {
@@ -41,6 +40,19 @@ export function ShareViewButton({
     if (result === "failed") setToast({ message: "No se pudo copiar el enlace. Cópialo de la barra de direcciones.", tone: "error" });
   }
 
+  return { share, toast: toast ? <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} /> : null };
+}
+
+export function ShareViewButton({
+  title,
+  publicPath,
+  view,
+  search,
+  fixedUrl,
+  variant = "ghost",
+}: ShareViewOptions & { variant?: "ghost" | "solid" }) {
+  const { share, toast } = useShareView({ title, publicPath, view, search, fixedUrl });
+
   const icon = (
     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 12.5V3m0 0L6.5 6.5M10 3l3.5 3.5M4.5 10.5v5a1.5 1.5 0 001.5 1.5h8a1.5 1.5 0 001.5-1.5v-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
@@ -49,7 +61,7 @@ export function ShareViewButton({
 
   return (
     <>
-      {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />}
+      {toast}
       <button
         type="button"
         onClick={share}

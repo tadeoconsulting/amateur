@@ -21,7 +21,7 @@ import {
 import { useApi } from "@/_lib/use-api";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { copyText } from "@/_lib/share";
-import { ShareViewButton } from "@/_components/share-view-button";
+import { TournamentActions } from "./_components/tournament-actions";
 import { competitionView } from "@/_lib/share-view";
 import { Toast } from "@/_components/toast";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
@@ -322,8 +322,8 @@ export default function TournamentDetailPage() {
         )}
       </button>
 
-      {/* Temporada (especificación 012): a cuál pertenece, o crear una con esta liga como Apertura. */}
-      {tournament.season ? (
+      {/* Temporada (especificación 012): a cuál pertenece. «Crear temporada con este torneo» está en el menú Acciones. */}
+      {tournament.season && (
         <Link
           href={`/torneos/temporadas/${tournament.season.id}`}
           className="mx-4 mt-2 flex min-h-11 items-center justify-between gap-2 rounded-xl border border-border-primary px-4 py-2 transition-colors hover:bg-btn-regular"
@@ -334,18 +334,9 @@ export default function TournamentDetailPage() {
           </span>
           <span className="shrink-0 font-heading text-xs font-bold text-text-primary underline">Ver temporada</span>
         </Link>
-      ) : (
-        tournament.format === "liga" && (
-          <Link
-            href={`/torneos/temporadas/nueva?apertura=${params.id}`}
-            className="mx-4 mt-2 flex min-h-11 items-center font-heading text-xs font-bold text-text-primary underline"
-          >
-            Crear temporada con este torneo
-          </Link>
-        )
       )}
 
-      {/* Tabs. "Compartir" (solo con el torneo en marcha) va fuera de la fila que se desplaza, para que siempre se vea. */}
+      {/* Tabs. El menú «Acciones» (especificación 021) va fuera de la fila que se desplaza, para que siempre se vea. */}
       <div className="mt-4 flex items-center gap-1.5 px-4">
         <div className="no-scrollbar flex min-w-0 gap-2 overflow-x-auto">
           {isConvocatoria
@@ -388,13 +379,17 @@ export default function TournamentDetailPage() {
                 </button>
               ))}
         </div>
-        {!isConvocatoria && (
-          <ShareViewButton
-            title={tournament.name}
-            publicPath={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
-            view={competitionView(shownTab)}
-          />
-        )}
+        <TournamentActions
+          tournamentId={params.id}
+          title={tournament.name}
+          publicPath={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
+          shareView={competitionView(shownTab)}
+          isConvocatoria={isConvocatoria}
+          canCreateSeason={!tournament.season && tournament.format === "liga"}
+          canEditCruces={matches.some((m) => !m.decisive)}
+          canUndoFixture={matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0)}
+          onUndoFixture={() => setConfirmUndoFixture(true)}
+        />
       </div>
 
       {/* === Convocatoria: equipos inscritos === */}
@@ -547,26 +542,6 @@ export default function TournamentDetailPage() {
             >
               Agregar partido
             </button>
-            <Link href={`/torneos/${params.id}/editar`} className="font-heading text-xs font-bold text-text-primary underline">
-              Editar torneo
-            </Link>
-            <Link href={`/torneos/${params.id}/mesa`} className="font-heading text-xs font-bold text-text-primary underline">
-              Mesa
-            </Link>
-            {/* Cambiar equipos y mover partidos de fecha sin que nadie juegue dos veces en una fecha (especificación 017). */}
-            {matches.some((m) => !m.decisive) && (
-              <Link href={`/torneos/${params.id}/editar-cruces`} className="font-heading text-xs font-bold text-text-primary underline">
-                Editar cruces
-              </Link>
-            )}
-            {matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0) && (
-              <button
-                onClick={() => setConfirmUndoFixture(true)}
-                className="cursor-pointer font-heading text-xs font-bold text-text-secondary underline"
-              >
-                Deshacer fixture
-              </button>
-            )}
           </div>
           {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
