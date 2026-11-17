@@ -90,7 +90,7 @@ export function Navbar({ onOpenAuth }: { onOpenAuth: (view: "login" | "register"
           </div>
 
           <div className="flex items-center gap-1 sm:gap-3">
-            <button onClick={() => onOpenAuth("login")} className="cursor-pointer px-3 py-2 text-sm font-medium hover:text-[var(--lc-lime)] sm:px-4">
+            <button onClick={() => onOpenAuth("login")} className="cursor-pointer px-3 py-2 font-[family-name:var(--font-lc-display)] text-base font-semibold hover:text-[var(--lc-lime)] sm:px-4">
               Iniciar sesión
             </button>
             <button onClick={() => onOpenAuth("register")} className="lc-btn lc-btn-lime !px-4 !py-2 text-sm sm:!px-5 sm:!py-2.5">

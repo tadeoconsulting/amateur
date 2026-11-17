@@ -34,7 +34,7 @@ Reemplazar la landing actual (clara, verde #00CA81, Lexend/Lato) por el lineamie
 - Respeta `prefers-reduced-motion` (el marquee y los contadores ya lo hacen).
 
 ## Estructura
-1. **Barra superior:** logo, enlaces (Torneos, Plataforma, Cómo funciona; en escritorio van en la fuente de títulos, Barlow Condensed, a 16 px y sin mayúsculas), *Ingresar* y *Crear mi torneo*. Abre el mismo modal de acceso de hoy (`AuthModal`), que no cambia de lógica.
+1. **Barra superior:** logo, enlaces (Torneos, Plataforma, Cómo funciona; en escritorio van en la fuente de títulos, Barlow Condensed, a 16 px y sin mayúsculas; *Iniciar sesión* también), *Ingresar* y *Crear mi torneo*. Abre el mismo modal de acceso de hoy (`AuthModal`), que no cambia de lógica.
 2. **Hero:** "TU TORNEO. TU CANCHA." con subtítulo, botón *Crear mi torneo gratis* y *Así funciona*. A la derecha, la composición de la propuesta: el **Match Center** y la **tabla de posiciones** apilados e inclinados sobre un panel de cancha. **Es siempre un ejemplo** (datos inventados), marcado como *"vista ilustrativa · datos de ejemplo"*; no se conecta a partidos reales (ver *Entregas*). El título del hero quedó como "TU TORNEO. TU COMUNIDAD.".
 3. **Cinta (marquee):** Fixture automático ✳ Estadísticas en vivo ✳ Perfil de jugador ✳ Tabla de posiciones ✳ Control de sanciones.
 4. ~~**En vivo ahora**~~ *(descartada, 2026-10-18)*: iba a mostrar una tarjeta por partido `en_curso` con tiempo real. No se hace; los partidos en vivo se ven en la sección Torneos (estado *En vivo*) y en la ficha de cada torneo.
