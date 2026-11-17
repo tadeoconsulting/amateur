@@ -194,7 +194,7 @@ function PartidosContent({ organizerId }: { organizerId: string }) {
                 type="button"
                 aria-selected={estado === e.key}
                 onClick={() => ir({ estado: e.key })}
-                className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold transition-colors ${
+                className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold transition-colors ${
                   estado === e.key ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
                 }`}
               >

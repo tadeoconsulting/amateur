@@ -152,7 +152,7 @@ export default function EditarCrucesPage() {
               role="tab"
               aria-selected={activeGroup === g}
               onClick={() => { setGroup(g); setMatchday(null); setMoving(null); }}
-              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold ${activeGroup === g ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
+              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold ${activeGroup === g ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
             >
               {g === "" ? "General" : g}
             </button>
@@ -203,7 +203,7 @@ export default function EditarCrucesPage() {
               role="tab"
               aria-selected={activeDay === day}
               onClick={() => { setMatchday(day); setMoving(null); }}
-              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold ${activeDay === day ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
+              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold ${activeDay === day ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
             >
               Fecha {day}
               {hasProblem && <span aria-label="con problemas" className="ml-1.5 inline-block h-2 w-2 rounded-full bg-red-500 align-middle" />}

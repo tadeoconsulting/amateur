@@ -39,8 +39,8 @@ export function SubTabs<K extends string>({
               onClick={() => onChange(tab.key)}
               className={
                 mobile === "equal"
-                  ? `flex-1 cursor-pointer py-2.5 text-center text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${active ? "border-b-2 border-border-primary text-text-primary" : "text-text-secondary"}`
-                  : `cursor-pointer pb-2 font-body text-sm cancha:font-bold transition-colors ${active ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"}`
+                  ? `flex-1 cursor-pointer py-2.5 text-center text-sm cancha:text-base font-medium cancha:font-body cancha:font-bold transition-colors ${active ? "border-b-2 border-border-primary text-text-primary" : "text-text-secondary"}`
+                  : `cursor-pointer pb-2 font-body text-sm cancha:text-base cancha:font-bold transition-colors ${active ? "border-b-2 border-text-primary font-semibold text-text-primary" : "text-text-secondary"}`
               }
             >
               {tab.label}
@@ -49,7 +49,7 @@ export function SubTabs<K extends string>({
         })}
       </div>
       <div className="hidden md:block">
-        <PillTabs tabs={tabs} value={value} onChange={onChange} label={label} className="px-4 pb-1" />
+        <PillTabs tabs={tabs} value={value} onChange={onChange} label={label} className="px-4 pb-1" size="base" />
       </div>
     </div>
   );

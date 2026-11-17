@@ -107,5 +107,23 @@ test("el encabezado del día en la lista de fechas va a 14 px solo con el tema d
 // Los tabs de las fechas («Fecha 1»…) van a 14 px solo en el organizador (2026-11-16); el club, el jugador y el fan siguen en 12 px.
 test("los tabs de las fechas van a 14 px solo con el tema del organizador", () => {
   const tabs = readFileSync(new URL("../../src/_components/pill-tabs.tsx", import.meta.url), "utf8");
-  assert.match(tabs, /font-heading text-xs cancha:text-sm font-semibold/);
+  assert.match(tabs, /"cancha:text-base" : "cancha:text-sm"/, "14 px por omisión, 16 px con size=base");
+  const sub = readFileSync(new URL("../../src/_components/sub-tabs.tsx", import.meta.url), "utf8");
+  assert.equal((sub.match(/cancha:text-base/g) ?? []).length, 2, "SubTabs en celular (dos variantes) a 16 px");
+  assert.match(sub, /size="base"/, "y las píldoras de escritorio también");
 });
+
+// Filtros en píldora (Competencia / Convocatoria / Finalizados y equivalentes) a 14 px en el organizador, y la barra de
+// abajo (celular) a 12 px en todos los ámbitos (2026-11-16).
+test("los filtros en píldora van a 14 px en el organizador y la barra de abajo a 12 px", () => {
+  const leer = (ruta) => readFileSync(new URL(`../../src/${ruta}`, import.meta.url), "utf8");
+  for (const ruta of ["app/(organizador)/partidos/page.tsx", "app/(organizador)/torneos/page.tsx", "app/(organizador)/torneos/[id]/editar-cruces/page.tsx", "_components/convocatoria-view.tsx", "_components/category-tabs.tsx"]) {
+    assert.match(leer(ruta), /cancha:text-sm font-(medium|semibold) cancha:font-body cancha:font-bold/, `píldoras a 14 px: ${ruta}`);
+  }
+  for (const ruta of ["_components/bottom-nav.tsx", "app/(organizador)/_components/bottom-nav.tsx", "app/(club)/_components/club-bottom-nav.tsx"]) {
+    const fuente = leer(ruta);
+    assert.doesNotMatch(fuente, /text-\[10px\]/, `sin 10 px: ${ruta}`);
+    assert.match(fuente, /text-xs/, `12 px: ${ruta}`);
+  }
+});
+
