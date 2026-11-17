@@ -7,8 +7,9 @@ import type { MatchListItem } from "@/_lib/api";
 type TeamOption = { id: string; name: string; groupName: string | null };
 
 const field =
-  "w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
-const label = "mb-1.5 block font-heading text-xs font-semibold text-text-primary";
+  "campo-14 w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-heading text-sm font-semibold text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
+// Etiqueta y campo (texto y marcador) comparten fuente y tamaño: la fuente de títulos a 14 px.
+const label = "mb-1.5 block font-heading text-sm font-semibold text-text-primary";
 
 const todayYmd = () => {
   const d = new Date();

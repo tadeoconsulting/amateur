@@ -126,6 +126,16 @@ test("el menú de la cuenta va a 16 px en el organizador", () => {
   assert.match(menu, /font-body text-xs cancha:text-base/, "rol del encabezado");
 });
 
+// La hoja «Agregar partido»: etiquetas y campos (texto y marcador) en la fuente de títulos a 14 px (2026-11-16). La regla
+// global pone los campos a 16 px en el celular (zoom de Safari); `campo-14` es la excepción pedida, solo para esta hoja.
+test("la hoja «Agregar partido» usa la fuente de títulos a 14 px en etiquetas y campos", () => {
+  const hoja = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/_components/match-editor.tsx", import.meta.url), "utf8");
+  assert.match(hoja, /const field =\s*"campo-14 [^"]*font-heading text-sm font-semibold/, "campos");
+  assert.match(hoja, /const label = "[^"]*font-heading text-sm font-semibold/, "etiquetas");
+  const css = readFileSync(new URL("../../src/app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.campo-14\s*\{\s*font-size:\s*14px;/, "excepción a los 16 px de los campos");
+});
+
 test("el ámbito del organizador aplica el tema y carga las fuentes de la landing", () => {
   const layout = readFileSync(new URL("../../src/app/(organizador)/layout.tsx", import.meta.url), "utf8");
   assert.match(layout, /tema-cancha/);
