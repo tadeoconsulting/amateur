@@ -9,6 +9,21 @@ type TeamOption = { id: string; name: string; groupName: string | null };
 const field =
   "campo-14 w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm font-semibold text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
 // Etiqueta y campo (texto y marcador) comparten fuente y tamaño: DM Sans (la fuente de cuerpo) a 14 px, en peso 600.
+// El desplegable propio: sin la flecha del navegador (que queda pegada al borde) y con la nuestra a 12 px del borde derecho,
+// el mismo margen que tiene el texto a la izquierda (`px-3`).
+function SelectField({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select {...props} className={`${field} appearance-none pr-10`}>
+        {children}
+      </select>
+      <svg aria-hidden width="16" height="16" viewBox="0 0 20 20" fill="none" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary">
+        <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
 const label = "mb-1.5 block font-body text-sm font-semibold text-text-primary";
 
 const todayYmd = () => {
@@ -132,14 +147,14 @@ export function MatchEditor({
   }
 
   const teamSelect = (value: string, onChange: (v: string) => void, other: string, id: string) => (
-    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={saving} className={field}>
+    <SelectField id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={saving}>
       <option value="">Elige un equipo</option>
       {teams.map((t) => (
         <option key={t.id} value={t.id} disabled={t.id === other}>
           {t.name}
         </option>
       ))}
-    </select>
+    </SelectField>
   );
 
   return (
@@ -165,12 +180,12 @@ export function MatchEditor({
               {editing ? (
                 <p className="font-body text-sm text-text-secondary">Fecha {matchday}{match?.groupName ? ` · ${match.groupName}` : ""}</p>
               ) : (
-                <select id="me-fecha" value={matchday} onChange={(e) => setMatchday(Number(e.target.value))} disabled={saving} className={field}>
+                <SelectField id="me-fecha" value={matchday} onChange={(e) => setMatchday(Number(e.target.value))} disabled={saving}>
                   {matchdays.map((d) => (
                     <option key={d} value={d}>Fecha {d}</option>
                   ))}
                   <option value={lastMatchday + 1}>Fecha {lastMatchday + 1} (nueva)</option>
-                </select>
+                </SelectField>
               )}
             </div>
 

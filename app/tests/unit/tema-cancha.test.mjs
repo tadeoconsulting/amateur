@@ -136,6 +136,10 @@ test("la hoja «Agregar partido» usa DM Sans a 14 px en etiquetas y campos", ()
   const botones = hoja.split("\n").filter((l) => /<button|className="[^"]*cursor-pointer[^"]*font-heading/.test(l) && l.includes("font-heading"));
   assert.ok(botones.length >= 6, "se encontraron los botones de la hoja");
   for (const b of botones) assert.match(b, /text-base/, `botón a 16 px: ${b.trim().slice(0, 60)}`);
+  // Los desplegables llevan su propia flecha a 12 px del borde derecho (igual que el texto a la izquierda, `px-3`).
+  assert.match(hoja, /appearance-none pr-10/, "desplegable sin la flecha del navegador");
+  assert.match(hoja, /pointer-events-none absolute right-3/, "flecha propia a 12 px del borde");
+  assert.doesNotMatch(hoja, /<select\b[^>]*className=\{field\}/, "ningún desplegable usa la flecha del navegador");
   const css = readFileSync(new URL("../../src/app/globals.css", import.meta.url), "utf8");
   assert.match(css, /\.campo-14\s*\{\s*font-size:\s*14px;/, "excepción a los 16 px de los campos");
 });
