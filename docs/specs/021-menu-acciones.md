@@ -16,7 +16,7 @@ La pantalla de un torneo mezcla una acción principal (**Agregar partido**, bot�
 | 3 | Nombre | **«Acciones»**, con un menú moderno (desplegable, no un `<select>`). |
 
 ## Reglas
-- El botón **Acciones** (texto y flecha, también en el celular) abre un panel debajo, alineado a la derecha, con un ítem por acción: ícono, texto y, si lleva a otra pantalla, es un enlace; si ejecuta algo (Compartir, Deshacer fixture), es un botón.
+- El botón **Acciones** (texto y flecha en tablet y escritorio; **en el celular solo el ícono de tres puntos**, el texto se oculta pero queda como nombre accesible, pedido del usuario 2026-11-16) abre un panel debajo, alineado a la derecha, con un ítem por acción: ícono, texto y, si lleva a otra pantalla, es un enlace; si ejecuta algo (Compartir, Deshacer fixture), es un botón.
 - **Cada ítem aparece solo cuando corresponde**, con las mismas condiciones de hoy:
   - *Compartir*: solo con el torneo en marcha (no en convocatoria).
   - *Editar torneo*: siempre.

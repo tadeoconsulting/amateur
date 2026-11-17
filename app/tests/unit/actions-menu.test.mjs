@@ -84,3 +84,11 @@ test("el menú es accesible: botón con aria-haspopup, panel role=menu e ítems 
   assert.match(source, /role="menuitem"/);
   assert.match(source, /Escape/);
 });
+
+// En el celular el botón es solo un ícono (pedido del usuario, 2026-11-16); sigue con nombre para el lector de pantalla.
+test("el botón «Acciones» en el celular muestra solo el ícono", () => {
+  const source = readFileSync(new URL("../../src/_components/actions-menu.tsx", import.meta.url), "utf8");
+  assert.match(source, /aria-label=\{label\}/, "el botón conserva su nombre accesible");
+  assert.match(source, /className="sm:hidden"/, "el ícono de tres puntos solo en el celular");
+  assert.match(source, /<span className="hidden sm:inline">\{label\}<\/span>/, "el texto se oculta en el celular");
+});
