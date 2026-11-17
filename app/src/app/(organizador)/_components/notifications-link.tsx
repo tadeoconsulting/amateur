@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 /**
- * La campana de notificaciones del organizador: va en la barra de arriba, a la izquierda de la cuenta (el layout deja 24 px
+ * La campana de notificaciones del organizador: va en la barra de arriba, a la izquierda de la cuenta (el layout deja 16 px
  * entre las dos). Todo el cuadro de 44 px es clicable, no solo el dibujo.
  */
 export function NotificationsLink() {

@@ -34,9 +34,9 @@ export default function OrganizadorLayout({
   }));
 
   // El nombre de quien tiene la sesión: su organización, o su nombre si no la puso (especificación 001).
-  // La campana va a la izquierda de la cuenta, separada por 24 px (`gap-6`).
+  // La campana va a la izquierda de la cuenta, separada por 16 px (`gap-4`).
   const account = user ? (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-4">
       <NotificationsLink />
       <AccountMenu name={navName("organizador", user)} roleLabel="Organizador de torneo" role="ORGANIZADOR" settingsHref="/ajustes" />
     </div>

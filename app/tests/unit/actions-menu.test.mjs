@@ -127,12 +127,12 @@ test("los filtros en píldora van a 14 px en el organizador y la barra de abajo 
   }
 });
 
-// La campana de notificaciones va en la barra de arriba, a la izquierda de la cuenta y a 24 px (`gap-6`); ya no está en
+// La campana de notificaciones va en la barra de arriba, a la izquierda de la cuenta y a 16 px (`gap-4`); ya no está en
 // «Mis torneos». El título de las tarjetas de torneo va a 16 px (2026-11-16).
-test("la campana va junto a la cuenta con 24 px y los títulos de las tarjetas a 16 px", () => {
+test("la campana va junto a la cuenta con 16 px y los títulos de las tarjetas a 16 px", () => {
   const leer = (ruta) => readFileSync(new URL(`../../src/${ruta}`, import.meta.url), "utf8");
   const layout = leer("app/(organizador)/layout.tsx");
-  assert.match(layout, /<div className="flex items-center gap-6">\s*<NotificationsLink \/>\s*<AccountMenu/, "campana a la izquierda de la cuenta, a 24 px");
+  assert.match(layout, /<div className="flex items-center gap-4">\s*<NotificationsLink \/>\s*<AccountMenu/, "campana a la izquierda de la cuenta, a 16 px");
   assert.match(leer("app/(organizador)/_components/notifications-link.tsx"), /size-11/, "área clicable de 44 px");
   assert.doesNotMatch(leer("app/(organizador)/torneos/page.tsx"), /\/notificaciones/, "ya no hay campana en «Mis torneos»");
   for (const ruta of ["app/(organizador)/torneos/page.tsx", "app/(jugador)/jugador/mis-torneos/page.tsx", "app/(jugador)/jugador/torneos/page.tsx"]) {

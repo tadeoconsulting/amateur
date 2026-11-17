@@ -21,6 +21,16 @@ export function navName(kind: NavIdentityKind, user: NavUser, club?: { name: str
   return own;
 }
 
+/**
+ * El nombre tal como cabe en el botón de cuenta: hasta `max` caracteres (12 por omisión) y, si tiene más, los primeros `max`
+ * seguidos de dos puntos («organizador..»). El nombre completo sigue en el encabezado del menú y en `title`/`aria-label`.
+ */
+export function shortNavName(name: string, max = 12): string {
+  const letters = Array.from(name.trim());
+  if (letters.length <= max) return letters.join("");
+  return `${letters.slice(0, max).join("").trimEnd()}..`;
+}
+
 /** La inicial para el círculo del botón (la primera letra del nombre mostrado, en mayúscula). */
 export function navInitial(name: string): string {
   return name.trim().charAt(0).toLocaleUpperCase("es") || "?";
