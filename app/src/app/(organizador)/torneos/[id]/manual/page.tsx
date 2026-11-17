@@ -145,7 +145,7 @@ export default function ManualFixturePage() {
                   >
                     {/* Group header */}
                     <div className="flex items-center justify-between bg-btn-regular px-4 py-2">
-                      <span className="font-heading text-xs font-bold text-text-primary">{group}</span>
+                      <span className="font-heading text-xs cancha:text-sm font-bold text-text-primary">{group}</span>
                       {scheduled && match.location && (
                         <div className="flex items-center gap-1 text-text-secondary">
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

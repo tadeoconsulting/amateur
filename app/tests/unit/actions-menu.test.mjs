@@ -162,3 +162,11 @@ test("los botones principales llevan max-md:text-base", () => {
   assert.deepEqual(malos, [], "botones principales sin 16 px en el celular");
 });
 
+// El título de la franja de cada partido («General» o el grupo) va a 14 px en el organizador (2026-11-16).
+test("el título de la franja del partido va a 14 px en el organizador", () => {
+  for (const ruta of ["manual/page.tsx", "en-vivo/[matchId]/page.tsx", "partido/[matchId]/page.tsx", "resultado/[matchId]/page.tsx"]) {
+    const fuente = readFileSync(new URL(`../../src/app/(organizador)/torneos/[id]/${ruta}`, import.meta.url), "utf8");
+    assert.match(fuente, /bg-btn-regular px-4 py-2">\s*<span className="font-heading text-xs cancha:text-sm font-bold/, ruta);
+  }
+});
+

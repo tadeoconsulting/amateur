@@ -93,7 +93,7 @@ export default function PartidoDetailPage() {
       <div className="mx-4 mb-4 rounded-xl border border-border-primary overflow-hidden">
         {/* Group header */}
         <div className="bg-btn-regular px-4 py-2">
-          <span className="font-heading text-xs font-bold text-text-primary">
+          <span className="font-heading text-xs cancha:text-sm font-bold text-text-primary">
             {match.groupName || "General"}
           </span>
         </div>
