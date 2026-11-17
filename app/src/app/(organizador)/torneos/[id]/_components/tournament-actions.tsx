@@ -7,7 +7,7 @@ import type { ShareView } from "@/_lib/share-view";
 /**
  * El menú «Acciones» de la pantalla de un torneo (especificación 021): junta las acciones secundarias que antes estaban
  * sueltas (Compartir, Editar torneo, Mesa, Editar cruces, Crear temporada y Deshacer fixture). Cada una aparece solo
- * cuando corresponde; «Agregar partido» sigue afuera, como acción principal.
+ * cuando corresponde; «Agregar partido» no va aquí: es un tab con «+» junto a los tabs.
  */
 export function TournamentActions({
   tournamentId,

@@ -11,7 +11,7 @@ La pantalla de un torneo mezcla una acción principal (**Agregar partido**, bot�
 ## Decisiones (del usuario)
 | # | Tema | Decisión |
 |---|---|---|
-| 1 | Qué va dentro | **Las seis:** Compartir, Editar torneo, Mesa, Editar cruces, Crear temporada y Deshacer fixture. «Agregar partido» queda afuera, como acción principal. |
+| 1 | Qué va dentro | **Las seis:** Compartir, Editar torneo, Mesa, Editar cruces, Crear temporada y Deshacer fixture. «Agregar partido» queda afuera del menú, como un tab con «+» (ver abajo). |
 | 2 | Dónde | **A la derecha de los tabs** (Partidos / Tabla / Goleadores / Equipos), en el lugar de «Compartir», así se ve en todas las pestañas. |
 | 3 | Nombre | **«Acciones»**, con un menú moderno (desplegable, no un `<select>`). |
 
@@ -30,6 +30,9 @@ La pantalla de un torneo mezcla una acción principal (**Agregar partido**, bot�
 - **Compartir** conserva su comportamiento (menú de compartir del sistema o copiar el enlace con aviso); la lógica sale de `ShareViewButton` a un hook (`useShareView`) que usan los dos.
 - Tipografía y colores del sistema «Cancha»: DM Sans en negrita, panel con la superficie de las tarjetas y borde de la línea del tema.
 - «Ver temporada» (la tarjeta de una liga que ya está en una temporada) y «Agregar equipo» **no** son acciones secundarias del mismo tipo y no se mueven.
+
+## «Agregar partido» como tab (pedido del usuario, 2026-11-16)
+«Agregar partido» deja de ser un botón lima suelto sobre las fechas y pasa a ser **un tab más, con el ícono «+»**, justo al lado de los tabs (antes de «Acciones»). Se ve en todas las pestañas de un torneo en marcha (no en convocatoria) y, al hacer clic, abre la misma hoja para agregar un partido. En el celular queda solo el «+» (con `aria-label="Agregar partido"`) para que la fila no se desborde.
 
 ## Reutilización
 `ActionsMenu` es un componente general (ítems con `label`, `icon`, `href` u `onSelect`, y `tone: "danger"`). Hoy solo lo usa la pantalla de un torneo; otras pantallas con acciones sueltas (club, partido) pueden adoptarlo después.
