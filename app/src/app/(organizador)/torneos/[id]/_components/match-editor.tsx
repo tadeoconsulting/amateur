@@ -248,7 +248,7 @@ export function MatchEditor({
             <button
               onClick={() => save(false)}
               disabled={saving}
-              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {saving ? "Guardando..." : editing ? "Guardar cambios" : "Agregar partido"}
             </button>
@@ -256,7 +256,7 @@ export function MatchEditor({
               <button
                 onClick={() => save(true)}
                 disabled={saving}
-                className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
+                className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-base font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
               >
                 Guardar y agregar otro
               </button>
@@ -264,7 +264,7 @@ export function MatchEditor({
             <button
               onClick={onClose}
               disabled={saving}
-              className="w-full cursor-pointer py-2 font-heading text-sm font-bold text-text-primary disabled:opacity-50"
+              className="w-full cursor-pointer py-2 font-heading text-base font-bold text-text-primary disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -276,14 +276,14 @@ export function MatchEditor({
                     <button
                       onClick={remove}
                       disabled={saving}
-                      className="flex-1 cursor-pointer rounded-lg bg-red-600 py-2.5 font-heading text-sm font-bold text-white disabled:opacity-50"
+                      className="flex-1 cursor-pointer rounded-lg bg-red-600 py-2.5 font-heading text-base font-bold text-white disabled:opacity-50"
                     >
                       Sí, quitar
                     </button>
                     <button
                       onClick={() => setConfirmRemove(false)}
                       disabled={saving}
-                      className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2.5 font-heading text-sm font-bold text-text-primary disabled:opacity-50"
+                      className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2.5 font-heading text-base font-bold text-text-primary disabled:opacity-50"
                     >
                       No
                     </button>
@@ -293,7 +293,7 @@ export function MatchEditor({
                 <button
                   onClick={() => setConfirmRemove(true)}
                   disabled={saving}
-                  className="w-full cursor-pointer py-2 font-heading text-xs font-bold text-red-600 underline disabled:opacity-50"
+                  className="w-full cursor-pointer py-2 font-heading text-base font-bold text-red-600 underline disabled:opacity-50"
                 >
                   Quitar partido
                 </button>

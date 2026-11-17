@@ -132,6 +132,10 @@ test("la hoja «Agregar partido» usa DM Sans a 14 px en etiquetas y campos", ()
   const hoja = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/_components/match-editor.tsx", import.meta.url), "utf8");
   assert.match(hoja, /const field =\s*"campo-14 [^"]*font-body text-sm font-semibold/, "campos");
   assert.match(hoja, /const label = "[^"]*font-body text-sm font-semibold/, "etiquetas");
+  // Todos los botones de la hoja (también «Cancelar» y «Quitar partido») a 16 px.
+  const botones = hoja.split("\n").filter((l) => /<button|className="[^"]*cursor-pointer[^"]*font-heading/.test(l) && l.includes("font-heading"));
+  assert.ok(botones.length >= 6, "se encontraron los botones de la hoja");
+  for (const b of botones) assert.match(b, /text-base/, `botón a 16 px: ${b.trim().slice(0, 60)}`);
   const css = readFileSync(new URL("../../src/app/globals.css", import.meta.url), "utf8");
   assert.match(css, /\.campo-14\s*\{\s*font-size:\s*14px;/, "excepción a los 16 px de los campos");
 });
