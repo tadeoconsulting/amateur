@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DireccionModal } from "./direccion-modal";
+import { Label } from "@/_components/label";
 
 export type Sede = {
   nombre: string;
@@ -92,9 +93,9 @@ export function CrearSedeModal({
                 <div className="flex flex-col gap-5">
                   {/* Nombre */}
                   <div>
-                    <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+                    <Label className="block mb-2">
                       Nombre de la sede
-                    </label>
+                    </Label>
                     <input
                       type="text"
                       placeholder="Ingresar nombre"
@@ -106,9 +107,9 @@ export function CrearSedeModal({
 
                   {/* Ubicación */}
                   <div>
-                    <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+                    <Label className="block mb-2">
                       Ingresa la ubicación
-                    </label>
+                    </Label>
                     <button
                       onClick={() => setShowDireccion(true)}
                       className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary"
@@ -124,9 +125,9 @@ export function CrearSedeModal({
 
                   {/* Referencia */}
                   <div>
-                    <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+                    <Label className="block mb-2">
                       Referencia
-                    </label>
+                    </Label>
                     <input
                       type="text"
                       placeholder="Ejemplo: frente al parque principal"

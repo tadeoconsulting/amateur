@@ -6,12 +6,13 @@ import { Spinner } from "@/_components/spinner";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { MAX_DURATION_MIN, MIN_DURATION_MIN, WEEKDAYS, isDuration, isTime, placeError, timeRange } from "@/_lib/club-training";
 import { GestionError, gestionRequest, type CategoryOption, type PlaceItem, type ScheduleItem, type SessionItem } from "@/_lib/club-training-client";
+import { Label } from "@/_components/label";
 
 export const inputClass =
   "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +
   "hover:bg-surface-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20";
 
-const labelClass = "font-heading text-sm font-bold text-text-primary";
+const labelClass = "";
 const DURATIONS = [60, 75, 90, 120];
 
 function ErrorLine({ message }: { message: string }) {
@@ -26,9 +27,9 @@ function ErrorLine({ message }: { message: string }) {
 function DurationField({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label htmlFor={id} className={labelClass}>
+      <Label htmlFor={id} className={labelClass}>
         Duración (minutos)
-      </label>
+      </Label>
       <input id={id} inputMode="numeric" autoComplete="off" value={value} onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))} className={`${inputClass} mt-1.5`} aria-describedby={`${id}-help`} />
       <div className="mt-2 flex flex-wrap gap-2">
         {DURATIONS.map((d) => (
@@ -47,9 +48,9 @@ function DurationField({ id, value, onChange }: { id: string; value: string; onC
 function PlaceSelect({ id, places, value, onChange }: { id: string; places: PlaceItem[]; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label htmlFor={id} className={labelClass}>
+      <Label htmlFor={id} className={labelClass}>
         Lugar
-      </label>
+      </Label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} mt-1.5`}>
         {places.map((p) => (
           <option key={p.id} value={p.id}>
@@ -64,9 +65,9 @@ function PlaceSelect({ id, places, value, onChange }: { id: string; places: Plac
 function CategorySelect({ id, categories, value, onChange }: { id: string; categories: CategoryOption[]; value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <label htmlFor={id} className={labelClass}>
+      <Label htmlFor={id} className={labelClass}>
         Categoría
-      </label>
+      </Label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} mt-1.5`}>
         <option value="">Todo el club</option>
         {categories.map((c) => (
@@ -111,9 +112,9 @@ export function ScheduleSheet({ base, schedule, places, categories, onSaved, onC
     <Sheet title={schedule ? "Editar horario" : "Nuevo horario"} onClose={onClose}>
       <form onSubmit={save} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="sch-weekday" className={labelClass}>
+          <Label htmlFor="sch-weekday" className={labelClass}>
             Día de la semana
-          </label>
+          </Label>
           <select id="sch-weekday" value={weekday} onChange={(e) => setWeekday(e.target.value)} className={`${inputClass} mt-1.5`}>
             {[1, 2, 3, 4, 5, 6, 0].map((d) => (
               <option key={d} value={d}>
@@ -123,9 +124,9 @@ export function ScheduleSheet({ base, schedule, places, categories, onSaved, onC
           </select>
         </div>
         <div>
-          <label htmlFor="sch-time" className={labelClass}>
+          <Label htmlFor="sch-time" className={labelClass}>
             Hora de inicio
-          </label>
+          </Label>
           <input id="sch-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={`${inputClass} mt-1.5`} />
           {isTime(startTime) && isDuration(Number(duration)) && <p className="mt-1.5 font-body text-xs text-text-secondary">Entrenan de {timeRange(startTime, Number(duration)).replace("–", " a ")}, hora de Lima.</p>}
         </div>
@@ -187,15 +188,15 @@ export function SessionSheet({ base, session, today, places, categories, onSaved
           </p>
         )}
         <div>
-          <label htmlFor="ses-date" className={labelClass}>
+          <Label htmlFor="ses-date" className={labelClass}>
             Fecha
-          </label>
+          </Label>
           <input id="ses-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} mt-1.5`} />
         </div>
         <div>
-          <label htmlFor="ses-time" className={labelClass}>
+          <Label htmlFor="ses-time" className={labelClass}>
             Hora de inicio
-          </label>
+          </Label>
           <input id="ses-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className={`${inputClass} mt-1.5`} />
         </div>
         <DurationField id="ses-duration" value={duration} onChange={setDuration} />
@@ -274,15 +275,15 @@ export function PlaceSheet({ base, place, onSaved, onClose }: { base: string; pl
         className="flex flex-col gap-4"
       >
         <div>
-          <label htmlFor="place-name" className={labelClass}>
+          <Label htmlFor="place-name" className={labelClass}>
             Nombre del lugar
-          </label>
+          </Label>
           <input id="place-name" autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="Colegio Perú Suizo" className={`${inputClass} mt-1.5`} />
         </div>
         <div>
-          <label htmlFor="place-address" className={labelClass}>
+          <Label htmlFor="place-address" className={labelClass}>
             Dirección o referencia (opcional)
-          </label>
+          </Label>
           <input id="place-address" autoComplete="off" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Av. Brasil, puerta 3" className={`${inputClass} mt-1.5`} />
         </div>
         <ErrorLine message={error} />

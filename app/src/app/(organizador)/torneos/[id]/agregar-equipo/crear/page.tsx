@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
+import { Label } from "@/_components/label";
 
 const presetColors = [
   "#FF6363", "#FF9F43", "#FFD039", "#00CA81",
@@ -205,9 +206,9 @@ export default function CrearEquipoPage() {
       <div className="mt-8 flex flex-col gap-5 px-4">
         {/* Nombre de equipo */}
         <div>
-          <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+          <Label className="mb-1.5 block">
             Nombre de equipo
-          </label>
+          </Label>
           <input
             type="text"
             value={nombre}
@@ -219,9 +220,9 @@ export default function CrearEquipoPage() {
 
         {/* Nombre corto */}
         <div>
-          <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+          <Label className="mb-1.5 block">
             Nombre corto
-          </label>
+          </Label>
           <input
             type="text"
             value={nombreCorto}
@@ -234,9 +235,9 @@ export default function CrearEquipoPage() {
 
         {/* Color representativo */}
         <div>
-          <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+          <Label className="mb-1.5 block">
             Color representativo
-          </label>
+          </Label>
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
             className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-transparent bg-btn-regular px-3 py-3 font-body text-sm transition-colors hover:border-border-primary hover:bg-surface-primary"

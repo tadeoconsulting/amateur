@@ -11,6 +11,7 @@ import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
 import { playoffLabel } from "@/_lib/fixture";
 import { saveWizardTournament } from "../_components/save-tournament";
 import { EditTabs } from "../_components/edit-tabs";
+import { Label } from "@/_components/label";
 
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
@@ -246,9 +247,9 @@ export default function CrearTorneoPaso3Page() {
 
         <div className="flex flex-col gap-4 mb-6">
           <div>
-            <label className="block font-body text-sm text-text-primary mb-2">
+            <Label className="block mb-2">
               Costo de inscripción
-            </label>
+            </Label>
             <input
               type="text"
               placeholder="Ejemplo: S/100"
@@ -259,9 +260,9 @@ export default function CrearTorneoPaso3Page() {
           </div>
 
           <div>
-            <label className="block font-body text-sm text-text-primary mb-2">
+            <Label className="block mb-2">
               Costo de arbitraje por partido (Opcional)
-            </label>
+            </Label>
             <input
               type="text"
               placeholder="Ejemplo: S/40 por equipo"

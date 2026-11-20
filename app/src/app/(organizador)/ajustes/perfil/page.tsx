@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getUser } from "@/_lib/api";
 import { Toast } from "@/_components/toast";
+import { Label } from "@/_components/label";
 
 export default function PerfilPage() {
   const { user, refresh } = useAuth();
@@ -96,9 +97,9 @@ export default function PerfilPage() {
 
         <div className="flex flex-col gap-5">
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Nombre del organizador
-            </label>
+            </Label>
             <input
               type="text"
               value={nombre}
@@ -109,9 +110,9 @@ export default function PerfilPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Nombre de la organización
-            </label>
+            </Label>
             <input
               type="text"
               value={organizacion}
@@ -122,9 +123,9 @@ export default function PerfilPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Teléfono del organizador
-            </label>
+            </Label>
             <input
               type="tel"
               value={telefono}
@@ -135,9 +136,9 @@ export default function PerfilPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Correo del organizador
-            </label>
+            </Label>
             <input
               type="email"
               value={correo}

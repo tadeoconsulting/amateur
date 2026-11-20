@@ -7,6 +7,7 @@ import { Spinner } from "@/_components/spinner";
 import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { PASSWORD_HINT, passwordError } from "@/_lib/password-rules";
+import { Label } from "@/_components/label";
 
 const inputClass = "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-brand-900 focus:outline-none";
 
@@ -87,12 +88,12 @@ export function RestablecerForm({ token }: { token: string }) {
                 </p>
               )}
               <div>
-                <label htmlFor="rp-new" className="text-sm text-text-secondary">Nueva contraseña</label>
+                <Label htmlFor="rp-new">Nueva contraseña</Label>
                 <PasswordInput id="rp-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
                 <PasswordRules value={next} showHint={false} className="text-text-secondary" />
               </div>
               <div>
-                <label htmlFor="rp-confirm" className="text-sm text-text-secondary">Repite la contraseña</label>
+                <Label htmlFor="rp-confirm">Repite la contraseña</Label>
                 <PasswordInput id="rp-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
               </div>
             </div>

@@ -8,6 +8,7 @@ import { btnSolid } from "@/_components/button-styles";
 import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { passwordError } from "@/_lib/password-rules";
+import { Label } from "@/_components/label";
 
 
 const inputClass =
@@ -72,16 +73,16 @@ export function ChangePasswordForm() {
           )}
 
           <div>
-            <label htmlFor="pw-current" className="text-sm text-text-secondary">Contraseña actual</label>
+            <Label htmlFor="pw-current">Contraseña actual</Label>
             <PasswordInput id="pw-current" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label htmlFor="pw-new" className="text-sm text-text-secondary">Nueva contraseña</label>
+            <Label htmlFor="pw-new">Nueva contraseña</Label>
             <PasswordInput id="pw-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
             <PasswordRules value={next} className="text-text-secondary" />
           </div>
           <div>
-            <label htmlFor="pw-confirm" className="text-sm text-text-secondary">Repite la nueva contraseña</label>
+            <Label htmlFor="pw-confirm">Repite la nueva contraseña</Label>
             <PasswordInput id="pw-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
           </div>
         </div>

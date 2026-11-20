@@ -10,6 +10,7 @@ import { ClubCrest } from "@/_components/club-crest";
 import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { passwordError } from "@/_lib/password-rules";
+import { Label } from "@/_components/label";
 
 type Preview = {
   kind: "link" | "email";
@@ -260,7 +261,7 @@ function InvitacionContent() {
           <div className="mt-6 space-y-5">
             {/* Nombre completo */}
             <div>
-              <label className="text-sm text-text-secondary">Nombre completo</label>
+              <Label>Nombre completo</Label>
               <input
                 type="text"
                 value={nombre}
@@ -272,7 +273,7 @@ function InvitacionContent() {
 
             {/* Apellidos */}
             <div>
-              <label className="text-sm text-text-secondary">Apellidos</label>
+              <Label>Apellidos</Label>
               <input
                 type="text"
                 value={apellidos}
@@ -284,7 +285,7 @@ function InvitacionContent() {
 
             {/* DNI */}
             <div>
-              <label className="text-sm text-text-secondary">DNI</label>
+              <Label>DNI</Label>
               <input
                 type="text"
                 value={dni}
@@ -296,7 +297,7 @@ function InvitacionContent() {
 
             {/* Posición */}
             <div>
-              <label className="text-sm text-text-secondary">Posición</label>
+              <Label>Posición</Label>
               <button
                 onClick={() => setSheet("posicion")}
                 className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2 text-sm"
@@ -312,7 +313,7 @@ function InvitacionContent() {
 
             {/* Fecha de nacimiento */}
             <div>
-              <label className="text-sm text-text-secondary">Fecha de nacimiento</label>
+              <Label>Fecha de nacimiento</Label>
               <div className="mt-1 flex gap-3">
                 <input
                   type="text"
@@ -343,7 +344,7 @@ function InvitacionContent() {
 
             {/* Sexo */}
             <div>
-              <label className="text-sm text-text-secondary">Sexo</label>
+              <Label>Sexo</Label>
               <div className="mt-1 flex gap-2">
                 {(["masculino", "femenino"] as const).map((s) => (
                   <button
@@ -363,7 +364,7 @@ function InvitacionContent() {
 
             {/* Teléfono */}
             <div>
-              <label className="text-sm text-text-secondary">Teléfono</label>
+              <Label>Teléfono</Label>
               <input
                 type="tel"
                 value={telefono}
@@ -375,7 +376,7 @@ function InvitacionContent() {
 
             {/* Correo */}
             <div>
-              <label className="text-sm text-text-secondary">Correo</label>
+              <Label>Correo</Label>
               <input
                 type="email"
                 value={correoFinal}
@@ -388,7 +389,7 @@ function InvitacionContent() {
 
             {/* Contraseña */}
             <div>
-              <label className="text-sm text-text-secondary">Contraseña</label>
+              <Label>Contraseña</Label>
               <PasswordInput
                 wrapperClassName="mt-1"
                 value={password}
@@ -403,7 +404,7 @@ function InvitacionContent() {
 
             {/* Departamento */}
             <div>
-              <label className="text-sm text-text-secondary">Departamento</label>
+              <Label>Departamento</Label>
               <button
                 onClick={() => setSheet("departamento")}
                 className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2 text-sm"

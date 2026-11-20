@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Label } from "@/_components/label";
 
 export interface InvitationSummary {
   id: string;
@@ -134,7 +135,7 @@ export function InvitePlayerPanel({
 
           {mode === "change" && (
             <div className="flex flex-col gap-2">
-              <label htmlFor="ip-cambiar" className="font-body text-xs font-medium text-text-secondary">Nuevo correo</label>
+              <Label htmlFor="ip-cambiar">Nuevo correo</Label>
               <input id="ip-cambiar" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-cambiar-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="jugador@correo.com" />
               <p id="ip-cambiar-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
                 {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Se crea un enlace nuevo y el anterior deja de funcionar."}
@@ -182,7 +183,7 @@ export function InvitePlayerPanel({
       {/* Crear: sin invitación vigente, o para reemplazar una vencida o bloqueada. */}
       {(!invitation || status === "expired" || status === "locked") && mode !== "change" && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="ip-correo" className="font-body text-xs font-medium text-text-secondary">Correo del jugador (opcional)</label>
+          <Label htmlFor="ip-correo">Correo del jugador (opcional)</Label>
           <input id="ip-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-correo-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="jugador@correo.com" />
           <p id="ip-correo-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
             {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Con correo, lo enviamos y la invitación es para esa cuenta. Sin correo, solo se crea el enlace para compartirlo por WhatsApp."}

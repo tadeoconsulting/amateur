@@ -9,6 +9,7 @@ import { BackHeader } from "@/_components/back-header";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { fieldClass, labelClass } from "../../_components/season-ui";
 import { FinalPhaseFields, validFinalTeams } from "../../_components/final-phase-fields";
+import { Label } from "@/_components/label";
 
 function Spinner() {
   return (
@@ -92,9 +93,9 @@ function EditForm({ season, onBack, onSaved }: { season: SeasonSummary; onBack: 
           }}
         >
           <div>
-            <label htmlFor="season-name" className={labelClass}>
+            <Label htmlFor="season-name" className={labelClass}>
               Nombre de la temporada
-            </label>
+            </Label>
             <input id="season-name" type="text" maxLength={120} value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
             <p className="mt-2 font-body text-xs text-text-secondary">El enlace público no cambia al renombrarla.</p>
           </div>

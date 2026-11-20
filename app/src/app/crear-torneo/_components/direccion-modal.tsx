@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MapaModal } from "./mapa-modal";
+import { Label } from "@/_components/label";
 
 const searchResults: { address: string; district: string }[] = [];
 
@@ -59,9 +60,9 @@ export function DireccionModal({
               Volver
             </button>
 
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Ingresa la ubicación
-            </label>
+            </Label>
             <div className="relative">
               <input
                 type="text"

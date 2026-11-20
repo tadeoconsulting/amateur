@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CONTENT_KINDS, LIMITS as limits, categoriesOf, type ContentKind, type ContentSection } from "@/_lib/content";
+import { Label } from "@/_components/label";
 
 // Cada sección lleva un `uid` solo para que React la reconozca al subirla, bajarla o quitarla.
 type Draft = ContentSection & { uid: number };
@@ -185,7 +186,7 @@ export function ContentEditor({ kind, onDirtyChange }: { kind: ContentKind; onDi
               </label>
             )}
             <label className="mb-3 block">
-              <span className="mb-1 block font-body text-xs text-text-secondary">{isHelp ? "Pregunta" : "Título (opcional)"}</span>
+              <Label as="span" optional={!isHelp} className="mb-1 block">{isHelp ? "Pregunta" : "Título"}</Label>
               <input
                 value={s.title}
                 onChange={(e) => change(s.uid, { title: e.target.value })}

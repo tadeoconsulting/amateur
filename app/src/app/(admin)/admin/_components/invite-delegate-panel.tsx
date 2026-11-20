@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useApi } from "@/_lib/use-api";
+import { Label } from "@/_components/label";
 
 interface DelegateInvitation {
   id: string;
@@ -126,7 +127,7 @@ export function InviteDelegatePanel({ club, onChanged }: { club: { id: string; n
 
           {mode === "change" && (
             <div className="flex flex-col gap-2">
-              <label htmlFor="id-cambiar" className="font-body text-xs font-medium text-text-secondary">Nuevo correo</label>
+              <Label htmlFor="id-cambiar">Nuevo correo</Label>
               <input id="id-cambiar" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="id-cambiar-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="delegado@correo.com" />
               <p id="id-cambiar-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
                 {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Se crea un enlace nuevo y el anterior deja de funcionar."}
@@ -155,7 +156,7 @@ export function InviteDelegatePanel({ club, onChanged }: { club: { id: string; n
       {/* Crear: sin invitación, o para reemplazar una vencida. */}
       {(!invitation || status === "expired") && mode !== "change" && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="id-correo" className="font-body text-xs font-medium text-text-secondary">Correo del delegado (opcional)</label>
+          <Label htmlFor="id-correo">Correo del delegado (opcional)</Label>
           <input id="id-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="id-correo-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="delegado@correo.com" />
           <p id="id-correo-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
             {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Con correo, lo enviamos y la invitación es para esa cuenta. Sin correo, solo se crea el enlace para compartirlo por WhatsApp: quien lo abra primero será el delegado, así que envíaselo solo a él."}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { InvitePlayerPanel, type InvitationSummary } from "./invite-player-panel";
+import { Label } from "@/_components/label";
 
 interface AccountResult {
   id: string;
@@ -159,7 +160,7 @@ export function LinkAccountModal({
 
         {!chosen && (
           <>
-            <label htmlFor="la-buscar" className="mb-1 block font-body text-xs font-medium text-text-secondary">Buscar la cuenta (correo, nombre o DNI)</label>
+            <Label htmlFor="la-buscar" className="mb-1 block">Buscar la cuenta (correo, nombre o DNI)</Label>
             <input
               id="la-buscar"
               value={query}

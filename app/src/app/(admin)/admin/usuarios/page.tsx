@@ -7,6 +7,7 @@ import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
 import { SortTh, useSort } from "../_components/sortable";
 import { displayShortName } from "@/_lib/short-name";
+import { Label } from "@/_components/label";
 
 interface UserRow {
   id: string;
@@ -233,7 +234,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
         <div className="flex flex-col gap-4">
           {/* Roles first — drives which fields appear */}
           <div>
-            <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Tipo de usuario *</label>
+            <Label className="mb-2 block">Tipo de usuario *</Label>
             <div className="flex flex-wrap gap-2">
               {selectableRoles.map((role) => (
                 <button
@@ -259,7 +260,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+              <Label className="mb-1 block">Nombre *</Label>
               <input
                 value={form.firstName}
                 onChange={(e) => set("firstName", e.target.value)}
@@ -268,7 +269,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellido *</label>
+              <Label className="mb-1 block">Apellido *</Label>
               <input
                 value={form.lastName}
                 onChange={(e) => set("lastName", e.target.value)}
@@ -279,7 +280,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Email *</label>
+            <Label className="mb-1 block">Email *</Label>
             <input
               type="email"
               value={form.email}
@@ -291,7 +292,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">DNI</label>
+              <Label className="mb-1 block">DNI</Label>
               <input
                 value={form.dni}
                 onChange={(e) => set("dni", e.target.value)}
@@ -301,7 +302,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono</label>
+              <Label className="mb-1 block">Teléfono</Label>
               <input
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
@@ -313,7 +314,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de nacimiento</label>
+              <Label className="mb-1 block">Fecha de nacimiento</Label>
               <input
                 type="date"
                 value={form.birthDate}
@@ -322,7 +323,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Departamento</label>
+              <Label className="mb-1 block">Departamento</Label>
               <select
                 value={form.department}
                 onChange={(e) => set("department", e.target.value)}
@@ -337,7 +338,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <div>
-            <label className="mb-1.5 block font-body text-xs font-medium text-text-secondary">Sexo</label>
+            <Label className="mb-1.5 block">Sexo</Label>
             <div className="flex gap-2">
               {(["masculino", "femenino"] as const).map((s) => (
                 <button
@@ -359,7 +360,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           {/* Campos de Organizador */}
           {isMesa && (
             <div>
-              <span className="mb-2 block font-body text-xs font-medium text-text-secondary">Torneos de la mesa (opcional)</span>
+              <Label as="span" optional className="mb-2 block">Torneos de la mesa</Label>
               <p className="mb-2 font-body text-xs text-text-secondary">
                 Solo podrá gestionar el partido en vivo de los torneos que marques, y solo el día de juego. Los puedes cambiar después.
               </p>
@@ -388,7 +389,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos de organizador</p>
 
               <div>
-                <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre de la organización</label>
+                <Label className="mb-1 block">Nombre de la organización</Label>
                 <input
                   value={form.organization}
                   onChange={(e) => set("organization", e.target.value)}
@@ -407,7 +408,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Posición</label>
+                  <Label className="mb-1 block">Posición</Label>
                   <select
                     value={form.position}
                     onChange={(e) => set("position", e.target.value)}
@@ -420,7 +421,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Número</label>
+                  <Label className="mb-1 block">Número</Label>
                   <input
                     type="number"
                     value={form.number}
@@ -434,7 +435,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               </div>
 
               <div>
-                <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Club</label>
+                <Label className="mb-1 block">Club</Label>
                 <select
                   value={form.clubId}
                   onChange={(e) => set("clubId", e.target.value)}
@@ -557,7 +558,7 @@ function EditUserModal({
         <div className="flex flex-col gap-4">
           <div>
             {/* El correo no se puede cambiar desde acá: es el identificador de login. */}
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Email</label>
+            <Label className="mb-1 block">Email</Label>
             <p className="rounded-lg border border-border-primary bg-brand-50 px-3 py-2.5 font-body text-sm text-text-secondary">
               {user.email}
             </p>
@@ -565,7 +566,7 @@ function EditUserModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+              <Label className="mb-1 block">Nombre *</Label>
               <input
                 value={form.firstName}
                 onChange={(e) => set("firstName", e.target.value)}
@@ -573,7 +574,7 @@ function EditUserModal({
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellido *</label>
+              <Label className="mb-1 block">Apellido *</Label>
               <input
                 value={form.lastName}
                 onChange={(e) => set("lastName", e.target.value)}
@@ -584,7 +585,7 @@ function EditUserModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono</label>
+              <Label className="mb-1 block">Teléfono</Label>
               <input
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
@@ -593,7 +594,7 @@ function EditUserModal({
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de nacimiento</label>
+              <Label className="mb-1 block">Fecha de nacimiento</Label>
               <input
                 type="date"
                 value={form.birthDate}
@@ -605,7 +606,7 @@ function EditUserModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Departamento</label>
+              <Label className="mb-1 block">Departamento</Label>
               <select
                 value={form.department}
                 onChange={(e) => set("department", e.target.value)}
@@ -618,7 +619,7 @@ function EditUserModal({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block font-body text-xs font-medium text-text-secondary">Sexo</label>
+              <Label className="mb-1.5 block">Sexo</Label>
               <div className="flex gap-2">
                 {(["masculino", "femenino"] as const).map((s) => (
                   <button
@@ -640,7 +641,7 @@ function EditUserModal({
 
           {roles.includes("ORGANIZADOR") && (
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre de la organización</label>
+              <Label className="mb-1 block">Nombre de la organización</Label>
               <input
                 value={form.organization}
                 onChange={(e) => set("organization", e.target.value)}
@@ -652,7 +653,7 @@ function EditUserModal({
 
           <hr className="border-border-primary" />
           <div>
-            <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Roles</label>
+            <Label className="mb-2 block">Roles</Label>
             <div className="flex flex-wrap gap-2">
               {selectableRoles.map((role) => (
                 <button

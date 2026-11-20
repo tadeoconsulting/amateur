@@ -8,6 +8,7 @@ import { getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import type { StaffRole } from "@/_lib/types";
+import { Label } from "@/_components/label";
 
 const roleOptions: { key: StaffRole; label: string }[] = [
   { key: "delegado", label: "Delegado" },
@@ -136,7 +137,7 @@ function EditStaffContent({ clubId }: { clubId: string }) {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Rol en el club</label>
+          <Label>Rol en el club</Label>
           <button
             onClick={() => setShowRoleSheet(true)}
             className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2"

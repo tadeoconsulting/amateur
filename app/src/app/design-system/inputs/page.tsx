@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Label } from "@/_components/label";
 
 export default function InputsPage() {
   return (
@@ -116,7 +117,7 @@ function InteractiveInput({
   return (
     <Variant label={label}>
       <div className="w-full">
-        <label className="text-xs font-medium text-text-primary">{inputLabel}</label>
+        <Label>{inputLabel}</Label>
         <div className={`mt-1 flex items-center rounded transition-all ${bgClass} ${
           hasError
             ? "border-2 border-error"
@@ -150,7 +151,7 @@ function InteractiveColorInput() {
   return (
     <Variant label="color / interactive">
       <div className="w-full">
-        <label className="text-xs font-medium text-text-primary">Selection color</label>
+        <Label>Selection color</Label>
         <div className="mt-1 flex items-center gap-2 rounded border border-brand-200 bg-btn-regular px-3 py-2 focus-within:border-2 focus-within:border-border-primary">
           <input
             type="color"
@@ -172,7 +173,7 @@ function InteractiveSelect() {
   return (
     <Variant label="select / interactive">
       <div className="w-full">
-        <label className="text-xs font-medium text-text-primary">Formato del torneo</label>
+        <Label>Formato del torneo</Label>
         <div className={`mt-1 rounded transition-all ${
           error
             ? "border-2 border-error"
@@ -208,7 +209,7 @@ function InteractiveDatePicker() {
   return (
     <Variant label="date / interactive">
       <div className="w-full">
-        <label className="text-xs font-medium text-text-primary">Fecha del reto</label>
+        <Label>Fecha del reto</Label>
         <div className="mt-1 flex gap-2">
           <select
             value={day}

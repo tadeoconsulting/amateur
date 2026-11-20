@@ -9,6 +9,7 @@ import {
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { SortTh, useSort } from "../_components/sortable";
+import { Label } from "@/_components/label";
 
 interface SponsorDetail {
   id: string;
@@ -80,7 +81,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
 
         <div className="flex flex-col gap-4">
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+            <Label className="mb-1 block">Nombre *</Label>
             <input
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
@@ -89,7 +90,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">URL del logo</label>
+            <Label className="mb-1 block">URL del logo</Label>
             <input
               value={form.logoUrl}
               onChange={(e) => set("logoUrl", e.target.value)}
@@ -98,7 +99,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Sitio web</label>
+            <Label className="mb-1 block">Sitio web</Label>
             <input
               value={form.website}
               onChange={(e) => set("website", e.target.value)}
@@ -212,7 +213,7 @@ function EditSponsorModal({
         <div className="flex flex-col gap-4">
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos del sponsor</p>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+            <Label className="mb-1 block">Nombre *</Label>
             <input
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
@@ -220,7 +221,7 @@ function EditSponsorModal({
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">URL del logo</label>
+            <Label className="mb-1 block">URL del logo</Label>
             <input
               value={form.logoUrl}
               onChange={(e) => set("logoUrl", e.target.value)}
@@ -229,7 +230,7 @@ function EditSponsorModal({
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Sitio web</label>
+            <Label className="mb-1 block">Sitio web</Label>
             <input
               value={form.website}
               onChange={(e) => set("website", e.target.value)}

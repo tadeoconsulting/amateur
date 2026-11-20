@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMatches } from "@/_lib/api";
+import { Label } from "@/_components/label";
 
 /**
  * "Eliminar torneo" de la pantalla de editar (DELETE /api/tournaments/:id): el torneo se oculta, con todo
@@ -79,9 +80,9 @@ export function DeleteTournament({ tournamentId, tournamentName }: { tournamentI
 
             {needsName && (
               <div className="mb-4">
-                <label htmlFor="delete-tournament-name" className="mb-1 block font-body text-xs text-text-secondary">
+                <Label htmlFor="delete-tournament-name" className="mb-1 block">
                   Ya hay {played} {played === 1 ? "partido jugado o en juego" : "partidos jugados o en juego"}. Escribe el nombre del torneo para confirmar.
-                </label>
+                </Label>
                 <input
                   id="delete-tournament-name"
                   value={typed}

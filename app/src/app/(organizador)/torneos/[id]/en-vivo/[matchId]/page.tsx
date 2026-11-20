@@ -12,6 +12,7 @@ import { UpdateFinishedMatchSheet, type DirectResult } from "./_components/updat
 import { walkoverNote, type Walkover } from "@/_lib/walkover";
 import { canDeleteEventIn, playerEditable } from "@/_lib/event-edit";
 import { ClubCrest } from "@/_components/club-crest";
+import { Label } from "@/_components/label";
 
 
 type MatchEvent = {
@@ -638,7 +639,7 @@ export default function EnVivoPage() {
           <div className="flex flex-col">
             {manual && (
               <div className="mb-2 px-1 py-2">
-                <label htmlFor="manual-minute" className="mb-1.5 block font-heading text-sm font-bold text-text-primary">Minuto de la jugada</label>
+                <Label htmlFor="manual-minute" className="mb-1.5 block">Minuto de la jugada</Label>
                 <input
                   id="manual-minute"
                   inputMode="numeric"

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { copyText } from "@/_lib/share";
+import { Label } from "@/_components/label";
 
 const MIN_LENGTH = 8;
 
@@ -96,9 +97,9 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
 
           {mode === "custom" && (
             <div className="mt-3">
-              <label htmlFor={`pw-custom-${userId}`} className="mb-1 block font-body text-xs font-medium text-text-secondary">
+              <Label htmlFor={`pw-custom-${userId}`} className="mb-1 block">
                 Contraseña nueva (mínimo {MIN_LENGTH} caracteres)
-              </label>
+              </Label>
               <div className="flex gap-2">
                 <input
                   id={`pw-custom-${userId}`}

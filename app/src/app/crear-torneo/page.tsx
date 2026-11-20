@@ -10,6 +10,7 @@ import { DeleteTournament } from "./_components/delete-tournament";
 import { EditTabs } from "./_components/edit-tabs";
 import { TournamentPhotoField } from "@/_components/tournament-photo-field";
 import { useEditSave } from "./_components/use-edit-save";
+import { Label } from "@/_components/label";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
@@ -74,9 +75,9 @@ export default function CrearTorneoPage() {
         <div className="flex flex-col gap-6 flex-1">
           {/* Nombre del torneo */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Nombre del torneo
-            </label>
+            </Label>
             <input
               type="text"
               placeholder="Ingresar nombre"
@@ -91,9 +92,9 @@ export default function CrearTorneoPage() {
 
           {/* Fecha de inicio */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Fecha de inicio
-            </label>
+            </Label>
             <div className="relative">
               <input
                 type="date"
@@ -110,9 +111,9 @@ export default function CrearTorneoPage() {
 
           {/* Sede del torneo */}
           <div className="relative">
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Sede del torneo
-            </label>
+            </Label>
             <button
               onClick={() => setShowSedeList(!showSedeList)}
               className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary"

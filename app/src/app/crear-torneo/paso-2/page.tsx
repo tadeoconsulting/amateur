@@ -10,6 +10,7 @@ import { useWizard } from "../_components/wizard-context";
 import { EditTabs } from "../_components/edit-tabs";
 import { useEditSave } from "../_components/use-edit-save";
 import { saveWizardTournament } from "../_components/save-tournament";
+import { Label } from "@/_components/label";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
@@ -80,9 +81,9 @@ export default function CrearTorneoPaso2Page() {
         <div className="flex flex-col gap-6 flex-1">
           {/* Modalidad del torneo */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Modalidad del torneo
-            </label>
+            </Label>
             <button
               onClick={() => setShowModalidad(true)}
               className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary"
@@ -98,9 +99,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Tipo de competencia */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Tipo de competencia
-            </label>
+            </Label>
             <button
               onClick={() => setShowCompetencia(true)}
               disabled={formatLocked}
@@ -122,9 +123,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Elige el género */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Elige el género
-            </label>
+            </Label>
             <div className="flex gap-3">
               {["Femenino", "Masculino", "Mixto"].map((g) => (
                 <button
@@ -144,9 +145,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Elige una categoría */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Elige una categoría
-            </label>
+            </Label>
             <div className="flex gap-3">
               {["Definir edad", "Libre", "Master"].map((c) => (
                 <button
@@ -166,9 +167,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Cantidad de equipos */}
           <div className="flex items-center justify-between">
-            <label className="font-heading text-sm font-semibold text-text-primary">
+            <Label>
               Cantidad de equipos en el torneo
-            </label>
+            </Label>
             <input
               type="number"
               min={0}

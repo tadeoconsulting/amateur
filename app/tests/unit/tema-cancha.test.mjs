@@ -131,7 +131,7 @@ test("el menú de la cuenta va a 16 px en el organizador", () => {
 test("la hoja «Agregar partido» usa DM Sans a 14 px en etiquetas y campos", () => {
   const hoja = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/_components/match-editor.tsx", import.meta.url), "utf8");
   assert.match(hoja, /const field =\s*"campo-14 [^"]*font-body text-sm font-semibold/, "campos");
-  assert.match(hoja, /const label = "[^"]*font-body text-sm font-semibold/, "etiquetas");
+  assert.match(hoja, /import \{ Label \} from "@\/_components\/label"/, "las etiquetas usan el componente Label");
   // Todos los botones de la hoja (también «Cancelar» y «Quitar partido») a 16 px.
   const botones = hoja.split("\n").filter((l) => /<button|className="[^"]*cursor-pointer[^"]*font-heading/.test(l) && l.includes("font-heading"));
   assert.ok(botones.length >= 6, "se encontraron los botones de la hoja");

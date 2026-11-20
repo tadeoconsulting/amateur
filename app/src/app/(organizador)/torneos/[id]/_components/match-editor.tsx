@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { MatchListItem } from "@/_lib/api";
+import { Label } from "@/_components/label";
 
 type TeamOption = { id: string; name: string; groupName: string | null };
 
@@ -24,7 +25,7 @@ function SelectField({ children, ...props }: React.SelectHTMLAttributes<HTMLSele
   );
 }
 
-const label = "mb-1.5 block font-body text-sm font-semibold text-text-primary";
+const label = "mb-1.5 block";
 
 const todayYmd = () => {
   const d = new Date();
@@ -176,7 +177,7 @@ export function MatchEditor({
 
           <div className="flex flex-col gap-4">
             <div>
-              <label htmlFor="me-fecha" className={label}>Fecha del fixture</label>
+              <Label htmlFor="me-fecha" className={label}>Fecha del fixture</Label>
               {editing ? (
                 <p className="font-body text-sm text-text-secondary">Fecha {matchday}{match?.groupName ? ` · ${match.groupName}` : ""}</p>
               ) : (
@@ -193,7 +194,7 @@ export function MatchEditor({
               // Cambiar un equipo mueve también al otro partido de la fecha (cada equipo juega una vez por fecha),
               // y eso lo resuelve «Editar cruces» (especificación 017), no esta hoja.
               <div>
-                <span className={label}>Equipos</span>
+                <Label as="span" className={label}>Equipos</Label>
                 <p className="font-body text-sm text-text-primary">
                   {teams.find((t) => t.id === homeId)?.name ?? "Por definir"} vs {teams.find((t) => t.id === awayId)?.name ?? "Por definir"}
                 </p>
@@ -210,11 +211,11 @@ export function MatchEditor({
             ) : (
               <>
                 <div>
-                  <label htmlFor="me-local" className={label}>Local</label>
+                  <Label htmlFor="me-local" className={label}>Local</Label>
                   {teamSelect(homeId, setHomeId, awayId, "me-local")}
                 </div>
                 <div>
-                  <label htmlFor="me-visita" className={label}>Visitante</label>
+                  <Label htmlFor="me-visita" className={label}>Visitante</Label>
                   {teamSelect(awayId, setAwayId, homeId, "me-visita")}
                 </div>
               </>
@@ -228,18 +229,18 @@ export function MatchEditor({
             {!tbd && (
               <div className="flex gap-3">
                 <div className="min-w-0 flex-1">
-                  <label htmlFor="me-dia" className={label}>Día</label>
+                  <Label htmlFor="me-dia" className={label}>Día</Label>
                   <input id="me-dia" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={saving} className={field} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <label htmlFor="me-hora" className={label}>Hora</label>
+                  <Label htmlFor="me-hora" className={label}>Hora</Label>
                   <input id="me-hora" type="time" value={time} onChange={(e) => setTime(e.target.value)} disabled={saving} className={field} />
                 </div>
               </div>
             )}
 
             <div>
-              <label htmlFor="me-sede" className={label}>Sede</label>
+              <Label htmlFor="me-sede" className={label}>Sede</Label>
               <input
                 id="me-sede"
                 type="text"

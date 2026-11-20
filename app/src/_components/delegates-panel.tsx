@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { Toast } from "@/_components/toast";
+import { Label } from "@/_components/label";
 
 // Los delegados de un equipo (especificación 014): el principal, los co-delegados y, para quien los gestiona (el
 // principal o un admin), las invitaciones pendientes y el formulario para invitar. Lo usan la pestaña Equipo → Delegados
@@ -205,9 +206,9 @@ export function DelegatesPanel({ clubId }: { clubId: string }) {
                   if (busy === null) void invite();
                 }}
               >
-                <label htmlFor="co-email" className="font-body text-sm text-text-secondary">
+                <Label htmlFor="co-email">
                   Correo (opcional: sin correo se crea un enlace para compartir)
-                </label>
+                </Label>
                 <input
                   id="co-email"
                   type="email"

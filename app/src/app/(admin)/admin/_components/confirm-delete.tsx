@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { Label } from "@/_components/label";
 
 /**
  * Confirmación de una eliminación. Si no se puede deshacer, hay que escribir `confirmWord` (el nombre de
@@ -64,9 +65,9 @@ export function ConfirmDelete({
 
         {confirmWord && (
           <>
-            <label htmlFor={inputId} className="mb-1 mt-5 block font-body text-xs font-medium text-text-secondary">
+            <Label htmlFor={inputId} className="mb-1 mt-5 block">
               Para confirmar, escribe <strong className="text-text-primary">{confirmWord}</strong>
-            </label>
+            </Label>
             <input
               id={inputId}
               value={typed}

@@ -13,6 +13,7 @@ import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { LinkAccountModal } from "../_components/link-account-modal";
 import { ImportPlayersModal } from "../_components/import-players-modal";
 import type { InvitationSummary } from "../_components/invite-player-panel";
+import { Label } from "@/_components/label";
 
 interface PlayerRow {
   id: string;
@@ -258,7 +259,7 @@ function EditPlayerModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="pl-nombre" className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombres *</label>
+              <Label htmlFor="pl-nombre" className="mb-1 block">Nombres *</Label>
               <input
                 id="pl-nombre"
                 value={form.firstName}
@@ -267,7 +268,7 @@ function EditPlayerModal({
               />
             </div>
             <div>
-              <label htmlFor="pl-apellido" className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellidos *</label>
+              <Label htmlFor="pl-apellido" className="mb-1 block">Apellidos *</Label>
               <input
                 id="pl-apellido"
                 value={form.lastName}
@@ -277,7 +278,7 @@ function EditPlayerModal({
             </div>
           </div>
           <div>
-            <label htmlFor="pl-email" className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo (con el que entra a la app) *</label>
+            <Label htmlFor="pl-email" className="mb-1 block">Correo (con el que entra a la app) *</Label>
             <input
               id="pl-email"
               type="email"
@@ -293,7 +294,7 @@ function EditPlayerModal({
             )}
           </div>
           <div>
-            <label htmlFor="pl-tel" className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono</label>
+            <Label htmlFor="pl-tel" className="mb-1 block">Teléfono</Label>
             <input
               id="pl-tel"
               value={form.phone}
@@ -308,7 +309,7 @@ function EditPlayerModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Posición</label>
+              <Label className="mb-1 block">Posición</Label>
               <select
                 value={form.position}
                 onChange={(e) => set("position", e.target.value)}
@@ -321,7 +322,7 @@ function EditPlayerModal({
               </select>
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Número</label>
+              <Label className="mb-1 block">Número</Label>
               <input
                 type="number"
                 value={form.number}
@@ -335,7 +336,7 @@ function EditPlayerModal({
           </div>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Club</label>
+            <Label className="mb-1 block">Club</Label>
             <select
               value={form.clubId}
               onChange={(e) => handleClubChange(e.target.value)}
@@ -349,7 +350,7 @@ function EditPlayerModal({
           </div>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Categoría</label>
+            <Label className="mb-1 block">Categoría</Label>
             <select
               value={form.categoryId}
               onChange={(e) => set("categoryId", e.target.value)}
@@ -364,7 +365,7 @@ function EditPlayerModal({
           </div>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Estado</label>
+            <Label className="mb-1 block">Estado</Label>
             <select
               value={form.status}
               onChange={(e) => set("status", e.target.value)}
@@ -492,21 +493,21 @@ function EditProvisionalModal({
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="pv-nombre" className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombres *</label>
+              <Label htmlFor="pv-nombre" className="mb-1 block">Nombres *</Label>
               <input id="pv-nombre" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} className={input} />
             </div>
             <div>
-              <label htmlFor="pv-apellido" className="mb-1 block font-body text-xs font-medium text-text-secondary">Apellidos *</label>
+              <Label htmlFor="pv-apellido" className="mb-1 block">Apellidos *</Label>
               <input id="pv-apellido" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} className={input} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="pv-dni" className="mb-1 block font-body text-xs font-medium text-text-secondary">DNI *</label>
+              <Label htmlFor="pv-dni" className="mb-1 block">DNI *</Label>
               <input id="pv-dni" inputMode="numeric" maxLength={8} value={form.dni} onChange={(e) => set("dni", e.target.value)} className={input} />
             </div>
             <div>
-              <label htmlFor="pv-nac" className="mb-1 block font-body text-xs font-medium text-text-secondary">Fecha de nacimiento *</label>
+              <Label htmlFor="pv-nac" className="mb-1 block">Fecha de nacimiento *</Label>
               <input id="pv-nac" type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className={input} />
             </div>
           </div>
@@ -516,32 +517,32 @@ function EditProvisionalModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="pv-pos" className="mb-1 block font-body text-xs font-medium text-text-secondary">Posición</label>
+              <Label htmlFor="pv-pos" className="mb-1 block">Posición</Label>
               <select id="pv-pos" value={form.position} onChange={(e) => set("position", e.target.value)} className={`${input} cursor-pointer`}>
                 <option value="">Sin definir</option>
                 {positionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="pv-num" className="mb-1 block font-body text-xs font-medium text-text-secondary">Número</label>
+              <Label htmlFor="pv-num" className="mb-1 block">Número</Label>
               <input id="pv-num" type="number" min={1} max={99} value={form.number} onChange={(e) => set("number", e.target.value)} className={input} placeholder="10" />
             </div>
           </div>
           <div>
-            <label htmlFor="pv-club" className="mb-1 block font-body text-xs font-medium text-text-secondary">Club *</label>
+            <Label htmlFor="pv-club" className="mb-1 block">Club *</Label>
             <select id="pv-club" value={form.clubId} onChange={(e) => setForm((f) => ({ ...f, clubId: e.target.value, categoryId: "" }))} className={`${input} cursor-pointer`}>
               {clubOptions.map((c) => <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="pv-cat" className="mb-1 block font-body text-xs font-medium text-text-secondary">Categoría</label>
+            <Label htmlFor="pv-cat" className="mb-1 block">Categoría</Label>
             <select id="pv-cat" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)} className={`${input} cursor-pointer`}>
               <option value="">Sin categoría</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.gender})</option>)}
             </select>
           </div>
           <div>
-            <label htmlFor="pv-estado" className="mb-1 block font-body text-xs font-medium text-text-secondary">Estado</label>
+            <Label htmlFor="pv-estado" className="mb-1 block">Estado</Label>
             <select id="pv-estado" value={form.status} onChange={(e) => set("status", e.target.value)} className={`${input} cursor-pointer`}>
               {Object.entries(statusLabels).map(([key, { label }]) => <option key={key} value={key}>{label}</option>)}
             </select>
