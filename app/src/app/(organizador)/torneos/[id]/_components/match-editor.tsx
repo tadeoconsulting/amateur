@@ -3,12 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { MatchListItem } from "@/_lib/api";
+import { Label } from "@/_components/label";
 
 type TeamOption = { id: string; name: string; groupName: string | null };
 
 const field =
-  "w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
-const label = "mb-1.5 block font-heading text-xs font-semibold text-text-primary";
+  "campo-14 w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm font-semibold text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
+// Etiqueta y campo (texto y marcador) comparten fuente y tamaño: DM Sans (la fuente de cuerpo) a 14 px, en peso 600.
+// El desplegable propio: sin la flecha del navegador (que queda pegada al borde) y con la nuestra a 12 px del borde derecho,
+// el mismo margen que tiene el texto a la izquierda (`px-3`).
+function SelectField({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select {...props} className={`${field} appearance-none pr-10`}>
+        {children}
+      </select>
+      <svg aria-hidden width="16" height="16" viewBox="0 0 20 20" fill="none" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary">
+        <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+const label = "mb-1.5 block";
 
 const todayYmd = () => {
   const d = new Date();
@@ -131,14 +148,14 @@ export function MatchEditor({
   }
 
   const teamSelect = (value: string, onChange: (v: string) => void, other: string, id: string) => (
-    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={saving} className={field}>
+    <SelectField id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={saving}>
       <option value="">Elige un equipo</option>
       {teams.map((t) => (
         <option key={t.id} value={t.id} disabled={t.id === other}>
           {t.name}
         </option>
       ))}
-    </select>
+    </SelectField>
   );
 
   return (
@@ -160,16 +177,16 @@ export function MatchEditor({
 
           <div className="flex flex-col gap-4">
             <div>
-              <label htmlFor="me-fecha" className={label}>Fecha del fixture</label>
+              <Label htmlFor="me-fecha" className={label}>Fecha del fixture</Label>
               {editing ? (
                 <p className="font-body text-sm text-text-secondary">Fecha {matchday}{match?.groupName ? ` · ${match.groupName}` : ""}</p>
               ) : (
-                <select id="me-fecha" value={matchday} onChange={(e) => setMatchday(Number(e.target.value))} disabled={saving} className={field}>
+                <SelectField id="me-fecha" value={matchday} onChange={(e) => setMatchday(Number(e.target.value))} disabled={saving}>
                   {matchdays.map((d) => (
                     <option key={d} value={d}>Fecha {d}</option>
                   ))}
                   <option value={lastMatchday + 1}>Fecha {lastMatchday + 1} (nueva)</option>
-                </select>
+                </SelectField>
               )}
             </div>
 
@@ -177,7 +194,7 @@ export function MatchEditor({
               // Cambiar un equipo mueve también al otro partido de la fecha (cada equipo juega una vez por fecha),
               // y eso lo resuelve «Editar cruces» (especificación 017), no esta hoja.
               <div>
-                <span className={label}>Equipos</span>
+                <Label as="span" className={label}>Equipos</Label>
                 <p className="font-body text-sm text-text-primary">
                   {teams.find((t) => t.id === homeId)?.name ?? "Por definir"} vs {teams.find((t) => t.id === awayId)?.name ?? "Por definir"}
                 </p>
@@ -194,11 +211,11 @@ export function MatchEditor({
             ) : (
               <>
                 <div>
-                  <label htmlFor="me-local" className={label}>Local</label>
+                  <Label htmlFor="me-local" className={label}>Local</Label>
                   {teamSelect(homeId, setHomeId, awayId, "me-local")}
                 </div>
                 <div>
-                  <label htmlFor="me-visita" className={label}>Visitante</label>
+                  <Label htmlFor="me-visita" className={label}>Visitante</Label>
                   {teamSelect(awayId, setAwayId, homeId, "me-visita")}
                 </div>
               </>
@@ -212,18 +229,18 @@ export function MatchEditor({
             {!tbd && (
               <div className="flex gap-3">
                 <div className="min-w-0 flex-1">
-                  <label htmlFor="me-dia" className={label}>Día</label>
+                  <Label htmlFor="me-dia" className={label}>Día</Label>
                   <input id="me-dia" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={saving} className={field} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <label htmlFor="me-hora" className={label}>Hora</label>
+                  <Label htmlFor="me-hora" className={label}>Hora</Label>
                   <input id="me-hora" type="time" value={time} onChange={(e) => setTime(e.target.value)} disabled={saving} className={field} />
                 </div>
               </div>
             )}
 
             <div>
-              <label htmlFor="me-sede" className={label}>Sede</label>
+              <Label htmlFor="me-sede" className={label}>Sede</Label>
               <input
                 id="me-sede"
                 type="text"
@@ -247,7 +264,7 @@ export function MatchEditor({
             <button
               onClick={() => save(false)}
               disabled={saving}
-              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {saving ? "Guardando..." : editing ? "Guardar cambios" : "Agregar partido"}
             </button>
@@ -255,7 +272,7 @@ export function MatchEditor({
               <button
                 onClick={() => save(true)}
                 disabled={saving}
-                className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
+                className="w-full cursor-pointer rounded-lg border border-border-primary py-3 font-heading text-base font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:opacity-50"
               >
                 Guardar y agregar otro
               </button>
@@ -263,7 +280,7 @@ export function MatchEditor({
             <button
               onClick={onClose}
               disabled={saving}
-              className="w-full cursor-pointer py-2 font-heading text-sm font-bold text-text-primary disabled:opacity-50"
+              className="w-full cursor-pointer py-2 font-heading text-base font-bold text-text-primary disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -275,14 +292,14 @@ export function MatchEditor({
                     <button
                       onClick={remove}
                       disabled={saving}
-                      className="flex-1 cursor-pointer rounded-lg bg-red-600 py-2.5 font-heading text-sm font-bold text-white disabled:opacity-50"
+                      className="flex-1 cursor-pointer rounded-lg bg-red-600 py-2.5 font-heading text-base font-bold text-white disabled:opacity-50"
                     >
                       Sí, quitar
                     </button>
                     <button
                       onClick={() => setConfirmRemove(false)}
                       disabled={saving}
-                      className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2.5 font-heading text-sm font-bold text-text-primary disabled:opacity-50"
+                      className="flex-1 cursor-pointer rounded-lg border border-border-primary py-2.5 font-heading text-base font-bold text-text-primary disabled:opacity-50"
                     >
                       No
                     </button>
@@ -292,7 +309,7 @@ export function MatchEditor({
                 <button
                   onClick={() => setConfirmRemove(true)}
                   disabled={saving}
-                  className="w-full cursor-pointer py-2 font-heading text-xs font-bold text-red-600 underline disabled:opacity-50"
+                  className="w-full cursor-pointer py-2 font-heading text-base font-bold text-red-600 underline disabled:opacity-50"
                 >
                   Quitar partido
                 </button>

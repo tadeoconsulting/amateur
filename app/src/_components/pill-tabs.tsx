@@ -21,6 +21,7 @@ export function PillTabs<K extends string>({
   onChange,
   label,
   className = "px-4 pb-3",
+  size = "sm",
 }: {
   tabs: { key: K; label: string }[];
   value: K;
@@ -29,6 +30,8 @@ export function PillTabs<K extends string>({
   label: string;
   /** Márgenes de la barra; por omisión el de un contenedor sin padding (`FixtureTabs`). */
   className?: string;
+  /** Tamaño de la letra en el organizador (`cancha:`): 14 px por omisión; `base` = 16 px (los tabs de `SubTabs`). */
+  size?: "sm" | "base";
 }) {
   const barRef = useRef<HTMLDivElement>(null);
   // El cambio vino del teclado: al marcarse la pestaña nueva hay que darle también el foco.
@@ -105,7 +108,7 @@ export function PillTabs<K extends string>({
             tabIndex={value === tab.key ? 0 : -1}
             aria-selected={value === tab.key}
             onClick={() => onChange(tab.key)}
-            className={`min-h-11 shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
+            className={`min-h-11 shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs ${size === "base" ? "cancha:text-base" : "cancha:text-sm"} font-semibold cancha:font-body cancha:font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
               value === tab.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
             }`}
           >

@@ -112,12 +112,19 @@ export function ActionsMenu({ items, label = "Acciones", className = "" }: { ite
           setOpen((o) => !o);
         }}
         onKeyDown={onTriggerKeyDown}
-        className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border-primary px-4 font-heading text-sm font-bold text-text-primary cancha:font-body cancha:font-bold transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
+        aria-label={label}
+        className={`inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-primary px-0 sm:px-4 font-heading text-sm font-bold text-text-primary cancha:font-body cancha:font-bold transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary ${
           open ? "bg-btn-regular" : ""
         }`}
       >
-        {label}
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+        {/* En el celular solo el ícono (tres puntos); desde `sm`, el texto y la flecha. */}
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="sm:hidden">
+          <circle cx="4" cy="10" r="1.7" />
+          <circle cx="10" cy="10" r="1.7" />
+          <circle cx="16" cy="10" r="1.7" />
+        </svg>
+        <span className="hidden sm:inline">{label}</span>
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true" className={`hidden transition-transform duration-200 sm:block ${open ? "rotate-180" : ""}`}>
           <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>

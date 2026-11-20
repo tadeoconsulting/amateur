@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EditableMatch } from "@/_lib/fixture-edit";
+import { Label } from "@/_components/label";
 
 /**
  * Mover un partido a otra fecha = intercambiarlo con un partido de esa fecha: cada uno pasa a la fecha del otro y toma
@@ -38,7 +39,7 @@ export function MoveMatchPanel({
         Mover <strong>{name(match.homeTeamId)} vs {name(match.awayTeamId)}</strong> a otra fecha. Ese partido se intercambia con uno de la fecha que elijas.
       </p>
 
-      <label className="mt-3 block font-body text-xs text-text-secondary" htmlFor={`dia-${match.id}`}>Fecha de destino</label>
+      <Label className="mt-3 block" htmlFor={`dia-${match.id}`}>Fecha de destino</Label>
       <select
         id={`dia-${match.id}`}
         value={day ?? ""}
@@ -71,7 +72,7 @@ export function MoveMatchPanel({
         <button
           onClick={() => other && onSwap(other)}
           disabled={!other}
-          className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert disabled:cursor-not-allowed disabled:opacity-40"
         >
           Intercambiar
         </button>

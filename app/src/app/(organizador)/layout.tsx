@@ -7,6 +7,7 @@ import { AccountMenu } from "@/_components/account-menu";
 import { MobileTopBar } from "@/_components/mobile-top-bar";
 import { TopNav } from "@/_components/top-nav";
 import { navName } from "@/_lib/nav-identity";
+import { NotificationsLink } from "./_components/notifications-link";
 import { BottomNav, isOrganizadorNavActive, organizadorNavItems } from "./_components/bottom-nav";
 
 // Sistema "Cancha" (especificación 020): las fuentes de la landing, cargadas solo para este ámbito.
@@ -33,7 +34,13 @@ export default function OrganizadorLayout({
   }));
 
   // El nombre de quien tiene la sesión: su organización, o su nombre si no la puso (especificación 001).
-  const account = user ? <AccountMenu name={navName("organizador", user)} roleLabel="Organizador de torneo" role="ORGANIZADOR" settingsHref="/ajustes" /> : null;
+  // La campana va a la izquierda de la cuenta, separada por 16 px (`gap-4`).
+  const account = user ? (
+    <div className="flex items-center gap-4">
+      <NotificationsLink />
+      <AccountMenu name={navName("organizador", user)} roleLabel="Organizador de torneo" role="ORGANIZADOR" settingsHref="/ajustes" />
+    </div>
+  ) : null;
 
   return (
     <div className={`tema-cancha ${display.variable} ${body.variable} flex min-h-dvh flex-col bg-surface-primary`}>

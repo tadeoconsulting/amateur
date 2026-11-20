@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PageSpinner } from "@/_components/spinner";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { useApi } from "@/_lib/use-api";
+import { Label } from "@/_components/label";
 
 // Las mesas de un torneo (especificación 011): quienes gestionan el partido en vivo los días de juego. La usan el
 // organizador (en su torneo) y el admin (en el panel de Torneos). Cada cambio se guarda al momento.
@@ -151,16 +152,16 @@ export function MesaManager({ tournamentId, admin = false }: { tournamentId: str
       <h2 className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Agregar una mesa</h2>
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
-          <label htmlFor="mesa-nombre" className="font-body text-xs font-medium text-text-secondary">Nombre</label>
+          <Label htmlFor="mesa-nombre">Nombre</Label>
           <input id="mesa-nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="off" className={input} />
         </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="mesa-apellido" className="font-body text-xs font-medium text-text-secondary">Apellido</label>
+          <Label htmlFor="mesa-apellido">Apellido</Label>
           <input id="mesa-apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="off" className={input} />
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <label htmlFor="mesa-correo" className="font-body text-xs font-medium text-text-secondary">Correo</label>
+        <Label htmlFor="mesa-correo">Correo</Label>
         <input id="mesa-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="mesa-correo-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="mesa@correo.com" />
         <p id="mesa-correo-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
           {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Si no tiene cuenta, la creamos con una contraseña temporal que verás una sola vez. Una cuenta de mesa es solo mesa."}

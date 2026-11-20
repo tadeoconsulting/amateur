@@ -11,6 +11,7 @@ import { BackHeader } from "@/_components/back-header";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { fieldClass, labelClass } from "../_components/season-ui";
 import { FinalPhaseFields, validFinalTeams } from "../_components/final-phase-fields";
+import { Label } from "@/_components/label";
 
 function Spinner() {
   return (
@@ -88,9 +89,9 @@ function NuevaTemporada({ organizerId }: { organizerId: string }) {
           }}
         >
           <div>
-            <label htmlFor="season-name" className={labelClass}>
+            <Label htmlFor="season-name" className={labelClass}>
               Nombre de la temporada
-            </label>
+            </Label>
             <input id="season-name" type="text" maxLength={120} placeholder="Ej.: Temporada 2026" value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
           </div>
 

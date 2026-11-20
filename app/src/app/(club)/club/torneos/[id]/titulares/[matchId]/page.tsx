@@ -174,7 +174,7 @@ function TitularesForm({
         <button
           onClick={handleSave}
           disabled={selected.size === 0 || saving}
-          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>

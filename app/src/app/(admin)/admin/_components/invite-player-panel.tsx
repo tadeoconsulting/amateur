@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Label } from "@/_components/label";
 
 export interface InvitationSummary {
   id: string;
@@ -134,13 +135,13 @@ export function InvitePlayerPanel({
 
           {mode === "change" && (
             <div className="flex flex-col gap-2">
-              <label htmlFor="ip-cambiar" className="font-body text-xs font-medium text-text-secondary">Nuevo correo</label>
+              <Label htmlFor="ip-cambiar">Nuevo correo</Label>
               <input id="ip-cambiar" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-cambiar-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="jugador@correo.com" />
               <p id="ip-cambiar-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
                 {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Se crea un enlace nuevo y el anterior deja de funcionar."}
               </p>
               <div className="flex gap-2">
-                <button onClick={() => void create(typed)} disabled={busy || !EMAIL_OK.test(typed)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
+                <button onClick={() => void create(typed)} disabled={busy || !EMAIL_OK.test(typed)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
                   {busy ? "Enviando..." : "Enviar a este correo"}
                 </button>
                 <button onClick={() => { setMode("view"); setEmail(""); }} disabled={busy} className={ghost}>Volver</button>
@@ -167,7 +168,7 @@ export function InvitePlayerPanel({
             <strong>{invitation.acceptedBy.name}</strong> ({invitation.acceptedBy.email}) aceptó la invitación y confirmó el DNI, pero su cuenta ya tiene una ficha en este equipo. Unir los perfiles lo decide un admin.
           </p>
           <div className="flex gap-2">
-            <button onClick={() => onReview(invitation.acceptedBy!.email)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700">Revisar y unir</button>
+            <button onClick={() => onReview(invitation.acceptedBy!.email)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700">Revisar y unir</button>
           </div>
         </div>
       )}
@@ -182,7 +183,7 @@ export function InvitePlayerPanel({
       {/* Crear: sin invitación vigente, o para reemplazar una vencida o bloqueada. */}
       {(!invitation || status === "expired" || status === "locked") && mode !== "change" && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="ip-correo" className="font-body text-xs font-medium text-text-secondary">Correo del jugador (opcional)</label>
+          <Label htmlFor="ip-correo">Correo del jugador (opcional)</Label>
           <input id="ip-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-correo-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="jugador@correo.com" />
           <p id="ip-correo-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
             {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Con correo, lo enviamos y la invitación es para esa cuenta. Sin correo, solo se crea el enlace para compartirlo por WhatsApp."}
@@ -190,7 +191,7 @@ export function InvitePlayerPanel({
           <button
             onClick={() => void create(typed)}
             disabled={busy || emailInvalid}
-            className="min-h-11 cursor-pointer self-start rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 cursor-pointer self-start rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Creando..." : typed ? "Enviar invitación por correo" : "Crear enlace"}
           </button>

@@ -242,7 +242,7 @@ export function AuthModal({
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer disabled:opacity-50"
+              className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer disabled:opacity-50"
             >
               {loading ? "Cargando..." : view === "login" ? "Iniciar sesión" : "Crear cuenta"}
             </button>

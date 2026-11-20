@@ -7,6 +7,7 @@ import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { FeeStatusChip } from "@/_components/fee-status";
 import { Sheet } from "@/_components/sheet";
+import { Label } from "@/_components/label";
 
 const inputClass =
   "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-2.5 font-body text-base text-text-primary transition-colors " +
@@ -141,16 +142,16 @@ function OwnFeeForm({ base, playerId, data, clubFee, busy, run }: { base: string
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-brand-200 p-3">
       <div>
-        <label htmlFor="own-fee" className="font-heading text-sm font-bold text-text-primary">
+        <Label htmlFor="own-fee">
           Cuota de este jugador (S/)
-        </label>
+        </Label>
         <input id="own-fee" inputMode="decimal" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(clubFee)} className={`${inputClass} mt-1.5`} />
         <p className="mt-1 font-body text-xs text-text-secondary">Escribe 0 si no paga.</p>
       </div>
       <div>
-        <label htmlFor="own-start" className="font-heading text-sm font-bold text-text-primary">
+        <Label htmlFor="own-start">
           Se cobra desde
-        </label>
+        </Label>
         <input id="own-start" type="month" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputClass} mt-1.5`} />
       </div>
       <div className="flex flex-wrap gap-2">

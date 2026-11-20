@@ -129,7 +129,7 @@ export default function EditarCrucesPage() {
   return (
     <div className="flex min-h-dvh flex-col pb-28">
       <header className="px-4 py-3">
-        <button onClick={() => router.back()} className="flex cursor-pointer items-center gap-1 font-heading text-base font-semibold text-text-primary">
+        <button onClick={() => router.back()} className="flex cursor-pointer items-center gap-1 font-heading text-base max-md:text-sm font-semibold text-text-primary">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -152,7 +152,7 @@ export default function EditarCrucesPage() {
               role="tab"
               aria-selected={activeGroup === g}
               onClick={() => { setGroup(g); setMatchday(null); setMoving(null); }}
-              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold ${activeGroup === g ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
+              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold ${activeGroup === g ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
             >
               {g === "" ? "General" : g}
             </button>
@@ -203,7 +203,7 @@ export default function EditarCrucesPage() {
               role="tab"
               aria-selected={activeDay === day}
               onClick={() => { setMatchday(day); setMoving(null); }}
-              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold ${activeDay === day ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
+              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold ${activeDay === day ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
             >
               Fecha {day}
               {hasProblem && <span aria-label="con problemas" className="ml-1.5 inline-block h-2 w-2 rounded-full bg-red-500 align-middle" />}
@@ -285,7 +285,7 @@ export default function EditarCrucesPage() {
             <button
               onClick={save}
               disabled={!okToSave || saving}
-              className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {saving ? "Guardando..." : dirty ? `Guardar cambios (${changes.length} ${changes.length === 1 ? "partido" : "partidos"})` : "Guardar cambios"}
             </button>

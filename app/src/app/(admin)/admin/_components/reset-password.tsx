@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { copyText } from "@/_lib/share";
+import { Label } from "@/_components/label";
 
 const MIN_LENGTH = 8;
 
@@ -96,9 +97,9 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
 
           {mode === "custom" && (
             <div className="mt-3">
-              <label htmlFor={`pw-custom-${userId}`} className="mb-1 block font-body text-xs font-medium text-text-secondary">
+              <Label htmlFor={`pw-custom-${userId}`} className="mb-1 block">
                 Contraseña nueva (mínimo {MIN_LENGTH} caracteres)
-              </label>
+              </Label>
               <div className="flex gap-2">
                 <input
                   id={`pw-custom-${userId}`}
@@ -130,7 +131,7 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
               type="button"
               onClick={reset}
               disabled={step === "working" || (mode === "custom" && custom.length === 0)}
-              className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {step === "working" ? "Guardando..." : mode === "custom" ? "Guardar contraseña" : "Generar y restablecer"}
             </button>
@@ -158,7 +159,7 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
             <button
               type="button"
               onClick={copy}
-              className="shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              className="shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
               Copiar
             </button>

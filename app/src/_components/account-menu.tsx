@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { otherProfiles, type ProfileRole } from "@/_lib/profiles";
-import { navInitial } from "@/_lib/nav-identity";
+import { navInitial, shortNavName } from "@/_lib/nav-identity";
 
 /**
  * El nombre de quien tiene la sesión en la navegación principal (especificación 001), con su menú de cuenta: ir a su perfil,
@@ -52,7 +52,7 @@ export function AccountMenu({ name, roleLabel, role, settingsHref }: { name: str
         <span aria-hidden className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-secondary text-xs font-bold text-text-invert">
           {navInitial(name)}
         </span>
-        <span className="max-w-[10rem] truncate md:max-w-[16rem]">{name}</span>
+        <span title={name} className="max-w-[10rem] truncate md:max-w-[16rem]">{shortNavName(name)}</span>
         <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 transition-transform ${open ? "rotate-180" : ""}`}>
           <path d="m6 9 6 6 6-6" />
         </svg>

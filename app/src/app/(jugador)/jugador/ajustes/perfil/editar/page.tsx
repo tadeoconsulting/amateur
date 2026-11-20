@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getUser } from "@/_lib/api";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
+import { Label } from "@/_components/label";
 
 const positions = [
   "Portero",
@@ -187,7 +188,7 @@ export default function JugadorPerfilPage() {
           {error && <p className="font-body text-sm text-red-600">{error}</p>}
 
           <div>
-            <label className="text-sm text-text-secondary">Nombre completo</label>
+            <Label>Nombre completo</Label>
             <input
               type="text"
               value={nombre}
@@ -197,7 +198,7 @@ export default function JugadorPerfilPage() {
           </div>
 
           <div>
-            <label className="text-sm text-text-secondary">Apellidos</label>
+            <Label>Apellidos</Label>
             <input
               type="text"
               value={apellidos}
@@ -207,7 +208,7 @@ export default function JugadorPerfilPage() {
           </div>
 
           <div>
-            <label className="text-sm text-text-secondary">Posición</label>
+            <Label>Posición</Label>
             <button
               onClick={() => setSheet("posicion")}
               className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2 text-sm"
@@ -222,7 +223,7 @@ export default function JugadorPerfilPage() {
           </div>
 
           <div>
-            <label className="text-sm text-text-secondary">Fecha de nacimiento</label>
+            <Label>Fecha de nacimiento</Label>
             <div className="mt-1 flex gap-3">
               <input
                 type="text"
@@ -252,7 +253,7 @@ export default function JugadorPerfilPage() {
           </div>
 
           <div>
-            <label className="text-sm text-text-secondary">Sexo</label>
+            <Label>Sexo</Label>
             <div className="mt-1 flex gap-2">
               {(["masculino", "femenino"] as const).map((s) => (
                 <button
@@ -271,7 +272,7 @@ export default function JugadorPerfilPage() {
           </div>
 
           <div>
-            <label className="text-sm text-text-secondary">Teléfono</label>
+            <Label>Teléfono</Label>
             <input
               type="tel"
               value={telefono}
@@ -281,7 +282,7 @@ export default function JugadorPerfilPage() {
           </div>
 
           <div>
-            <label className="text-sm text-text-secondary">Departamento</label>
+            <Label>Departamento</Label>
             <button
               onClick={() => setSheet("departamento")}
               className="mt-1 flex w-full cursor-pointer items-center justify-between border-b border-brand-200 py-2 text-sm"

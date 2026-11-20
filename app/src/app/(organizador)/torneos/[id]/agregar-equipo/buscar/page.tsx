@@ -11,6 +11,7 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { Toast } from "@/_components/toast";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
+import { Label } from "@/_components/label";
 
 export default function BuscarEquipoPage() {
   const params = useParams<{ id: string }>();
@@ -182,9 +183,9 @@ export default function BuscarEquipoPage() {
 
       {/* Search */}
       <div className="mt-2 px-4">
-        <label htmlFor="buscar-equipo" className="mb-2 block font-heading text-base font-semibold text-text-primary">
+        <Label htmlFor="buscar-equipo" className="mb-2 block">
           Buscar equipo
-        </label>
+        </Label>
         <div className="relative">
           <input
             id="buscar-equipo"

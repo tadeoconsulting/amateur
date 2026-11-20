@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useApi } from "@/_lib/use-api";
+import { Label } from "@/_components/label";
 
 interface SedeDetail {
   id: string;
@@ -101,9 +102,9 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
 
         <div className="flex flex-col gap-5">
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Nombre de la sede
-            </label>
+            </Label>
             <input
               type="text"
               value={nombre}
@@ -114,9 +115,9 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Elige tu departamento
-            </label>
+            </Label>
             <select
               value={ciudad}
               onChange={(e) => setCiudad(e.target.value)}
@@ -130,9 +131,9 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Ingresa la ubicación
-            </label>
+            </Label>
             <input
               type="text"
               value={ubicacion}
@@ -143,9 +144,9 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Referencia
-            </label>
+            </Label>
             <input
               type="text"
               value={referencia}
@@ -161,7 +162,7 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
         <button
           onClick={handleSave}
           disabled={!nombre.trim() || saving}
-          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>
@@ -194,7 +195,7 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
               >
                 {deleting ? "Eliminando..." : "Sí, eliminar"}
               </button>

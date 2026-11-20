@@ -117,7 +117,7 @@ export function PenaltyShootout({
         <button
           onClick={() => onKick(true)}
           disabled={saving}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving && <Spinner size={16} label="Guardando" />}
           Convirtió

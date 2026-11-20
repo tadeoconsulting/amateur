@@ -10,6 +10,7 @@ import { DeleteTournament } from "./_components/delete-tournament";
 import { EditTabs } from "./_components/edit-tabs";
 import { TournamentPhotoField } from "@/_components/tournament-photo-field";
 import { useEditSave } from "./_components/use-edit-save";
+import { Label } from "@/_components/label";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function CrearTorneoPage() {
       <header className="px-4 py-3">
         <button
           onClick={() => (editing ? router.push(exitHref) : router.back())}
-          className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer"
+          className="flex items-center gap-1 font-heading text-base max-md:text-sm font-semibold text-text-primary cursor-pointer"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -74,9 +75,9 @@ export default function CrearTorneoPage() {
         <div className="flex flex-col gap-6 flex-1">
           {/* Nombre del torneo */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Nombre del torneo
-            </label>
+            </Label>
             <input
               type="text"
               placeholder="Ingresar nombre"
@@ -91,9 +92,9 @@ export default function CrearTorneoPage() {
 
           {/* Fecha de inicio */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Fecha de inicio
-            </label>
+            </Label>
             <div className="relative">
               <input
                 type="date"
@@ -110,9 +111,9 @@ export default function CrearTorneoPage() {
 
           {/* Sede del torneo */}
           <div className="relative">
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Sede del torneo
-            </label>
+            </Label>
             <button
               onClick={() => setShowSedeList(!showSedeList)}
               className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary"
@@ -165,7 +166,7 @@ export default function CrearTorneoPage() {
               <button
                 onClick={save}
                 disabled={saving}
-                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>
@@ -174,7 +175,7 @@ export default function CrearTorneoPage() {
             <button
               onClick={handleContinuar}
               disabled={!canContinue}
-              className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+              className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
             >
               Continuar
             </button>

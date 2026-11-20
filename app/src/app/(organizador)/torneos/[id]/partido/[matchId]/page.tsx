@@ -93,7 +93,7 @@ export default function PartidoDetailPage() {
       <div className="mx-4 mb-4 rounded-xl border border-border-primary overflow-hidden">
         {/* Group header */}
         <div className="bg-btn-regular px-4 py-2">
-          <span className="font-heading text-xs font-bold text-text-primary">
+          <span className="font-heading text-xs cancha:text-sm font-bold text-text-primary">
             {match.groupName || "General"}
           </span>
         </div>
@@ -209,7 +209,7 @@ export default function PartidoDetailPage() {
         </button>
         <button
           onClick={() => router.push(`/torneos/${params.id}/en-vivo/${params.matchId}`)}
-          className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           Iniciar el partido
         </button>

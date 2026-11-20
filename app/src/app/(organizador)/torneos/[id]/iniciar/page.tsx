@@ -9,6 +9,7 @@ import { planFixture, planBracket } from "@/_lib/fixture";
 import { formatLabel, OPEN_STATUSES } from "@/_lib/tournament-labels";
 import { btnSolid, btnOutline } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
+import { Label } from "@/_components/label";
 
 const BRACKET_FORMATS = ["eliminacion", "relampago"];
 
@@ -226,7 +227,7 @@ export default function IniciarTorneoPage() {
           {tournament.status === "en_curso" && (
             <Link
               href={`/torneos/${params.id}/partidos`}
-              className="flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              className="flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
               Ver fixture
             </Link>
@@ -327,9 +328,9 @@ export default function IniciarTorneoPage() {
             </p>
             <div className="flex flex-col gap-4 mb-6">
               <div>
-                <label htmlFor="rel-date" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+                <Label htmlFor="rel-date" className="mb-1.5 block">
                   Fecha
-                </label>
+                </Label>
                 <input
                   id="rel-date"
                   type="date"
@@ -340,9 +341,9 @@ export default function IniciarTorneoPage() {
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <label htmlFor="rel-start" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+                  <Label htmlFor="rel-start" className="mb-1.5 block">
                     Desde
-                  </label>
+                  </Label>
                   <input
                     id="rel-start"
                     type="time"
@@ -352,9 +353,9 @@ export default function IniciarTorneoPage() {
                   />
                 </div>
                 <div className="flex-1">
-                  <label htmlFor="rel-end" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+                  <Label htmlFor="rel-end" className="mb-1.5 block">
                     Hasta
-                  </label>
+                  </Label>
                   <input
                     id="rel-end"
                     type="time"

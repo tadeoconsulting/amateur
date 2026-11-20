@@ -14,6 +14,7 @@ import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { displayShortName } from "@/_lib/short-name";
 import { ConfirmDelete } from "../_components/confirm-delete";
 import { InviteDelegatePanel } from "../_components/invite-delegate-panel";
+import { Label } from "@/_components/label";
 
 interface ClubRow {
   id: string;
@@ -142,7 +143,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <div className="mt-6 flex justify-end">
               <button
                 onClick={onCreated}
-                className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+                className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
               >
                 Listo
               </button>
@@ -161,7 +162,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+              <Label className="mb-1 block">Nombre *</Label>
               <input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -170,7 +171,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Abreviatura *</label>
+              <Label className="mb-1 block">Abreviatura *</Label>
               <input
                 value={form.shortName}
                 onChange={(e) => setForm((f) => ({ ...f, shortName: e.target.value.toUpperCase() }))}
@@ -182,7 +183,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <div>
-            <label htmlFor="club-city" className="mb-1 block font-body text-xs font-medium text-text-secondary">Ciudad</label>
+            <Label htmlFor="club-city" className="mb-1 block">Ciudad</Label>
             <input
               id="club-city"
               value={form.city}
@@ -194,7 +195,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <div>
-            <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Color del club</label>
+            <Label className="mb-2 block">Color del club</Label>
             <div className="flex gap-2">
               {clubColors.map((c) => (
                 <button
@@ -233,7 +234,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           {delegateMode === "existing" ? (
           <>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Delegado del club *</label>
+            <Label className="mb-1 block">Delegado del club *</Label>
             {selectedOwner ? (
               <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2.5">
                 <span className="font-body text-sm text-text-primary">
@@ -275,7 +276,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </div>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre del delegado</label>
+            <Label className="mb-1 block">Nombre del delegado</Label>
             <input
               value={form.delegadoNombre}
               onChange={(e) => setForm((f) => ({ ...f, delegadoNombre: e.target.value }))}
@@ -286,7 +287,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono del delegado</label>
+              <Label className="mb-1 block">Teléfono del delegado</Label>
               <input
                 value={form.delegadoTel}
                 onChange={(e) => setForm((f) => ({ ...f, delegadoTel: e.target.value }))}
@@ -295,7 +296,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo del delegado</label>
+              <Label className="mb-1 block">Correo del delegado</Label>
               <input
                 type="email"
                 value={form.delegadoEmail}
@@ -308,7 +309,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </>
           ) : (
           <div>
-            <label htmlFor="club-invite-email" className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo para invitar al delegado (opcional)</label>
+            <Label htmlFor="club-invite-email" className="mb-1 block">Correo para invitar al delegado (opcional)</Label>
             <input
               id="club-invite-email"
               type="email"
@@ -335,7 +336,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Creando..." : "Crear club"}
           </button>
@@ -533,7 +534,7 @@ function EditClubModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+              <Label className="mb-1 block">Nombre *</Label>
               <input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
@@ -541,7 +542,7 @@ function EditClubModal({
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Abreviatura *</label>
+              <Label className="mb-1 block">Abreviatura *</Label>
               <input
                 value={form.shortName}
                 onChange={(e) => set("shortName", e.target.value.toUpperCase())}
@@ -552,7 +553,7 @@ function EditClubModal({
           </div>
 
           <div>
-            <label htmlFor="club-city" className="mb-1 block font-body text-xs font-medium text-text-secondary">Ciudad</label>
+            <Label htmlFor="club-city" className="mb-1 block">Ciudad</Label>
             <input
               id="club-city"
               value={form.city}
@@ -564,7 +565,7 @@ function EditClubModal({
           </div>
 
           <div>
-            <label className="mb-2 block font-body text-xs font-medium text-text-secondary">Color del club</label>
+            <Label className="mb-2 block">Color del club</Label>
             <div className="flex gap-2">
               {clubColors.map((c) => (
                 <button
@@ -582,7 +583,7 @@ function EditClubModal({
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Delegado</p>
 
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre del delegado</label>
+            <Label className="mb-1 block">Nombre del delegado</Label>
             <input
               value={form.delegadoNombre}
               onChange={(e) => set("delegadoNombre", e.target.value)}
@@ -593,7 +594,7 @@ function EditClubModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Teléfono del delegado</label>
+              <Label className="mb-1 block">Teléfono del delegado</Label>
               <input
                 value={form.delegadoTel}
                 onChange={(e) => set("delegadoTel", e.target.value)}
@@ -602,7 +603,7 @@ function EditClubModal({
               />
             </div>
             <div>
-              <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Correo del delegado</label>
+              <Label className="mb-1 block">Correo del delegado</Label>
               <input
                 type="email"
                 value={form.delegadoEmail}
@@ -684,7 +685,7 @@ function EditClubModal({
                       type="button"
                       onClick={makeOfficial}
                       disabled={makingOfficial}
-                      className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+                      className="cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
                     >
                       {makingOfficial ? "Oficializando..." : "Sí, oficializar"}
                     </button>
@@ -741,7 +742,7 @@ function EditClubModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -823,7 +824,7 @@ function AdminClubesContent() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

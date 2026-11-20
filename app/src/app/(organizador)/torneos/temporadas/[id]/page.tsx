@@ -13,6 +13,7 @@ import { ScorersList, StandingsTable } from "@/_components/tournament-results";
 import { Toast } from "@/_components/toast";
 import { SeasonStages, SeasonStatusChip } from "@/_components/season-stages";
 import { fieldClass, labelClass } from "../_components/season-ui";
+import { Label } from "@/_components/label";
 
 function Spinner() {
   return (
@@ -232,15 +233,15 @@ function NextStep({
       <p className="mt-1 mb-4 font-body text-xs text-text-secondary">{help}</p>
       <div className="flex flex-col gap-4">
         <div>
-          <label htmlFor="stage-date" className={labelClass}>
+          <Label htmlFor="stage-date" className={labelClass}>
             Fecha de inicio
-          </label>
+          </Label>
           <input id="stage-date" type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} className={fieldClass} />
         </div>
         <div>
-          <label htmlFor="stage-name" className={labelClass}>
+          <Label htmlFor="stage-name" className={labelClass}>
             Nombre <span className="font-normal text-text-secondary">(opcional)</span>
-          </label>
+          </Label>
           <input
             id="stage-name"
             type="text"

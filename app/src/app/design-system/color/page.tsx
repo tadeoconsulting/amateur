@@ -201,7 +201,7 @@ function CanchaSection() {
         <p className="font-heading text-xl font-bold text-text-primary">Copa Apertura 2026</p>
         <p className="mt-1 font-body text-sm text-text-secondary">8 equipos · Liga · Estadio Central</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <button className="min-h-11 rounded-lg bg-surface-secondary px-4 font-heading text-sm font-bold text-text-invert hover:bg-brand-700">Iniciar partido</button>
+          <button className="min-h-11 rounded-lg bg-surface-secondary px-4 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700">Iniciar partido</button>
           <button className="min-h-11 rounded-lg border border-border-primary px-4 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular">Editar torneo</button>
           <span className="inline-flex items-center rounded-full bg-verification px-2.5 py-1 font-heading text-xs font-bold text-ink">En vivo</span>
           <span className="inline-flex items-center rounded-full bg-yellow px-2.5 py-1 font-heading text-xs font-bold text-ink">Convocatoria</span>

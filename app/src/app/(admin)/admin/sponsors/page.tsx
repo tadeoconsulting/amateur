@@ -9,6 +9,7 @@ import {
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { SortTh, useSort } from "../_components/sortable";
+import { Label } from "@/_components/label";
 
 interface SponsorDetail {
   id: string;
@@ -80,7 +81,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
 
         <div className="flex flex-col gap-4">
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+            <Label className="mb-1 block">Nombre *</Label>
             <input
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
@@ -89,7 +90,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">URL del logo</label>
+            <Label className="mb-1 block">URL del logo</Label>
             <input
               value={form.logoUrl}
               onChange={(e) => set("logoUrl", e.target.value)}
@@ -98,7 +99,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Sitio web</label>
+            <Label className="mb-1 block">Sitio web</Label>
             <input
               value={form.website}
               onChange={(e) => set("website", e.target.value)}
@@ -118,7 +119,7 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Creando..." : "Crear sponsor"}
           </button>
@@ -212,7 +213,7 @@ function EditSponsorModal({
         <div className="flex flex-col gap-4">
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos del sponsor</p>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Nombre *</label>
+            <Label className="mb-1 block">Nombre *</Label>
             <input
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
@@ -220,7 +221,7 @@ function EditSponsorModal({
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">URL del logo</label>
+            <Label className="mb-1 block">URL del logo</Label>
             <input
               value={form.logoUrl}
               onChange={(e) => set("logoUrl", e.target.value)}
@@ -229,7 +230,7 @@ function EditSponsorModal({
             />
           </div>
           <div>
-            <label className="mb-1 block font-body text-xs font-medium text-text-secondary">Sitio web</label>
+            <Label className="mb-1 block">Sitio web</Label>
             <input
               value={form.website}
               onChange={(e) => set("website", e.target.value)}
@@ -241,7 +242,7 @@ function EditSponsorModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="cursor-pointer self-start rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer self-start rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar datos"}
           </button>
@@ -336,7 +337,7 @@ export default function AdminSponsorsPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

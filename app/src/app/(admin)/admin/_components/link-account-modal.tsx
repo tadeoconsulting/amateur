@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { InvitePlayerPanel, type InvitationSummary } from "./invite-player-panel";
+import { Label } from "@/_components/label";
 
 interface AccountResult {
   id: string;
@@ -159,7 +160,7 @@ export function LinkAccountModal({
 
         {!chosen && (
           <>
-            <label htmlFor="la-buscar" className="mb-1 block font-body text-xs font-medium text-text-secondary">Buscar la cuenta (correo, nombre o DNI)</label>
+            <Label htmlFor="la-buscar" className="mb-1 block">Buscar la cuenta (correo, nombre o DNI)</Label>
             <input
               id="la-buscar"
               value={query}
@@ -255,7 +256,7 @@ export function LinkAccountModal({
             <button onClick={onClose} className="cursor-pointer rounded-lg border border-border-primary px-5 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular">Cancelar</button>
           )}
           {chosen && (
-            <button onClick={() => void confirm()} disabled={!summary || working} className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50">
+            <button onClick={() => void confirm()} disabled={!summary || working} className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50">
               {working ? "Guardando..." : summary?.mode === "merge" ? "Unir perfiles" : "Vincular cuenta"}
             </button>
           )}

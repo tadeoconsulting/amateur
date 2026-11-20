@@ -54,8 +54,8 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-brand-200 bg-surface-alt">
-            <th className="py-2.5 pl-3 pr-1 font-medium text-text-secondary">#</th>
-            <th className="px-1 py-2.5 font-medium text-text-secondary">Equipo</th>
+            <th className="w-px whitespace-nowrap border-l-4 border-transparent py-2.5 pl-2 pr-1 font-medium text-text-secondary">#</th>
+            <th className="py-2.5 pl-2 pr-1 font-medium text-text-secondary">Equipo</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">PJ</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">G</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">E</th>
@@ -72,21 +72,21 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
             const isBottom = restOut ? position > advanceCount : showDescends && position >= 7;
             return (
               <tr key={row.clubId} className="border-b border-brand-200 last:border-0">
-                <td className="py-2.5 pl-3 pr-1">
+                {/* Clasifica (verde) o desciende (rojo): un borde de 4 px a la izquierda, a todo el alto de la fila y pegado al borde de la tabla. */}
+                <td
+                  className={`w-px whitespace-nowrap border-l-4 py-2.5 pl-2 pr-1 ${
+                    isTop ? "border-verification" : isBottom ? "border-red-500" : "border-transparent"
+                  }`}
+                >
                   <div className="flex items-center gap-1.5">
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        isTop ? "bg-verification" : isBottom ? "bg-red-500" : "bg-transparent"
-                      }`}
-                    />
                     <span className="text-xs font-medium text-text-secondary">{position}</span>
                     <PlaceMove change={moves.get(row.clubId)} />
                   </div>
                 </td>
-                <td className="px-1 py-2.5">
+                <td className="py-2.5 pl-2 pr-1">
                   <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
                     <ClubCrest club={row} size="h-6 w-6" />
-                    <span className="truncate text-xs font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
+                    <span className="truncate text-xs md:text-base font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
                     {row.live && <LiveDot />}
                   </Link>
                 </td>
@@ -379,21 +379,6 @@ export default function TournamentDetailPage() {
                 </button>
               ))}
         </div>
-        {/* «Agregar partido» como un tab más, con el +, al lado de los tabs: abre la hoja para agregar uno. En el celular
-            queda solo el ícono para que la fila no se desborde. */}
-        {!isConvocatoria && (
-          <button
-            type="button"
-            onClick={() => setEditor({ match: null })}
-            aria-label="Agregar partido"
-            className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-border-primary px-3.5 py-2.5 font-heading text-sm font-medium text-text-primary transition-colors hover:bg-btn-regular cancha:font-body cancha:font-bold sm:px-5"
-          >
-            <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span className="hidden sm:inline">Agregar partido</span>
-          </button>
-        )}
         <TournamentActions
           tournamentId={params.id}
           title={tournament.name}
@@ -464,7 +449,7 @@ export default function TournamentDetailPage() {
           {tournament.teams.length >= 2 && (
             <Link
               href={`/torneos/${params.id}/iniciar`}
-              className="mt-3 flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
               Iniciar torneo
             </Link>
@@ -548,8 +533,7 @@ export default function TournamentDetailPage() {
           esta pestaña era una lista plana sin tabs, distinta de como se armó el torneo. */}
       {!isConvocatoria && shownTab === "partidos" && (
         <div className="mt-4">
-          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan (el tab «+ Agregar partido»
-              de arriba) y editar un partido pendiente (el lápiz de cada fila). */}
+          {/* El torneo se puede seguir armando mientras corre: agregar los partidos que faltan (el «+» a la derecha de las fechas) y editar un partido pendiente (el lápiz de cada fila). */}
           {/* Un partido sin terminar va directo a la pantalla en vivo (ahí está "Iniciar partido");
             "resultado" es solo la crónica de uno finalizado — igual que en el hub de partidos. */}
           {/* La tabla al lado solo si es una sola tabla: con grupos (copa) una lista mezclada no dice quién clasifica. */}
@@ -561,6 +545,7 @@ export default function TournamentDetailPage() {
             qualifyCount={tournament.format === "liga" ? tournament.playoffTeams : null}
             hrefFor={(m) => `/torneos/${params.id}/${m.status === "finalizado" ? "resultado" : "en-vivo"}/${m.id}`}
             onEdit={(m) => setEditor({ match: m })}
+            onAdd={() => setEditor({ match: null })}
             onViewFullTable={() => setActiveTab("tabla")}
             stickyTop="@4xl:top-20"
           />
@@ -617,12 +602,12 @@ export default function TournamentDetailPage() {
               : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} clubHref={clubHref} />}
             <div className={`flex items-center gap-4 px-1 ${plainSeasonTable ? "hidden" : ""}`}>
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-verification" />
+                <span className="h-4 w-1 rounded-sm bg-verification" />
                 <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : ligaLlaves !== null ? "Clasifica a las llaves" : "Clasifica a liguilla"}</span>
               </div>
               {(!noDescent || ligaLlaves !== null) && (
                 <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="h-4 w-1 rounded-sm bg-red-500" />
                   <span className="text-xs text-text-secondary">{ligaLlaves !== null ? "No clasifica" : "Desciende"}</span>
                 </div>
               )}
@@ -740,7 +725,7 @@ export default function TournamentDetailPage() {
                     router.push(`/torneos/${selectedTournamentId}`);
                   }
                 }}
-                className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700"
+                className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
               >
                 Cambiar
               </button>
@@ -787,7 +772,7 @@ export default function TournamentDetailPage() {
               <button
                 onClick={undoFixture}
                 disabled={undoingFixture}
-                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
               >
                 {undoingFixture ? "Deshaciendo..." : "Sí, deshacer"}
               </button>

@@ -17,6 +17,7 @@ export function FixtureWithStandings({
   hrefFor,
   highlightClubId,
   onEdit,
+  onAdd,
   onViewFullTable,
   stickyTop = "@4xl:top-4",
   bleed = false,
@@ -30,6 +31,8 @@ export function FixtureWithStandings({
   highlightClubId?: string;
   /** Si se pasa (el organizador), los partidos por jugar traen un botón para editarlos. */
   onEdit?: (match: MatchListItem) => void;
+  /** Si se pasa (el organizador), el «+» fijo a la derecha de las fechas para agregar un partido. */
+  onAdd?: () => void;
   /** Lleva a la tabla completa (y goleadores) de la pantalla. */
   onViewFullTable: () => void;
   stickyTop?: string;
@@ -43,7 +46,7 @@ export function FixtureWithStandings({
   return (
     <div className="@4xl:grid @4xl:grid-cols-[minmax(0,1fr)_20rem] @4xl:items-start @4xl:gap-8">
       <div className={bleed ? "-mx-4" : undefined}>
-        <FixtureTabs matches={matches} hrefFor={hrefFor} highlightClubId={highlightClubId} onEdit={onEdit} syncUrl={syncUrl} />
+        <FixtureTabs matches={matches} hrefFor={hrefFor} highlightClubId={highlightClubId} onEdit={onEdit} onAdd={onAdd} syncUrl={syncUrl} />
       </div>
       {standings.length > 0 && (
         <aside aria-label="Posiciones" className={`hidden @4xl:sticky @4xl:block ${stickyTop} ${bleed ? "" : "@4xl:mr-4"}`}>

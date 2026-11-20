@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner } from "@/_components/spinner";
 import { SwitchAccount } from "@/_components/switch-account";
+import { Label } from "@/_components/label";
 
 // Quien recibió una invitación a reclamar su perfil de jugador (especificación 009, entrega 3). Es pública: la
 // abre quien tiene el enlace, sin cuenta todavía. Muestra solo el nombre del perfil y el equipo; para vincularlo
@@ -119,9 +120,9 @@ export default function ReclamarPerfilPage() {
               <p className="font-body text-xs text-text-secondary">
                 Entraste como <strong className="text-text-primary">{user.email}</strong>
               </p>
-              <label htmlFor="rp-dni" className="font-heading text-sm font-semibold text-text-primary">
+              <Label htmlFor="rp-dni">
                 Confirma tu DNI
-              </label>
+              </Label>
               <input
                 id="rp-dni"
                 value={dni}

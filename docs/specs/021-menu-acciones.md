@@ -16,7 +16,7 @@ La pantalla de un torneo mezcla una acción principal (**Agregar partido**, bot�
 | 3 | Nombre | **«Acciones»**, con un menú moderno (desplegable, no un `<select>`). |
 
 ## Reglas
-- El botón **Acciones** (texto y flecha, también en el celular) abre un panel debajo, alineado a la derecha, con un ítem por acción: ícono, texto y, si lleva a otra pantalla, es un enlace; si ejecuta algo (Compartir, Deshacer fixture), es un botón.
+- El botón **Acciones** (texto y flecha en tablet y escritorio; **en el celular solo el ícono de tres puntos**, el texto se oculta pero queda como nombre accesible, pedido del usuario 2026-11-16) abre un panel debajo, alineado a la derecha, con un ítem por acción: ícono, texto y, si lleva a otra pantalla, es un enlace; si ejecuta algo (Compartir, Deshacer fixture), es un botón.
 - **Cada ítem aparece solo cuando corresponde**, con las mismas condiciones de hoy:
   - *Compartir*: solo con el torneo en marcha (no en convocatoria).
   - *Editar torneo*: siempre.
@@ -31,8 +31,24 @@ La pantalla de un torneo mezcla una acción principal (**Agregar partido**, bot�
 - Tipografía y colores del sistema «Cancha»: DM Sans en negrita, panel con la superficie de las tarjetas y borde de la línea del tema.
 - «Ver temporada» (la tarjeta de una liga que ya está en una temporada) y «Agregar equipo» **no** son acciones secundarias del mismo tipo y no se mueven.
 
-## «Agregar partido» como tab (pedido del usuario, 2026-11-16)
-«Agregar partido» deja de ser un botón lima suelto sobre las fechas y pasa a ser **un tab más, con el ícono «+»**, justo al lado de los tabs (antes de «Acciones»). Se ve en todas las pestañas de un torneo en marcha (no en convocatoria) y, al hacer clic, abre la misma hoja para agregar un partido. En el celular queda solo el «+» (con `aria-label="Agregar partido"`) para que la fila no se desborde.
+## «Agregar partido» como «+» a la derecha de las fechas (pedido del usuario, 2026-11-16)
+«Agregar partido» deja de ser un botón lima suelto y pasa a ser **un botón con el ícono «+», fijo a la derecha de la fila de las fechas, después de la última visible**: queda siempre a mano aunque la fila se desplace *(una versión anterior lo puso a la izquierda, antes de «Fecha 1»; se movió a la derecha por pedido del usuario)*. Al hacer clic abre la misma hoja de siempre para agregar un partido. Solo lo ve el organizador, en la pestaña Partidos de un torneo en marcha (el club y los demás usan la misma lista de fechas sin el «+»). También aparece cuando todavía no hay partidos. En el celular queda solo el «+» (con `aria-label="Agregar partido"`); desde `sm` lleva también el texto. *(Una primera versión lo puso como un tab junto a Partidos · Tabla · Goleadores; se movió a la fila de las fechas.)*
+
+El encabezado de cada día de la lista de fechas («Por definir», «Dom 15 Nov») va a **14 px** en el organizador (`cancha:text-sm`); el club, el jugador y el fan siguen en 12 px. Los tabs de las fechas («Fecha 1»…, `PillTabs`) van a **14 px** en el organizador (`cancha:text-sm`), también solo ahí. Los `SubTabs` (Torneos / Temporadas y similares, `torneos/page.tsx`) van a **16 px** en el organizador, en celular y en las píldoras de escritorio (`size="base"` de `PillTabs`).
+
+Otros ajustes de tamaño pedidos el mismo día:
+- **Filtros en píldora** (Competencia / Convocatoria / Finalizados, el selector de estado de Partidos, `CategoryTabs`, los de Convocatoria y los del editor de cruces): **14 px** en el organizador (`cancha:text-sm`).
+- **Título de la franja de cada partido** («General» o el nombre del grupo, en el partido en vivo, el resultado, el partido y el fixture manual): **14 px** en el organizador (`cancha:text-sm`).
+- **Botones «Volver» / «Salir»** (flecha y texto): **14 px en el celular** en toda la app; los pocos que estaban en 16 px (editor de cruces y asistente de crear torneo) llevan `max-md:text-sm`, así que en escritorio no cambian.
+- **Pestañas principales de «Mis torneos»** (Torneos / Temporadas, `SubTabs`): con **subrayado** también en escritorio (`desktop="underline"`), para distinguirlas de las **píldoras** de abajo (Competencia / Convocatoria / Finalizados). Los demás `SubTabs` (club) siguen como píldoras en escritorio.
+- **Dos medidas por elemento** (2026-11-19): `btnSolid` (acción principal de `button-styles.ts`, p. ej. «Crear temporada») va a **14 px en el celular y 16 px desde 768 px** (tableta y escritorio, `md:text-base`). El **nombre del equipo** en la lista de equipos del torneo (`TeamsList`) va a **16 px solo en escritorio** y solo en el organizador (`md:cancha:text-base`); en el celular sigue en 14 px.
+- **Nombre del equipo en la tabla de posiciones** (pestaña Tabla del torneo, organizador): **12 px en el celular y 16 px en escritorio** (`md:text-base`). Las demás columnas de la tabla no cambian.
+- **Clasifica / desciende en la tabla de posiciones** (organizador): en lugar del punto de color, un **borde de 4 px a la izquierda de la fila**, verde (clasifica) o rojo (desciende), a todo el alto de la fila y pegado al borde de la tabla. La leyenda de abajo usa la misma marca, como una barrita vertical. Se aplica igual en celular y en escritorio.
+- **Columna de posición de la tabla de posiciones** (`#`, organizador): ocupa solo su contenido y queda a **12 px** del escudo del equipo, en lugar de estirarse. Se midió igual en celular y en escritorio.
+- **Botones principales** (fondo lima, letra de títulos en negrita; «Crear torneo», «Guardar», «Agregar partido» de las hojas, etc.): **14 px en el celular y 16 px desde 768 px** (tableta y escritorio), en **toda la app** (`text-sm md:text-base`), la misma medida que `btnSolid`. Un botón nuevo con ese estilo debe llevarla (una prueba lo vigila). *(Historia: primero 16 px en el celular, luego 16 px siempre; el 19/11/2026 el usuario fijó 14 px celular y 16 px tableta y escritorio.)*
+- **Barra de abajo del celular** (organizador, club y jugador): las etiquetas pasan de 10 a **16 px** (primero se pidió 12 y después 16), en todos los ámbitos.
+- **Título de las tarjetas de torneo** (Mis torneos del organizador y las listas del jugador): **16 px**.
+- **Campana de notificaciones** del organizador: sale de «Mis torneos» y pasa a la barra de arriba (celular y escritorio), **a la izquierda de la cuenta y a 16 px de ella**, con un área clicable de 44 × 44 px. **El nombre en el botón de la cuenta** se muestra con **hasta 12 caracteres** y, si tiene más, los primeros 12 seguidos de dos puntos («organizador..»); el nombre completo queda en el encabezado del menú, en `title` y en el nombre accesible (`shortNavName`, vale para todos los roles).
 
 ## Reutilización
 `ActionsMenu` es un componente general (ítems con `label`, `icon`, `href` u `onSelect`, y `tone: "danger"`). Hoy solo lo usa la pantalla de un torneo; otras pantallas con acciones sueltas (club, partido) pueden adoptarlo después.

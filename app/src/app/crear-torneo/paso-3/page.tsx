@@ -11,6 +11,7 @@ import { formatFromCompetitionLabel } from "@/_lib/tournament-labels";
 import { playoffLabel } from "@/_lib/fixture";
 import { saveWizardTournament } from "../_components/save-tournament";
 import { EditTabs } from "../_components/edit-tabs";
+import { Label } from "@/_components/label";
 
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function CrearTorneoPaso3Page() {
       <header className="px-4 py-3">
         <button
           onClick={() => (editing ? router.push(exitHref) : router.back())}
-          className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer"
+          className="flex items-center gap-1 font-heading text-base max-md:text-sm font-semibold text-text-primary cursor-pointer"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -246,9 +247,9 @@ export default function CrearTorneoPaso3Page() {
 
         <div className="flex flex-col gap-4 mb-6">
           <div>
-            <label className="block font-body text-sm text-text-primary mb-2">
+            <Label className="block mb-2">
               Costo de inscripción
-            </label>
+            </Label>
             <input
               type="text"
               placeholder="Ejemplo: S/100"
@@ -259,9 +260,9 @@ export default function CrearTorneoPaso3Page() {
           </div>
 
           <div>
-            <label className="block font-body text-sm text-text-primary mb-2">
+            <Label className="block mb-2">
               Costo de arbitraje por partido (Opcional)
-            </label>
+            </Label>
             <input
               type="text"
               placeholder="Ejemplo: S/40 por equipo"
@@ -309,7 +310,7 @@ export default function CrearTorneoPaso3Page() {
           <button
             onClick={handleCrearTorneo}
             disabled={saving || torneoCreado}
-            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
           >
             {saving ? (editing ? "Guardando..." : "Creando...") : editing ? "Guardar cambios" : "Crear torneo"}
           </button>

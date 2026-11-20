@@ -12,6 +12,7 @@ import { UpdateFinishedMatchSheet, type DirectResult } from "./_components/updat
 import { walkoverNote, type Walkover } from "@/_lib/walkover";
 import { canDeleteEventIn, playerEditable } from "@/_lib/event-edit";
 import { ClubCrest } from "@/_components/club-crest";
+import { Label } from "@/_components/label";
 
 
 type MatchEvent = {
@@ -410,7 +411,7 @@ export default function EnVivoPage() {
       {/* Match card with scores */}
       <div className="mx-4 mb-4 rounded-xl border border-border-primary overflow-hidden">
         <div className="bg-btn-regular px-4 py-2">
-          <span className="font-heading text-xs font-bold text-text-primary">
+          <span className="font-heading text-xs cancha:text-sm font-bold text-text-primary">
             {match.groupName || "General"}
           </span>
         </div>
@@ -468,7 +469,7 @@ export default function EnVivoPage() {
           <button
             onClick={() => setPeriod("descanso")}
             disabled={saving}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             Finalizar 1.er tiempo
           </button>
@@ -483,7 +484,7 @@ export default function EnVivoPage() {
           <button
             onClick={() => setPeriod("segundo_tiempo")}
             disabled={saving}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             Iniciar 2.º tiempo
           </button>
@@ -509,7 +510,7 @@ export default function EnVivoPage() {
             <button
               onClick={() => setStatus("finalizado")}
               disabled={saving}
-              className="mt-3 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+              className="mt-3 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
             >
               Finalizar con {homeScore}-{awayScore}
             </button>
@@ -524,7 +525,7 @@ export default function EnVivoPage() {
           <button
             onClick={() => setStatus("en_curso")}
             disabled={saving}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             Iniciar partido
           </button>
@@ -638,7 +639,7 @@ export default function EnVivoPage() {
           <div className="flex flex-col">
             {manual && (
               <div className="mb-2 px-1 py-2">
-                <label htmlFor="manual-minute" className="mb-1.5 block font-heading text-sm font-bold text-text-primary">Minuto de la jugada</label>
+                <Label htmlFor="manual-minute" className="mb-1.5 block">Minuto de la jugada</Label>
                 <input
                   id="manual-minute"
                   inputMode="numeric"
@@ -940,7 +941,7 @@ export default function EnVivoPage() {
                 <button
                   onClick={() => setStatus("finalizado")}
                   disabled={saving}
-                  className="min-h-12 flex-1 cursor-pointer rounded-lg bg-surface-secondary px-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                  className="min-h-12 flex-1 cursor-pointer rounded-lg bg-surface-secondary px-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
                 >
                   Sí, finalizar
                 </button>

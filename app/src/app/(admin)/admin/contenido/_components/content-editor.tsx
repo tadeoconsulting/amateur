@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CONTENT_KINDS, LIMITS as limits, categoriesOf, type ContentKind, type ContentSection } from "@/_lib/content";
+import { Label } from "@/_components/label";
 
 // Cada sección lleva un `uid` solo para que React la reconozca al subirla, bajarla o quitarla.
 type Draft = ContentSection & { uid: number };
@@ -185,7 +186,7 @@ export function ContentEditor({ kind, onDirtyChange }: { kind: ContentKind; onDi
               </label>
             )}
             <label className="mb-3 block">
-              <span className="mb-1 block font-body text-xs text-text-secondary">{isHelp ? "Pregunta" : "Título (opcional)"}</span>
+              <Label as="span" optional={!isHelp} className="mb-1 block">{isHelp ? "Pregunta" : "Título"}</Label>
               <input
                 value={s.title}
                 onChange={(e) => change(s.uid, { title: e.target.value })}
@@ -230,7 +231,7 @@ export function ContentEditor({ kind, onDirtyChange }: { kind: ContentKind; onDi
           type="button"
           onClick={() => save(plain(sections), "Publicado. Ya se ve en la plataforma.")}
           disabled={saving || (!dirty && !usingDefaults)}
-          className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? "Guardando..." : "Guardar y publicar"}
         </button>

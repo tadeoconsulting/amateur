@@ -59,7 +59,7 @@ function TournamentCard({ tournament, colorIndex }: { tournament: TournamentList
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="truncate font-heading text-sm font-bold text-text-primary">{tournament.name}</p>
+          <p className="truncate font-heading text-base font-bold text-text-primary">{tournament.name}</p>
           <p className="mt-0.5 font-body text-xs text-text-secondary">
             {tournament.category || "Libre"} |{" "}
             {new Date(tournament.startDate).toLocaleDateString("es-PE", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" })}
@@ -165,19 +165,6 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
   if (!hasTournaments) {
     return (
       <div className="flex min-h-full flex-col">
-        <div className="flex justify-end px-4 pt-4">
-          <Link href="/notificaciones" aria-label="Notificaciones" className="text-text-primary">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </div>
         <EmptyState />
       </div>
     );
@@ -202,20 +189,9 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
           <h1 className="font-heading text-xl font-bold text-text-primary">Mis torneos</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/notificaciones" aria-label="Notificaciones" className="text-text-primary">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
           <Link
             href={mainTab === "temporadas" ? "/torneos/temporadas/nueva" : "/crear-torneo"}
-            className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-xs font-bold text-text-invert transition-colors hover:bg-brand-700"
+            className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -225,7 +201,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
         </div>
       </div>
 
-      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" className="mb-4" />
+      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" desktop="underline" className="mb-4" />
 
       {mainTab === "temporadas" ? (
         <SeasonsList organizerId={organizerId} />
@@ -237,7 +213,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold cancha:font-body cancha:font-bold transition-colors ${
+            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold transition-colors ${
               activeTab === tab.key
                 ? "bg-surface-secondary text-text-invert"
                 : "border border-border-primary text-text-primary"
@@ -277,7 +253,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate font-heading text-sm font-bold text-text-primary">{t.name}</p>
+                      <p className="truncate font-heading text-base font-bold text-text-primary">{t.name}</p>
                       {canStart && (
                         <span className="shrink-0 rounded-full bg-verification px-2 py-0.5 font-heading text-[10px] font-bold text-ink">
                           Activo

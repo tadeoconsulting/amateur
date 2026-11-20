@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
+import { Label } from "@/_components/label";
 
 /**
  * Elegir la foto del torneo: se encuadra en un círculo (`AvatarCropper`), se sube y queda la URL en
@@ -30,7 +31,7 @@ export function TournamentPhotoField({ value, onChange }: { value: string; onCha
 
   return (
     <div>
-      <span className="mb-2 block font-body text-sm text-text-primary">Foto del torneo (opcional)</span>
+      <Label as="span" optional className="mb-2 block">Foto del torneo</Label>
       <div className="flex items-center gap-3">
         <TournamentLogo logoUrl={value || null} size="h-16 w-16" />
         <div className="flex flex-wrap gap-2">

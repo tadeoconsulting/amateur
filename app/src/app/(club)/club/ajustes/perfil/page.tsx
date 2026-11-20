@@ -9,6 +9,7 @@ import { getClub } from "@/_lib/api";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
+import { Label } from "@/_components/label";
 
 export default function ClubPerfilPage() {
   const { club, isPrincipal, loading: loadingClub } = useMyClub();
@@ -172,7 +173,7 @@ export default function ClubPerfilPage() {
         {error && <p className="font-body text-sm text-red-600">{error}</p>}
 
         <div>
-          <label className="text-sm text-text-secondary">Equipo</label>
+          <Label>Equipo</Label>
           <input
             type="text"
             value={equipo}
@@ -182,7 +183,7 @@ export default function ClubPerfilPage() {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Nombre corto</label>
+          <Label>Nombre corto</Label>
           <input
             type="text"
             value={nombreCorto}
@@ -193,7 +194,7 @@ export default function ClubPerfilPage() {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Ciudad</label>
+          <Label>Ciudad</Label>
           <input
             type="text"
             value={ciudad}
@@ -205,7 +206,7 @@ export default function ClubPerfilPage() {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Color representativo</label>
+          <Label>Color representativo</Label>
           <div className="mt-1 flex items-center gap-3 border-b border-brand-200 py-2">
             <input
               type="color"
@@ -224,7 +225,7 @@ export default function ClubPerfilPage() {
         )}
 
         <div>
-          <label className="text-sm text-text-secondary">Nombre del delegado</label>
+          <Label>Nombre del delegado</Label>
           <input
             type="text"
             value={delegadoNombre}
@@ -235,7 +236,7 @@ export default function ClubPerfilPage() {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Número del delegado</label>
+          <Label>Número del delegado</Label>
           <input
             type="tel"
             value={delegadoTel}
@@ -246,7 +247,7 @@ export default function ClubPerfilPage() {
         </div>
 
         <div>
-          <label className="text-sm text-text-secondary">Correo del delegado</label>
+          <Label>Correo del delegado</Label>
           <input
             type="email"
             value={delegadoEmail}

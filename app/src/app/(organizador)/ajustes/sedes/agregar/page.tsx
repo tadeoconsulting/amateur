@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Label } from "@/_components/label";
 
 export default function AgregarSedePage() {
   const router = useRouter();
@@ -56,9 +57,9 @@ export default function AgregarSedePage() {
 
         <div className="flex flex-col gap-5">
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Nombre de la sede
-            </label>
+            </Label>
             <input
               type="text"
               value={nombre}
@@ -69,9 +70,9 @@ export default function AgregarSedePage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Elige tu ciudad
-            </label>
+            </Label>
             <select
               value={ciudad}
               onChange={(e) => setCiudad(e.target.value)}
@@ -86,9 +87,9 @@ export default function AgregarSedePage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Ingresa la ubicación
-            </label>
+            </Label>
             <input
               type="text"
               value={ubicacion}
@@ -99,9 +100,9 @@ export default function AgregarSedePage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+            <Label className="mb-1.5 block">
               Referencia
-            </label>
+            </Label>
             <input
               type="text"
               value={referencia}
@@ -117,7 +118,7 @@ export default function AgregarSedePage() {
         <button
           onClick={handleSubmit}
           disabled={!nombre.trim() || saving}
-          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Creando..." : "Crear sede"}
         </button>

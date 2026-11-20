@@ -4,6 +4,7 @@ import { MesaManager } from "@/_components/mesa-manager";
 import { useEffect, useState, type ReactNode } from "react";
 import { COMPETITION_TYPES, GENDERS, MODALITIES, TOURNAMENT_STATUSES } from "@/_lib/tournament-labels";
 import { TournamentPhotoField } from "@/_components/tournament-photo-field";
+import { Label } from "@/_components/label";
 
 interface UserOption {
   id: string;
@@ -75,10 +76,10 @@ const isKnockout = (format: string) => format === "eliminacion" || format === "r
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block">
+    <Label className="block">
       <span className="mb-1 block font-body text-xs font-medium text-text-secondary">{label}</span>
       {children}
-    </label>
+    </Label>
   );
 }
 
@@ -469,7 +470,7 @@ export function TournamentModal({
           <button
             onClick={handleSubmit}
             disabled={saving || loading || (editing && !original)}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : editing ? "Guardar cambios" : "Crear torneo"}
           </button>

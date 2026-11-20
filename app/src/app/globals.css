@@ -145,6 +145,13 @@ body {
   }
 }
 
+/* Excepción a lo de arriba, a pedido (2026-11-16): los campos con `campo-14` se quedan en 14px también en el celular.
+   Ojo: Safari de iPhone amplía la pantalla al tocar un campo de menos de 16px; por eso se usa solo donde el diseño lo pide
+   (la hoja «Agregar partido»). Va fuera de cualquier @layer y con una clase: le gana al `:where` de arriba. */
+.campo-14 {
+  font-size: 14px;
+}
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 

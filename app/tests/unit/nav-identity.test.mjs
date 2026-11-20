@@ -2,7 +2,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { fullName, navName, navInitial } from "../../src/_lib/nav-identity.ts";
+import { fullName, navName, navInitial, shortNavName } from "../../src/_lib/nav-identity.ts";
 
 const ana = { firstName: "Ana", lastName: "Prueba Uno", organization: null };
 
@@ -30,6 +30,20 @@ describe("navName", () => {
   test("sin apellido no deja espacios sobrando", () => {
     assert.equal(fullName({ firstName: "Ana", lastName: "" }), "Ana");
     assert.equal(fullName({ firstName: " Ana ", lastName: "  Prueba   Uno " }), "Ana Prueba Uno");
+  });
+});
+
+describe("shortNavName", () => {
+  test("hasta 12 caracteres se muestra completo", () => {
+    assert.equal(shortNavName("Club Real"), "Club Real");
+    assert.equal(shortNavName("123456789012"), "123456789012");
+  });
+  test("con más de 12, los primeros 12 y dos puntos", () => {
+    assert.equal(shortNavName("123456789012345"), "123456789012..");
+    assert.equal(shortNavName("organizador Prueba"), "organizador..", "sin el espacio antes de los puntos");
+  });
+  test("cuenta letras, no unidades internas del texto", () => {
+    assert.equal(shortNavName("Álvaro Ñandú Pérez"), "Álvaro Ñandú..");
   });
 });
 

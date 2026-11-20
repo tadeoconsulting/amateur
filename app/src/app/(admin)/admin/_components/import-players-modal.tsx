@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Label } from "@/_components/label";
 
 interface TournamentOption {
   id: string;
@@ -151,7 +152,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
   const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
   const ghost = "min-h-11 cursor-pointer rounded-lg border border-border-primary px-4 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-50";
-  const solid = "min-h-11 cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const solid = "min-h-11 cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 
   const shown = review ? (onlyProblems ? review.rows.filter((r) => r.status === "problem") : review.rows) : [];
 
@@ -200,7 +201,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
               {scope === "club" && (
                 <div>
-                  <label htmlFor="ip-club-buscar" className="mb-1 block font-body text-xs font-medium text-text-secondary">Club *</label>
+                  <Label htmlFor="ip-club-buscar" className="mb-1 block">Club *</Label>
                   <input
                     id="ip-club-buscar"
                     type="search"
@@ -225,7 +226,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
               {scope === "tournament" && (
                 <div>
-                  <label htmlFor="ip-torneo" className="mb-1 block font-body text-xs font-medium text-text-secondary">Torneo *</label>
+                  <Label htmlFor="ip-torneo" className="mb-1 block">Torneo *</Label>
                   <select id="ip-torneo" value={tournamentId} onChange={(e) => { setTournamentId(e.target.value); setTeams(null); }} className={`${input} cursor-pointer`} disabled={!tournaments}>
                     <option value="">{tournaments ? "Elige un torneo" : "Cargando torneos..."}</option>
                     {(tournaments ?? []).map((t) => (
@@ -251,7 +252,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
               <div>
                 <div className="mb-1 flex items-center justify-between gap-3">
-                  <label htmlFor="ip-filas" className="block font-body text-xs font-medium text-text-secondary">Filas de la hoja de cálculo *</label>
+                  <Label htmlFor="ip-filas" className="block">Filas de la hoja de cálculo *</Label>
                   <div className="flex items-center gap-2">
                     {fileNote && <span className="font-body text-xs text-text-secondary">{fileNote}</span>}
                     <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv" className="sr-only" id="ip-archivo" onChange={(e) => void onFile(e.target.files?.[0])} />

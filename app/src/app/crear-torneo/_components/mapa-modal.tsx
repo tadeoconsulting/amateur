@@ -25,7 +25,7 @@ export function MapaModal({
         <div className="px-5 pt-5">
           <button
             onClick={onClose}
-            className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer mb-2"
+            className="flex items-center gap-1 font-heading text-base max-md:text-sm font-semibold text-text-primary cursor-pointer mb-2"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
               <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -82,7 +82,7 @@ export function MapaModal({
 
           <button
             onClick={() => onConfirm(editedAddress || address)}
-            className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-5"
+            className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-5"
           >
             Confirmar dirección
           </button>

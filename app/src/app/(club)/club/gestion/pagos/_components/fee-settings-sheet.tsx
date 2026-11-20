@@ -6,6 +6,7 @@ import { FeesError, feesRequest } from "@/_lib/club-fees-client";
 import { btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { Sheet } from "@/_components/sheet";
+import { Label } from "@/_components/label";
 
 const inputClass =
   "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +
@@ -50,18 +51,18 @@ export function FeeSettingsSheet({
     <Sheet title="Cuota del club" onClose={onClose}>
       <form onSubmit={save} className="flex flex-col gap-4">
         <div>
-          <label htmlFor="club-fee" className="font-heading text-sm font-bold text-text-primary">
+          <Label htmlFor="club-fee">
             Cuota mensual estándar (S/)
-          </label>
+          </Label>
           <input id="club-fee" inputMode="decimal" autoComplete="off" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="80" className={`${inputClass} mt-1.5`} aria-describedby="club-fee-help" />
           <p id="club-fee-help" className="mt-1.5 font-body text-xs text-text-secondary">
             La pagan todos los jugadores, salvo quien tenga un monto propio (por ejemplo S/ 60, o S/ 0 si no paga).
           </p>
         </div>
         <div>
-          <label htmlFor="club-due-day" className="font-heading text-sm font-bold text-text-primary">
+          <Label htmlFor="club-due-day">
             Día de vencimiento
-          </label>
+          </Label>
           <select id="club-due-day" value={dueDay} onChange={(e) => setDueDay(e.target.value)} className={`${inputClass} mt-1.5`}>
             {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
               <option key={d} value={d}>

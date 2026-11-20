@@ -9,6 +9,7 @@ import { ClubAvatar } from "@/_components/club-avatar";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
+import { Label } from "@/_components/label";
 
 // Colores oscuros: las iniciales blancas del avatar llegan a 4.5:1 sobre todos.
 const COLORS = [
@@ -100,9 +101,9 @@ function CreateClubForm({ next }: { next: string }) {
 
       <form onSubmit={submit} noValidate className="mt-6 flex flex-col gap-5">
         <div>
-          <label htmlFor="club-name" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+          <Label htmlFor="club-name" className="mb-1.5 block">
             Nombre del equipo
-          </label>
+          </Label>
           <input
             id="club-name"
             value={name}
@@ -120,9 +121,9 @@ function CreateClubForm({ next }: { next: string }) {
         </div>
 
         <div>
-          <label htmlFor="club-short" className="mb-1.5 block font-heading text-sm font-semibold text-text-primary">
+          <Label htmlFor="club-short" className="mb-1.5 block">
             Nombre corto
-          </label>
+          </Label>
           <input
             id="club-short"
             value={shownShort}

@@ -32,6 +32,7 @@ import { parseView, withView } from "@/_lib/share-view";
 import { ShareViewButton } from "@/_components/share-view-button";
 import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { STAGE_LABEL } from "@/_lib/season";
+import { Label } from "@/_components/label";
 
 type Notify = (message: string, tone: "success" | "error") => void;
 const PUB = { pub: true } as const;
@@ -217,7 +218,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
             <button
               key={t.key}
               onClick={() => pickTab(t.key)}
-              className={`shrink-0 cursor-pointer rounded-lg px-[7px] py-2 font-heading text-[13px] font-medium cancha:font-body cancha:font-bold transition-colors sm:px-3 ${
+              className={`shrink-0 cursor-pointer rounded-lg px-[7px] py-2 font-heading text-[13px] cancha:text-sm font-medium cancha:font-body cancha:font-bold transition-colors sm:px-3 ${
                 mainTab === t.key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"
               }`}
             >
@@ -496,9 +497,9 @@ function JoinPanel({
     <div className="flex flex-col gap-2">
       {clubs.length > 1 && (
         <div>
-          <label htmlFor="club-select" className="mb-1 block font-body text-xs text-text-secondary">
+          <Label htmlFor="club-select" className="mb-1 block">
             Solicitar con el equipo
-          </label>
+          </Label>
           <select
             id="club-select"
             value={club.id}

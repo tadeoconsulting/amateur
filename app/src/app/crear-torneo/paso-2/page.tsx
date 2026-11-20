@@ -10,6 +10,7 @@ import { useWizard } from "../_components/wizard-context";
 import { EditTabs } from "../_components/edit-tabs";
 import { useEditSave } from "../_components/use-edit-save";
 import { saveWizardTournament } from "../_components/save-tournament";
+import { Label } from "@/_components/label";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
@@ -58,7 +59,7 @@ export default function CrearTorneoPaso2Page() {
       <header className="px-4 py-3">
         <button
           onClick={() => (editing ? router.push(exitHref) : router.back())}
-          className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer"
+          className="flex items-center gap-1 font-heading text-base max-md:text-sm font-semibold text-text-primary cursor-pointer"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -80,9 +81,9 @@ export default function CrearTorneoPaso2Page() {
         <div className="flex flex-col gap-6 flex-1">
           {/* Modalidad del torneo */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Modalidad del torneo
-            </label>
+            </Label>
             <button
               onClick={() => setShowModalidad(true)}
               className="flex w-full items-center rounded border border-transparent bg-btn-regular px-3 py-3 text-left cursor-pointer transition-colors hover:border-border-primary hover:bg-surface-primary"
@@ -98,9 +99,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Tipo de competencia */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Tipo de competencia
-            </label>
+            </Label>
             <button
               onClick={() => setShowCompetencia(true)}
               disabled={formatLocked}
@@ -122,9 +123,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Elige el género */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Elige el género
-            </label>
+            </Label>
             <div className="flex gap-3">
               {["Femenino", "Masculino", "Mixto"].map((g) => (
                 <button
@@ -144,9 +145,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Elige una categoría */}
           <div>
-            <label className="block font-heading text-sm font-semibold text-text-primary mb-2">
+            <Label className="block mb-2">
               Elige una categoría
-            </label>
+            </Label>
             <div className="flex gap-3">
               {["Definir edad", "Libre", "Master"].map((c) => (
                 <button
@@ -166,9 +167,9 @@ export default function CrearTorneoPaso2Page() {
 
           {/* Cantidad de equipos */}
           <div className="flex items-center justify-between">
-            <label className="font-heading text-sm font-semibold text-text-primary">
+            <Label>
               Cantidad de equipos en el torneo
-            </label>
+            </Label>
             <input
               type="number"
               min={0}
@@ -191,7 +192,7 @@ export default function CrearTorneoPaso2Page() {
               <button
                 onClick={save}
                 disabled={saving}
-                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>
@@ -202,7 +203,7 @@ export default function CrearTorneoPaso2Page() {
               <button
                 onClick={handleCrear}
                 disabled={!canContinue || creating}
-                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
               >
                 {creating ? "Creando..." : "Crear torneo"}
               </button>

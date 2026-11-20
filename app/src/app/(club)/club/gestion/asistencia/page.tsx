@@ -66,7 +66,7 @@ function SessionsToMark({ clubId }: { clubId: string }) {
       <div className="mx-4 mt-4 rounded-xl border border-brand-200 p-5 text-center">
         <p className="font-heading text-base font-bold text-text-primary">No hay entrenamientos para pasar lista</p>
         <p className="mt-1.5 font-body text-sm text-text-secondary">Aparecen aquí desde el día de cada entrenamiento. Define tus horarios en Sesiones.</p>
-        <Link href="/club/gestion/sesiones" className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-surface-secondary px-4 font-heading text-sm font-bold text-text-invert">
+        <Link href="/club/gestion/sesiones" className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-surface-secondary px-4 font-heading text-sm md:text-base font-bold text-text-invert">
           Ir a Sesiones
         </Link>
       </div>
