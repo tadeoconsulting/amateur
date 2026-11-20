@@ -200,3 +200,13 @@ test("las pestañas principales de Mis torneos van con subrayado también en esc
   assert.match(pagina, /<SubTabs[^>]*desktop="underline"/, "Mis torneos usa el subrayado en escritorio");
 });
 
+// Dos medidas por elemento (2026-11-19): «btnSolid» (p. ej. «Crear temporada») 14 px en el celular y 16 px desde 768 px
+// (tableta y escritorio); el nombre del equipo en la lista de equipos del organizador, 16 px solo en escritorio.
+test("btnSolid va a 14 px en celular y 16 px desde md; el nombre del equipo a 16 px en escritorio", () => {
+  const botones = readFileSync(new URL("../../src/_components/button-styles.ts", import.meta.url), "utf8");
+  assert.match(botones, /font-heading text-sm font-bold/, "base de 14 px (celular)");
+  assert.match(botones, /btnSolid = `\$\{base\} md:text-base /, "btnSolid a 16 px desde md");
+  const equipos = readFileSync(new URL("../../src/_components/teams-list.tsx", import.meta.url), "utf8");
+  assert.match(equipos, /font-heading text-sm md:cancha:text-base font-bold[^"]*">\{team\.club\.name\}/, "nombre del equipo a 16 px solo en escritorio del organizador");
+});
+

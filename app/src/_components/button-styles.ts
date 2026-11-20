@@ -5,8 +5,8 @@ const base =
   "transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-primary " +
   "disabled:cursor-not-allowed disabled:opacity-40";
 
-/** Acción principal de la pantalla. */
-export const btnSolid = `${base} bg-surface-secondary text-text-invert hover:bg-brand-700`;
+/** Acción principal de la pantalla. 14 px en el celular y 16 px desde 768 px (tableta y escritorio). */
+export const btnSolid = `${base} md:text-base bg-surface-secondary text-text-invert hover:bg-brand-700`;
 /** Acción secundaria o que rechaza. */
 export const btnOutline = `${base} border border-border-primary text-text-primary hover:bg-btn-regular`;
 /** Acción discreta (cancelar, quitar) que sigue teniendo área táctil completa. */
