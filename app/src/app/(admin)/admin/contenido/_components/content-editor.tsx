@@ -230,7 +230,7 @@ export function ContentEditor({ kind, onDirtyChange }: { kind: ContentKind; onDi
           type="button"
           onClick={() => save(plain(sections), "Publicado. Ya se ve en la plataforma.")}
           disabled={saving || (!dirty && !usingDefaults)}
-          className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? "Guardando..." : "Guardar y publicar"}
         </button>

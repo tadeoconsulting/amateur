@@ -328,7 +328,7 @@ export default function FixturePage() {
         <button
           onClick={guardar}
           disabled={saving}
-          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
         >
           {saving ? "Creando fixture..." : "Guardar"}
         </button>

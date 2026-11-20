@@ -134,7 +134,7 @@ function SolicitudesContent({ tournaments }: { tournaments: TournamentListItem[]
                     <button
                       onClick={() => handleResolve(s.id, "accept", s.club.name)}
                       disabled={resolving === s.id}
-                      className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+                      className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
                     >
                       Aceptar
                     </button>

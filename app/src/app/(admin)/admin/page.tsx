@@ -163,7 +163,7 @@ export default function AdminDashboardPage() {
         <div className="flex gap-3">
           <Link
             href="/admin/usuarios?crear=true"
-            className="flex items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+            className="flex items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

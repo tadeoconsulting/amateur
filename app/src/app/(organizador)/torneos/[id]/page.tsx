@@ -449,7 +449,7 @@ export default function TournamentDetailPage() {
           {tournament.teams.length >= 2 && (
             <Link
               href={`/torneos/${params.id}/iniciar`}
-              className="mt-3 flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+              className="mt-3 flex w-full items-center justify-center rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
             >
               Iniciar torneo
             </Link>
@@ -725,7 +725,7 @@ export default function TournamentDetailPage() {
                     router.push(`/torneos/${selectedTournamentId}`);
                   }
                 }}
-                className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+                className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
               >
                 Cambiar
               </button>
@@ -772,7 +772,7 @@ export default function TournamentDetailPage() {
               <button
                 onClick={undoFixture}
                 disabled={undoingFixture}
-                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
               >
                 {undoingFixture ? "Deshaciendo..." : "Sí, deshacer"}
               </button>

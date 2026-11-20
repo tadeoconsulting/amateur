@@ -80,7 +80,7 @@ export function CrearSedeModal({
                 </p>
                 <button
                   onClick={handleDone}
-                  className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-4"
+                  className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-4"
                 >
                   Continuar
                 </button>
@@ -140,7 +140,7 @@ export function CrearSedeModal({
                 <button
                   onClick={handleCrear}
                   disabled={!nombre.trim() || !direccion.trim()}
-                  className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-6 disabled:opacity-40"
+                  className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-6 disabled:opacity-40"
                 >
                   Crear sede
                 </button>

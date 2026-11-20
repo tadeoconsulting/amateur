@@ -151,7 +151,7 @@ export function EditEventSheet({
               <button
                 onClick={save}
                 disabled={!canSave}
-                className="min-h-12 w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="min-h-12 w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>

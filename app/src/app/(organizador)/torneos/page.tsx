@@ -191,7 +191,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
         <div className="flex items-center gap-3">
           <Link
             href={mainTab === "temporadas" ? "/torneos/temporadas/nueva" : "/crear-torneo"}
-            className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+            className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

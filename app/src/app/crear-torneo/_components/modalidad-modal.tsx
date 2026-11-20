@@ -62,7 +62,7 @@ export function ModalidadModal({
           <button
             onClick={() => { if (selected) onSave(selected); }}
             disabled={!selected}
-            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-6 disabled:opacity-40"
+            className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-6 disabled:opacity-40"
           >
             Guardar
           </button>

@@ -263,7 +263,7 @@ export function MatchEditor({
             <button
               onClick={() => save(false)}
               disabled={saving}
-              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {saving ? "Guardando..." : editing ? "Guardar cambios" : "Agregar partido"}
             </button>

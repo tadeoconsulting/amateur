@@ -101,7 +101,7 @@ export function AdminLoginForm({ next }: { next: string | null }) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {submitting ? "Ingresando..." : "Ingresar"}
           </button>
