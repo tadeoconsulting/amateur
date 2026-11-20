@@ -2,7 +2,8 @@
 // se usan los componentes `TextField`, `TextArea`, `Picklist`, `PasswordInput`, `DatePicker` y `TimePicker`, que salen de aquí.
 // Es la base del design system (`/design-system/inputs`) y debe mantenerse sincronizada con él.
 //
-// Medidas (las del club, 2026-11-20): radio 8 px, relleno 12 px a los lados y 12 px arriba y abajo (alto de 48 px), borde de 1 px.
+// Medidas (las del club, 2026-11-20): radio 8 px, relleno de 12 px a los lados y arriba y abajo (el alto sale del texto: unos 46 px
+// en escritorio y 50 px en el celular), borde de 1 px.
 // Letra: 16 px en el celular (también evita que Safari de iPhone amplíe la pantalla) y 14 px desde 768 px (escritorio).
 // Los colores salen de los tokens del ámbito (`bg-btn-regular`, `text-text-primary`…), así el mismo campo se ve bien en el
 // tema oscuro «Cancha» y en el claro.
