@@ -12,8 +12,9 @@ import { ClubCrest } from "@/_components/club-crest";
 import { ScorersList, StandingsTable } from "@/_components/tournament-results";
 import { Toast } from "@/_components/toast";
 import { SeasonStages, SeasonStatusChip } from "@/_components/season-stages";
-import { fieldClass, labelClass } from "../_components/season-ui";
+import { labelClass } from "../_components/season-ui";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 function Spinner() {
   return (
@@ -236,21 +237,13 @@ function NextStep({
           <Label htmlFor="stage-date" className={labelClass}>
             Fecha de inicio
           </Label>
-          <input id="stage-date" type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} className={fieldClass} />
+          <TextField id="stage-date" type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         </div>
         <div>
           <Label htmlFor="stage-name" className={labelClass}>
             Nombre <span className="font-normal text-text-secondary">(opcional)</span>
           </Label>
-          <input
-            id="stage-name"
-            type="text"
-            maxLength={120}
-            placeholder={stage === "clausura" ? "Clausura y el año de la Apertura" : `${season.name} · ${STAGE_LABEL.final}`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={fieldClass}
-          />
+          <TextField id="stage-name" type="text" maxLength={120} placeholder={stage === "clausura" ? "Clausura y el año de la Apertura" : `${season.name} · ${STAGE_LABEL.final}`} value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <button type="submit" disabled={!startDate || saving} className={`${btnSolid} w-full`}>
           {saving ? "Un momento..." : title}

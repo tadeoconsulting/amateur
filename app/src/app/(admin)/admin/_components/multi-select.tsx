@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { TextField } from "@/_components/text-field";
 
 export type MultiOption = { value: string; label: string; hint?: string };
 
@@ -79,14 +80,7 @@ export function MultiSelect({
         <div className="absolute left-0 top-full z-30 mt-1 w-72 rounded-xl border border-border-primary bg-surface-primary shadow-lg">
           {options.length > 6 && (
             <div className="border-b border-border-primary p-2">
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={searchPlaceholder}
-                aria-label={searchPlaceholder}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} />
             </div>
           )}
           <div className="flex items-center justify-between px-3 py-2">

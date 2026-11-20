@@ -8,6 +8,8 @@ import { ResetPassword } from "../_components/reset-password";
 import { SortTh, useSort } from "../_components/sortable";
 import { displayShortName } from "@/_lib/short-name";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 interface UserRow {
   id: string;
@@ -261,79 +263,43 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Nombre *</Label>
-              <input
-                value={form.firstName}
-                onChange={(e) => set("firstName", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="Nombre"
-              />
+              <TextField value={form.firstName} onChange={(e) => set("firstName", e.target.value)} placeholder="Nombre" />
             </div>
             <div>
               <Label className="mb-1 block">Apellido *</Label>
-              <input
-                value={form.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="Apellido"
-              />
+              <TextField value={form.lastName} onChange={(e) => set("lastName", e.target.value)} placeholder="Apellido" />
             </div>
           </div>
 
           <div>
             <Label className="mb-1 block">Email *</Label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => set("email", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="correo@ejemplo.com"
-            />
+            <TextField type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="correo@ejemplo.com" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">DNI</Label>
-              <input
-                value={form.dni}
-                onChange={(e) => set("dni", e.target.value)}
-                maxLength={8}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="12345678"
-              />
+              <TextField value={form.dni} onChange={(e) => set("dni", e.target.value)} maxLength={8} placeholder="12345678" />
             </div>
             <div>
               <Label className="mb-1 block">Teléfono</Label>
-              <input
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="999 999 999"
-              />
+              <TextField value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="999 999 999" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Fecha de nacimiento</Label>
-              <input
-                type="date"
-                value={form.birthDate}
-                onChange={(e) => set("birthDate", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
             </div>
             <div>
               <Label className="mb-1 block">Departamento</Label>
-              <select
-                value={form.department}
-                onChange={(e) => set("department", e.target.value)}
-                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              >
+              <Picklist value={form.department} onChange={(v) => set("department", v)} className="cursor-pointer">
                 <option value="">Seleccionar</option>
                 {departamentos.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
-              </select>
+              </Picklist>
             </div>
           </div>
 
@@ -390,12 +356,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
               <div>
                 <Label className="mb-1 block">Nombre de la organización</Label>
-                <input
-                  value={form.organization}
-                  onChange={(e) => set("organization", e.target.value)}
-                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                  placeholder="Liga Premier Norte"
-                />
+                <TextField value={form.organization} onChange={(e) => set("organization", e.target.value)} placeholder="Liga Premier Norte" />
               </div>
             </>
           )}
@@ -409,43 +370,27 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="mb-1 block">Posición</Label>
-                  <select
-                    value={form.position}
-                    onChange={(e) => set("position", e.target.value)}
-                    className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                  >
+                  <Picklist value={form.position} onChange={(v) => set("position", v)} className="cursor-pointer">
                     <option value="">Seleccionar</option>
                     {positions.map((p) => (
                       <option key={p} value={p}>{p}</option>
                     ))}
-                  </select>
+                  </Picklist>
                 </div>
                 <div>
                   <Label className="mb-1 block">Número</Label>
-                  <input
-                    type="number"
-                    value={form.number}
-                    onChange={(e) => set("number", e.target.value)}
-                    min={1}
-                    max={99}
-                    className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                    placeholder="10"
-                  />
+                  <TextField type="number" value={form.number} onChange={(e) => set("number", e.target.value)} min={1} max={99} placeholder="10" />
                 </div>
               </div>
 
               <div>
                 <Label className="mb-1 block">Club</Label>
-                <select
-                  value={form.clubId}
-                  onChange={(e) => set("clubId", e.target.value)}
-                  className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                >
+                <Picklist value={form.clubId} onChange={(v) => set("clubId", v)} className="cursor-pointer">
                   <option value="">Sin club</option>
                   {clubs?.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>
                   ))}
-                </select>
+                </Picklist>
               </div>
             </>
           )}
@@ -471,7 +416,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   );
 }
 
-/** Convierte una fecha ISO (o null) al formato que espera un <input type="date">. */
+/** Convierte una fecha ISO (o null) al formato que espera un <TextField type="date">. */
 function toDateInput(value: string | null) {
   return value ? value.slice(0, 10) : "";
 }
@@ -567,56 +512,34 @@ function EditUserModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Nombre *</Label>
-              <input
-                value={form.firstName}
-                onChange={(e) => set("firstName", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
             </div>
             <div>
               <Label className="mb-1 block">Apellido *</Label>
-              <input
-                value={form.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Teléfono</Label>
-              <input
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="999 999 999"
-              />
+              <TextField value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="999 999 999" />
             </div>
             <div>
               <Label className="mb-1 block">Fecha de nacimiento</Label>
-              <input
-                type="date"
-                value={form.birthDate}
-                onChange={(e) => set("birthDate", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Departamento</Label>
-              <select
-                value={form.department}
-                onChange={(e) => set("department", e.target.value)}
-                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              >
+              <Picklist value={form.department} onChange={(v) => set("department", v)} className="cursor-pointer">
                 <option value="">Seleccionar</option>
                 {departamentos.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
-              </select>
+              </Picklist>
             </div>
             <div>
               <Label className="mb-1.5 block">Sexo</Label>
@@ -642,12 +565,7 @@ function EditUserModal({
           {roles.includes("ORGANIZADOR") && (
             <div>
               <Label className="mb-1 block">Nombre de la organización</Label>
-              <input
-                value={form.organization}
-                onChange={(e) => set("organization", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="Liga Premier Norte"
-              />
+              <TextField value={form.organization} onChange={(e) => set("organization", e.target.value)} placeholder="Liga Premier Norte" />
             </div>
           )}
 
@@ -771,13 +689,7 @@ function AdminUsuariosContent() {
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && refetch()}
-            className="w-full rounded-lg border border-border-primary bg-surface-primary py-2.5 pl-9 pr-3 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar por nombre o email..."
-          />
+          <TextField value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refetch()} className="pl-9 pr-3" placeholder="Buscar por nombre o email..." />
         </div>
 
         <div className="flex gap-1.5">

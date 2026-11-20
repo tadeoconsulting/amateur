@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { TextField } from "@/_components/text-field";
 
-const inputClass =
-  "w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green";
 
 /** "Olvidé mi contraseña": pide el correo y avisa que, si hay una cuenta, le llega un enlace. */
 export function ForgotPasswordPanel({ initialEmail, onBack }: { initialEmail: string; onBack: () => void }) {
@@ -57,15 +56,7 @@ export function ForgotPasswordPanel({ initialEmail, onBack }: { initialEmail: st
         <>
           <p className="mb-6 font-body text-sm text-text-secondary">Ingresa el correo de tu cuenta y te enviamos un enlace para elegir una contraseña nueva.</p>
           <form onSubmit={submit} className="flex flex-col gap-3">
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className={inputClass}
-            />
+            <TextField type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
             {error && <p role="alert" className="font-body text-sm text-red-600">{error}</p>}
             <button
               type="submit"

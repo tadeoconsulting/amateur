@@ -18,6 +18,7 @@ import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
+import { TextField } from "@/_components/text-field";
 
 export default function ClubBuscarTorneosPage() {
   // useApi consulta una sola vez al montar: por eso se espera a conocer el club antes de montar la pantalla.
@@ -140,14 +141,7 @@ function BuscarTorneos({ club }: { club: MyClub | null }) {
           Buscar torneo por nombre o sede
         </label>
         <div className="relative">
-          <input
-            id="buscar-torneo"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nombre del torneo o sede"
-            className="w-full rounded-lg border border-transparent bg-btn-regular px-3 py-3 pr-10 font-body text-base text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20"
-          />
+          <TextField id="buscar-torneo" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nombre del torneo o sede" className="pr-10" />
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary">
             <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.5" />
             <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

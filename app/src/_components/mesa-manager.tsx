@@ -5,6 +5,8 @@ import { PageSpinner } from "@/_components/spinner";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { useApi } from "@/_lib/use-api";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 // Las mesas de un torneo (especificación 011): quienes gestionan el partido en vivo los días de juego. La usan el
 // organizador (en su torneo) y el admin (en el panel de Torneos). Cada cambio se guarda al momento.
@@ -14,7 +16,6 @@ type Created = { name: string; email: string; temporaryPassword?: string };
 type MesaAccount = { id: string; firstName: string; lastName: string; email?: string };
 
 const EMAIL_OK = /^\S+@\S+\.\S+$/;
-const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-base text-text-primary outline-none focus:border-brand-500";
 
 export function MesaManager({ tournamentId, admin = false }: { tournamentId: string; admin?: boolean }) {
   const { data: mesas, loading, refetchSilently } = useApi<Mesa[]>(() => fetch(`/api/tournaments/${tournamentId}/mesa`).then((r) => (r.ok ? r.json() : [])));
@@ -153,16 +154,16 @@ export function MesaManager({ tournamentId, admin = false }: { tournamentId: str
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <Label htmlFor="mesa-nombre">Nombre</Label>
-          <input id="mesa-nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="off" className={input} />
+          <TextField id="mesa-nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="off" />
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="mesa-apellido">Apellido</Label>
-          <input id="mesa-apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="off" className={input} />
+          <TextField id="mesa-apellido" value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="off" />
         </div>
       </div>
       <div className="flex flex-col gap-1">
         <Label htmlFor="mesa-correo">Correo</Label>
-        <input id="mesa-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="mesa-correo-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="mesa@correo.com" />
+        <TextField id="mesa-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="mesa-correo-ayuda" placeholder="mesa@correo.com" invalid={emailInvalid} />
         <p id="mesa-correo-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
           {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Si no tiene cuenta, la creamos con una contraseña temporal que verás una sola vez. Una cuenta de mesa es solo mesa."}
         </p>
@@ -177,12 +178,12 @@ export function MesaManager({ tournamentId, admin = false }: { tournamentId: str
           <h2 className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">O asignar una cuenta de mesa que ya existe</h2>
           <div className="flex gap-2">
             <label htmlFor="mesa-existente" className="sr-only">Cuenta de mesa</label>
-            <select id="mesa-existente" value={pick} onChange={(e) => setPick(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary">
+            <Picklist id="mesa-existente" value={pick} onChange={(v) => setPick(v)} className="min-w-0 flex-1">
               <option value="">Elegir una mesa...</option>
               {options.map((a) => (
                 <option key={a.id} value={a.id}>{a.firstName} {a.lastName}{a.email ? ` (${a.email})` : ""}</option>
               ))}
-            </select>
+            </Picklist>
             <button type="button" onClick={() => void assignExisting()} disabled={busy || !pick} className={`${btnOutline} shrink-0 !min-h-10 !px-4 !text-xs`}>
               Asignar
             </button>

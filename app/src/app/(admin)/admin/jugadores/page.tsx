@@ -14,6 +14,8 @@ import { LinkAccountModal } from "../_components/link-account-modal";
 import { ImportPlayersModal } from "../_components/import-players-modal";
 import type { InvitationSummary } from "../_components/invite-player-panel";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 interface PlayerRow {
   id: string;
@@ -260,33 +262,16 @@ function EditPlayerModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="pl-nombre" className="mb-1 block">Nombres *</Label>
-              <input
-                id="pl-nombre"
-                value={form.firstName}
-                onChange={(e) => set("firstName", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField id="pl-nombre" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="pl-apellido" className="mb-1 block">Apellidos *</Label>
-              <input
-                id="pl-apellido"
-                value={form.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField id="pl-apellido" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
             </div>
           </div>
           <div>
             <Label htmlFor="pl-email" className="mb-1 block">Correo (con el que entra a la app) *</Label>
-            <input
-              id="pl-email"
-              type="email"
-              value={form.email}
-              onChange={(e) => set("email", e.target.value)}
-              autoComplete="off"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            />
+            <TextField id="pl-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" />
             {form.email.trim().toLowerCase() !== player.user.email.toLowerCase() && (
               <p className="mt-1 font-body text-xs text-text-secondary">
                 Si lo cambias, el jugador entrará con el correo nuevo; su contraseña no cambia.
@@ -295,13 +280,7 @@ function EditPlayerModal({
           </div>
           <div>
             <Label htmlFor="pl-tel" className="mb-1 block">Teléfono</Label>
-            <input
-              id="pl-tel"
-              value={form.phone}
-              onChange={(e) => set("phone", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="999 999 999"
-            />
+            <TextField id="pl-tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="999 999 999" />
           </div>
 
           <hr className="border-border-primary" />
@@ -310,71 +289,46 @@ function EditPlayerModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Posición</Label>
-              <select
-                value={form.position}
-                onChange={(e) => set("position", e.target.value)}
-                className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              >
+              <Picklist value={form.position} onChange={(v) => set("position", v)} className="cursor-pointer">
                 <option value="">Sin definir</option>
                 {positions.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
-              </select>
+              </Picklist>
             </div>
             <div>
               <Label className="mb-1 block">Número</Label>
-              <input
-                type="number"
-                value={form.number}
-                onChange={(e) => set("number", e.target.value)}
-                min={1}
-                max={99}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="10"
-              />
+              <TextField type="number" value={form.number} onChange={(e) => set("number", e.target.value)} min={1} max={99} placeholder="10" />
             </div>
           </div>
 
           <div>
             <Label className="mb-1 block">Club</Label>
-            <select
-              value={form.clubId}
-              onChange={(e) => handleClubChange(e.target.value)}
-              className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            >
+            <Picklist value={form.clubId} onChange={(v) => handleClubChange(v)} className="cursor-pointer">
               <option value="">Sin club</option>
               {clubs.map((c) => (
                 <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>
               ))}
-            </select>
+            </Picklist>
           </div>
 
           <div>
             <Label className="mb-1 block">Categoría</Label>
-            <select
-              value={form.categoryId}
-              onChange={(e) => set("categoryId", e.target.value)}
-              disabled={!form.clubId}
-              className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Picklist value={form.categoryId} onChange={(v) => set("categoryId", v)} disabled={!form.clubId} className="cursor-pointer">
               <option value="">Sin categoría</option>
               {visibleCategories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name} ({c.gender})</option>
               ))}
-            </select>
+            </Picklist>
           </div>
 
           <div>
             <Label className="mb-1 block">Estado</Label>
-            <select
-              value={form.status}
-              onChange={(e) => set("status", e.target.value)}
-              className="w-full cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            >
+            <Picklist value={form.status} onChange={(v) => set("status", v)} className="cursor-pointer">
               {Object.entries(statusLabels).map(([key, { label }]) => (
                 <option key={key} value={key}>{label}</option>
               ))}
-            </select>
+            </Picklist>
           </div>
         </div>
 
@@ -446,8 +400,7 @@ function EditProvisionalModal({
   // El equipo actual siempre aparece entre las opciones, aunque no viniera en la lista.
   const clubOptions = player.club && !clubs.some((c) => c.id === player.club?.id) ? [player.club, ...clubs] : clubs;
   const positionOptions = form.position && !positions.includes(form.position) ? [form.position, ...positions] : positions;
-  const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
-
+  
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -494,21 +447,21 @@ function EditProvisionalModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="pv-nombre" className="mb-1 block">Nombres *</Label>
-              <input id="pv-nombre" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} className={input} />
+              <TextField id="pv-nombre" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="pv-apellido" className="mb-1 block">Apellidos *</Label>
-              <input id="pv-apellido" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} className={input} />
+              <TextField id="pv-apellido" value={form.lastName} onChange={(e) => set("lastName", e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="pv-dni" className="mb-1 block">DNI *</Label>
-              <input id="pv-dni" inputMode="numeric" maxLength={8} value={form.dni} onChange={(e) => set("dni", e.target.value)} className={input} />
+              <TextField id="pv-dni" inputMode="numeric" maxLength={8} value={form.dni} onChange={(e) => set("dni", e.target.value)} />
             </div>
             <div>
               <Label htmlFor="pv-nac" className="mb-1 block">Fecha de nacimiento *</Label>
-              <input id="pv-nac" type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} className={input} />
+              <TextField id="pv-nac" type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} />
             </div>
           </div>
 
@@ -518,34 +471,34 @@ function EditProvisionalModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="pv-pos" className="mb-1 block">Posición</Label>
-              <select id="pv-pos" value={form.position} onChange={(e) => set("position", e.target.value)} className={`${input} cursor-pointer`}>
+              <Picklist id="pv-pos" value={form.position} onChange={(v) => set("position", v)} className="cursor-pointer">
                 <option value="">Sin definir</option>
                 {positionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
+              </Picklist>
             </div>
             <div>
               <Label htmlFor="pv-num" className="mb-1 block">Número</Label>
-              <input id="pv-num" type="number" min={1} max={99} value={form.number} onChange={(e) => set("number", e.target.value)} className={input} placeholder="10" />
+              <TextField id="pv-num" type="number" min={1} max={99} value={form.number} onChange={(e) => set("number", e.target.value)} placeholder="10" />
             </div>
           </div>
           <div>
             <Label htmlFor="pv-club" className="mb-1 block">Club *</Label>
-            <select id="pv-club" value={form.clubId} onChange={(e) => setForm((f) => ({ ...f, clubId: e.target.value, categoryId: "" }))} className={`${input} cursor-pointer`}>
+            <Picklist id="pv-club" value={form.clubId} onChange={(v) => setForm((f) => ({ ...f, clubId: v, categoryId: "" }))} className="cursor-pointer">
               {clubOptions.map((c) => <option key={c.id} value={c.id}>{c.name} ({displayShortName(c.shortName)})</option>)}
-            </select>
+            </Picklist>
           </div>
           <div>
             <Label htmlFor="pv-cat" className="mb-1 block">Categoría</Label>
-            <select id="pv-cat" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)} className={`${input} cursor-pointer`}>
+            <Picklist id="pv-cat" value={form.categoryId} onChange={(v) => set("categoryId", v)} className="cursor-pointer">
               <option value="">Sin categoría</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.gender})</option>)}
-            </select>
+            </Picklist>
           </div>
           <div>
             <Label htmlFor="pv-estado" className="mb-1 block">Estado</Label>
-            <select id="pv-estado" value={form.status} onChange={(e) => set("status", e.target.value)} className={`${input} cursor-pointer`}>
+            <Picklist id="pv-estado" value={form.status} onChange={(v) => set("status", v)} className="cursor-pointer">
               {Object.entries(statusLabels).map(([key, { label }]) => <option key={key} value={key}>{label}</option>)}
-            </select>
+            </Picklist>
           </div>
         </div>
 
@@ -664,26 +617,15 @@ export default function AdminJugadoresPage() {
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && refetch()}
-            className="w-full rounded-lg border border-border-primary bg-surface-primary py-2.5 pl-9 pr-3 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar jugador..."
-          />
+          <TextField value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refetch()} className="pl-9 pr-3" placeholder="Buscar jugador..." />
         </div>
 
         <MultiSelect allLabel="Todos los equipos" noun="equipos" options={clubOptions} selected={clubFilter} onChange={setClubFilter} searchPlaceholder="Buscar equipo..." />
-        <select
-          value={kind}
-          onChange={(e) => setKind(e.target.value as typeof kind)}
-          aria-label="Tipo de jugador"
-          className="cursor-pointer rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-        >
+        <Picklist value={kind} onChange={(v) => setKind(v as typeof kind)} aria-label="Tipo de jugador" className="cursor-pointer">
           <option value="all">Con y sin cuenta</option>
           <option value="account">Con cuenta</option>
           <option value="provisional">Provisionales (sin cuenta)</option>
-        </select>
+        </Picklist>
         {(clubFilter.length > 0 || kind !== "all") && (
           <button type="button" onClick={() => { setClubFilter([]); setKind("all"); }} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
             Quitar filtros

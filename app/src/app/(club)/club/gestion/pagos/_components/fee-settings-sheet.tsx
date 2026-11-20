@@ -7,10 +7,9 @@ import { btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { Sheet } from "@/_components/sheet";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
-const inputClass =
-  "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +
-  "hover:bg-surface-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20";
 
 /** La cuota mensual estándar del club y su día de vencimiento. */
 export function FeeSettingsSheet({
@@ -54,7 +53,7 @@ export function FeeSettingsSheet({
           <Label htmlFor="club-fee">
             Cuota mensual estándar (S/)
           </Label>
-          <input id="club-fee" inputMode="decimal" autoComplete="off" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="80" className={`${inputClass} mt-1.5`} aria-describedby="club-fee-help" />
+          <TextField id="club-fee" inputMode="decimal" autoComplete="off" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="80" className="mt-1.5" aria-describedby="club-fee-help" />
           <p id="club-fee-help" className="mt-1.5 font-body text-xs text-text-secondary">
             La pagan todos los jugadores, salvo quien tenga un monto propio (por ejemplo S/ 60, o S/ 0 si no paga).
           </p>
@@ -63,13 +62,13 @@ export function FeeSettingsSheet({
           <Label htmlFor="club-due-day">
             Día de vencimiento
           </Label>
-          <select id="club-due-day" value={dueDay} onChange={(e) => setDueDay(e.target.value)} className={`${inputClass} mt-1.5`}>
+          <Picklist id="club-due-day" value={dueDay} onChange={(v) => setDueDay(v)} className="mt-1.5">
             {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
               <option key={d} value={d}>
                 Día {d} de cada mes
               </option>
             ))}
-          </select>
+          </Picklist>
           <p className="mt-1.5 font-body text-xs text-text-secondary">Un mes con saldo pasa a “Vencido” después de este día.</p>
         </div>
         {current.defined && (

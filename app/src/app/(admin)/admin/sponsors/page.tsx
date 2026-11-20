@@ -10,6 +10,7 @@ import {
 import { useApi } from "@/_lib/use-api";
 import { SortTh, useSort } from "../_components/sortable";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 interface SponsorDetail {
   id: string;
@@ -82,30 +83,15 @@ function CreateSponsorModal({ onClose, onCreated }: { onClose: () => void; onCre
         <div className="flex flex-col gap-4">
           <div>
             <Label className="mb-1 block">Nombre *</Label>
-            <input
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="Gatorade Perú"
-            />
+            <TextField value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Gatorade Perú" />
           </div>
           <div>
             <Label className="mb-1 block">URL del logo</Label>
-            <input
-              value={form.logoUrl}
-              onChange={(e) => set("logoUrl", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="https://…"
-            />
+            <TextField value={form.logoUrl} onChange={(e) => set("logoUrl", e.target.value)} placeholder="https://…" />
           </div>
           <div>
             <Label className="mb-1 block">Sitio web</Label>
-            <input
-              value={form.website}
-              onChange={(e) => set("website", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="https://…"
-            />
+            <TextField value={form.website} onChange={(e) => set("website", e.target.value)} placeholder="https://…" />
           </div>
         </div>
 
@@ -214,29 +200,15 @@ function EditSponsorModal({
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">Datos del sponsor</p>
           <div>
             <Label className="mb-1 block">Nombre *</Label>
-            <input
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            />
+            <TextField value={form.name} onChange={(e) => set("name", e.target.value)} />
           </div>
           <div>
             <Label className="mb-1 block">URL del logo</Label>
-            <input
-              value={form.logoUrl}
-              onChange={(e) => set("logoUrl", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="https://…"
-            />
+            <TextField value={form.logoUrl} onChange={(e) => set("logoUrl", e.target.value)} placeholder="https://…" />
           </div>
           <div>
             <Label className="mb-1 block">Sitio web</Label>
-            <input
-              value={form.website}
-              onChange={(e) => set("website", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="https://…"
-            />
+            <TextField value={form.website} onChange={(e) => set("website", e.target.value)} placeholder="https://…" />
           </div>
 
           <button
@@ -251,12 +223,7 @@ function EditSponsorModal({
           <p className="font-heading text-xs font-semibold uppercase tracking-wider text-text-secondary">
             Torneos que auspicia
           </p>
-          <input
-            value={tournamentSearch}
-            onChange={(e) => setTournamentSearch(e.target.value)}
-            className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar torneo..."
-          />
+          <TextField value={tournamentSearch} onChange={(e) => setTournamentSearch(e.target.value)} placeholder="Buscar torneo..." />
           <div className="max-h-56 overflow-y-auto rounded-lg border border-border-primary">
             {visibleTournaments.length === 0 && (
               <p className="px-3 py-4 text-center font-body text-sm text-text-secondary">No se encontraron torneos</p>
@@ -352,13 +319,7 @@ export default function AdminSponsorsPage() {
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && refetch()}
-            className="w-full rounded-lg border border-border-primary bg-surface-primary py-2.5 pl-9 pr-3 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar sponsor..."
-          />
+          <TextField value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refetch()} className="pl-9 pr-3" placeholder="Buscar sponsor..." />
         </div>
         <button
           onClick={refetch}

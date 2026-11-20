@@ -126,22 +126,18 @@ test("el menú de la cuenta va a 16 px en el organizador", () => {
   assert.match(menu, /font-body text-xs cancha:text-base/, "rol del encabezado");
 });
 
-// La hoja «Agregar partido»: etiquetas y campos (texto y marcador) en DM Sans a 14 px (2026-11-16). La regla
-// global pone los campos a 16 px en el celular (zoom de Safari); `campo-14` es la excepción pedida, solo para esta hoja.
-test("la hoja «Agregar partido» usa DM Sans a 14 px en etiquetas y campos", () => {
+// La hoja «Agregar partido» usa los componentes únicos de campos (especificación 022): Label, TextField y Picklist; el estilo del
+// campo ya no vive en la hoja. Sus botones principales van a 14 px en celular y 16 px desde md.
+test("la hoja «Agregar partido» usa los componentes únicos de campos", () => {
   const hoja = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/_components/match-editor.tsx", import.meta.url), "utf8");
-  assert.match(hoja, /const field =\s*"campo-14 [^"]*font-body text-sm font-semibold/, "campos");
   assert.match(hoja, /import \{ Label \} from "@\/_components\/label"/, "las etiquetas usan el componente Label");
+  assert.match(hoja, /import \{ TextField \} from "@\/_components\/text-field"/, "los campos usan TextField");
+  assert.match(hoja, /import \{ Picklist \} from "@\/_components\/picklist"/, "los desplegables usan Picklist");
+  assert.doesNotMatch(hoja, /const field =|<select\b|<input\b(?![^>]*type="checkbox")/, "sin estilos de campo propios ni controles nativos (salvo la casilla)");
   // Todos los botones de la hoja (también «Cancelar» y «Quitar partido») a 16 px.
   const botones = hoja.split("\n").filter((l) => /<button|className="[^"]*cursor-pointer[^"]*font-heading/.test(l) && l.includes("font-heading"));
   assert.ok(botones.length >= 6, "se encontraron los botones de la hoja");
   for (const b of botones) assert.match(b, /text-base/, `botón a 16 px: ${b.trim().slice(0, 60)}`);
-  // Los desplegables llevan su propia flecha a 12 px del borde derecho (igual que el texto a la izquierda, `px-3`).
-  assert.match(hoja, /appearance-none pr-10/, "desplegable sin la flecha del navegador");
-  assert.match(hoja, /pointer-events-none absolute right-3/, "flecha propia a 12 px del borde");
-  assert.doesNotMatch(hoja, /<select\b[^>]*className=\{field\}/, "ningún desplegable usa la flecha del navegador");
-  const css = readFileSync(new URL("../../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.campo-14\s*\{\s*font-size:\s*14px;/, "excepción a los 16 px de los campos");
 });
 
 test("el ámbito del organizador aplica el tema y carga las fuentes de la landing", () => {

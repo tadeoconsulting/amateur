@@ -10,6 +10,7 @@ import { AvatarCropper } from "@/_components/avatar-cropper";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export default function ClubPerfilPage() {
   const { club, isPrincipal, loading: loadingClub } = useMyClub();
@@ -174,35 +175,17 @@ export default function ClubPerfilPage() {
 
         <div>
           <Label>Equipo</Label>
-          <input
-            type="text"
-            value={equipo}
-            onChange={(e) => setEquipo(e.target.value)}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="text" value={equipo} onChange={(e) => setEquipo(e.target.value)} className="mt-1" />
         </div>
 
         <div>
           <Label>Nombre corto</Label>
-          <input
-            type="text"
-            value={nombreCorto}
-            onChange={(e) => setNombreCorto(e.target.value)}
-            maxLength={SHORT_NAME_MAX}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="text" value={nombreCorto} onChange={(e) => setNombreCorto(e.target.value)} maxLength={SHORT_NAME_MAX} className="mt-1" />
         </div>
 
         <div>
           <Label>Ciudad</Label>
-          <input
-            type="text"
-            value={ciudad}
-            onChange={(e) => setCiudad(e.target.value)}
-            maxLength={60}
-            placeholder="Ciudad del club"
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="text" value={ciudad} onChange={(e) => setCiudad(e.target.value)} maxLength={60} placeholder="Ciudad del club" className="mt-1" />
         </div>
 
         <div>
@@ -226,35 +209,17 @@ export default function ClubPerfilPage() {
 
         <div>
           <Label>Nombre del delegado</Label>
-          <input
-            type="text"
-            value={delegadoNombre}
-            onChange={(e) => setDelegadoNombre(e.target.value)}
-            readOnly={!isPrincipal}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary read-only:text-text-secondary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="text" value={delegadoNombre} onChange={(e) => setDelegadoNombre(e.target.value)} readOnly={!isPrincipal} className="mt-1" />
         </div>
 
         <div>
           <Label>Número del delegado</Label>
-          <input
-            type="tel"
-            value={delegadoTel}
-            onChange={(e) => setDelegadoTel(e.target.value)}
-            readOnly={!isPrincipal}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary read-only:text-text-secondary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="tel" value={delegadoTel} onChange={(e) => setDelegadoTel(e.target.value)} readOnly={!isPrincipal} className="mt-1" />
         </div>
 
         <div>
           <Label>Correo del delegado</Label>
-          <input
-            type="email"
-            value={delegadoEmail}
-            onChange={(e) => setDelegadoEmail(e.target.value)}
-            readOnly={!isPrincipal}
-            className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary read-only:text-text-secondary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="email" value={delegadoEmail} onChange={(e) => setDelegadoEmail(e.target.value)} readOnly={!isPrincipal} className="mt-1" />
         </div>
 
         <button

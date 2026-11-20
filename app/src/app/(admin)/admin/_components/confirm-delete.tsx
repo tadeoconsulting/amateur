@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 /**
  * Confirmación de una eliminación. Si no se puede deshacer, hay que escribir `confirmWord` (el nombre de
@@ -68,15 +69,7 @@ export function ConfirmDelete({
             <Label htmlFor={inputId} className="mb-1 mt-5 block">
               Para confirmar, escribe <strong className="text-text-primary">{confirmWord}</strong>
             </Label>
-            <input
-              id={inputId}
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              disabled={working}
-              autoComplete="off"
-              autoFocus
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            />
+            <TextField id={inputId} value={typed} onChange={(e) => setTyped(e.target.value)} disabled={working} autoComplete="off" autoFocus />
           </>
         )}
 

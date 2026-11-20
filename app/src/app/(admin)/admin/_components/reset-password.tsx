@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { copyText } from "@/_lib/share";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 const MIN_LENGTH = 8;
 
@@ -101,15 +102,7 @@ export function ResetPassword({ userId, userLabel }: { userId: string; userLabel
                 Contraseña nueva (mínimo {MIN_LENGTH} caracteres)
               </Label>
               <div className="flex gap-2">
-                <input
-                  id={`pw-custom-${userId}`}
-                  type={showCustom ? "text" : "password"}
-                  value={custom}
-                  onChange={(e) => setCustom(e.target.value)}
-                  autoComplete="new-password"
-                  disabled={step === "working"}
-                  className="min-w-0 flex-1 rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                />
+                <TextField id={`pw-custom-${userId}`} type={showCustom ? "text" : "password"} value={custom} onChange={(e) => setCustom(e.target.value)} autoComplete="new-password" disabled={step === "working"} className="min-w-0 flex-1" />
                 <button
                   type="button"
                   onClick={() => setShowCustom((v) => !v)}

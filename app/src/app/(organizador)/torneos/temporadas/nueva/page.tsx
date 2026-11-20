@@ -9,9 +9,10 @@ import { useAuth } from "@/lib/auth-context";
 import type { FinalFormat } from "@/_lib/season";
 import { BackHeader } from "@/_components/back-header";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
-import { fieldClass, labelClass } from "../_components/season-ui";
+import { labelClass } from "../_components/season-ui";
 import { FinalPhaseFields, validFinalTeams } from "../_components/final-phase-fields";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 function Spinner() {
   return (
@@ -92,7 +93,7 @@ function NuevaTemporada({ organizerId }: { organizerId: string }) {
             <Label htmlFor="season-name" className={labelClass}>
               Nombre de la temporada
             </Label>
-            <input id="season-name" type="text" maxLength={120} placeholder="Ej.: Temporada 2026" value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
+            <TextField id="season-name" type="text" maxLength={120} placeholder="Ej.: Temporada 2026" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
 
           <fieldset>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { InvitePlayerPanel, type InvitationSummary } from "./invite-player-panel";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 interface AccountResult {
   id: string;
@@ -161,14 +162,7 @@ export function LinkAccountModal({
         {!chosen && (
           <>
             <Label htmlFor="la-buscar" className="mb-1 block">Buscar la cuenta (correo, nombre o DNI)</Label>
-            <input
-              id="la-buscar"
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); if (e.target.value.trim().length < 3) setResults(null); }}
-              autoComplete="off"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="jugador@correo.com"
-            />
+            <TextField id="la-buscar" value={query} onChange={(e) => { setQuery(e.target.value); if (e.target.value.trim().length < 3) setResults(null); }} autoComplete="off" placeholder="jugador@correo.com" />
             <div className="mt-3 flex flex-col gap-2" aria-live="polite">
               {searching && <p className="font-body text-sm text-text-secondary">Buscando...</p>}
               {!searching && results !== null && visible.length === 0 && (

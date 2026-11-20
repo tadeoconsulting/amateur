@@ -10,6 +10,7 @@ import { ProfilePicker } from "./profile-picker";
 import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { passwordError } from "@/_lib/password-rules";
+import { TextField } from "@/_components/text-field";
 
 type AuthView = "login" | "register";
 
@@ -194,34 +195,10 @@ export function AuthModal({
           {/* Email form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             {view === "register" && (
-              <input
-                type="text"
-                placeholder="Nombre completo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoComplete="name"
-                className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
-              />
+              <TextField type="text" placeholder="Nombre completo" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
             )}
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
-            />
-            <PasswordInput
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              maxLength={72}
-              autoComplete={view === "register" ? "new-password" : "current-password"}
-              className="w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green"
-            />
+            <TextField type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+            <PasswordInput placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required maxLength={72} autoComplete={view === "register" ? "new-password" : "current-password"} />
             {view === "register" && <PasswordRules value={password} className="-mt-1 text-text-secondary" />}
 
             {view === "register" && (

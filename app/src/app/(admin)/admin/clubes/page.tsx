@@ -15,6 +15,7 @@ import { displayShortName } from "@/_lib/short-name";
 import { ConfirmDelete } from "../_components/confirm-delete";
 import { InviteDelegatePanel } from "../_components/invite-delegate-panel";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 interface ClubRow {
   id: string;
@@ -163,35 +164,17 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Nombre *</Label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="Deportivo Union"
-              />
+              <TextField value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Deportivo Union" />
             </div>
             <div>
               <Label className="mb-1 block">Abreviatura *</Label>
-              <input
-                value={form.shortName}
-                onChange={(e) => setForm((f) => ({ ...f, shortName: e.target.value.toUpperCase() }))}
-                maxLength={SHORT_NAME_MAX}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="DPU"
-              />
+              <TextField value={form.shortName} onChange={(e) => setForm((f) => ({ ...f, shortName: e.target.value.toUpperCase() }))} maxLength={SHORT_NAME_MAX} placeholder="DPU" />
             </div>
           </div>
 
           <div>
             <Label htmlFor="club-city" className="mb-1 block">Ciudad</Label>
-            <input
-              id="club-city"
-              value={form.city}
-              onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-              maxLength={60}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="Ciudad del club"
-            />
+            <TextField id="club-city" value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} maxLength={60} placeholder="Ciudad del club" />
           </div>
 
           <div>
@@ -248,12 +231,7 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
               </div>
             ) : (
               <div className="relative">
-                <input
-                  value={ownerSearch}
-                  onChange={(e) => setOwnerSearch(e.target.value)}
-                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                  placeholder="Buscar usuario por nombre..."
-                />
+                <TextField value={ownerSearch} onChange={(e) => setOwnerSearch(e.target.value)} placeholder="Buscar usuario por nombre..." />
                 {ownerResults.length > 0 && ownerSearch.length >= 2 && (
                   <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-primary bg-surface-primary shadow-lg">
                     {ownerResults.map((u) => (
@@ -277,48 +255,24 @@ function CreateClubModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
           <div>
             <Label className="mb-1 block">Nombre del delegado</Label>
-            <input
-              value={form.delegadoNombre}
-              onChange={(e) => setForm((f) => ({ ...f, delegadoNombre: e.target.value }))}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="Nombre completo del delegado"
-            />
+            <TextField value={form.delegadoNombre} onChange={(e) => setForm((f) => ({ ...f, delegadoNombre: e.target.value }))} placeholder="Nombre completo del delegado" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Teléfono del delegado</Label>
-              <input
-                value={form.delegadoTel}
-                onChange={(e) => setForm((f) => ({ ...f, delegadoTel: e.target.value }))}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="999 999 999"
-              />
+              <TextField value={form.delegadoTel} onChange={(e) => setForm((f) => ({ ...f, delegadoTel: e.target.value }))} placeholder="999 999 999" />
             </div>
             <div>
               <Label className="mb-1 block">Correo del delegado</Label>
-              <input
-                type="email"
-                value={form.delegadoEmail}
-                onChange={(e) => setForm((f) => ({ ...f, delegadoEmail: e.target.value }))}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="delegado@club.com"
-              />
+              <TextField type="email" value={form.delegadoEmail} onChange={(e) => setForm((f) => ({ ...f, delegadoEmail: e.target.value }))} placeholder="delegado@club.com" />
             </div>
           </div>
           </>
           ) : (
           <div>
             <Label htmlFor="club-invite-email" className="mb-1 block">Correo para invitar al delegado (opcional)</Label>
-            <input
-              id="club-invite-email"
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="delegado@club.com"
-              aria-invalid={inviteInvalid}
-            />
+            <TextField id="club-invite-email" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="delegado@club.com" aria-invalid={inviteInvalid} />
             <p className="mt-1.5 font-body text-xs text-text-secondary">
               Si lo escribes, se le envía la invitación para ser el delegado; puede ser un correo provisional y se cambia después desde Editar. Si lo dejas vacío, el club se crea sin delegado y lo invitas cuando quieras. Mientras tanto no se puede pedir unirse a este club.
             </p>
@@ -535,33 +489,17 @@ function EditClubModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Nombre *</Label>
-              <input
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField value={form.name} onChange={(e) => set("name", e.target.value)} />
             </div>
             <div>
               <Label className="mb-1 block">Abreviatura *</Label>
-              <input
-                value={form.shortName}
-                onChange={(e) => set("shortName", e.target.value.toUpperCase())}
-                maxLength={SHORT_NAME_MAX}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField value={form.shortName} onChange={(e) => set("shortName", e.target.value.toUpperCase())} maxLength={SHORT_NAME_MAX} />
             </div>
           </div>
 
           <div>
             <Label htmlFor="club-city" className="mb-1 block">Ciudad</Label>
-            <input
-              id="club-city"
-              value={form.city}
-              onChange={(e) => set("city", e.target.value)}
-              maxLength={60}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="Ciudad del club"
-            />
+            <TextField id="club-city" value={form.city} onChange={(e) => set("city", e.target.value)} maxLength={60} placeholder="Ciudad del club" />
           </div>
 
           <div>
@@ -584,33 +522,17 @@ function EditClubModal({
 
           <div>
             <Label className="mb-1 block">Nombre del delegado</Label>
-            <input
-              value={form.delegadoNombre}
-              onChange={(e) => set("delegadoNombre", e.target.value)}
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              placeholder="Nombre completo del delegado"
-            />
+            <TextField value={form.delegadoNombre} onChange={(e) => set("delegadoNombre", e.target.value)} placeholder="Nombre completo del delegado" />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">Teléfono del delegado</Label>
-              <input
-                value={form.delegadoTel}
-                onChange={(e) => set("delegadoTel", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="999 999 999"
-              />
+              <TextField value={form.delegadoTel} onChange={(e) => set("delegadoTel", e.target.value)} placeholder="999 999 999" />
             </div>
             <div>
               <Label className="mb-1 block">Correo del delegado</Label>
-              <input
-                type="email"
-                value={form.delegadoEmail}
-                onChange={(e) => set("delegadoEmail", e.target.value)}
-                className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                placeholder="delegado@club.com"
-              />
+              <TextField type="email" value={form.delegadoEmail} onChange={(e) => set("delegadoEmail", e.target.value)} placeholder="delegado@club.com" />
             </div>
           </div>
         </div>
@@ -647,13 +569,7 @@ function EditClubModal({
               </div>
             ) : (
               <div className="relative">
-                <input
-                  value={ownerSearch}
-                  onChange={(e) => setOwnerSearch(e.target.value)}
-                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-                  placeholder="Buscar al delegado por nombre o correo..."
-                  aria-label="Buscar al delegado"
-                />
+                <TextField value={ownerSearch} onChange={(e) => setOwnerSearch(e.target.value)} placeholder="Buscar al delegado por nombre o correo..." aria-label="Buscar al delegado" />
                 {ownerResults.length > 0 && ownerSearch.length >= 2 && (
                   <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-primary bg-surface-primary shadow-lg">
                     {ownerResults.map((u) => (
@@ -840,13 +756,7 @@ function AdminClubesContent() {
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && refetch()}
-            className="w-full rounded-lg border border-border-primary bg-surface-primary py-2.5 pl-9 pr-3 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar club..."
-          />
+          <TextField value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refetch()} className="pl-9 pr-3" placeholder="Buscar club..." />
         </div>
         <MultiSelect allLabel="Todos los delegados" noun="delegados" options={ownerOptions} selected={ownerFilter} onChange={setOwnerFilter} searchPlaceholder="Buscar delegado u organizador..." />
         {ownerFilter.length > 0 && (

@@ -1,10 +1,35 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { Children, Fragment, isValidElement, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { fieldClass, picklistOptionClass, picklistPanelClass } from "@/_components/field-styles";
 import { firstEnabled, indexOfValue, lastEnabled, picklistLabel, stepEnabled, typeaheadIndex, type PicklistOption } from "@/_lib/picklist";
 
 export type { PicklistOption };
+
+// El texto de un nodo (los `<option>` suelen traer textos y números mezclados: «Fecha {d}»).
+function textOf(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
+
+// Las opciones escritas como `<option value disabled>texto</option>` (también dentro de fragmentos y de `.map`), para migrar un
+// `<select>` sin reescribir sus opciones.
+function optionsFromChildren(children: ReactNode): PicklistOption[] {
+  const out: PicklistOption[] = [];
+  Children.forEach(children, (child) => {
+    if (!isValidElement<{ value?: string | number; disabled?: boolean; children?: ReactNode }>(child)) return;
+    if (child.type === Fragment) {
+      out.push(...optionsFromChildren(child.props.children));
+    } else if (child.type === "option") {
+      const label = textOf(child.props.children);
+      out.push({ value: String(child.props.value ?? label), label, disabled: Boolean(child.props.disabled) });
+    }
+  });
+  return out;
+}
 
 /**
  * El desplegable propio de la plataforma (especificación 022): reemplaza al `<select>` nativo, con el aspecto del design system
@@ -15,18 +40,20 @@ export type { PicklistOption };
  * cierra; al escribir letras salta a la opción que empieza con ellas. Con el ratón o el dedo: clic en el botón y en una opción;
  * fuera del panel se cierra.
  *
- * - `value` / `onChange(value)`: controlado; el valor `""` es «sin elegir» y muestra el `placeholder`.
- * - `options`: `{ value, label, disabled? }`.
+ * - `value` / `onChange(value)`: controlado; el valor `""` es «sin elegir» y muestra el `placeholder`. `onChange` recibe siempre
+ *   un texto (si el estado es un número, conviértelo: `Number(v)`).
+ * - `options`: `{ value, label, disabled? }`; o, en su lugar, `<option>` como hijos (la opción con valor `""` es el marcador).
  * - `name`: si se pasa, agrega un `<input type="hidden">` para los formularios nativos.
  * - `invalid`: borde de error. `className`: solo disposición (ancho, márgenes).
  */
 export function Picklist({
   id,
   name,
-  value,
+  value: rawValue,
   onChange,
-  options,
-  placeholder = "Elige una opción",
+  options: optionsProp,
+  children,
+  placeholder: placeholderProp,
   invalid = false,
   disabled = false,
   className = "",
@@ -35,9 +62,10 @@ export function Picklist({
 }: {
   id?: string;
   name?: string;
-  value: string;
+  value: string | number;
   onChange: (value: string) => void;
-  options: PicklistOption[];
+  options?: PicklistOption[];
+  children?: ReactNode;
   placeholder?: string;
   invalid?: boolean;
   disabled?: boolean;
@@ -45,6 +73,9 @@ export function Picklist({
   "aria-label"?: string;
   "aria-describedby"?: string;
 }) {
+  const options = optionsProp ?? optionsFromChildren(children);
+  const value = String(rawValue ?? "");
+  const placeholder = placeholderProp ?? options.find((o) => o.value === "")?.label ?? "Elige una opción";
   const autoId = useId();
   const controlId = id ?? `picklist-${autoId}`;
   const listId = `${controlId}-lista`;

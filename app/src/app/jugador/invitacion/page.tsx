@@ -11,6 +11,7 @@ import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { passwordError } from "@/_lib/password-rules";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 type Preview = {
   kind: "link" | "email";
@@ -262,37 +263,19 @@ function InvitacionContent() {
             {/* Nombre completo */}
             <div>
               <Label>Nombre completo</Label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Joe Doe"
-                className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-              />
+              <TextField type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Joe Doe" className="mt-1" />
             </div>
 
             {/* Apellidos */}
             <div>
               <Label>Apellidos</Label>
-              <input
-                type="text"
-                value={apellidos}
-                onChange={(e) => setApellidos(e.target.value)}
-                placeholder="Joe Doe"
-                className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-              />
+              <TextField type="text" value={apellidos} onChange={(e) => setApellidos(e.target.value)} placeholder="Joe Doe" className="mt-1" />
             </div>
 
             {/* DNI */}
             <div>
               <Label>DNI</Label>
-              <input
-                type="text"
-                value={dni}
-                onChange={(e) => setDni(e.target.value)}
-                placeholder="12345678"
-                className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-              />
+              <TextField type="text" value={dni} onChange={(e) => setDni(e.target.value)} placeholder="12345678" className="mt-1" />
             </div>
 
             {/* Posición */}
@@ -315,30 +298,9 @@ function InvitacionContent() {
             <div>
               <Label>Fecha de nacimiento</Label>
               <div className="mt-1 flex gap-3">
-                <input
-                  type="text"
-                  value={dia}
-                  onChange={(e) => setDia(e.target.value)}
-                  placeholder="Día"
-                  maxLength={2}
-                  className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={mes}
-                  onChange={(e) => setMes(e.target.value)}
-                  placeholder="Mes"
-                  maxLength={2}
-                  className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={anio}
-                  onChange={(e) => setAnio(e.target.value)}
-                  placeholder="Año"
-                  maxLength={4}
-                  className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-                />
+                <TextField type="text" value={dia} onChange={(e) => setDia(e.target.value)} placeholder="Día" maxLength={2} className="text-center" />
+                <TextField type="text" value={mes} onChange={(e) => setMes(e.target.value)} placeholder="Mes" maxLength={2} className="text-center" />
+                <TextField type="text" value={anio} onChange={(e) => setAnio(e.target.value)} placeholder="Año" maxLength={4} className="text-center" />
               </div>
             </div>
 
@@ -365,40 +327,19 @@ function InvitacionContent() {
             {/* Teléfono */}
             <div>
               <Label>Teléfono</Label>
-              <input
-                type="tel"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                placeholder="999 777 888"
-                className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-              />
+              <TextField type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="999 777 888" className="mt-1" />
             </div>
 
             {/* Correo */}
             <div>
               <Label>Correo</Label>
-              <input
-                type="email"
-                value={correoFinal}
-                onChange={(e) => setCorreo(e.target.value)}
-                readOnly={preview.kind === "email"}
-                placeholder="joe@gmail.com"
-                className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-              />
+              <TextField type="email" value={correoFinal} onChange={(e) => setCorreo(e.target.value)} readOnly={preview.kind === "email"} placeholder="joe@gmail.com" className="mt-1" />
             </div>
 
             {/* Contraseña */}
             <div>
               <Label>Contraseña</Label>
-              <PasswordInput
-                wrapperClassName="mt-1"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña"
-                maxLength={72}
-                autoComplete="new-password"
-                className="w-full border-b border-brand-200 py-2 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-              />
+              <PasswordInput wrapperClassName="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" maxLength={72} autoComplete="new-password" />
               <PasswordRules value={password} className="text-text-secondary" />
             </div>
 

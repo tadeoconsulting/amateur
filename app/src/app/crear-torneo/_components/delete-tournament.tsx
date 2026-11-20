@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getMatches } from "@/_lib/api";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 /**
  * "Eliminar torneo" de la pantalla de editar (DELETE /api/tournaments/:id): el torneo se oculta, con todo
@@ -83,14 +84,7 @@ export function DeleteTournament({ tournamentId, tournamentName }: { tournamentI
                 <Label htmlFor="delete-tournament-name" className="mb-1 block">
                   Ya hay {played} {played === 1 ? "partido jugado o en juego" : "partidos jugados o en juego"}. Escribe el nombre del torneo para confirmar.
                 </Label>
-                <input
-                  id="delete-tournament-name"
-                  value={typed}
-                  onChange={(e) => setTyped(e.target.value)}
-                  placeholder={tournamentName}
-                  autoComplete="off"
-                  className="w-full rounded-lg border border-border-primary px-3 py-2.5 font-body text-base text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/30"
-                />
+                <TextField id="delete-tournament-name" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder={tournamentName} autoComplete="off" />
               </div>
             )}
 
