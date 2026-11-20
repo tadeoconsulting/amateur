@@ -1,6 +1,6 @@
 # 022 · Campos, selectores y desplegables: un solo estilo, sincronizado con el design system
 
-**Estado:** 🟡 **en curso (2026-11-20).** Hechos: el estilo único, los componentes, la página del design system y el registro de sincronización. Falta migrar los ámbitos (ver *Entregas*).
+**Estado:** 🟡 **casi completa (2026-11-20).** Hechos: el estilo único, los componentes, la página del design system, el registro de sincronización y la migración de todos los formularios. Quedan decisiones y piezas del design system por documentar (ver *Pendiente*).
 **Origen:** el usuario vio que los campos, selectores y desplegables del design system no coincidían con los de la plataforma, y que los de la plataforma tampoco coincidían entre sí.
 **Toca:** `src/_components/` (componentes nuevos), `src/app/design-system/`, y los formularios de todos los ámbitos. No cambia la API ni la base de datos.
 
@@ -48,9 +48,15 @@
 
 ## Entregas
 1. ✅ Estilo único, componentes, `Picklist`, registro y página del design system (campos y botones).
-2. ⏳ Migrar los formularios por ámbito, en este orden: organizador → asistente de torneo → club y jugador → administración → landing y acceso. En cada uno: `<input>`/`<textarea>` → `TextField`/`TextArea`, `<select>` → `Picklist`, `Field` donde haya etiqueta, y quitar las constantes de estilo propias.
-3. ⏳ Una prueba que falle si aparece un `<input>`, `<select>` o `<textarea>` con estilos propios fuera de los componentes.
-4. ⏳ Documentar en el design system las piezas pendientes (menús, pestañas, hojas, barras, tipografía y color con los valores reales).
+2. ✅ Migración de los formularios de **todos los ámbitos** (organizador, asistente de torneo, club, jugador, administración, landing y acceso): 181 `<input>`, 34 `<select>`, 4 `<textarea>` y 11 `PasswordInput` pasan a `TextField`, `Picklist`, `TextArea` y `PasswordInput`; se eliminaron las constantes de estilo propias y la excepción `campo-14`. Los `<option>` se mantienen como hijos de `Picklist`.
+3. ✅ `tests/unit/campos.test.mjs`: falla si aparece un `<input>` de texto, `<select>` o `<textarea>` nativos, o una constante de estilo de campo, fuera de los componentes. Excepciones documentadas: casillas, botones de opción, archivos, rango y color; y el editor de minuto de la línea de tiempo del partido en vivo (un número chico en la misma fila).
+4. ⏳ Documentar en el design system las piezas pendientes (17 en el registro).
+
+## Pendiente
+- **Fuente en los ámbitos claros.** `font-body` es DM Sans en el tema «Cancha» (organizador, administrador) pero **Lato** en el claro (club, jugador, asistente de torneo, landing y acceso); por eso allí las etiquetas y los campos tienen la misma forma pero no la misma letra. Decidir si el cuerpo pasa a DM Sans en toda la plataforma.
+- **Escritorio 14 px** (supuesto, ver arriba): confirmar con el usuario.
+- **Casillas, botones de opción e interruptores** no tienen componente propio todavía (`Checkbox`, `Radio`, `Switch`): sumarlos al design system.
+- **Revisión visual** de administración (103 campos y 21 selectores migrados) y del club: se verificaron el organizador, el asistente de torneo, el acceso y el design system.
 
 ## Criterios de aceptación
 - Un campo, un selector y un desplegable se ven y se comportan igual en el organizador, el administrador, el club, el jugador, el asistente de torneo, la landing y el acceso (cada uno con su tema).
