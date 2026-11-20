@@ -86,7 +86,7 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
                 <td className="px-1 py-2.5">
                   <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
                     <ClubCrest club={row} size="h-6 w-6" />
-                    <span className="truncate text-xs font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
+                    <span className="truncate text-xs md:text-base font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
                     {row.live && <LiveDot />}
                   </Link>
                 </td>

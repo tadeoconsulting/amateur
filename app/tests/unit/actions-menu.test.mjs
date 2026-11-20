@@ -210,3 +210,9 @@ test("btnSolid va a 14 px en celular y 16 px desde md; el nombre del equipo a 16
   assert.match(equipos, /font-heading text-sm md:cancha:text-base font-bold[^"]*">\{team\.club\.name\}/, "nombre del equipo a 16 px solo en escritorio del organizador");
 });
 
+// Nombre del equipo en la tabla de posiciones del organizador: 12 px en el celular y 16 px en escritorio (2026-11-19).
+test("el nombre del equipo en la tabla de posiciones va a 12 px en celular y 16 px en escritorio", () => {
+  const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/page.tsx", import.meta.url), "utf8");
+  assert.match(pagina, /truncate text-xs md:text-base font-medium text-text-primary[^"]*">\{row\.clubName\}/);
+});
+
