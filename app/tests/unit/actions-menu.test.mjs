@@ -216,3 +216,13 @@ test("el nombre del equipo en la tabla de posiciones va a 12 px en celular y 16 
   assert.match(pagina, /truncate text-xs md:text-base font-medium text-text-primary[^"]*">\{row\.clubName\}/);
 });
 
+// Tabla de posiciones del organizador: la columna «#» ocupa solo su contenido (`w-px`) y deja 12 px hasta el escudo del equipo
+// (4 px de `pr-1` + 8 px de `pl-2`), en vez de repartirse el ancho sobrante (2026-11-19).
+test("la columna de posición de la tabla no se estira y queda a 12 px del equipo", () => {
+  const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/page.tsx", import.meta.url), "utf8");
+  assert.match(pagina, /<th className="w-px whitespace-nowrap py-2\.5 pl-3 pr-1 [^"]*">#<\/th>/, "encabezado «#» angosto");
+  assert.match(pagina, /<td className="w-px whitespace-nowrap py-2\.5 pl-3 pr-1">/, "celda de posición angosta");
+  assert.match(pagina, /<th className="py-2\.5 pl-2 pr-1 [^"]*">Equipo<\/th>/, "«Equipo» alineado con el escudo");
+  assert.match(pagina, /<td className="py-2\.5 pl-2 pr-1">\s*<Link href=\{clubHref/, "celda del equipo con 8 px a la izquierda");
+});
+

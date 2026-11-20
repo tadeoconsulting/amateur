@@ -54,8 +54,8 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-brand-200 bg-surface-alt">
-            <th className="py-2.5 pl-3 pr-1 font-medium text-text-secondary">#</th>
-            <th className="px-1 py-2.5 font-medium text-text-secondary">Equipo</th>
+            <th className="w-px whitespace-nowrap py-2.5 pl-3 pr-1 font-medium text-text-secondary">#</th>
+            <th className="py-2.5 pl-2 pr-1 font-medium text-text-secondary">Equipo</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">PJ</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">G</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">E</th>
@@ -72,7 +72,7 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
             const isBottom = restOut ? position > advanceCount : showDescends && position >= 7;
             return (
               <tr key={row.clubId} className="border-b border-brand-200 last:border-0">
-                <td className="py-2.5 pl-3 pr-1">
+                <td className="w-px whitespace-nowrap py-2.5 pl-3 pr-1">
                   <div className="flex items-center gap-1.5">
                     <span
                       className={`h-2 w-2 rounded-full ${
@@ -83,7 +83,7 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
                     <PlaceMove change={moves.get(row.clubId)} />
                   </div>
                 </td>
-                <td className="px-1 py-2.5">
+                <td className="py-2.5 pl-2 pr-1">
                   <Link href={clubHref(row.clubId)} aria-label={`Ver a ${row.clubName}`} className="-mx-1 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-text-primary">
                     <ClubCrest club={row} size="h-6 w-6" />
                     <span className="truncate text-xs md:text-base font-medium text-text-primary underline-offset-2 hover:underline">{row.clubName}</span>
