@@ -220,9 +220,19 @@ test("el nombre del equipo en la tabla de posiciones va a 12 px en celular y 16 
 // (4 px de `pr-1` + 8 px de `pl-2`), en vez de repartirse el ancho sobrante (2026-11-19).
 test("la columna de posición de la tabla no se estira y queda a 12 px del equipo", () => {
   const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/page.tsx", import.meta.url), "utf8");
-  assert.match(pagina, /<th className="w-px whitespace-nowrap py-2\.5 pl-3 pr-1 [^"]*">#<\/th>/, "encabezado «#» angosto");
-  assert.match(pagina, /<td className="w-px whitespace-nowrap py-2\.5 pl-3 pr-1">/, "celda de posición angosta");
+  assert.match(pagina, /<th className="w-px whitespace-nowrap border-l-4 border-transparent py-2\.5 pl-2 pr-1 [^"]*">#<\/th>/, "encabezado «#» angosto");
+  assert.match(pagina, /className=\{`w-px whitespace-nowrap border-l-4 py-2\.5 pl-2 pr-1 \$\{/, "celda de posición angosta");
   assert.match(pagina, /<th className="py-2\.5 pl-2 pr-1 [^"]*">Equipo<\/th>/, "«Equipo» alineado con el escudo");
   assert.match(pagina, /<td className="py-2\.5 pl-2 pr-1">\s*<Link href=\{clubHref/, "celda del equipo con 8 px a la izquierda");
+});
+
+// Clasifica / desciende en la tabla de posiciones del organizador: un borde de color de 4 px a la izquierda de la fila, a todo
+// el alto y pegado al borde de la tabla, en lugar de un punto (2026-11-19).
+test("la tabla de posiciones marca clasifica y desciende con un borde a la izquierda de la fila", () => {
+  const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/[id]/page.tsx", import.meta.url), "utf8");
+  assert.match(pagina, /isTop \? "border-verification" : isBottom \? "border-red-500" : "border-transparent"/, "borde verde, rojo o sin color");
+  assert.doesNotMatch(pagina, /h-2 w-2 rounded-full \$\{\s*isTop/, "ya no hay punto en cada fila");
+  assert.match(pagina, /h-4 w-1 rounded-sm bg-verification/, "la leyenda usa la misma marca (barrita)");
+  assert.match(pagina, /h-4 w-1 rounded-sm bg-red-500/, "también la roja");
 });
 

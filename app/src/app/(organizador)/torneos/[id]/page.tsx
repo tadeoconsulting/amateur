@@ -54,7 +54,7 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-brand-200 bg-surface-alt">
-            <th className="w-px whitespace-nowrap py-2.5 pl-3 pr-1 font-medium text-text-secondary">#</th>
+            <th className="w-px whitespace-nowrap border-l-4 border-transparent py-2.5 pl-2 pr-1 font-medium text-text-secondary">#</th>
             <th className="py-2.5 pl-2 pr-1 font-medium text-text-secondary">Equipo</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">PJ</th>
             <th className="px-1 py-2.5 text-center font-medium text-text-secondary">G</th>
@@ -72,13 +72,13 @@ function StandingsTable({ rows, advanceCount, showDescends, restOut = false, clu
             const isBottom = restOut ? position > advanceCount : showDescends && position >= 7;
             return (
               <tr key={row.clubId} className="border-b border-brand-200 last:border-0">
-                <td className="w-px whitespace-nowrap py-2.5 pl-3 pr-1">
+                {/* Clasifica (verde) o desciende (rojo): un borde de 4 px a la izquierda, a todo el alto de la fila y pegado al borde de la tabla. */}
+                <td
+                  className={`w-px whitespace-nowrap border-l-4 py-2.5 pl-2 pr-1 ${
+                    isTop ? "border-verification" : isBottom ? "border-red-500" : "border-transparent"
+                  }`}
+                >
                   <div className="flex items-center gap-1.5">
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        isTop ? "bg-verification" : isBottom ? "bg-red-500" : "bg-transparent"
-                      }`}
-                    />
                     <span className="text-xs font-medium text-text-secondary">{position}</span>
                     <PlaceMove change={moves.get(row.clubId)} />
                   </div>
@@ -602,12 +602,12 @@ export default function TournamentDetailPage() {
               : <StandingsTable rows={standings} advanceCount={advanceCount} showDescends={!noDescent} restOut={ligaLlaves !== null} clubHref={clubHref} />}
             <div className={`flex items-center gap-4 px-1 ${plainSeasonTable ? "hidden" : ""}`}>
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-verification" />
+                <span className="h-4 w-1 rounded-sm bg-verification" />
                 <span className="text-xs text-text-secondary">{isCopa ? "Clasifica al cuadro" : ligaLlaves !== null ? "Clasifica a las llaves" : "Clasifica a liguilla"}</span>
               </div>
               {(!noDescent || ligaLlaves !== null) && (
                 <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  <span className="h-4 w-1 rounded-sm bg-red-500" />
                   <span className="text-xs text-text-secondary">{ligaLlaves !== null ? "No clasifica" : "Desciende"}</span>
                 </div>
               )}
