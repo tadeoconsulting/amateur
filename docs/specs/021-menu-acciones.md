@@ -39,6 +39,7 @@ El encabezado de cada día de la lista de fechas («Por definir», «Dom 15 Nov�
 Otros ajustes de tamaño pedidos el mismo día:
 - **Filtros en píldora** (Competencia / Convocatoria / Finalizados, el selector de estado de Partidos, `CategoryTabs`, los de Convocatoria y los del editor de cruces): **14 px** en el organizador (`cancha:text-sm`).
 - **Título de la franja de cada partido** («General» o el nombre del grupo, en el partido en vivo, el resultado, el partido y el fixture manual): **14 px** en el organizador (`cancha:text-sm`).
+- **Botones «Volver» / «Salir»** (flecha y texto): **14 px en el celular** en toda la app; los pocos que estaban en 16 px (editor de cruces y asistente de crear torneo) llevan `max-md:text-sm`, así que en escritorio no cambian.
 - **Botones principales** (fondo lima, letra de títulos en negrita; «Crear torneo», «Guardar», «Agregar partido» de las hojas, etc.): **16 px en el celular** (menos de 768 px) en **toda la app**, con `max-md:text-base`; en escritorio no cambian. Un botón nuevo con ese estilo debe llevarlo (una prueba lo vigila).
 - **Barra de abajo del celular** (organizador, club y jugador): las etiquetas pasan de 10 a **16 px** (primero se pidió 12 y después 16), en todos los ámbitos.
 - **Título de las tarjetas de torneo** (Mis torneos del organizador y las listas del jugador): **16 px**.

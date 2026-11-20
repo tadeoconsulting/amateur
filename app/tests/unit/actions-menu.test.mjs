@@ -170,3 +170,23 @@ test("el título de la franja del partido va a 14 px en el organizador", () => {
   }
 });
 
+// Los botones «Volver» / «Salir» (flecha + texto) van a 14 px en el celular en toda la app (2026-11-16): los que tenían
+// 16 px llevan `max-md:text-sm`.
+test("los botones de volver no pasan de 14 px en el celular", () => {
+  const raiz = fileURLToPath(new URL("../../src/", import.meta.url));
+  const malos = [];
+  const recorrer = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const ruta = join(dir, e.name);
+      if (e.isDirectory()) recorrer(ruta);
+      else if (e.name.endsWith(".tsx")) {
+        readFileSync(ruta, "utf8").split("\n").forEach((l, i) => {
+          if (l.includes("items-center gap-1 font-heading text-base font-semibold text-text-primary") && !l.includes("max-md:text-sm")) malos.push(`${ruta.replace(raiz, "")}:${i + 1}`);
+        });
+      }
+    }
+  };
+  recorrer(raiz);
+  assert.deepEqual(malos, [], "botones de volver a 16 px en el celular");
+});
+

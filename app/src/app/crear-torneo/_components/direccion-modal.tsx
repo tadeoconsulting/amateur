@@ -51,7 +51,7 @@ export function DireccionModal({
           <div className="px-5 pt-5 pb-4">
             <button
               onClick={handleClose}
-              className="flex items-center gap-1 font-heading text-base font-semibold text-text-primary cursor-pointer mb-4"
+              className="flex items-center gap-1 font-heading text-base max-md:text-sm font-semibold text-text-primary cursor-pointer mb-4"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180">
                 <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
