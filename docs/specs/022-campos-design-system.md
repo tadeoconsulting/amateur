@@ -1,6 +1,6 @@
 # 022 · Campos, selectores y desplegables: un solo estilo, sincronizado con el design system
 
-**Estado:** 🟡 **casi completa (2026-11-20).** Hechos: el estilo único, los componentes, la página del design system, el registro de sincronización y la migración de todos los formularios. Quedan decisiones y piezas del design system por documentar (ver *Pendiente*).
+**Estado:** 🟡 **casi completa (2026-11-20, actualizada).** Hechos: el estilo único, los componentes, la página del design system, el registro de sincronización y la migración de todos los formularios. Quedan decisiones y piezas del design system por documentar (ver *Pendiente*).
 **Origen:** el usuario vio que los campos, selectores y desplegables del design system no coincidían con los de la plataforma, y que los de la plataforma tampoco coincidían entre sí.
 **Toca:** `src/_components/` (componentes nuevos), `src/app/design-system/`, y los formularios de todos los ámbitos. No cambia la API ni la base de datos.
 
@@ -19,10 +19,13 @@
 | 5 | Contraseña (restablecer y cambiar) | **Sí**, se unifican con el resto (adiós a la línea inferior). |
 | 6 | Desplegables | **Picklist propio** (no el `<select>` nativo). |
 | 7 | Sincronización | **Todo campo, componente, texto o letra nuevo se documenta en el design system, y el design system se comunica con el sistema en los dos sentidos.** |
+| 8 | Fuente de cuerpo | **DM Sans en toda la plataforma** (también en los ámbitos claros: club, jugador, asistente de torneo, landing y acceso). `font-body` y `font-sans` son DM Sans; Inter queda solo de respaldo. Los correos no cambian (usan Lato). |
+| 9 | Medidas de escritorio | **Las del organizador**: letra de 14 px, relleno de 12 px. Con las del club para celular (16 px). |
+| 10 | Desplegables | **Un solo componente, `Picklist`, con variantes.** No se crean otros. |
 
 ## El estilo del campo (`field-styles.ts`)
 - **Caja:** radio 8 px, borde de 1 px, relleno de 12 px (`px-3 py-3`) y fondo `bg-btn-regular`. El alto sale del texto: unos 46 px en escritorio y 50 px en el celular.
-- **Letra:** DM Sans; **16 px en el celular** y **14 px desde 768 px** (`text-base md:text-sm`). *Supuesto a confirmar: las medidas del club son de celular (16 px); para escritorio se tomó 14 px, la densidad del organizador y de administración.*
+- **Letra:** DM Sans; **16 px en el celular** (medidas del club) y **14 px desde 768 px** (medidas del organizador): `text-base md:text-sm`. Confirmado por el usuario el 2026-11-20.
 - **Estados:** normal (sin borde a la vista), hover (borde `border-primary` y fondo de superficie), foco (borde `text-primary`), error (borde rojo, también en hover y foco) y deshabilitado (opacidad 60 %).
 - **Marcador:** `text-text-primary/60`.
 - Los colores son tokens del ámbito, así el mismo campo se ve bien en el tema oscuro «Cancha» y en el claro.
@@ -35,11 +38,22 @@
 | `Field` | Etiqueta + control + ayuda o error; conecta `aria-describedby` y `aria-invalid`. |
 | `TextField` | `input` de texto, correo, número, fecha, hora…; `invalid`, `icon`. |
 | `TextArea` | Área de texto. |
-| `Picklist` | El desplegable propio: `combobox` + `listbox` accesibles; ↓ ↑ Inicio Fin Enter Espacio Escape Tab y escribir para saltar; `value` / `onChange(value)` / `options`. Lógica pura en `_lib/picklist.ts`. |
+| `Picklist` | **El único desplegable**, con tres variantes (ver abajo). Lógica pura en `_lib/picklist.ts`; íconos en `picklist-icons.tsx`. |
 | `PasswordInput` | Contraseña con ojo; usa el mismo campo. |
 | `DatePicker` / `TimePicker` | Calendario y hora, con la misma caja. |
 
 `className` en estos componentes es solo para disposición (ancho, márgenes); el aspecto nunca se cambia desde afuera.
+
+## Un solo desplegable: `Picklist` y sus variantes
+Antes había **cinco** implementaciones (el `<select>` nativo, el menú «Acciones», el menú de la cuenta, `MultiSelect` en administración y `ProfilePicker` en el acceso). Ahora hay un solo componente, con el mismo panel, las mismas opciones y el mismo cierre (clic fuera, Escape, Tab):
+
+| Variante | Para qué | Dónde se usa |
+|---|---|---|
+| `field` (por omisión) | Elegir **un valor** (`value` / `onChange` / `options` o `<option>` hijos; `inline` para modales con scroll). Combobox accesible. | los 34 selectores de los formularios |
+| `multi` | Elegir **varios**: casillas, resumen en el botón, buscador con más de 6 opciones, «Limpiar»; opciones con `icon`, `description` y `hint`. | filtros de administración; perfiles del registro |
+| `menu` | **Acciones**: `items` con ícono, enlace o acción, `tone="danger"`, `separated`; botón `outline` o `ghost`, `trigger` y `header` propios. El foco se mueve entre los ítems. | menú «Acciones» del torneo; menú de la cuenta |
+
+`TournamentActions` y `AccountMenu` y `ProfilePicker` son composiciones de dominio: arman sus datos y se los pasan a `Picklist`. Los archivos `actions-menu.tsx`, `_lib/actions-menu.ts` y `multi-select.tsx` se eliminaron. Una prueba falla si aparece otro componente de desplegable o un panel con `role="menu"` o `role="listbox"` fuera de `Picklist`. *(Los selectores de fecha y de hora son calendarios, no desplegables de opciones; siguen siendo `DatePicker` y `TimePicker`.)*
 
 ## Sincronización con el design system
 - `/design-system` se muestra en el tema «Cancha» (con un interruptor para ver el claro) y **usa los componentes reales**; la página de campos y la de botones lo hacen ya. Los tokens se imprimen desde el código (`labelText`, `fieldBox`…).
@@ -53,8 +67,6 @@
 4. ⏳ Documentar en el design system las piezas pendientes (17 en el registro).
 
 ## Pendiente
-- **Fuente en los ámbitos claros.** `font-body` es DM Sans en el tema «Cancha» (organizador, administrador) pero **Lato** en el claro (club, jugador, asistente de torneo, landing y acceso); por eso allí las etiquetas y los campos tienen la misma forma pero no la misma letra. Decidir si el cuerpo pasa a DM Sans en toda la plataforma.
-- **Escritorio 14 px** (supuesto, ver arriba): confirmar con el usuario.
 - **Casillas, botones de opción e interruptores** no tienen componente propio todavía (`Checkbox`, `Radio`, `Switch`): sumarlos al design system.
 - **Revisión visual** de administración (103 campos y 21 selectores migrados) y del club: se verificaron el organizador, el asistente de torneo, el acceso y el design system.
 

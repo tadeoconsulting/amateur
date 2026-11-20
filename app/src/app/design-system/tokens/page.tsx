@@ -72,9 +72,9 @@ const tokenGroups: { title: string; tokens: Token[] }[] = [
   {
     title: "Typography",
     tokens: [
-      { css: "--font-sans", tailwind: "font-sans", value: "Inter", desc: "Default UI sans-serif" },
+      { css: "--font-sans", tailwind: "font-sans", value: "DM Sans (respaldo: Inter)", desc: "Default UI sans-serif" },
       { css: "--font-heading", tailwind: "font-heading", value: "Lexend", desc: "Headings, buttons, labels" },
-      { css: "--font-body", tailwind: "font-body", value: "Lato", desc: "Body text, paragraphs" },
+      { css: "--font-body", tailwind: "font-body", value: "DM Sans", desc: "Body text, paragraphs, labels and fields" },
     ],
   },
 ];

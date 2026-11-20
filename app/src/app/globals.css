@@ -31,7 +31,7 @@
   --c-tint-blue: #BEE3F8;
   --c-tint-sky: #d4e5ff;
   --f-heading: var(--font-lexend);
-  --f-body: var(--font-lato);
+  --f-body: var(--font-dm-sans);
 }
 
 /* Sistema "Cancha": el lineamiento de la landing (oscuro, lima, tipografía condensada) llevado a la app.
@@ -123,7 +123,7 @@
   --color-field-dark: #00A868;
   --color-field-light: #E6FFF5;
 
-  --font-sans: var(--font-inter);
+  --font-sans: var(--f-body); /* DM Sans en todos los ámbitos (especificación 022); Inter queda solo de respaldo */
   --font-heading: var(--f-heading);
   --font-body: var(--f-body);
 }
