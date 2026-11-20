@@ -48,7 +48,7 @@ export function ForgotPasswordPanel({ initialEmail, onBack }: { initialEmail: st
           </p>
           <button
             onClick={onBack}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
           >
             Volver a iniciar sesión
           </button>
@@ -70,7 +70,7 @@ export function ForgotPasswordPanel({ initialEmail, onBack }: { initialEmail: st
             <button
               type="submit"
               disabled={sending || !email}
-              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+              className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
             >
               {sending ? "Enviando..." : "Enviarme el enlace"}
             </button>

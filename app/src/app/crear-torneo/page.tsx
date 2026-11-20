@@ -165,7 +165,7 @@ export default function CrearTorneoPage() {
               <button
                 onClick={save}
                 disabled={saving}
-                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm max-md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+                className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
               >
                 {saving ? "Guardando..." : "Guardar cambios"}
               </button>
@@ -174,7 +174,7 @@ export default function CrearTorneoPage() {
             <button
               onClick={handleContinuar}
               disabled={!canContinue}
-              className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-sm max-md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
+              className="w-full rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer disabled:opacity-40"
             >
               Continuar
             </button>

@@ -82,7 +82,7 @@ export function MapaModal({
 
           <button
             onClick={() => onConfirm(editedAddress || address)}
-            className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-5"
+            className="w-full rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert hover:bg-brand-700 transition-colors cursor-pointer mt-5"
           >
             Confirmar dirección
           </button>

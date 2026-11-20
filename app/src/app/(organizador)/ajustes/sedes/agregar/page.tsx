@@ -117,7 +117,7 @@ export default function AgregarSedePage() {
         <button
           onClick={handleSubmit}
           disabled={!nombre.trim() || saving}
-          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Creando..." : "Crear sede"}
         </button>

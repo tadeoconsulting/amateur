@@ -55,7 +55,7 @@ export default function ManualFixturePage() {
           </svg>
           <h1 className="font-heading text-xl font-bold text-text-primary">Fixture</h1>
         </div>
-        <button className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer">
+        <button className="flex items-center gap-1.5 rounded-lg bg-surface-secondary px-4 py-2 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 cursor-pointer">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M2 5.5L7 2l5 3.5M7 2v10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M4 8l-2 1.5V12h4v-2.5a1 1 0 012 0V12h4V9.5L10 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />

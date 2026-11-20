@@ -468,7 +468,7 @@ export default function EnVivoPage() {
           <button
             onClick={() => setPeriod("descanso")}
             disabled={saving}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             Finalizar 1.er tiempo
           </button>
@@ -483,7 +483,7 @@ export default function EnVivoPage() {
           <button
             onClick={() => setPeriod("segundo_tiempo")}
             disabled={saving}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             Iniciar 2.º tiempo
           </button>
@@ -509,7 +509,7 @@ export default function EnVivoPage() {
             <button
               onClick={() => setStatus("finalizado")}
               disabled={saving}
-              className="mt-3 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+              className="mt-3 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
             >
               Finalizar con {homeScore}-{awayScore}
             </button>
@@ -524,7 +524,7 @@ export default function EnVivoPage() {
           <button
             onClick={() => setStatus("en_curso")}
             disabled={saving}
-            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+            className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             Iniciar partido
           </button>
@@ -940,7 +940,7 @@ export default function EnVivoPage() {
                 <button
                   onClick={() => setStatus("finalizado")}
                   disabled={saving}
-                  className="min-h-12 flex-1 cursor-pointer rounded-lg bg-surface-secondary px-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                  className="min-h-12 flex-1 cursor-pointer rounded-lg bg-surface-secondary px-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
                 >
                   Sí, finalizar
                 </button>

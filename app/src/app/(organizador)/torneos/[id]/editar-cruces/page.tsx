@@ -285,7 +285,7 @@ export default function EditarCrucesPage() {
             <button
               onClick={save}
               disabled={!okToSave || saving}
-              className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {saving ? "Guardando..." : dirty ? `Guardar cambios (${changes.length} ${changes.length === 1 ? "partido" : "partidos"})` : "Guardar cambios"}
             </button>

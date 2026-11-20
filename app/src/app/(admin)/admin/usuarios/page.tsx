@@ -205,7 +205,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </code>
           <button
             onClick={onCreated}
-            className="mt-5 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert"
+            className="mt-5 w-full cursor-pointer rounded-lg bg-surface-secondary py-2.5 font-heading text-base font-bold text-text-invert"
           >
             Listo
           </button>
@@ -460,7 +460,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Creando..." : "Crear usuario"}
           </button>
@@ -693,7 +693,7 @@ function EditUserModal({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
+            className="cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -754,7 +754,7 @@ function AdminUsuariosContent() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-secondary px-4 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

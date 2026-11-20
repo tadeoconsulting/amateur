@@ -140,7 +140,7 @@ export function InvitePlayerPanel({
                 {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Se crea un enlace nuevo y el anterior deja de funcionar."}
               </p>
               <div className="flex gap-2">
-                <button onClick={() => void create(typed)} disabled={busy || !EMAIL_OK.test(typed)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
+                <button onClick={() => void create(typed)} disabled={busy || !EMAIL_OK.test(typed)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
                   {busy ? "Enviando..." : "Enviar a este correo"}
                 </button>
                 <button onClick={() => { setMode("view"); setEmail(""); }} disabled={busy} className={ghost}>Volver</button>
@@ -167,7 +167,7 @@ export function InvitePlayerPanel({
             <strong>{invitation.acceptedBy.name}</strong> ({invitation.acceptedBy.email}) aceptó la invitación y confirmó el DNI, pero su cuenta ya tiene una ficha en este equipo. Unir los perfiles lo decide un admin.
           </p>
           <div className="flex gap-2">
-            <button onClick={() => onReview(invitation.acceptedBy!.email)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-xs max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700">Revisar y unir</button>
+            <button onClick={() => onReview(invitation.acceptedBy!.email)} className="min-h-10 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700">Revisar y unir</button>
           </div>
         </div>
       )}
@@ -190,7 +190,7 @@ export function InvitePlayerPanel({
           <button
             onClick={() => void create(typed)}
             disabled={busy || emailInvalid}
-            className="min-h-11 cursor-pointer self-start rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 cursor-pointer self-start rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? "Creando..." : typed ? "Enviar invitación por correo" : "Crear enlace"}
           </button>

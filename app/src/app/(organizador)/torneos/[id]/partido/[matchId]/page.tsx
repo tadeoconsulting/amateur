@@ -209,7 +209,7 @@ export default function PartidoDetailPage() {
         </button>
         <button
           onClick={() => router.push(`/torneos/${params.id}/en-vivo/${params.matchId}`)}
-          className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
+          className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700"
         >
           Iniciar el partido
         </button>

@@ -161,7 +161,7 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
         <button
           onClick={handleSave}
           disabled={!nombre.trim() || saving}
-          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-8 w-full cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>
@@ -194,7 +194,7 @@ function EditarSedeForm({ sede, onDeleted }: { sede: SedeDetail; onDeleted: () =
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
+                className="flex-1 cursor-pointer rounded-lg bg-surface-secondary py-3 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:opacity-40"
               >
                 {deleting ? "Eliminando..." : "Sí, eliminar"}
               </button>

@@ -320,7 +320,7 @@ export default function ConfigurarPartidoPage() {
         <button
           onClick={save}
           disabled={!selectedDate || !hora || saving}
-          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full cursor-pointer rounded-lg bg-surface-secondary py-3.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>

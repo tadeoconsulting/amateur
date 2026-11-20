@@ -142,9 +142,9 @@ test("la campana va junto a la cuenta con 16 px y los títulos de las tarjetas a
   }
 });
 
-// Los botones principales (fondo lima, letra de títulos en negrita sobre texto invertido) van a 16 px en el celular en toda
-// la app (2026-11-16): `max-md:text-base`, así escritorio no cambia. Un botón nuevo con ese estilo debe llevarlo.
-test("los botones principales llevan max-md:text-base", () => {
+// Los botones principales (fondo lima, letra de títulos en negrita sobre texto invertido) van siempre a 16 px, en celular
+// y en escritorio, en toda la app (2026-11-16): `text-base`. Un botón nuevo con ese estilo no debe usar text-xs ni text-sm.
+test("los botones principales van siempre a 16 px", () => {
   const raiz = fileURLToPath(new URL("../../src/", import.meta.url));
   const malos = [];
   const recorrer = (dir) => {
@@ -153,13 +153,13 @@ test("los botones principales llevan max-md:text-base", () => {
       if (e.isDirectory()) recorrer(ruta);
       else if (e.name.endsWith(".tsx")) {
         readFileSync(ruta, "utf8").split("\n").forEach((l, i) => {
-          if (l.includes("bg-surface-secondary") && /font-heading text-(xs|sm) font-bold text-text-invert/.test(l) && !l.includes("max-md:text-base")) malos.push(`${ruta.replace(raiz, "")}:${i + 1}`);
+          if (l.includes("bg-surface-secondary") && /font-heading text-(xs|sm)\b[^"`]*font-bold text-text-invert/.test(l)) malos.push(`${ruta.replace(raiz, "")}:${i + 1}`);
         });
       }
     }
   };
   recorrer(raiz);
-  assert.deepEqual(malos, [], "botones principales sin 16 px en el celular");
+  assert.deepEqual(malos, [], "botones principales que no están a 16 px");
 });
 
 // El título de la franja de cada partido («General» o el grupo) va a 14 px en el organizador (2026-11-16).

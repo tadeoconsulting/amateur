@@ -151,7 +151,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
 
   const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
   const ghost = "min-h-11 cursor-pointer rounded-lg border border-border-primary px-4 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-50";
-  const solid = "min-h-11 cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm max-md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
+  const solid = "min-h-11 cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 
   const shown = review ? (onlyProblems ? review.rows.filter((r) => r.status === "problem") : review.rows) : [];
 
