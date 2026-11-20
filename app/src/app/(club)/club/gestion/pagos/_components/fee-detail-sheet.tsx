@@ -8,10 +8,8 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { FeeStatusChip } from "@/_components/fee-status";
 import { Sheet } from "@/_components/sheet";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
-const inputClass =
-  "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-2.5 font-body text-base text-text-primary transition-colors " +
-  "hover:bg-surface-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20";
 
 type Notify = (message: string, tone?: "success" | "error") => void;
 
@@ -145,14 +143,14 @@ function OwnFeeForm({ base, playerId, data, clubFee, busy, run }: { base: string
         <Label htmlFor="own-fee">
           Cuota de este jugador (S/)
         </Label>
-        <input id="own-fee" inputMode="decimal" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(clubFee)} className={`${inputClass} mt-1.5`} />
+        <TextField id="own-fee" inputMode="decimal" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(clubFee)} className="mt-1.5" />
         <p className="mt-1 font-body text-xs text-text-secondary">Escribe 0 si no paga.</p>
       </div>
       <div>
         <Label htmlFor="own-start">
           Se cobra desde
         </Label>
-        <input id="own-start" type="month" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputClass} mt-1.5`} />
+        <TextField id="own-start" type="month" value={start} onChange={(e) => setStart(e.target.value)} className="mt-1.5" />
       </div>
       <div className="flex flex-wrap gap-2">
         <button
@@ -247,7 +245,7 @@ function MonthBlock({ base, m, busy, run }: { base: string; m: PlayerFeeHistory[
             <label htmlFor={`partial-${m.feeId}`} className="sr-only">
               Monto de un pago parcial en soles
             </label>
-            <input id={`partial-${m.feeId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Otro monto" className={inputClass} />
+            <TextField id={`partial-${m.feeId}`} inputMode="decimal" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Otro monto" />
             <button
               disabled={busy !== null || cents === null || cents <= 0}
               onClick={() => run(`part-${m.feeId}`, async () => { await feesRequest("POST", `${base}/cargos/${m.feeId}/abonos`, { amount: cents! / 100 }); setAmount(""); return `Abono registrado: ${formatSolesAmount(cents!)}`; })}
@@ -264,7 +262,7 @@ function MonthBlock({ base, m, busy, run }: { base: string; m: PlayerFeeHistory[
           <label htmlFor={`due-${m.feeId}`} className="sr-only">
             Nuevo monto del mes en soles
           </label>
-          <input id={`due-${m.feeId}`} inputMode="decimal" autoComplete="off" value={newDue} onChange={(e) => setNewDue(e.target.value)} className={inputClass} />
+          <TextField id={`due-${m.feeId}`} inputMode="decimal" autoComplete="off" value={newDue} onChange={(e) => setNewDue(e.target.value)} />
           <button
             disabled={busy !== null || dueCents === null}
             onClick={() => run(`due-${m.feeId}`, async () => { await feesRequest("PATCH", `${base}/cargos/${m.feeId}`, { amountDue: dueCents! / 100 }); setCorrecting(false); return "Monto del mes corregido"; })}

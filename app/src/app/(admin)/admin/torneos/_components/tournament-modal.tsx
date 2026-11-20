@@ -5,6 +5,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { COMPETITION_TYPES, GENDERS, MODALITIES, TOURNAMENT_STATUSES } from "@/_lib/tournament-labels";
 import { TournamentPhotoField } from "@/_components/tournament-photo-field";
 import { Label } from "@/_components/label";
+import { TextField, TextArea } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 interface UserOption {
   id: string;
@@ -69,8 +71,6 @@ const STATUS_OPTIONS: Record<string, string> = {
 // "grupos" no está en el asistente pero existe en torneos anteriores.
 const FORMAT_OPTIONS = [...COMPETITION_TYPES.map((t) => ({ value: t.format, label: t.label })), { value: "grupos", label: "Grupos" }];
 
-const inputClass =
-  "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
 
 const isKnockout = (format: string) => format === "eliminacion" || format === "relampago" || format === "copa";
 
@@ -287,34 +287,34 @@ export function TournamentModal({
         ) : editing && !original ? null : (
           <div className="flex flex-col gap-4">
             <Field label="Nombre del torneo *">
-              <input value={form.name} onChange={(e) => set("name", e.target.value)} className={inputClass} placeholder="Copa Comunidad 2026" />
+              <TextField value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Copa Comunidad 2026" />
             </Field>
 
             <TournamentPhotoField value={form.logoUrl} onChange={(url) => set("logoUrl", url)} />
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Formato *">
-                <select value={form.format} onChange={(e) => set("format", e.target.value)} className={`${inputClass} cursor-pointer`}>
+                <Picklist value={form.format} onChange={(v) => set("format", v)} className="cursor-pointer">
                   {FORMAT_OPTIONS.map((f) => (
                     <option key={f.value} value={f.value}>{f.label}</option>
                   ))}
-                </select>
+                </Picklist>
               </Field>
               <Field label={editing ? "Estado" : "Estado inicial"}>
-                <select value={form.status} onChange={(e) => set("status", e.target.value)} className={`${inputClass} cursor-pointer`}>
+                <Picklist value={form.status} onChange={(v) => set("status", v)} className="cursor-pointer">
                   {(editing ? statusChoices : statusChoices.filter((s) => s.value === "draft" || s.value === "inscripcion")).map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
                   ))}
-                </select>
+                </Picklist>
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Máx. equipos *">
-                <input type="number" min={2} value={form.maxTeams} onChange={(e) => set("maxTeams", e.target.value)} className={inputClass} />
+                <TextField type="number" min={2} value={form.maxTeams} onChange={(e) => set("maxTeams", e.target.value)} />
               </Field>
               <Field label="Mín. equipos">
-                <input type="number" min={2} value={form.minTeams} onChange={(e) => set("minTeams", e.target.value)} className={inputClass} />
+                <TextField type="number" min={2} value={form.minTeams} onChange={(e) => set("minTeams", e.target.value)} />
               </Field>
             </div>
             {editing && original && original._count.teams > 0 && (
@@ -325,47 +325,47 @@ export function TournamentModal({
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Fecha de inicio *">
-                <input type="date" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} className={inputClass} />
+                <TextField type="date" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} />
               </Field>
               <Field label="Fecha de fin">
-                <input type="date" value={form.endDate} onChange={(e) => set("endDate", e.target.value)} className={inputClass} />
+                <TextField type="date" value={form.endDate} onChange={(e) => set("endDate", e.target.value)} />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Ubicación *">
-                <input value={form.location} onChange={(e) => set("location", e.target.value)} className={inputClass} placeholder="Complejo Deportivo Norte" />
+                <TextField value={form.location} onChange={(e) => set("location", e.target.value)} placeholder="Complejo Deportivo Norte" />
               </Field>
               <Field label="Categoría">
-                <input value={form.category} onChange={(e) => set("category", e.target.value)} className={inputClass} placeholder="Libre" />
+                <TextField value={form.category} onChange={(e) => set("category", e.target.value)} placeholder="Libre" />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Modalidad">
-                <select value={form.modality} onChange={(e) => set("modality", e.target.value)} className={`${inputClass} cursor-pointer`}>
+                <Picklist value={form.modality} onChange={(v) => set("modality", v)} className="cursor-pointer">
                   <option value="">Sin definir</option>
                   {MODALITIES.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
-                </select>
+                </Picklist>
               </Field>
               <Field label="Género">
-                <select value={form.gender} onChange={(e) => set("gender", e.target.value)} className={`${inputClass} cursor-pointer`}>
+                <Picklist value={form.gender} onChange={(v) => set("gender", v)} className="cursor-pointer">
                   <option value="">Sin definir</option>
                   {GENDERS.map((g) => (
                     <option key={g} value={g}>{g}</option>
                   ))}
-                </select>
+                </Picklist>
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Minutos por tiempo">
-                <input type="number" min={1} max={90} value={form.minutesPerHalf} onChange={(e) => set("minutesPerHalf", e.target.value)} className={inputClass} />
+                <TextField type="number" min={1} max={90} value={form.minutesPerHalf} onChange={(e) => set("minutesPerHalf", e.target.value)} />
               </Field>
               <Field label="Jugadores por equipo">
-                <input type="number" min={1} max={50} value={form.playersPerTeam} onChange={(e) => set("playersPerTeam", e.target.value)} className={inputClass} />
+                <TextField type="number" min={1} max={50} value={form.playersPerTeam} onChange={(e) => set("playersPerTeam", e.target.value)} />
               </Field>
             </div>
 
@@ -373,17 +373,17 @@ export function TournamentModal({
               <div className="grid grid-cols-2 gap-3">
                 {isKnockout(form.format) && (
                   <Field label="Tiempo extra (min)">
-                    <input type="number" min={1} max={45} value={form.extraTimeMinutes} onChange={(e) => set("extraTimeMinutes", e.target.value)} className={inputClass} />
+                    <TextField type="number" min={1} max={45} value={form.extraTimeMinutes} onChange={(e) => set("extraTimeMinutes", e.target.value)} />
                   </Field>
                 )}
                 {form.format === "copa" && (
                   <Field label="Clasifican por grupo">
-                    <select value={form.groupsAdvancePerGroup} onChange={(e) => set("groupsAdvancePerGroup", e.target.value)} className={`${inputClass} cursor-pointer`}>
+                    <Picklist value={form.groupsAdvancePerGroup} onChange={(v) => set("groupsAdvancePerGroup", v)} className="cursor-pointer">
                       <option value="">Sin definir</option>
                       {[2, 3, 4].map((n) => (
                         <option key={n} value={n}>{n}</option>
                       ))}
-                    </select>
+                    </Picklist>
                   </Field>
                 )}
               </div>
@@ -391,10 +391,10 @@ export function TournamentModal({
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Costo de inscripción">
-                <input value={form.registrationFee} onChange={(e) => set("registrationFee", e.target.value)} className={inputClass} placeholder="50" />
+                <TextField value={form.registrationFee} onChange={(e) => set("registrationFee", e.target.value)} placeholder="50" />
               </Field>
               <Field label="Costo de arbitraje">
-                <input value={form.refereeFee} onChange={(e) => set("refereeFee", e.target.value)} className={inputClass} placeholder="40" />
+                <TextField value={form.refereeFee} onChange={(e) => set("refereeFee", e.target.value)} placeholder="40" />
               </Field>
             </div>
 
@@ -404,7 +404,7 @@ export function TournamentModal({
             </label>
 
             <Field label="Bases y condiciones (una por línea)">
-              <textarea value={form.rules} onChange={(e) => set("rules", e.target.value)} rows={4} className={inputClass} />
+              <TextArea value={form.rules} onChange={(e) => set("rules", e.target.value)} rows={4} />
             </Field>
 
             <div>
@@ -426,7 +426,7 @@ export function TournamentModal({
                 </div>
               ) : (
                 <div className="relative">
-                  <input value={organizerSearch} onChange={(e) => setOrganizerSearch(e.target.value)} className={inputClass} placeholder="Buscar organizador por nombre..." />
+                  <TextField value={organizerSearch} onChange={(e) => setOrganizerSearch(e.target.value)} placeholder="Buscar organizador por nombre..." />
                   {organizerResults.length > 0 && organizerSearch.length >= 2 && (
                     <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-primary bg-surface-primary shadow-lg">
                       {organizerResults.map((u) => (

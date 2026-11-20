@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { EditableMatch } from "@/_lib/fixture-edit";
 import { Label } from "@/_components/label";
+import { Picklist } from "@/_components/picklist";
 
 /**
  * Mover un partido a otra fecha = intercambiarlo con un partido de esa fecha: cada uno pasa a la fecha del otro y toma
@@ -40,15 +41,10 @@ export function MoveMatchPanel({
       </p>
 
       <Label className="mt-3 block" htmlFor={`dia-${match.id}`}>Fecha de destino</Label>
-      <select
-        id={`dia-${match.id}`}
-        value={day ?? ""}
-        onChange={(e) => { setDay(e.target.value === "" ? null : Number(e.target.value)); setOther(null); }}
-        className="mt-1 w-full rounded-lg border border-border-primary bg-surface-primary px-2 py-2.5 font-body text-sm text-text-primary"
-      >
+      <Picklist id={`dia-${match.id}`} value={day ?? ""} onChange={(v) => { setDay(v === "" ? null : Number(v)); setOther(null); }} className="mt-1">
         <option value="">Elige una fecha</option>
         {days.map((d) => <option key={d} value={d}>Fecha {d}</option>)}
-      </select>
+      </Picklist>
 
       {day !== null && (
         <fieldset className="mt-3">

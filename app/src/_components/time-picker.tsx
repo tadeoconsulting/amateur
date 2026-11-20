@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fieldClass } from "@/_components/field-styles";
 
 const hours = [
   "06:00 am", "07:00 am", "08:00 am", "09:00 am", "10:00 am",
@@ -81,9 +82,9 @@ export function TimePicker({
           setStep("hour");
           setOpen(!open);
         }}
-        className="flex w-full cursor-pointer items-center rounded-lg border border-border-primary px-3 py-3 transition-colors hover:bg-btn-regular"
+        className={`${fieldClass()} flex cursor-pointer items-center`}
       >
-        <span className={`flex-1 text-left font-body text-sm ${value ? "text-text-primary" : "text-text-secondary"}`}>
+        <span className={`flex-1 truncate text-left ${value ? "" : "text-text-primary/60"}`}>
           {value || placeholder}
         </span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-text-secondary">

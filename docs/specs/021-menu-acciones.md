@@ -50,6 +50,8 @@ Otros ajustes de tamaño pedidos el mismo día:
 - **Título de las tarjetas de torneo** (Mis torneos del organizador y las listas del jugador): **16 px**.
 - **Campana de notificaciones** del organizador: sale de «Mis torneos» y pasa a la barra de arriba (celular y escritorio), **a la izquierda de la cuenta y a 16 px de ella**, con un área clicable de 44 × 44 px. **El nombre en el botón de la cuenta** se muestra con **hasta 12 caracteres** y, si tiene más, los primeros 12 seguidos de dos puntos («organizador..»); el nombre completo queda en el encabezado del menú, en `title` y en el nombre accesible (`shortNavName`, vale para todos los roles).
 
+> **Actualización 2026-11-20:** el menú «Acciones» ya no es un componente propio: es la variante `menu` del desplegable único `Picklist` (especificación [022](022-campos-design-system.md)). `ActionsMenu` y `_lib/actions-menu.ts` se eliminaron; los ítems, el teclado y el aspecto son los mismos.
+
 ## Reutilización
 `ActionsMenu` es un componente general (ítems con `label`, `icon`, `href` u `onSelect`, y `tone: "danger"`). Hoy solo lo usa la pantalla de un torneo; otras pantallas con acciones sueltas (club, partido) pueden adoptarlo después.
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export interface InvitationSummary {
   id: string;
@@ -44,8 +45,7 @@ export function InvitePlayerPanel({
 
   const typed = email.trim();
   const emailInvalid = typed !== "" && !EMAIL_OK.test(typed);
-  const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
-  const ghost = "min-h-10 cursor-pointer rounded-lg border border-border-primary px-3 py-2 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-50";
+    const ghost = "min-h-10 cursor-pointer rounded-lg border border-border-primary px-3 py-2 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-50";
 
   async function call(request: () => Promise<Response>, ok: (data: Record<string, unknown>) => string) {
     setBusy(true);
@@ -120,7 +120,7 @@ export function InvitePlayerPanel({
 
           {status === "pending" && (
             <div className="flex gap-2">
-              <input readOnly value={linkOf(invitation.token)} onFocus={(e) => e.currentTarget.select()} aria-label="Enlace de la invitación" className={`${input} min-w-0 flex-1 text-xs`} />
+              <TextField readOnly value={linkOf(invitation.token)} onFocus={(e) => e.currentTarget.select()} aria-label="Enlace de la invitación" className="min-w-0 flex-1" />
               <button onClick={() => void copy(linkOf(invitation.token))} className={`${ghost} shrink-0`}>Copiar enlace</button>
             </div>
           )}
@@ -136,7 +136,7 @@ export function InvitePlayerPanel({
           {mode === "change" && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="ip-cambiar">Nuevo correo</Label>
-              <input id="ip-cambiar" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-cambiar-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="jugador@correo.com" />
+              <TextField id="ip-cambiar" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-cambiar-ayuda" placeholder="jugador@correo.com" invalid={emailInvalid} />
               <p id="ip-cambiar-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
                 {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Se crea un enlace nuevo y el anterior deja de funcionar."}
               </p>
@@ -184,7 +184,7 @@ export function InvitePlayerPanel({
       {(!invitation || status === "expired" || status === "locked") && mode !== "change" && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="ip-correo">Correo del jugador (opcional)</Label>
-          <input id="ip-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-correo-ayuda" className={`${input} ${emailInvalid ? "border-red-500" : ""}`} placeholder="jugador@correo.com" />
+          <TextField id="ip-correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" aria-invalid={emailInvalid || undefined} aria-describedby="ip-correo-ayuda" placeholder="jugador@correo.com" invalid={emailInvalid} />
           <p id="ip-correo-ayuda" className={`font-body text-xs ${emailInvalid ? "text-red-700" : "text-text-secondary"}`}>
             {emailInvalid ? "Escribe un correo válido (nombre@dominio.com)." : "Con correo, lo enviamos y la invitación es para esa cuenta. Sin correo, solo se crea el enlace para compartirlo por WhatsApp."}
           </p>

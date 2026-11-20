@@ -9,7 +9,6 @@ import { PasswordRules } from "@/_components/password-rules";
 import { PASSWORD_HINT, passwordError } from "@/_lib/password-rules";
 import { Label } from "@/_components/label";
 
-const inputClass = "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-brand-900 focus:outline-none";
 
 /** Elegir la contraseña nueva con el enlace del correo (POST /api/auth/reset-password). */
 export function RestablecerForm({ token }: { token: string }) {
@@ -89,12 +88,12 @@ export function RestablecerForm({ token }: { token: string }) {
               )}
               <div>
                 <Label htmlFor="rp-new">Nueva contraseña</Label>
-                <PasswordInput id="rp-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
+                <PasswordInput id="rp-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
                 <PasswordRules value={next} showHint={false} className="text-text-secondary" />
               </div>
               <div>
                 <Label htmlFor="rp-confirm">Repite la contraseña</Label>
-                <PasswordInput id="rp-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
+                <PasswordInput id="rp-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
               </div>
             </div>
 

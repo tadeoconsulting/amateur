@@ -6,6 +6,7 @@ import { playoffLabel, standardSeedOrder } from "@/_lib/fixture";
 import { btnSolid } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { ClubCrest } from "@/_components/club-crest";
+import { Picklist } from "@/_components/picklist";
 
 type Mode = "auto" | "manual";
 
@@ -110,20 +111,14 @@ export function LigaBracketBuilder({
               <legend className="px-1 font-body text-xs text-text-secondary">Cruce {i + 1}</legend>
               <div className="flex flex-col gap-2">
                 {([0, 1] as const).map((slot) => (
-                  <select
-                    key={slot}
-                    value={pair[slot]}
-                    onChange={(e) => setSlot(i, slot, e.target.value)}
-                    aria-label={`Cruce ${i + 1}, equipo ${slot + 1}`}
-                    className="w-full cursor-pointer rounded border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary focus:border-text-primary focus:outline-none"
-                  >
+                  <Picklist key={slot} value={pair[slot]} onChange={(v) => setSlot(i, slot, v)} aria-label={`Cruce ${i + 1}, equipo ${slot + 1}`} className="cursor-pointer">
                     <option value="">Elige un equipo</option>
                     {qualified.map((r, idx) => (
                       <option key={r.clubId} value={r.clubId} disabled={chosen.includes(r.clubId) && pair[slot] !== r.clubId}>
                         {idx + 1}.º {r.clubName}
                       </option>
                     ))}
-                  </select>
+                  </Picklist>
                 ))}
               </div>
             </fieldset>

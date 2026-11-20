@@ -3,12 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { CONTENT_KINDS, LIMITS as limits, categoriesOf, type ContentKind, type ContentSection } from "@/_lib/content";
 import { Label } from "@/_components/label";
+import { TextField, TextArea } from "@/_components/text-field";
 
 // Cada sección lleva un `uid` solo para que React la reconozca al subirla, bajarla o quitarla.
 type Draft = ContentSection & { uid: number };
 
-const FIELD =
-  "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
 const ICON_BTN =
   "cursor-pointer rounded-lg border border-border-primary px-2.5 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-40";
 
@@ -175,35 +174,16 @@ export function ContentEditor({ kind, onDirtyChange }: { kind: ContentKind; onDi
             {isHelp && (
               <label className="mb-3 block">
                 <span className="mb-1 block font-body text-xs text-text-secondary">Categoría</span>
-                <input
-                  value={s.category ?? ""}
-                  onChange={(e) => change(s.uid, { category: e.target.value })}
-                  maxLength={limits.category}
-                  list="categorias-ayuda"
-                  className={FIELD}
-                  placeholder="Ejemplo: General"
-                />
+                <TextField value={s.category ?? ""} onChange={(e) => change(s.uid, { category: e.target.value })} maxLength={limits.category} list="categorias-ayuda" placeholder="Ejemplo: General" />
               </label>
             )}
             <label className="mb-3 block">
               <Label as="span" optional={!isHelp} className="mb-1 block">{isHelp ? "Pregunta" : "Título"}</Label>
-              <input
-                value={s.title}
-                onChange={(e) => change(s.uid, { title: e.target.value })}
-                maxLength={limits.title}
-                className={FIELD}
-                placeholder={isHelp ? "Ejemplo: ¿Cómo creo mi cuenta?" : "Ejemplo: 1. Uso de la plataforma."}
-              />
+              <TextField value={s.title} onChange={(e) => change(s.uid, { title: e.target.value })} maxLength={limits.title} placeholder={isHelp ? "Ejemplo: ¿Cómo creo mi cuenta?" : "Ejemplo: 1. Uso de la plataforma."} />
             </label>
             <label className="block">
               <span className="mb-1 block font-body text-xs text-text-secondary">{isHelp ? "Respuesta" : "Texto"}</span>
-              <textarea
-                value={s.body}
-                onChange={(e) => change(s.uid, { body: e.target.value })}
-                maxLength={limits.body}
-                rows={5}
-                className={`${FIELD} resize-y leading-relaxed`}
-              />
+              <TextArea value={s.body} onChange={(e) => change(s.uid, { body: e.target.value })} maxLength={limits.body} rows={5} className="resize-y" />
             </label>
           </li>
         ))}

@@ -6,6 +6,7 @@ import { BackHeader } from "@/_components/back-header";
 import { Toast } from "@/_components/toast";
 import { searchUsers, type UserItem } from "@/_lib/api";
 import { useMyClub } from "@/_lib/use-my-club";
+import { TextField } from "@/_components/text-field";
 
 export default function BuscarDelegadoPage() {
   const router = useRouter();
@@ -117,13 +118,7 @@ export default function BuscarDelegadoPage() {
         {/* Search */}
         <div className="mt-2">
           <p className="text-sm text-text-secondary">Ingresar ID o usuario</p>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ingresa el nombre o apellido"
-            className="mt-1 w-full rounded-lg bg-brand-100 px-3 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none"
-          />
+          <TextField type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ingresa el nombre o apellido" className="mt-1" />
         </div>
 
         {/* Results */}
@@ -178,13 +173,7 @@ export default function BuscarDelegadoPage() {
                         <p className="text-sm text-text-secondary">
                           Si todavía no tiene cuenta, invítalo por correo:
                         </p>
-                        <input
-                          type="email"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                          placeholder="correo@ejemplo.com"
-                          className="w-full rounded-lg bg-brand-100 px-3 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none"
-                        />
+                        <TextField type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="correo@ejemplo.com" />
                         {inviteError && <p className="font-body text-sm text-red-600">{inviteError}</p>}
                         <button
                           onClick={handleInvite}

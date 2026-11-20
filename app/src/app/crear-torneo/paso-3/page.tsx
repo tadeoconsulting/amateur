@@ -12,6 +12,7 @@ import { playoffLabel } from "@/_lib/fixture";
 import { saveWizardTournament } from "../_components/save-tournament";
 import { EditTabs } from "../_components/edit-tabs";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export default function CrearTorneoPaso3Page() {
   const router = useRouter();
@@ -102,26 +103,14 @@ export default function CrearTorneoPaso3Page() {
             <span className="font-body text-sm text-text-primary leading-snug max-w-[55%]">
               Minutos de cada tiempo en el partido
             </span>
-            <input
-              type="number"
-              min={0}
-              value={minutos}
-              onChange={(e) => setMinutos(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-24 rounded border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary text-center transition-colors hover:border-text-primary focus:border-text-primary focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
+            <TextField type="number" min={0} value={minutos} onChange={(e) => setMinutos(Math.max(0, parseInt(e.target.value) || 0))} className="w-24 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
           </div>
 
           <div className="flex items-center justify-between">
             <span className="font-body text-sm text-text-primary leading-snug max-w-[55%]">
               Cantidad de jugadores inscritos por equipo
             </span>
-            <input
-              type="number"
-              min={0}
-              value={jugadores}
-              onChange={(e) => setJugadores(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-24 rounded border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary text-center transition-colors hover:border-text-primary focus:border-text-primary focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
+            <TextField type="number" min={0} value={jugadores} onChange={(e) => setJugadores(Math.max(0, parseInt(e.target.value) || 0))} className="w-24 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
           </div>
 
           {esEliminatorio && (
@@ -129,14 +118,7 @@ export default function CrearTorneoPaso3Page() {
               <span className="font-body text-sm text-text-primary leading-snug max-w-[55%]">
                 Minutos de cada tiempo extra (si hay empate)
               </span>
-              <input
-                type="number"
-                min={0}
-                value={tiempoExtra}
-                onChange={(e) => setTiempoExtra(Math.max(0, parseInt(e.target.value) || 0))}
-                aria-describedby="tiempo-extra-ayuda"
-                className="w-24 rounded border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary text-center transition-colors hover:border-text-primary focus:border-text-primary focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
+              <TextField type="number" min={0} value={tiempoExtra} onChange={(e) => setTiempoExtra(Math.max(0, parseInt(e.target.value) || 0))} aria-describedby="tiempo-extra-ayuda" className="w-24 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
             </div>
           )}
           {esEliminatorio && (
@@ -250,26 +232,14 @@ export default function CrearTorneoPaso3Page() {
             <Label className="block mb-2">
               Costo de inscripción
             </Label>
-            <input
-              type="text"
-              placeholder="Ejemplo: S/100"
-              value={costoInscripcion}
-              onChange={(e) => setCostoInscripcion(e.target.value)}
-              className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-            />
+            <TextField type="text" placeholder="Ejemplo: S/100" value={costoInscripcion} onChange={(e) => setCostoInscripcion(e.target.value)} />
           </div>
 
           <div>
             <Label className="block mb-2">
               Costo de arbitraje por partido (Opcional)
             </Label>
-            <input
-              type="text"
-              placeholder="Ejemplo: S/40 por equipo"
-              value={costoArbitraje}
-              onChange={(e) => setCostoArbitraje(e.target.value)}
-              className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-            />
+            <TextField type="text" placeholder="Ejemplo: S/40 por equipo" value={costoArbitraje} onChange={(e) => setCostoArbitraje(e.target.value)} />
           </div>
         </div>
 

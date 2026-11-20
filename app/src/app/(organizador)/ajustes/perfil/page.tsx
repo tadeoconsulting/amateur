@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getUser } from "@/_lib/api";
 import { Toast } from "@/_components/toast";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export default function PerfilPage() {
   const { user, refresh } = useAuth();
@@ -100,52 +101,28 @@ export default function PerfilPage() {
             <Label className="mb-1.5 block">
               Nombre del organizador
             </Label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ingresar nombre completo"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
-            />
+            <TextField type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ingresar nombre completo" />
           </div>
 
           <div>
             <Label className="mb-1.5 block">
               Nombre de la organización
             </Label>
-            <input
-              type="text"
-              value={organizacion}
-              onChange={(e) => setOrganizacion(e.target.value)}
-              placeholder="Ingresar nombre"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
-            />
+            <TextField type="text" value={organizacion} onChange={(e) => setOrganizacion(e.target.value)} placeholder="Ingresar nombre" />
           </div>
 
           <div>
             <Label className="mb-1.5 block">
               Teléfono del organizador
             </Label>
-            <input
-              type="tel"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              placeholder="Ingresar teléfono"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
-            />
+            <TextField type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Ingresar teléfono" />
           </div>
 
           <div>
             <Label className="mb-1.5 block">
               Correo del organizador
             </Label>
-            <input
-              type="email"
-              value={correo}
-              readOnly
-              disabled
-              className="w-full cursor-not-allowed rounded-lg border border-border-primary bg-btn-regular px-3 py-3 font-body text-sm text-text-secondary outline-none"
-            />
+            <TextField type="email" value={correo} readOnly disabled />
           </div>
         </div>
 

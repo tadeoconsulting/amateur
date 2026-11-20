@@ -8,6 +8,7 @@ import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import { searchUsers, type UserItem } from "@/_lib/api";
 import type { RosterPlayer } from "@/_lib/types";
+import { TextField } from "@/_components/text-field";
 
 interface SentInvitation {
   id: string;
@@ -142,13 +143,7 @@ export default function ClubBuscarJugadorPage() {
 
         {/* Search input */}
         <div className="relative mt-3">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ingresa el nombre o apellido"
-            className="w-full rounded-lg border border-brand-200 bg-brand-100 py-3 pl-3 pr-10 text-sm text-text-primary placeholder:text-text-secondary focus:border-brand-900 focus:outline-none"
-          />
+          <TextField type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ingresa el nombre o apellido" className="pl-3 pr-10" />
           <svg
             width="18"
             height="18"

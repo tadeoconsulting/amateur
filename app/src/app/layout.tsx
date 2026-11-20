@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Lexend, Lato } from "next/font/google";
+import { Inter, Lexend, DM_Sans } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -13,9 +13,10 @@ const lexend = Lexend({
   subsets: ["latin"],
 });
 
-const lato = Lato({
-  variable: "--font-lato",
-  weight: ["400", "700"],
+// La fuente de cuerpo de toda la plataforma (especificación 022): DM Sans en todos los ámbitos, claros y oscuros.
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`${inter.variable} ${lexend.variable} ${lato.variable} h-full antialiased`}>
+    <html lang="es" className={`${inter.variable} ${lexend.variable} ${dmSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>

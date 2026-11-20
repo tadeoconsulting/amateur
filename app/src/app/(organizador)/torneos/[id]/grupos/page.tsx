@@ -10,6 +10,7 @@ import { btnSolid } from "@/_components/button-styles";
 import { getTournament } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { ClubCrest } from "@/_components/club-crest";
+import { TextField } from "@/_components/text-field";
 
 /**
  * Asigna el grupo de cada equipo inscrito — lo pide el formato "grupos" (y la fase de grupos
@@ -83,13 +84,7 @@ export default function AsignarGruposPage() {
             <div key={team.id} className="flex items-center gap-3 border-b border-brand-200 py-3.5 last:border-0">
               <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
               <p className="min-w-0 flex-1 truncate font-heading text-sm font-bold text-text-primary">{team.club.name}</p>
-              <input
-                value={valueFor(team.club.id, team.groupName)}
-                onChange={(e) => setDrafts((d) => ({ ...d, [team.club.id]: e.target.value }))}
-                placeholder="Sin grupo"
-                list="grupos-existentes"
-                className="w-24 shrink-0 rounded-lg border border-border-primary bg-surface-primary px-2.5 py-2 text-center font-body text-sm text-text-primary outline-none focus:border-brand-500"
-              />
+              <TextField value={valueFor(team.club.id, team.groupName)} onChange={(e) => setDrafts((d) => ({ ...d, [team.club.id]: e.target.value }))} placeholder="Sin grupo" list="grupos-existentes" className="w-24 shrink-0 text-center" />
               <button
                 onClick={() => save(team.club.id)}
                 disabled={drafts[team.club.id] === undefined || savingId === team.club.id}

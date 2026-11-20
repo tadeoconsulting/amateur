@@ -16,6 +16,7 @@ import {
 } from "@/_lib/fixture-edit";
 import { formatMatchDate, formatTime12 } from "@/_lib/match-format";
 import { MoveMatchPanel } from "./_components/move-match-panel";
+import { Picklist } from "@/_components/picklist";
 
 type Team = { id: string; name: string; shortName: string };
 type Loaded = { matches: EditableMatch[]; teams: Team[] };
@@ -232,15 +233,9 @@ export default function EditarCrucesPage() {
                 {(["home", "away"] as const).map((side, i) => (
                   <div key={side} className={i === 1 ? "order-3" : ""}>
                     <label className="sr-only" htmlFor={`${m.id}-${side}`}>{side === "home" ? "Local" : "Visitante"}</label>
-                    <select
-                      id={`${m.id}-${side}`}
-                      value={side === "home" ? m.homeTeamId : m.awayTeamId}
-                      disabled={m.locked}
-                      onChange={(e) => apply(changeTeam(draft, m.id, side, e.target.value))}
-                      className="w-full rounded-lg border border-border-primary bg-surface-primary px-2 py-2.5 font-body text-sm text-text-primary disabled:opacity-60"
-                    >
+                    <Picklist id={`${m.id}-${side}`} value={side === "home" ? m.homeTeamId : m.awayTeamId} disabled={m.locked} onChange={(v) => apply(changeTeam(draft, m.id, side, v))}>
                       {options.map((t) => <option key={t} value={t}>{name(t)}</option>)}
-                    </select>
+                    </Picklist>
                   </div>
                 ))}
                 <span className="order-2 font-heading text-xs font-bold text-text-secondary">vs</span>

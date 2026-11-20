@@ -13,6 +13,7 @@ import { walkoverNote, type Walkover } from "@/_lib/walkover";
 import { canDeleteEventIn, playerEditable } from "@/_lib/event-edit";
 import { ClubCrest } from "@/_components/club-crest";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 
 type MatchEvent = {
@@ -640,16 +641,7 @@ export default function EnVivoPage() {
             {manual && (
               <div className="mb-2 px-1 py-2">
                 <Label htmlFor="manual-minute" className="mb-1.5 block">Minuto de la jugada</Label>
-                <input
-                  id="manual-minute"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  maxLength={3}
-                  value={manualMinute}
-                  onChange={(e) => setManualMinute(e.target.value)}
-                  placeholder="Por ejemplo 35"
-                  className="w-full rounded border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
-                />
+                <TextField id="manual-minute" inputMode="numeric" autoComplete="off" maxLength={3} value={manualMinute} onChange={(e) => setManualMinute(e.target.value)} placeholder="Por ejemplo 35" />
               </div>
             )}
             {selectedAction === "penal" && (

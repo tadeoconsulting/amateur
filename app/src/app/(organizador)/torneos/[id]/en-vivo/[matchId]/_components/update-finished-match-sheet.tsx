@@ -5,9 +5,8 @@ import { Sheet } from "@/_components/sheet";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { directResultProblem, walkoverScore, type Walkover } from "@/_lib/walkover";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
-const field =
-  "w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
 const label = "mb-1.5 block";
 
 export type DirectResult = {
@@ -166,11 +165,11 @@ export function UpdateFinishedMatchSheet({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="direct-home" className={label}>{home.name}</Label>
-                <input id="direct-home" inputMode="numeric" autoComplete="off" maxLength={3} value={homeScore} onChange={(e) => setHomeScore(e.target.value)} placeholder="0" className={field} />
+                <TextField id="direct-home" inputMode="numeric" autoComplete="off" maxLength={3} value={homeScore} onChange={(e) => setHomeScore(e.target.value)} placeholder="0" />
               </div>
               <div>
                 <Label htmlFor="direct-away" className={label}>{away.name}</Label>
-                <input id="direct-away" inputMode="numeric" autoComplete="off" maxLength={3} value={awayScore} onChange={(e) => setAwayScore(e.target.value)} placeholder="0" className={field} />
+                <TextField id="direct-away" inputMode="numeric" autoComplete="off" maxLength={3} value={awayScore} onChange={(e) => setAwayScore(e.target.value)} placeholder="0" />
               </div>
             </div>
 
@@ -193,8 +192,8 @@ export function UpdateFinishedMatchSheet({
                 </div>
                 <Label as="span" optional className="mb-1.5 mt-3 block">Penales</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  <input aria-label={`Penales de ${home.name}`} inputMode="numeric" autoComplete="off" maxLength={3} value={penHome} onChange={(e) => setPenHome(e.target.value)} placeholder="—" className={field} />
-                  <input aria-label={`Penales de ${away.name}`} inputMode="numeric" autoComplete="off" maxLength={3} value={penAway} onChange={(e) => setPenAway(e.target.value)} placeholder="—" className={field} />
+                  <TextField aria-label={`Penales de ${home.name}`} inputMode="numeric" autoComplete="off" maxLength={3} value={penHome} onChange={(e) => setPenHome(e.target.value)} placeholder="—" />
+                  <TextField aria-label={`Penales de ${away.name}`} inputMode="numeric" autoComplete="off" maxLength={3} value={penAway} onChange={(e) => setPenAway(e.target.value)} placeholder="—" />
                 </div>
               </div>
             )}

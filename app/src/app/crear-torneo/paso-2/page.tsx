@@ -11,6 +11,7 @@ import { EditTabs } from "../_components/edit-tabs";
 import { useEditSave } from "../_components/use-edit-save";
 import { saveWizardTournament } from "../_components/save-tournament";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export default function CrearTorneoPaso2Page() {
   const router = useRouter();
@@ -170,13 +171,7 @@ export default function CrearTorneoPaso2Page() {
             <Label>
               Cantidad de equipos en el torneo
             </Label>
-            <input
-              type="number"
-              min={0}
-              value={cantidadEquipos}
-              onChange={(e) => setCantidadEquipos(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-20 rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary text-center transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
+            <TextField type="number" min={0} value={cantidadEquipos} onChange={(e) => setCantidadEquipos(Math.max(0, parseInt(e.target.value) || 0))} className="w-20 text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
           </div>
         </div>
 

@@ -7,10 +7,9 @@ import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { MAX_DURATION_MIN, MIN_DURATION_MIN, WEEKDAYS, isDuration, isTime, placeError, timeRange } from "@/_lib/club-training";
 import { GestionError, gestionRequest, type CategoryOption, type PlaceItem, type ScheduleItem, type SessionItem } from "@/_lib/club-training-client";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
-export const inputClass =
-  "w-full rounded-lg border border-brand-200 bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +
-  "hover:bg-surface-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20";
 
 const labelClass = "";
 const DURATIONS = [60, 75, 90, 120];
@@ -30,7 +29,7 @@ function DurationField({ id, value, onChange }: { id: string; value: string; onC
       <Label htmlFor={id} className={labelClass}>
         Duración (minutos)
       </Label>
-      <input id={id} inputMode="numeric" autoComplete="off" value={value} onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))} className={`${inputClass} mt-1.5`} aria-describedby={`${id}-help`} />
+      <TextField id={id} inputMode="numeric" autoComplete="off" value={value} onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))} className="mt-1.5" aria-describedby={`${id}-help`} />
       <div className="mt-2 flex flex-wrap gap-2">
         {DURATIONS.map((d) => (
           <button key={d} type="button" onClick={() => onChange(String(d))} aria-pressed={value === String(d)} className={`min-h-11 cursor-pointer rounded-lg px-3 font-heading text-sm font-medium ${value === String(d) ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}>
@@ -51,13 +50,13 @@ function PlaceSelect({ id, places, value, onChange }: { id: string; places: Plac
       <Label htmlFor={id} className={labelClass}>
         Lugar
       </Label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} mt-1.5`}>
+      <Picklist id={id} value={value} onChange={(v) => onChange(v)} className="mt-1.5">
         {places.map((p) => (
           <option key={p.id} value={p.id}>
             {p.name}
           </option>
         ))}
-      </select>
+      </Picklist>
     </div>
   );
 }
@@ -68,14 +67,14 @@ function CategorySelect({ id, categories, value, onChange }: { id: string; categ
       <Label htmlFor={id} className={labelClass}>
         Categoría
       </Label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} mt-1.5`}>
+      <Picklist id={id} value={value} onChange={(v) => onChange(v)} className="mt-1.5">
         <option value="">Todo el club</option>
         {categories.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
           </option>
         ))}
-      </select>
+      </Picklist>
     </div>
   );
 }
@@ -115,19 +114,19 @@ export function ScheduleSheet({ base, schedule, places, categories, onSaved, onC
           <Label htmlFor="sch-weekday" className={labelClass}>
             Día de la semana
           </Label>
-          <select id="sch-weekday" value={weekday} onChange={(e) => setWeekday(e.target.value)} className={`${inputClass} mt-1.5`}>
+          <Picklist id="sch-weekday" value={weekday} onChange={(v) => setWeekday(v)} className="mt-1.5">
             {[1, 2, 3, 4, 5, 6, 0].map((d) => (
               <option key={d} value={d}>
                 {WEEKDAYS[d]}
               </option>
             ))}
-          </select>
+          </Picklist>
         </div>
         <div>
           <Label htmlFor="sch-time" className={labelClass}>
             Hora de inicio
           </Label>
-          <input id="sch-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={`${inputClass} mt-1.5`} />
+          <TextField id="sch-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="mt-1.5" />
           {isTime(startTime) && isDuration(Number(duration)) && <p className="mt-1.5 font-body text-xs text-text-secondary">Entrenan de {timeRange(startTime, Number(duration)).replace("–", " a ")}, hora de Lima.</p>}
         </div>
         <DurationField id="sch-duration" value={duration} onChange={setDuration} />
@@ -191,13 +190,13 @@ export function SessionSheet({ base, session, today, places, categories, onSaved
           <Label htmlFor="ses-date" className={labelClass}>
             Fecha
           </Label>
-          <input id="ses-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} mt-1.5`} />
+          <TextField id="ses-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1.5" />
         </div>
         <div>
           <Label htmlFor="ses-time" className={labelClass}>
             Hora de inicio
           </Label>
-          <input id="ses-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className={`${inputClass} mt-1.5`} />
+          <TextField id="ses-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="mt-1.5" />
         </div>
         <DurationField id="ses-duration" value={duration} onChange={setDuration} />
         {!session && <CategorySelect id="ses-category" categories={categories} value={categoryId} onChange={setCategoryId} />}
@@ -278,13 +277,13 @@ export function PlaceSheet({ base, place, onSaved, onClose }: { base: string; pl
           <Label htmlFor="place-name" className={labelClass}>
             Nombre del lugar
           </Label>
-          <input id="place-name" autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="Colegio Perú Suizo" className={`${inputClass} mt-1.5`} />
+          <TextField id="place-name" autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} placeholder="Colegio Perú Suizo" className="mt-1.5" />
         </div>
         <div>
           <Label htmlFor="place-address" className={labelClass}>
             Dirección o referencia (opcional)
           </Label>
-          <input id="place-address" autoComplete="off" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Av. Brasil, puerta 3" className={`${inputClass} mt-1.5`} />
+          <TextField id="place-address" autoComplete="off" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Av. Brasil, puerta 3" className="mt-1.5" />
         </div>
         <ErrorLine message={error} />
         <button type="submit" disabled={invalid || busy} className={`${btnSolid} w-full`}>

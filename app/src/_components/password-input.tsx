@@ -1,28 +1,31 @@
 "use client";
 
 import { useState, type InputHTMLAttributes } from "react";
+import { fieldClass } from "@/_components/field-styles";
 
 /**
  * Un campo de contraseña con un botón para verla u ocultarla (el ojo, a la derecha). Se usa en lugar de
  * `<input type="password">` en todas las pantallas donde alguien escribe una contraseña: en el celular es fácil
  * equivocarse al escribir sin ver lo que se escribe.
  *
- * - Recibe lo mismo que un `<input>`, salvo `type`. `className` va al campo (se le deja espacio a la derecha para el
- *   botón); `wrapperClassName`, al contenedor (por ejemplo, un margen de arriba).
+ * - Recibe lo mismo que un `<input>`, salvo `type`. El aspecto sale de `field-styles` (el mismo que `TextField`, con espacio a la
+ *   derecha para el botón); `className` es solo para disposición y `wrapperClassName` va al contenedor (por ejemplo, un margen).
+ * - `invalid` pinta el borde de error.
  * - Arranca oculta. El botón se anuncia como "Mostrar contraseña" / "Ocultar contraseña" y dice si está activado.
  * - Al mostrarla el campo sigue siendo el mismo (mantiene el foco y el cursor): solo cambia el `type`.
  */
 export function PasswordInput({
   className = "",
   wrapperClassName = "",
+  invalid = false,
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { wrapperClassName?: string }) {
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & { wrapperClassName?: string; invalid?: boolean }) {
   const [visible, setVisible] = useState(false);
   const label = visible ? "Ocultar contraseña" : "Mostrar contraseña";
 
   return (
     <div className={`relative ${wrapperClassName}`}>
-      <input {...props} type={visible ? "text" : "password"} className={`${className} pr-12`} />
+      <input aria-invalid={invalid || undefined} {...props} type={visible ? "text" : "password"} className={`${fieldClass(invalid)} pr-12 ${className}`.trim()} />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}

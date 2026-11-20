@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Label } from "@/_components/label";
+import { TextField, TextArea } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 interface TournamentOption {
   id: string;
@@ -150,7 +152,6 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
     }
   }
 
-  const input = "w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary outline-none focus:border-brand-500";
   const ghost = "min-h-11 cursor-pointer rounded-lg border border-border-primary px-4 py-2.5 font-heading text-sm font-bold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-50";
   const solid = "min-h-11 cursor-pointer rounded-lg bg-surface-secondary px-5 py-2.5 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -202,22 +203,14 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
               {scope === "club" && (
                 <div>
                   <Label htmlFor="ip-club-buscar" className="mb-1 block">Club *</Label>
-                  <input
-                    id="ip-club-buscar"
-                    type="search"
-                    value={clubQuery}
-                    onChange={(e) => setClubQuery(e.target.value)}
-                    placeholder="Busca un club por su nombre"
-                    className={input}
-                    disabled={!clubs}
-                  />
+                  <TextField id="ip-club-buscar" type="search" value={clubQuery} onChange={(e) => setClubQuery(e.target.value)} placeholder="Busca un club por su nombre" disabled={!clubs} />
                   <label htmlFor="ip-club" className="sr-only">Club elegido</label>
-                  <select id="ip-club" value={clubId} onChange={(e) => setClubId(e.target.value)} className={`${input} mt-2 cursor-pointer`} disabled={!clubs} size={Math.min(Math.max(filteredClubs.length, 2) + 1, 7)}>
+                  <Picklist id="ip-club" value={clubId} onChange={(v) => setClubId(v)} className="mt-2" disabled={!clubs}>
                     <option value="">{clubs ? (filteredClubs.length === 0 ? "Ningún club coincide" : "Elige un club") : "Cargando clubes..."}</option>
                     {filteredClubs.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}{c.shortName && c.shortName !== c.name ? ` (${c.shortName})` : ""}{c.isTemporary ? " · temporal" : ""}</option>
                     ))}
-                  </select>
+                  </Picklist>
                   <p className="mt-1.5 font-body text-xs text-text-secondary">
                     La columna <strong>Club</strong> del archivo puede ir vacía o no estar. Si la llenas, tiene que ser este club.
                   </p>
@@ -227,12 +220,12 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
               {scope === "tournament" && (
                 <div>
                   <Label htmlFor="ip-torneo" className="mb-1 block">Torneo *</Label>
-                  <select id="ip-torneo" value={tournamentId} onChange={(e) => { setTournamentId(e.target.value); setTeams(null); }} className={`${input} cursor-pointer`} disabled={!tournaments}>
+                  <Picklist id="ip-torneo" value={tournamentId} onChange={(v) => { setTournamentId(v); setTeams(null); }} className="cursor-pointer" disabled={!tournaments}>
                     <option value="">{tournaments ? "Elige un torneo" : "Cargando torneos..."}</option>
                     {(tournaments ?? []).map((t) => (
                       <option key={t.id} value={t.id}>{t.name}{t.organizer ? ` · ${t.organizer.firstName} ${t.organizer.lastName}` : ""} ({t.teamsCount} equipos)</option>
                     ))}
-                  </select>
+                  </Picklist>
                   {teams && teams.length > 0 && (
                     <div className="mt-2" aria-live="polite">
                       <p className="font-body text-xs text-text-secondary">En la columna <strong>Club</strong> escribe el equipo tal como se llama aquí:</p>
@@ -259,16 +252,7 @@ export function ImportPlayersModal({ onClose, onImported }: { onClose: () => voi
                     <label htmlFor="ip-archivo" className="inline-flex min-h-9 cursor-pointer items-center rounded-lg border border-border-primary px-3 py-1.5 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular focus-within:outline-2">Subir un CSV</label>
                   </div>
                 </div>
-                <textarea
-                  id="ip-filas"
-                  value={text}
-                  onChange={(e) => { setText(e.target.value); setFileNote(null); }}
-                  rows={9}
-                  spellCheck={false}
-                  aria-describedby="ip-filas-ayuda"
-                  className={`${input} font-mono text-xs leading-relaxed`}
-                  placeholder={"Nombres\tApellidos\tClub\tDNI\tFecha de nacimiento\nAna María\tNúñez Peña\tLGK\t12345678\t05/02/1990"}
-                />
+                <TextArea id="ip-filas" value={text} onChange={(e) => { setText(e.target.value); setFileNote(null); }} rows={9} spellCheck={false} aria-describedby="ip-filas-ayuda" placeholder={"Nombres\tApellidos\tClub\tDNI\tFecha de nacimiento\nAna María\tNúñez Peña\tLGK\t12345678\t05/02/1990"} />
                 <p id="ip-filas-ayuda" className="mt-1 font-body text-xs text-text-secondary">
                   Copia las filas de Excel o Google Sheets <strong>con el encabezado</strong> (Nombres, Apellidos, Club, DNI, Fecha de nacimiento) y pégalas aquí; o sube un CSV. En la hoja, deja la columna del DNI en formato <strong>Texto</strong> para no perder un cero inicial. Las fechas se leen como día/mes/año.
                 </p>

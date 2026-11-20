@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useApi } from "@/_lib/use-api";
+import { Picklist } from "@/_components/picklist";
 
 type Tournament = { id: string; name: string };
 
@@ -65,12 +66,12 @@ export function MesaTournaments({ user, initial }: { user: { id: string; firstNa
 
       <div className="flex gap-2">
         <label htmlFor="mesa-torneo" className="sr-only">Torneo para asignar</label>
-        <select id="mesa-torneo" value={pick} onChange={(e) => setPick(e.target.value)} className="min-w-0 flex-1 rounded-lg border border-border-primary bg-surface-primary px-3 py-2.5 font-body text-sm text-text-primary">
+        <Picklist id="mesa-torneo" value={pick} onChange={(v) => setPick(v)} className="min-w-0 flex-1">
           <option value="">Elegir un torneo...</option>
           {options.map((t) => (
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
-        </select>
+        </Picklist>
         <button type="button" onClick={() => void add()} disabled={busy || !pick} className="min-h-10 shrink-0 cursor-pointer rounded-lg bg-surface-secondary px-4 py-2 font-heading text-sm md:text-base font-bold text-text-invert transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
           Asignar
         </button>

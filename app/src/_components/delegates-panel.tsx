@@ -7,6 +7,7 @@ import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { Toast } from "@/_components/toast";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 // Los delegados de un equipo (especificación 014): el principal, los co-delegados y, para quien los gestiona (el
 // principal o un admin), las invitaciones pendientes y el formulario para invitar. Lo usan la pestaña Equipo → Delegados
@@ -209,16 +210,7 @@ export function DelegatesPanel({ clubId }: { clubId: string }) {
                 <Label htmlFor="co-email">
                   Correo (opcional: sin correo se crea un enlace para compartir)
                 </Label>
-                <input
-                  id="co-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="correo@ejemplo.com"
-                  autoComplete="off"
-                  maxLength={254}
-                  className="min-h-12 w-full rounded-lg border border-transparent bg-btn-regular px-3 font-body text-base text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-                />
+                <TextField id="co-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@ejemplo.com" autoComplete="off" maxLength={254} />
                 <button type="submit" disabled={busy !== null} className={btnSolid}>
                   {busy === "invite" ? "Creando..." : email.trim() ? "Enviar invitación" : "Crear enlace"}
                 </button>
@@ -230,7 +222,7 @@ export function DelegatesPanel({ clubId }: { clubId: string }) {
                 <p className="font-body text-sm text-text-primary">
                   {created.emailed ? "Invitación enviada por correo. También puedes compartir este enlace:" : "Comparte este enlace (vale 7 días y se usa una sola vez):"}
                 </p>
-                <input readOnly value={created.url} onFocus={(e) => e.currentTarget.select()} aria-label="Enlace de la invitación" className="mt-2 w-full rounded border border-brand-200 bg-surface-primary px-2 py-2 font-body text-xs text-text-primary" />
+                <TextField readOnly value={created.url} onFocus={(e) => e.currentTarget.select()} aria-label="Enlace de la invitación" className="mt-2" />
                 <button type="button" onClick={() => copy(created.url)} className={`${btnOutline} mt-2`}>
                   Copiar enlace
                 </button>

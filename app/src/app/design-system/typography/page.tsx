@@ -56,19 +56,19 @@ export default function TypographyPage() {
             </div>
           </div>
 
-          {/* Lato */}
+          {/* DM Sans */}
           <div className="rounded-xl border border-brand-200 bg-white p-6">
             <div className="flex items-baseline justify-between gap-4">
               <h3 className="font-heading text-lg font-bold text-text-primary">
-                Lato
+                DM Sans
               </h3>
               <code className="rounded bg-brand-300 px-2 py-0.5 text-xs text-text-secondary">
                 font-body
               </code>
             </div>
             <p className="mt-1 font-body text-sm text-text-secondary">
-              Texto de cuerpo, párrafos y descripciones. Excelente legibilidad
-              en bloques de texto largos.
+              Texto de cuerpo, párrafos, etiquetas y campos, en todos los ámbitos (claro y oscuro).
+              Excelente legibilidad en bloques de texto largos.
             </p>
             <div className="mt-5 space-y-4 border-t border-brand-200 pt-5">
               <div>
@@ -87,19 +87,19 @@ export default function TypographyPage() {
             </div>
           </div>
 
-          {/* Inter */}
+          {/* Inter (respaldo) */}
           <div className="rounded-xl border border-brand-200 bg-white p-6">
             <div className="flex items-baseline justify-between gap-4">
               <h3 className="font-heading text-lg font-bold text-text-primary">
-                Inter
+                Inter (respaldo)
               </h3>
               <code className="rounded bg-brand-300 px-2 py-0.5 text-xs text-text-secondary">
                 font-sans
               </code>
             </div>
             <p className="mt-1 font-body text-sm text-text-secondary">
-              UI sans-serif por default. Se usa como fallback base y para
-              elementos de interfaz que no son heading ni body.
+              Solo de respaldo: `font-sans` es ahora DM Sans, igual que `font-body`.
+              Inter se usa únicamente si DM Sans no carga.
             </p>
             <div className="mt-5 space-y-4 border-t border-brand-200 pt-5">
               <div>
@@ -141,8 +141,8 @@ export default function TypographyPage() {
               {[
                 { size: "30px", family: "Lexend", weight: "Bold", use: "Page title (DS)", sample: "Crono DS" },
                 { size: "22px", family: "Lexend", weight: "Bold", use: "Screen heading", sample: "Bienvenid@" },
-                { size: "18px", family: "Lato", weight: "Regular", use: "Subtitle", sample: "Inicia sesión" },
-                { size: "16px", family: "Lato", weight: "Regular", use: "Body", sample: "Registra tu organización" },
+                { size: "18px", family: "DM Sans", weight: "Regular", use: "Subtitle", sample: "Inicia sesión" },
+                { size: "16px", family: "DM Sans", weight: "Regular", use: "Body", sample: "Registra tu organización" },
                 { size: "14px", family: "Lexend", weight: "SemiBold", use: "Button / Link", sample: "Continuar con email" },
                 { size: "12px", family: "Lexend", weight: "Regular", use: "Caption / Label", sample: "Términos y condiciones" },
                 { size: "11px", family: "Inter", weight: "Medium", use: "Badge / Tag", sample: "En curso" },
@@ -153,7 +153,7 @@ export default function TypographyPage() {
                       className={`${
                         row.family === "Lexend"
                           ? "font-heading"
-                          : row.family === "Lato"
+                          : row.family === "DM Sans"
                             ? "font-body"
                             : "font-sans"
                       } text-text-primary`}
@@ -197,7 +197,7 @@ export default function TypographyPage() {
           {[
             { var: "--font-sans", value: "Inter", tw: "font-sans" },
             { var: "--font-heading", value: "Lexend", tw: "font-heading" },
-            { var: "--font-body", value: "Lato", tw: "font-body" },
+            { var: "--font-body", value: "DM Sans", tw: "font-body" },
           ].map((v) => (
             <div key={v.var} className="flex items-center justify-between gap-4 px-4 py-3">
               <div>

@@ -5,8 +5,9 @@ import { useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import { organizersOf, type AdminTeam } from "@/_lib/admin-teams";
 import { ClubCrest } from "@/_components/club-crest";
-import { MultiSelect } from "../../_components/multi-select";
+import { Picklist } from "@/_components/picklist";
 import { SortTh, useSort } from "../../_components/sortable";
+import { TextField } from "@/_components/text-field";
 
 type StatusLabels = Record<string, { label: string; color: string }>;
 
@@ -78,18 +79,12 @@ export function TorneosEquipos({ statusLabels }: { statusLabels: StatusLabels })
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Buscar equipo"
-            className="w-full rounded-lg border border-border-primary bg-surface-primary py-2.5 pl-9 pr-3 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar equipo..."
-          />
+          <TextField value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar equipo" className="pl-9 pr-3" placeholder="Buscar equipo..." />
         </div>
 
-        <MultiSelect allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
-        <MultiSelect allLabel="Todos los torneos" noun="torneos" options={tournamentOptions} selected={tournamentFilter} onChange={setTournamentFilter} searchPlaceholder="Buscar torneo..." />
-        <MultiSelect allLabel="Oficiales y temporales" noun="tipos" options={kindOptions} selected={kindFilter} onChange={setKindFilter} />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los torneos" noun="torneos" options={tournamentOptions} selected={tournamentFilter} onChange={setTournamentFilter} searchPlaceholder="Buscar torneo..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Oficiales y temporales" noun="tipos" options={kindOptions} selected={kindFilter} onChange={setKindFilter} />
         {hasFilters && (
           <button
             type="button"

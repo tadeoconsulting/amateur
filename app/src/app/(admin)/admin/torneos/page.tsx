@@ -6,11 +6,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useApi } from "@/_lib/use-api";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { TournamentModal } from "./_components/tournament-modal";
-import { MultiSelect } from "../_components/multi-select";
+import { Picklist } from "@/_components/picklist";
 import { SortTh, useSort } from "../_components/sortable";
 import { ConfirmDelete } from "../_components/confirm-delete";
 import { TorneosEliminados, type DeletedTournament } from "./_components/eliminados";
 import { TorneosEquipos } from "./_components/equipos";
+import { TextField } from "@/_components/text-field";
 
 interface TournamentRow {
   id: string;
@@ -165,17 +166,12 @@ function AdminTorneosContent() {
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
             <path d="M14 14l-3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-border-primary bg-surface-primary py-2.5 pl-9 pr-3 font-body text-sm text-text-primary outline-none focus:border-brand-500"
-            placeholder="Buscar torneo..."
-          />
+          <TextField value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 pr-3" placeholder="Buscar torneo..." />
         </div>
 
-        <MultiSelect allLabel="Todos los estados" noun="estados" options={statusOptions} selected={statusFilter} onChange={setStatusFilter} />
-        <MultiSelect allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
-        <MultiSelect allLabel="Todos los formatos" noun="formatos" options={formatOptions} selected={formatFilter} onChange={setFormatFilter} />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los estados" noun="estados" options={statusOptions} selected={statusFilter} onChange={setStatusFilter} />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los formatos" noun="formatos" options={formatOptions} selected={formatFilter} onChange={setFormatFilter} />
         {hasFilters && (
           <button
             type="button"

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import type { PlayerListItem } from "@/_lib/api";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
-const field =
-  "w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
 const label = "mb-1.5 block";
 
 export type EventToEdit = {
@@ -89,30 +89,19 @@ export function EditEventSheet({
           <div className="flex flex-col gap-4">
             <div>
               <Label htmlFor="ej-minuto" className={label}>Minuto</Label>
-              <input
-                id="ej-minuto"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={200}
-                value={minute}
-                onChange={(e) => setMinute(e.target.value)}
-                disabled={saving}
-                aria-invalid={!minuteOk}
-                className={field}
-              />
+              <TextField id="ej-minuto" type="number" inputMode="numeric" min={0} max={200} value={minute} onChange={(e) => setMinute(e.target.value)} disabled={saving} aria-invalid={!minuteOk} />
               {!minuteOk && <p className="mt-1 font-body text-xs text-red-600">El minuto es un número de 0 a 200.</p>}
             </div>
 
             {event.canChangePlayer && (
               <div>
                 <Label htmlFor="ej-jugador" className={label}>Jugador</Label>
-                <select id="ej-jugador" value={playerId} onChange={(e) => setPlayerId(e.target.value)} disabled={saving} className={field}>
+                <Picklist id="ej-jugador" value={playerId} onChange={(v) => setPlayerId(v)} disabled={saving}>
                   <option value="">Sin jugador</option>
                   {sorted.map((p) => (
                     <option key={p.id} value={p.id}>{nameOf(p)}</option>
                   ))}
-                </select>
+                </Picklist>
                 {event.playerId && !currentName && (
                   <p className="mt-1 font-body text-xs text-text-secondary">El jugador actual ya no está en el plantel de este equipo.</p>
                 )}
