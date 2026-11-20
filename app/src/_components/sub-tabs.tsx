@@ -10,6 +10,8 @@ import { PillTabs } from "@/_components/pill-tabs";
  *
  * - `equal`: las pestañas se reparten todo el ancho (equipo, jugadores).
  * - `start`: pegadas a la izquierda, con la letra un poco más chica (Libre / Sub 18).
+ * - `desktop`: `pills` (por omisión) las muestra como píldoras desde 768 px; `underline` mantiene el subrayado también en
+ *   escritorio, para que las pestañas principales se distingan de las píldoras de abajo («Mis torneos»).
  */
 export function SubTabs<K extends string>({
   tabs,
@@ -17,6 +19,7 @@ export function SubTabs<K extends string>({
   onChange,
   label,
   mobile = "equal",
+  desktop = "pills",
   className = "mt-4",
 }: {
   tabs: { key: K; label: string }[];
@@ -25,12 +28,14 @@ export function SubTabs<K extends string>({
   /** Nombre de la barra para quien usa lector de pantalla. */
   label: string;
   mobile?: "equal" | "start";
+  /** Cómo se ven desde 768 px: como píldoras (por omisión) o con el subrayado del celular. */
+  desktop?: "pills" | "underline";
   /** Márgenes de afuera (el espacio sobre la barra). */
   className?: string;
 }) {
   return (
     <div className={className}>
-      <div className={`md:hidden ${mobile === "equal" ? "flex border-b border-brand-200 px-4" : "flex gap-4 border-b border-border-primary px-4"}`}>
+      <div className={`${desktop === "pills" ? "md:hidden" : ""} ${mobile === "equal" ? "flex border-b border-brand-200 px-4" : "flex gap-4 border-b border-border-primary px-4"}`}>
         {tabs.map((tab) => {
           const active = value === tab.key;
           return (
@@ -48,9 +53,11 @@ export function SubTabs<K extends string>({
           );
         })}
       </div>
-      <div className="hidden md:block">
-        <PillTabs tabs={tabs} value={value} onChange={onChange} label={label} className="px-4 pb-1" size="base" />
-      </div>
+      {desktop === "pills" && (
+        <div className="hidden md:block">
+          <PillTabs tabs={tabs} value={value} onChange={onChange} label={label} className="px-4 pb-1" size="base" />
+        </div>
+      )}
     </div>
   );
 }

@@ -190,3 +190,13 @@ test("los botones de volver no pasan de 14 px en el celular", () => {
   assert.deepEqual(malos, [], "botones de volver a 16 px en el celular");
 });
 
+// Las pestañas principales de «Mis torneos» (Torneos / Temporadas) se distinguen de las píldoras de abajo (Competencia /
+// Convocatoria / Finalizados): llevan el subrayado también en escritorio (2026-11-19). El resto de los `SubTabs` no cambia.
+test("las pestañas principales de Mis torneos van con subrayado también en escritorio", () => {
+  const sub = readFileSync(new URL("../../src/_components/sub-tabs.tsx", import.meta.url), "utf8");
+  assert.match(sub, /desktop = "pills"/, "por omisión siguen como píldoras");
+  assert.match(sub, /desktop === "pills" \? "md:hidden" : ""/, "con underline el subrayado no se oculta en escritorio");
+  const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/page.tsx", import.meta.url), "utf8");
+  assert.match(pagina, /<SubTabs[^>]*desktop="underline"/, "Mis torneos usa el subrayado en escritorio");
+});
+

@@ -201,7 +201,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
         </div>
       </div>
 
-      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" className="mb-4" />
+      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" desktop="underline" className="mb-4" />
 
       {mainTab === "temporadas" ? (
         <SeasonsList organizerId={organizerId} />
