@@ -29,8 +29,19 @@ export function fieldClass(invalid = false): string {
 export const fieldHelpClass = "mt-1.5 font-body text-xs text-text-secondary";
 export const fieldErrorClass = "mt-1.5 font-body text-xs text-error";
 
-/** El panel y las opciones del desplegable propio (`Picklist`). */
-export const picklistPanelClass =
-  "animate-menu-in absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-border-primary bg-surface-alt p-1 shadow-xl shadow-black/30";
+/** El panel y las opciones del desplegable único (`Picklist`), iguales en sus dos variantes. */
+const picklistPanelBase =
+  "animate-menu-in absolute z-50 mt-1 max-h-[min(20rem,70vh)] overflow-auto rounded-lg border border-border-primary bg-surface-alt p-1.5 shadow-xl shadow-black/30";
+/** Variante selector: del ancho del campo. */
+export const picklistPanelClass = `${picklistPanelBase} left-0 right-0 top-full`;
+/** Panel «en el flujo» de la página (sin flotar), para usar el desplegable dentro de un modal con scroll. */
+export const picklistInlinePanelClass =
+  "animate-menu-in mt-1 max-h-[min(20rem,70vh)] overflow-auto rounded-lg border border-border-primary bg-surface-alt p-1.5";
+/** Variante menú: a la derecha del botón, de 256 px. */
+export const picklistMenuPanelClass = `${picklistPanelBase} right-0 top-full w-64 max-w-[calc(100vw-2rem)] origin-top-right`;
+/** Una opción del selector (14 px desde 768 px, 16 px en el celular, como los campos). */
 export const picklistOptionClass =
   "flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-md px-3 font-body text-base md:text-sm text-text-primary";
+/** Una acción del menú (16 px siempre). */
+export const picklistMenuItemClass =
+  "flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-md px-3 text-left font-body text-base font-semibold transition-colors hover:bg-btn-regular focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-text-primary disabled:cursor-not-allowed disabled:opacity-40";

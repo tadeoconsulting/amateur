@@ -6,7 +6,7 @@ import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
 import { DelegatesPanel } from "@/_components/delegates-panel";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
-import { MultiSelect } from "../_components/multi-select";
+import { Picklist } from "@/_components/picklist";
 import { SortTh, useSort } from "../_components/sortable";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { ClubCrest } from "@/_components/club-crest";
@@ -758,7 +758,7 @@ function AdminClubesContent() {
           </svg>
           <TextField value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refetch()} className="pl-9 pr-3" placeholder="Buscar club..." />
         </div>
-        <MultiSelect allLabel="Todos los delegados" noun="delegados" options={ownerOptions} selected={ownerFilter} onChange={setOwnerFilter} searchPlaceholder="Buscar delegado u organizador..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los delegados" noun="delegados" options={ownerOptions} selected={ownerFilter} onChange={setOwnerFilter} searchPlaceholder="Buscar delegado u organizador..." />
         {ownerFilter.length > 0 && (
           <button type="button" onClick={() => setOwnerFilter([])} className="cursor-pointer font-heading text-xs font-bold text-text-primary underline">
             Quitar filtros

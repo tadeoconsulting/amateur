@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useApi } from "@/_lib/use-api";
 import { organizersOf, type AdminTeam } from "@/_lib/admin-teams";
 import { ClubCrest } from "@/_components/club-crest";
-import { MultiSelect } from "../../_components/multi-select";
+import { Picklist } from "@/_components/picklist";
 import { SortTh, useSort } from "../../_components/sortable";
 import { TextField } from "@/_components/text-field";
 
@@ -82,9 +82,9 @@ export function TorneosEquipos({ statusLabels }: { statusLabels: StatusLabels })
           <TextField value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar equipo" className="pl-9 pr-3" placeholder="Buscar equipo..." />
         </div>
 
-        <MultiSelect allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
-        <MultiSelect allLabel="Todos los torneos" noun="torneos" options={tournamentOptions} selected={tournamentFilter} onChange={setTournamentFilter} searchPlaceholder="Buscar torneo..." />
-        <MultiSelect allLabel="Oficiales y temporales" noun="tipos" options={kindOptions} selected={kindFilter} onChange={setKindFilter} />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los organizadores" noun="organizadores" options={organizerOptions} selected={organizerFilter} onChange={setOrganizerFilter} searchPlaceholder="Buscar organizador..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los torneos" noun="torneos" options={tournamentOptions} selected={tournamentFilter} onChange={setTournamentFilter} searchPlaceholder="Buscar torneo..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Oficiales y temporales" noun="tipos" options={kindOptions} selected={kindFilter} onChange={setKindFilter} />
         {hasFilters && (
           <button
             type="button"

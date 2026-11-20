@@ -1,7 +1,11 @@
-// Lógica pura del desplegable propio `Picklist` (especificación 022): sin React, para probarla con node:test. El componente solo
-// mueve el foco y pinta; qué opción sigue, a cuál saltar al escribir y qué texto se muestra se decide aquí.
+// Lógica pura del desplegable único `Picklist` (especificación 022), en sus dos variantes (selector y menú de acciones): sin
+// React, para probarla con node:test. El componente solo mueve el foco y pinta; qué opción sigue, a cuál saltar al escribir y qué
+// texto se muestra se decide aquí.
 
 export type PicklistOption = { value: string; label: string; disabled?: boolean };
+
+/** Cualquier cosa que se pueda recorrer con el teclado: las opciones del selector y los ítems del menú. */
+export type Navegable = { disabled?: boolean };
 
 /** Índice de la opción con ese valor, o -1 si no hay. */
 export function indexOfValue(options: PicklistOption[], value: string): number {
@@ -9,12 +13,12 @@ export function indexOfValue(options: PicklistOption[], value: string): number {
 }
 
 /** Primera opción habilitada, o -1. */
-export function firstEnabled(options: PicklistOption[]): number {
+export function firstEnabled(options: Navegable[]): number {
   return options.findIndex((o) => !o.disabled);
 }
 
 /** Última opción habilitada, o -1. */
-export function lastEnabled(options: PicklistOption[]): number {
+export function lastEnabled(options: Navegable[]): number {
   for (let i = options.length - 1; i >= 0; i--) if (!options[i].disabled) return i;
   return -1;
 }
@@ -23,7 +27,7 @@ export function lastEnabled(options: PicklistOption[]): number {
  * La opción habilitada que sigue (`step` 1) o precede (`step` -1) a `from`, dando la vuelta al llegar al borde. Con `from` -1
  * arranca desde el primero (si baja) o desde el último (si sube). -1 si no hay ninguna habilitada.
  */
-export function stepEnabled(options: PicklistOption[], from: number, step: 1 | -1): number {
+export function stepEnabled(options: Navegable[], from: number, step: 1 | -1): number {
   const total = options.length;
   if (total === 0) return -1;
   let index = from < 0 ? (step === 1 ? -1 : total) : from;

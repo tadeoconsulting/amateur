@@ -3,10 +3,11 @@
 import { useState, type ReactNode } from "react";
 import { DatePicker } from "@/_components/date-picker";
 import { Field } from "@/_components/field";
-import { fieldBox, fieldInvalidStates, fieldStates, picklistOptionClass, picklistPanelClass } from "@/_components/field-styles";
+import { fieldBox, fieldInvalidStates, fieldStates, picklistMenuItemClass, picklistMenuPanelClass, picklistOptionClass, picklistPanelClass } from "@/_components/field-styles";
 import { Label, labelText } from "@/_components/label";
 import { PasswordInput } from "@/_components/password-input";
-import { Picklist } from "@/_components/picklist";
+import { Picklist, type PicklistItem } from "@/_components/picklist";
+import { actionIcons } from "@/_components/picklist-icons";
 import { TextArea, TextField } from "@/_components/text-field";
 import { TimePicker } from "@/_components/time-picker";
 
@@ -26,6 +27,19 @@ const SEDES = ["Estadio Central", "Parque Zonal", "Complejo Norte", "Cancha Muni
   label: s,
 }));
 
+const EQUIPOS = ["Atlético Norte", "Real Sur", "Ciclón", "Deportivo Este", "Juventud", "Sporting", "Unión", "Academia"].map((n, i) => ({
+  value: String(i),
+  label: n,
+  hint: i % 3 === 0 ? "oficial" : undefined,
+}));
+
+const ACCIONES: PicklistItem[] = [
+  { key: "compartir", label: "Compartir", icon: actionIcons.share, onSelect: () => {} },
+  { key: "editar", label: "Editar torneo", icon: actionIcons.edit, href: "#" },
+  { key: "mesa", label: "Mesa", icon: actionIcons.desk, href: "#" },
+  { key: "deshacer", label: "Deshacer fixture", icon: actionIcons.undo, tone: "danger", separated: true, onSelect: () => {} },
+];
+
 function Seccion({ titulo, descripcion, children }: { titulo: string; descripcion?: string; children: ReactNode }) {
   return (
     <section className="mt-14">
@@ -42,6 +56,7 @@ export default function InputsPage() {
   const [formato, setFormato] = useState("");
   const [formatoLiga, setFormatoLiga] = useState("liga");
   const [sede, setSede] = useState("");
+  const [equipos, setEquipos] = useState<string[]>([]);
   const [fecha, setFecha] = useState<Date | null>(null);
   const [hora, setHora] = useState<string | null>(null);
   const [clave, setClave] = useState("");
@@ -54,7 +69,7 @@ export default function InputsPage() {
         <p className="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-verification">Components</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Campos, selectores y desplegables</h1>
         <p className="mt-3 max-w-xl font-body text-base leading-relaxed text-text-secondary">
-          Un solo estilo para todos los campos de la plataforma. Cada control de esta página es el componente real: pruébalo con el
+          Un solo estilo para todos los campos de la plataforma y un solo desplegable, Picklist, con tres variantes: selector, selector de varios y menú de acciones. Cada control de esta página es el componente real: pruébalo con el
           ratón, el teclado y el dedo. Medidas: radio de 8 px, relleno de 12 px (alto de unos 46 px en escritorio y 50 px en el celular), letra de 16 px en el celular y 14 px desde 768 px.
         </p>
       </header>
@@ -115,6 +130,42 @@ export default function InputsPage() {
         </Field>
       </Seccion>
 
+      <Seccion
+        titulo="Selector de varios (Picklist · multi)"
+        descripcion="La misma pieza con casillas: resumen en el botón, buscador con más de 6 opciones y «Limpiar». Sin nada elegido no filtra."
+      >
+        <Field label="Equipos" htmlFor="ds-equipos">
+          <Picklist variant="multi" id="ds-equipos" options={EQUIPOS} selected={equipos} onChange={setEquipos} allLabel="Todos los equipos" noun="equipos" />
+        </Field>
+      </Seccion>
+
+      <section className="mt-14">
+        <h2 className="font-heading text-xl font-bold text-text-primary">Menú de acciones (Picklist · menu)</h2>
+        <p className="mt-1 max-w-xl font-body text-sm text-text-secondary">
+          La misma pieza como menú: acciones con ícono, enlaces, lo destructivo separado y en rojo. En el celular el botón es solo el ícono
+          de tres puntos. Teclado: Enter, Espacio o ↓ abren; ↑ ↓ recorren; Inicio y Fin saltan; Escape cierra.
+        </p>
+        <div className="mt-5 flex flex-wrap items-start gap-4">
+          <Picklist variant="menu" label="Acciones" items={ACCIONES} />
+          <Picklist
+            variant="menu"
+            triggerStyle="ghost"
+            label="Cuenta de ejemplo"
+            items={[
+              { key: "perfil", label: "Mi perfil y ajustes", href: "#" },
+              { key: "salir", label: "Cerrar sesión", onSelect: () => {} },
+            ]}
+            trigger={<span className="font-body text-sm font-semibold">Ejemplo de cuenta ▾</span>}
+            header={
+              <>
+                <p className="font-body text-base font-bold text-text-primary">Club Ejemplo</p>
+                <p className="font-body text-base text-text-secondary">Organizador de torneo</p>
+              </>
+            }
+          />
+        </div>
+      </section>
+
       <Seccion titulo="Fecha y hora" descripcion="Los selectores de fecha y de hora usan la misma caja.">
         <Field label="Fecha de inicio" htmlFor="ds-fecha">
           <DatePicker value={fecha} onChange={setFecha} placeholder="dd/mm/aaaa" />
@@ -137,7 +188,9 @@ export default function InputsPage() {
             ["Estados normales (fieldStates)", fieldStates],
             ["Estado con error (fieldInvalidStates)", fieldInvalidStates],
             ["Panel del selector (picklistPanelClass)", picklistPanelClass],
+            ["Panel del menú (picklistMenuPanelClass)", picklistMenuPanelClass],
             ["Opción del selector (picklistOptionClass)", picklistOptionClass],
+            ["Acción del menú (picklistMenuItemClass)", picklistMenuItemClass],
           ].map(([nombre, clases]) => (
             <div key={nombre} className="rounded-lg border border-border-primary p-3">
               <dt className="font-body text-sm font-semibold text-text-primary">{nombre}</dt>

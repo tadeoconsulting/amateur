@@ -118,12 +118,15 @@ test("el nombre del torneo y «Volver» van en DM Sans, y el menú superior en 1
   assert.match(menu, /cancha:text-base/, "menú superior a 16 px");
 });
 
-// El menú de la cuenta (ítems y encabezado) va a 16 px en el organizador (2026-11-16), solo con `cancha:`.
-test("el menú de la cuenta va a 16 px en el organizador", () => {
-  const menu = readFileSync(new URL("../../src/_components/account-menu.tsx", import.meta.url), "utf8");
-  assert.match(menu, /font-heading text-sm cancha:text-base font-semibold/, "ítems");
-  assert.match(menu, /font-heading text-sm cancha:text-base font-bold/, "nombre del encabezado");
-  assert.match(menu, /font-body text-xs cancha:text-base/, "rol del encabezado");
+// El menú de la cuenta es la variante `menu` del desplegable único `Picklist` (especificación 022): sus ítems y su encabezado van
+// a 16 px en todos los ámbitos, en DM Sans.
+test("el menú de la cuenta usa Picklist (menu) con ítems y encabezado a 16 px", () => {
+  const cuenta = readFileSync(new URL("../../src/_components/account-menu.tsx", import.meta.url), "utf8");
+  assert.match(cuenta, /<Picklist\s+variant="menu"/, "el menú de la cuenta es una variante de Picklist");
+  assert.match(cuenta, /font-body text-base font-bold text-text-primary">\{name\}/, "nombre del encabezado a 16 px");
+  assert.match(cuenta, /font-body text-base text-text-secondary">\{roleLabel\}/, "rol del encabezado a 16 px");
+  const estilos = readFileSync(new URL("../../src/_components/field-styles.ts", import.meta.url), "utf8");
+  assert.match(estilos, /picklistMenuItemClass =\s*"[^"]*font-body text-base font-semibold/, "ítems del menú a 16 px");
 });
 
 // La hoja «Agregar partido» usa los componentes únicos de campos (especificación 022): Label, TextField y Picklist; el estilo del

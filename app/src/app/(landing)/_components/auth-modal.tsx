@@ -203,7 +203,6 @@ export function AuthModal({
 
             {view === "register" && (
               <ProfilePicker
-                multiple
                 label="¿Cómo vas a usar Amateur?"
                 hint="Elige uno o varios. Puedes agregar más después."
                 placeholder="Elige uno o varios perfiles"

@@ -69,3 +69,25 @@ describe("picklistLabel", () => {
     assert.deepEqual(picklistLabel(opciones, "no-existe", "Elige"), { text: "Elige", isPlaceholder: true });
   });
 });
+
+describe("navegación del menú de acciones (mismos recorridos, sobre ítems)", () => {
+  const ok = { disabled: false };
+  const off = { disabled: true };
+  test("primero y último habilitados, saltando los deshabilitados", () => {
+    assert.equal(firstEnabled([off, ok, ok, off]), 1);
+    assert.equal(lastEnabled([off, ok, ok, off]), 2);
+    assert.equal(firstEnabled([]), -1);
+    assert.equal(lastEnabled([off, off]), -1);
+  });
+  test("siguiente y anterior con vuelta, sin tocar los deshabilitados", () => {
+    const items = [ok, ok, ok];
+    assert.equal(stepEnabled(items, 0, 1), 1);
+    assert.equal(stepEnabled(items, 2, -1), 1);
+    assert.equal(stepEnabled(items, 2, 1), 0);
+    assert.equal(stepEnabled(items, 0, -1), 2);
+    assert.equal(stepEnabled([ok, off, off, ok], 0, 1), 3);
+    assert.equal(stepEnabled([off, ok, off], 1, 1), 1);
+    assert.equal(stepEnabled([off, off], 0, 1), -1);
+  });
+});
+

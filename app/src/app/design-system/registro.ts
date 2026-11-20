@@ -18,6 +18,7 @@ export const documentados: { archivo: string; pagina: string }[] = [
   { archivo: "_components/field-styles.ts", pagina: "inputs" },
   { archivo: "_components/text-field.tsx", pagina: "inputs" },
   { archivo: "_components/picklist.tsx", pagina: "inputs" },
+  { archivo: "_components/picklist-icons.tsx", pagina: "inputs" },
   { archivo: "_components/password-input.tsx", pagina: "inputs" },
   { archivo: "_components/date-picker.tsx", pagina: "inputs" },
   { archivo: "_components/time-picker.tsx", pagina: "inputs" },
@@ -27,7 +28,6 @@ export const documentados: { archivo: string; pagina: string }[] = [
 export const pendientes: string[] = [
   "_components/accordion.tsx",
   "_components/account-menu.tsx",
-  "_components/actions-menu.tsx",
   "_components/assign-dialog.tsx",
   "_components/back-header.tsx",
   "_components/bottom-nav.tsx",

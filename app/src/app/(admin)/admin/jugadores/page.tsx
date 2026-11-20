@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useApi } from "@/_lib/use-api";
 import { ResetPassword } from "../_components/reset-password";
-import { MultiSelect } from "../_components/multi-select";
 import { SortTh, useSort } from "../_components/sortable";
 import { displayShortName } from "@/_lib/short-name";
 import { ConfirmDelete } from "../_components/confirm-delete";
@@ -620,7 +619,7 @@ export default function AdminJugadoresPage() {
           <TextField value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && refetch()} className="pl-9 pr-3" placeholder="Buscar jugador..." />
         </div>
 
-        <MultiSelect allLabel="Todos los equipos" noun="equipos" options={clubOptions} selected={clubFilter} onChange={setClubFilter} searchPlaceholder="Buscar equipo..." />
+        <Picklist variant="multi" className="max-w-[260px]" allLabel="Todos los equipos" noun="equipos" options={clubOptions} selected={clubFilter} onChange={setClubFilter} searchPlaceholder="Buscar equipo..." />
         <Picklist value={kind} onChange={(v) => setKind(v as typeof kind)} aria-label="Tipo de jugador" className="cursor-pointer">
           <option value="all">Con y sin cuenta</option>
           <option value="account">Con cuenta</option>
