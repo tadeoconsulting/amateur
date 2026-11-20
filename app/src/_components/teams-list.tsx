@@ -51,7 +51,7 @@ export function TeamsList({
                   <>
                     <ClubCrest club={team.club} size="h-10 w-10" textSize="text-xs" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-heading text-sm md:cancha:text-base font-bold text-text-primary">{team.club.name}</p>
+                      <p className="truncate font-heading text-sm md:cancha:text-base font-bold cancha:font-body text-text-primary">{team.club.name}</p>
                       {subtitle && <p className="mt-0.5 truncate font-body text-xs text-text-secondary">{subtitle}</p>}
                     </div>
                     {s && (
