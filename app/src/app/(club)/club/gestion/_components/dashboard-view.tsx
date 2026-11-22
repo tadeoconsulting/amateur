@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useMyClub } from "@/_lib/use-my-club";
 import { formatSolesAmount, monthLabel, monthName } from "@/_lib/club-fees";
 import { countLabel } from "@/_lib/club-training";
 import { FeesError, feesRequest } from "@/_lib/club-fees-client";
 import { PageSpinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
-import { CollectionChart, PercentBars, SERIES, TrendChart, type CollectionPoint, type TrendPoint } from "./_components/charts";
+import { CollectionChart, PercentBars, SERIES, TrendChart, type CollectionPoint, type TrendPoint } from "./charts";
 
 // El dashboard del delegado (especificación 015, entrega 4). Los datos salen de GET /api/clubs/:id/gestion/dashboard.
 type Dashboard = {
@@ -29,14 +28,7 @@ type Dashboard = {
   sesiones: { realizadas: number; canceladas: number; sinMarcar: number; proximas: number };
 };
 
-export default function ClubDashboardPage() {
-  const { club, loading } = useMyClub();
-  if (loading) return <PageSpinner />;
-  if (!club) return <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">Todavía no tienes un club.</div>;
-  return <DashboardContent key={club.id} clubId={club.id} />;
-}
-
-function DashboardContent({ clubId }: { clubId: string }) {
+export function DashboardView({ clubId, onOpenPagos }: { clubId: string; /** Abre el tab Pagos de Gestión. */ onOpenPagos: () => void }) {
   const [month, setMonth] = useState<string | null>(null); // null = el mes en curso
   const [categoryId, setCategoryId] = useState("");
   const [data, setData] = useState<Dashboard | null>(null);
@@ -76,15 +68,6 @@ function DashboardContent({ clubId }: { clubId: string }) {
 
   return (
     <div className="w-full pb-10">
-      <div className="flex items-center gap-1 px-4 pt-4">
-        <Link href="/club/gestion" aria-label="Volver a Gestión" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-text-primary">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180" aria-hidden="true">
-            <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
-        <h1 className="font-heading text-xl font-bold text-text-primary">Dashboard</h1>
-      </div>
-
       {error && (
         <div role="alert" className="mx-4 mt-4 rounded-lg bg-error/15 px-3 py-2.5 font-body text-sm text-brand-900">
           {error}
@@ -126,9 +109,9 @@ function DashboardContent({ clubId }: { clubId: string }) {
           <Section title="Cobro por mes" subtitle="Lo recaudado sobre lo esperado de las cuotas de cada mes">
             {!data.cobro.defined ? (
               <Empty title="Todavía no defines la cuota mensual" text="Con la cuota del club verás aquí cuánto se recauda cada mes.">
-                <Link href="/club/gestion/pagos" className={btnSolid}>
+                <button type="button" onClick={onOpenPagos} className={btnSolid}>
                   Ir a Pagos
-                </Link>
+                </button>
               </Empty>
             ) : (
               <CollectionChart data={data.cobro.series} selected={data.month} />
@@ -159,9 +142,9 @@ function DashboardContent({ clubId }: { clubId: string }) {
                   ))}
                 </ul>
                 {data.morosos.count > data.morosos.list.length && <p className="mt-2 font-body text-xs text-text-secondary">Se muestran los {data.morosos.list.length} con mayor deuda.</p>}
-                <Link href="/club/gestion/pagos" className="mt-2 inline-flex min-h-11 items-center font-body text-sm font-semibold text-text-primary underline">
+                <button type="button" onClick={onOpenPagos} className="cursor-pointer mt-2 inline-flex min-h-11 items-center font-body text-sm font-semibold text-text-primary underline">
                   Ver pagos
-                </Link>
+                </button>
               </>
             )}
           </Section>
@@ -169,7 +152,7 @@ function DashboardContent({ clubId }: { clubId: string }) {
           <Section title="Asistencia por semana" subtitle="Promedio de los entrenamientos de cada semana, últimas 12">
             {data.asistencia.trend.every((w) => w.percent === null) ? (
               <Empty title="Todavía no hay asistencia marcada" text="Cuando pases lista en un entrenamiento verás aquí cómo evoluciona.">
-                <Link href="/club/gestion/asistencia" className={btnSolid}>
+                <Link href="/club/seguimiento?tab=asistencia" className={btnSolid}>
                   Pasar lista
                 </Link>
               </Empty>
@@ -208,7 +191,7 @@ function DashboardContent({ clubId }: { clubId: string }) {
               ))}
             </dl>
             {data.sesiones.sinMarcar > 0 && (
-              <Link href="/club/gestion/asistencia" className="mt-2 inline-flex min-h-11 items-center font-body text-sm font-semibold text-text-primary underline">
+              <Link href="/club/seguimiento?tab=asistencia" className="mt-2 inline-flex min-h-11 items-center font-body text-sm font-semibold text-text-primary underline">
                 Pasar lista de los pendientes
               </Link>
             )}

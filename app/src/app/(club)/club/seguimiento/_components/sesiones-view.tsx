@@ -2,14 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useMyClub } from "@/_lib/use-my-club";
 import { WEEKDAYS, addDays, peruToday, relativeDayLabel, timeRange } from "@/_lib/club-training";
 import { GestionError, gestionRequest, type CategoryOption, type PlaceItem, type ScheduleItem, type SessionItem } from "@/_lib/club-training-client";
 import { PageSpinner } from "@/_components/spinner";
 import { SubTabs } from "@/_components/sub-tabs";
 import { Toast } from "@/_components/toast";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
-import { PlaceSheet, ScheduleSheet, SessionSheet } from "./_components/forms";
+import { PlaceSheet, ScheduleSheet, SessionSheet } from "./forms";
 
 type Tab = "calendario" | "horarios" | "lugares";
 const TABS: { key: Tab; label: string }[] = [
@@ -20,14 +19,7 @@ const TABS: { key: Tab; label: string }[] = [
 
 type Data = { places: PlaceItem[]; schedules: ScheduleItem[]; sessions: SessionItem[]; categories: CategoryOption[] };
 
-export default function ClubSesionesPage() {
-  const { club, loading } = useMyClub();
-  if (loading) return <PageSpinner />;
-  if (!club) return <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">Todavía no tienes un club.</div>;
-  return <SesionesContent key={club.id} clubId={club.id} />;
-}
-
-function SesionesContent({ clubId }: { clubId: string }) {
+export function SesionesView({ clubId }: { clubId: string }) {
   const base = `/api/clubs/${clubId}/gestion`;
   const today = peruToday(new Date());
   const [tab, setTab] = useState<Tab>("calendario");
@@ -81,16 +73,8 @@ function SesionesContent({ clubId }: { clubId: string }) {
     <div className="w-full pb-8">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={dismissToast} />}
 
-      <div className="flex items-center justify-between gap-2 px-4 pt-4">
-        <div className="flex min-w-0 items-center gap-1">
-          <Link href="/club/gestion" aria-label="Volver a Gestión" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-text-primary">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180" aria-hidden="true">
-              <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-          <h1 className="font-heading text-xl font-bold text-text-primary">Sesiones</h1>
-        </div>
-        {data && (
+      <div className="flex items-center justify-end gap-2 px-4 pt-4">
+                {data && (
           <button
             onClick={() => (tab === "horarios" ? setScheduleSheet("new") : tab === "lugares" ? setPlaceSheet("new") : setSessionSheet("new"))}
             disabled={noPlaces && tab !== "lugares"}
@@ -220,7 +204,7 @@ function SessionGroup({ title, sessions, today, onOpen }: { title: string; sessi
                     </span>
                   </button>
                   {s.canMark && (
-                    <Link href={`/club/gestion/asistencia/${s.id}`} className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular">
+                    <Link href={`/club/seguimiento/asistencia/${s.id}`} className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular">
                       Pasar lista
                     </Link>
                   )}

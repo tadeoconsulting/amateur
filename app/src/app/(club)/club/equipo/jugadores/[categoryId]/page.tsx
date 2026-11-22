@@ -178,7 +178,7 @@ function ClubCategoryDetailContent({ clubId }: { clubId: string }) {
           </h1>
         </div>
         <Link
-          href="/club/jugadores/invitar"
+          href="/club/equipo/jugadores/invitar"
           className="rounded-lg bg-brand-900 px-4 py-2 text-sm font-semibold text-text-invert"
         >
           Agregar

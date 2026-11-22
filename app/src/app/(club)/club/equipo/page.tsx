@@ -12,9 +12,18 @@ import { ClubCrest } from "@/_components/club-crest";
 import { SubTabs } from "@/_components/sub-tabs";
 import { DelegatesPanel } from "@/_components/delegates-panel";
 import { ClubSettingsLink } from "../../_components/club-settings-link";
+import { JugadoresView } from "./_components/jugadores-view";
+import { useUrlTab } from "@/_lib/use-url-tab";
 
-const tabs = ["Categorías", "Planilla", "Delegados"] as const;
-type Tab = (typeof tabs)[number];
+// Equipo y Jugadores son una sola sección (especificación 023): los jugadores, las categorías, la planilla y los delegados.
+const tabs = [
+  { key: "jugadores", label: "Jugadores" },
+  { key: "categorias", label: "Categorías" },
+  { key: "planilla", label: "Planilla" },
+  { key: "delegados", label: "Delegados" },
+] as const;
+type Tab = (typeof tabs)[number]["key"];
+const TAB_KEYS = tabs.map((t) => t.key);
 
 const roleLabels: Record<StaffRole, string> = {
   delegado: "Delegado",
@@ -190,7 +199,7 @@ function JoinRequests({ clubId, onJoined }: { clubId: string; onJoined: () => vo
 }
 
 export default function ClubEquipoPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("Categorías");
+  const [activeTab, setActiveTab] = useUrlTab<Tab>(TAB_KEYS, "jugadores");
   const { club, loading: loadingClub } = useMyClub();
 
   if (loadingClub) {
@@ -263,7 +272,15 @@ function ClubEquipoContent({
           <h1 className="font-heading text-xl font-bold text-text-primary">Equipo</h1>
         </div>
         <div className="flex items-center gap-3">
-          {activeTab === "Planilla" && (
+          {activeTab === "jugadores" && (
+            <Link href="/club/equipo/jugadores/buscar" aria-label="Buscar jugadores" className="text-text-primary">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M15 15l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </Link>
+          )}
+          {activeTab === "planilla" && (
             <button className="text-text-primary">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
@@ -294,10 +311,13 @@ function ClubEquipoContent({
       <JoinRequests clubId={clubId} onJoined={() => { refetchCategories(); refetchStaff(); }} />
 
       {/* Tabs */}
-      <SubTabs label="Equipo" value={activeTab} onChange={setActiveTab} tabs={tabs.map((t) => ({ key: t, label: t }))} />
+      <SubTabs label="Equipo" value={activeTab} onChange={setActiveTab} tabs={[...tabs]} />
+
+      {/* Jugadores Tab */}
+      {activeTab === "jugadores" && <JugadoresView clubId={clubId} />}
 
       {/* Categorías Tab */}
-      {activeTab === "Categorías" && (
+      {activeTab === "categorias" && (
         <>
           {hasCategories ? (
             <div className="px-4">
@@ -308,7 +328,7 @@ function ClubEquipoContent({
                     {cats.map((cat) => (
                       <Link
                         key={cat.id}
-                        href={`/club/jugadores/${cat.id}`}
+                        href={`/club/equipo/jugadores/${cat.id}`}
                         className="flex items-center justify-between border-b border-brand-200 py-4 last:border-0"
                       >
                         <div>
@@ -353,10 +373,10 @@ function ClubEquipoContent({
       )}
 
       {/* Delegados Tab: el principal y los co-delegados (especificación 014) */}
-      {activeTab === "Delegados" && <DelegatesPanel clubId={clubId} />}
+      {activeTab === "delegados" && <DelegatesPanel clubId={clubId} />}
 
       {/* Planilla Tab */}
-      {activeTab === "Planilla" && (
+      {activeTab === "planilla" && (
         <>
           <div className="mt-2">
             {staff.map((member) => (

@@ -19,7 +19,7 @@ export default function ClubInvitarPage() {
             Encuentra el jugador que necesitas en tu equipo. Si aun no esta en Amateur, puedes invitarlo por WhatsApp.
           </p>
           <Link
-            href="/club/jugadores/buscar"
+            href="/club/equipo/jugadores/buscar"
             className="mt-4 block rounded-xl border border-brand-900 bg-white py-3 text-center font-heading text-sm font-semibold text-text-primary"
           >
             Buscar jugador
