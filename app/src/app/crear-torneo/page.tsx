@@ -11,6 +11,7 @@ import { EditTabs } from "./_components/edit-tabs";
 import { TournamentPhotoField } from "@/_components/tournament-photo-field";
 import { useEditSave } from "./_components/use-edit-save";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export default function CrearTorneoPage() {
   const router = useRouter();
@@ -78,13 +79,7 @@ export default function CrearTorneoPage() {
             <Label className="block mb-2">
               Nombre del torneo
             </Label>
-            <input
-              type="text"
-              placeholder="Ingresar nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-            />
+            <TextField type="text" placeholder="Ingresar nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
 
           {/* Foto del torneo */}
@@ -96,12 +91,7 @@ export default function CrearTorneoPage() {
               Fecha de inicio
             </Label>
             <div className="relative">
-              <input
-                type="date"
-                value={fecha}
-                onChange={(e) => setFecha(e.target.value)}
-                className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-              />
+              <TextField type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary">
                 <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

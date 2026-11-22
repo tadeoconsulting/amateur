@@ -7,9 +7,10 @@ import { useApi } from "@/_lib/use-api";
 import { FINAL_FORMAT_LABEL, type FinalFormat } from "@/_lib/season";
 import { BackHeader } from "@/_components/back-header";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
-import { fieldClass, labelClass } from "../../_components/season-ui";
+import { labelClass } from "../../_components/season-ui";
 import { FinalPhaseFields, validFinalTeams } from "../../_components/final-phase-fields";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 function Spinner() {
   return (
@@ -96,7 +97,7 @@ function EditForm({ season, onBack, onSaved }: { season: SeasonSummary; onBack: 
             <Label htmlFor="season-name" className={labelClass}>
               Nombre de la temporada
             </Label>
-            <input id="season-name" type="text" maxLength={120} value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
+            <TextField id="season-name" type="text" maxLength={120} value={name} onChange={(e) => setName(e.target.value)} />
             <p className="mt-2 font-body text-xs text-text-secondary">El enlace público no cambia al renombrarla.</p>
           </div>
 

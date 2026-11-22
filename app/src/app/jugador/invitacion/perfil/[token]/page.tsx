@@ -9,6 +9,7 @@ import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PageSpinner } from "@/_components/spinner";
 import { SwitchAccount } from "@/_components/switch-account";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 // Quien recibió una invitación a reclamar su perfil de jugador (especificación 009, entrega 3). Es pública: la
 // abre quien tiene el enlace, sin cuenta todavía. Muestra solo el nombre del perfil y el equipo; para vincularlo
@@ -123,7 +124,7 @@ export default function ReclamarPerfilPage() {
               <Label htmlFor="rp-dni">
                 Confirma tu DNI
               </Label>
-              <input
+              <TextField
                 id="rp-dni"
                 value={dni}
                 onChange={(e) => setDni(e.target.value)}
@@ -131,8 +132,8 @@ export default function ReclamarPerfilPage() {
                 autoComplete="off"
                 maxLength={11}
                 aria-describedby="rp-dni-ayuda rp-dni-error"
-                aria-invalid={error ? true : undefined}
-                className={`min-h-12 w-full rounded-lg border bg-surface-primary px-3 font-body text-base tabular-nums tracking-wide text-text-primary outline-none focus:border-brand-500 ${error ? "border-red-500" : "border-border-primary"}`}
+                invalid={Boolean(error)}
+                className="tabular-nums tracking-wide"
                 placeholder="8 dígitos"
               />
               <p id="rp-dni-ayuda" className="font-body text-xs text-text-secondary">

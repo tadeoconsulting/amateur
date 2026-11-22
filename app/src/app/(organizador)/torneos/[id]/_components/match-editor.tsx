@@ -4,27 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import type { MatchListItem } from "@/_lib/api";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 type TeamOption = { id: string; name: string; groupName: string | null };
 
-const field =
-  "campo-14 w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm font-semibold text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:opacity-60";
-// Etiqueta y campo (texto y marcador) comparten fuente y tamaño: DM Sans (la fuente de cuerpo) a 14 px, en peso 600.
-// El desplegable propio: sin la flecha del navegador (que queda pegada al borde) y con la nuestra a 12 px del borde derecho,
-// el mismo margen que tiene el texto a la izquierda (`px-3`).
-function SelectField({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <div className="relative">
-      <select {...props} className={`${field} appearance-none pr-10`}>
-        {children}
-      </select>
-      <svg aria-hidden width="16" height="16" viewBox="0 0 20 20" fill="none" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary">
-        <path d="M5 8l5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
-}
-
+// Los campos, desplegables y etiquetas son los componentes únicos de la plataforma (especificación 022).
 const label = "mb-1.5 block";
 
 const todayYmd = () => {
@@ -148,14 +133,14 @@ export function MatchEditor({
   }
 
   const teamSelect = (value: string, onChange: (v: string) => void, other: string, id: string) => (
-    <SelectField id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={saving}>
+    <Picklist id={id} value={value} onChange={onChange} disabled={saving}>
       <option value="">Elige un equipo</option>
       {teams.map((t) => (
         <option key={t.id} value={t.id} disabled={t.id === other}>
           {t.name}
         </option>
       ))}
-    </SelectField>
+    </Picklist>
   );
 
   return (
@@ -181,12 +166,12 @@ export function MatchEditor({
               {editing ? (
                 <p className="font-body text-sm text-text-secondary">Fecha {matchday}{match?.groupName ? ` · ${match.groupName}` : ""}</p>
               ) : (
-                <SelectField id="me-fecha" value={matchday} onChange={(e) => setMatchday(Number(e.target.value))} disabled={saving}>
+                <Picklist id="me-fecha" value={matchday} onChange={(v) => setMatchday(Number(v))} disabled={saving}>
                   {matchdays.map((d) => (
                     <option key={d} value={d}>Fecha {d}</option>
                   ))}
                   <option value={lastMatchday + 1}>Fecha {lastMatchday + 1} (nueva)</option>
-                </SelectField>
+                </Picklist>
               )}
             </div>
 
@@ -230,27 +215,18 @@ export function MatchEditor({
               <div className="flex gap-3">
                 <div className="min-w-0 flex-1">
                   <Label htmlFor="me-dia" className={label}>Día</Label>
-                  <input id="me-dia" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={saving} className={field} />
+                  <TextField id="me-dia" type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={saving} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <Label htmlFor="me-hora" className={label}>Hora</Label>
-                  <input id="me-hora" type="time" value={time} onChange={(e) => setTime(e.target.value)} disabled={saving} className={field} />
+                  <TextField id="me-hora" type="time" value={time} onChange={(e) => setTime(e.target.value)} disabled={saving} />
                 </div>
               </div>
             )}
 
             <div>
               <Label htmlFor="me-sede" className={label}>Sede</Label>
-              <input
-                id="me-sede"
-                type="text"
-                value={location}
-                maxLength={200}
-                onChange={(e) => setLocation(e.target.value)}
-                disabled={saving}
-                placeholder="Cancha o dirección"
-                className={field}
-              />
+              <TextField id="me-sede" type="text" value={location} maxLength={200} onChange={(e) => setLocation(e.target.value)} disabled={saving} placeholder="Cancha o dirección" />
             </div>
           </div>
 

@@ -7,6 +7,7 @@ import { Toast } from "@/_components/toast";
 import { useMyClub } from "@/_lib/use-my-club";
 import { searchUsers, type UserItem } from "@/_lib/api";
 import type { RosterPlayer } from "@/_lib/types";
+import { TextField } from "@/_components/text-field";
 
 export default function BuscarJugadorPage() {
   const [query, setQuery] = useState("");
@@ -83,13 +84,7 @@ export default function BuscarJugadorPage() {
 
         {/* Search input */}
         <div className="relative mt-3">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ingresa el nombre o apellido"
-            className="w-full rounded-lg border border-brand-200 bg-surface-alt py-3 pl-3 pr-10 text-sm text-text-primary placeholder:text-text-secondary focus:border-border-primary focus:outline-none"
-          />
+          <TextField type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ingresa el nombre o apellido" className="pl-3 pr-10" />
           <svg
             width="18"
             height="18"

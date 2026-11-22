@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { Barlow_Condensed, DM_Sans } from "next/font/google";
+
+// El design system se muestra en el tema «Cancha» (el de la plataforma: organizador, administrador y acceso), con las mismas
+// fuentes; un interruptor deja ver también el tema claro (club y jugador). Los componentes son los reales: no hay copias.
+const display = Barlow_Condensed({ variable: "--font-cancha-display", subsets: ["latin"], weight: ["500", "600", "700", "800"] });
+const body = DM_Sans({ variable: "--font-cancha-body", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 const navSections = [
   {
@@ -30,6 +36,7 @@ const navSections = [
 export default function DesignSystemLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [oscuro, setOscuro] = useState(true);
 
   return (
     <div className="flex min-h-dvh bg-surface-primary">
@@ -112,8 +119,18 @@ export default function DesignSystemLayout({ children }: { children: React.React
       </aside>
 
       {/* Main content */}
-      <main className="min-w-0 flex-1 pt-[52px] lg:pt-0">
+      <main className={`min-w-0 flex-1 pt-[52px] lg:pt-0 ${oscuro ? `tema-cancha ${display.variable} ${body.variable} bg-surface-primary` : ""}`}>
         <div className="mx-auto max-w-3xl px-6 py-10 lg:px-12 lg:py-16">
+          <div className="mb-8 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setOscuro((v) => !v)}
+              aria-pressed={oscuro}
+              className="cursor-pointer rounded-lg border border-border-primary px-3 py-2 font-body text-sm font-semibold text-text-primary transition-colors hover:bg-btn-regular"
+            >
+              Tema: {oscuro ? "Cancha (oscuro)" : "Claro"}
+            </button>
+          </div>
           {children}
         </div>
       </main>

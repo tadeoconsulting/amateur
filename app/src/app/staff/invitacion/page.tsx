@@ -9,6 +9,7 @@ import { ClubCrest } from "@/_components/club-crest";
 import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { passwordError } from "@/_lib/password-rules";
+import { TextField } from "@/_components/text-field";
 
 type Preview = {
   club: { id: string; name: string; shortName: string; color: string | null; logoUrl: string | null };
@@ -168,34 +169,10 @@ function InvitacionStaffContent() {
         <p className="mt-2 text-center text-sm text-text-secondary">Crea tu cuenta para aceptar.</p>
 
         <div className="mt-6 flex flex-col gap-3">
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            placeholder="Nombre"
-            className="w-full rounded-lg bg-brand-100 px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none"
-          />
-          <input
-            type="text"
-            value={apellidos}
-            onChange={(e) => setApellidos(e.target.value)}
-            placeholder="Apellidos"
-            className="w-full rounded-lg bg-brand-100 px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none"
-          />
-          <input
-            type="email"
-            value={preview.email}
-            readOnly
-            disabled
-            className="w-full cursor-not-allowed rounded-lg bg-brand-100 px-4 py-3 text-sm text-text-secondary focus:outline-none"
-          />
-          <PasswordInput
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            autoComplete="new-password"
-            className="w-full rounded-lg bg-brand-100 px-4 py-3 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none"
-          />
+          <TextField type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre" />
+          <TextField type="text" value={apellidos} onChange={(e) => setApellidos(e.target.value)} placeholder="Apellidos" />
+          <TextField type="email" value={preview.email} readOnly disabled />
+          <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" autoComplete="new-password" />
           <PasswordRules value={password} className="-mt-2 text-text-secondary" />
 
           {error && <p className="font-body text-sm text-red-600">{error}</p>}

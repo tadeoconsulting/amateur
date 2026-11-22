@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TextArea } from "@/_components/text-field";
 
 export function CondicionModal({
   open,
@@ -47,13 +48,7 @@ export function CondicionModal({
             Agregar una condición
           </h3>
 
-          <textarea
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            autoFocus
-            rows={5}
-            className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none resize-none"
-          />
+          <TextArea value={texto} onChange={(e) => setTexto(e.target.value)} autoFocus rows={5} className="resize-none" />
 
           <button
             onClick={handleSave}

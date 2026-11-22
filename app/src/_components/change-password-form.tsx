@@ -11,8 +11,6 @@ import { passwordError } from "@/_lib/password-rules";
 import { Label } from "@/_components/label";
 
 
-const inputClass =
-  "mt-1 w-full border-b border-brand-200 py-2 text-base text-text-primary focus:border-border-primary focus:outline-none";
 
 /** "Cambiar mi contraseña" — la misma pantalla para organizador, club y jugador (POST /api/auth/password). */
 export function ChangePasswordForm() {
@@ -74,16 +72,16 @@ export function ChangePasswordForm() {
 
           <div>
             <Label htmlFor="pw-current">Contraseña actual</Label>
-            <PasswordInput id="pw-current" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputClass} />
+            <PasswordInput id="pw-current" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} />
           </div>
           <div>
             <Label htmlFor="pw-new">Nueva contraseña</Label>
-            <PasswordInput id="pw-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} />
+            <PasswordInput id="pw-new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
             <PasswordRules value={next} className="text-text-secondary" />
           </div>
           <div>
             <Label htmlFor="pw-confirm">Repite la nueva contraseña</Label>
-            <PasswordInput id="pw-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
+            <PasswordInput id="pw-confirm" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </div>
         </div>
 

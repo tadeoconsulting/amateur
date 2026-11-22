@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 
 function ClickFeedback({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const [clicked, setClicked] = useState(false);
@@ -40,6 +41,24 @@ export default function ButtonsPage() {
           Hacé click para probar cada variante.
         </p>
       </header>
+
+      {/* Los botones reales de la plataforma: salen de `button-styles.ts`, no son copias (especificación 022). */}
+      <Section title="Botones de la plataforma (reales)">
+        <Variant label="btnSolid · acción principal (14 px en celular, 16 px desde 768 px)">
+          <button className={btnSolid}>Crear torneo</button>
+        </Variant>
+        <Variant label="btnOutline · acción secundaria">
+          <button className={btnOutline}>Cancelar</button>
+        </Variant>
+        <Variant label="btnText · acción discreta">
+          <button className={btnText}>Quitar</button>
+        </Variant>
+        <Variant label="btnSolid · deshabilitado">
+          <button className={btnSolid} disabled>
+            Guardar cambios
+          </button>
+        </Variant>
+      </Section>
 
       {/* Primary / Secondary */}
       <Section title="Primary / Secondary">

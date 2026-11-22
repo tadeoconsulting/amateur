@@ -7,6 +7,7 @@ import { getClubStaff } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useMyClub } from "@/_lib/use-my-club";
 import { Toast } from "@/_components/toast";
+import { TextField } from "@/_components/text-field";
 
 type Gender = "femenino" | "masculino" | "mixto";
 type CategoryType = "definir_edad" | "libre" | "master";
@@ -162,12 +163,7 @@ function CrearCategoriaContent({ clubId }: { clubId: string }) {
         {showAgeField && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-text-primary">{ageLabel}</p>
-            <input
-              type="number"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              className="w-16 rounded-lg border border-brand-200 py-2 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
+            <TextField type="number" value={age} onChange={(e) => setAge(e.target.value)} className="w-16 text-center" />
           </div>
         )}
 

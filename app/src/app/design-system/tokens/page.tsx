@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TextField } from "@/_components/text-field";
 
 interface Token {
   css: string;
@@ -71,9 +72,9 @@ const tokenGroups: { title: string; tokens: Token[] }[] = [
   {
     title: "Typography",
     tokens: [
-      { css: "--font-sans", tailwind: "font-sans", value: "Inter", desc: "Default UI sans-serif" },
+      { css: "--font-sans", tailwind: "font-sans", value: "DM Sans (respaldo: Inter)", desc: "Default UI sans-serif" },
       { css: "--font-heading", tailwind: "font-heading", value: "Lexend", desc: "Headings, buttons, labels" },
-      { css: "--font-body", tailwind: "font-body", value: "Lato", desc: "Body text, paragraphs" },
+      { css: "--font-body", tailwind: "font-body", value: "DM Sans", desc: "Body text, paragraphs, labels and fields" },
     ],
   },
 ];
@@ -110,13 +111,7 @@ export default function TokensPage() {
 
       {/* Search */}
       <div className="mb-8">
-        <input
-          type="text"
-          placeholder="Buscar token..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-brand-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-border-primary"
-        />
+        <TextField type="text" placeholder="Buscar token..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Buscar token" />
       </div>
 
       {/* Token groups */}

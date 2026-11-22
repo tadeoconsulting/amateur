@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MapaModal } from "./mapa-modal";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 const searchResults: { address: string; district: string }[] = [];
 
@@ -64,14 +65,7 @@ export function DireccionModal({
               Ingresa la ubicación
             </Label>
             <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar dirección..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                autoFocus
-                className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 pr-10 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-              />
+              <TextField type="text" placeholder="Buscar dirección..." value={query} onChange={(e) => setQuery(e.target.value)} autoFocus className="pr-10" />
               {query && (
                 <button
                   onClick={() => setQuery("")}

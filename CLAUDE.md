@@ -17,3 +17,12 @@ Si algo de lo anterior no se puede validar, decirlo y preguntar antes de seguir.
 ## Notion: solo el board de Amateur
 
 Para tareas, pendientes y observaciones del proyecto, consultar únicamente el espacio **Amateur** de Notion (boards "[Amateur] Observaciones", "[Amateur] Tareas" y "[Amateur] Data"). No buscar, leer ni analizar el "[Backlog] General" (Operations) ni otros espacios, aunque aparezcan en los resultados de búsqueda. Si algo parece estar solo ahí, avisar al usuario en vez de abrirlo.
+
+## Design system sincronizado con el sistema
+
+El design system (`/design-system`) y la plataforma se mantienen **sincronizados en los dos sentidos** (especificación `docs/specs/022-campos-design-system.md`):
+
+1. **Todo campo, componente, texto o tipografía nuevos se documenta en el design system al crearlo**, en la misma tarea y el mismo PR. No se agregan estilos de campo, etiqueta ni botón propios en una pantalla: se usan los componentes únicos de `app/src/_components/` (`Label`, `Field`, `TextField`, `TextArea`, `Picklist`, `PasswordInput`, `DatePicker`, `TimePicker` y los estilos de `button-styles.ts`).
+2. **El design system muestra los componentes reales**, nunca copias. Si se cambia un componente en el sistema, el design system lo refleja solo; si se cambia una regla en el design system, se cambia en el componente.
+3. **Cada archivo de `app/src/_components/` está clasificado en `app/src/app/design-system/registro.ts`** (documentado, pendiente o de dominio). La prueba `design-system-registro.test.mjs` falla si hay uno nuevo sin clasificar o si algo «documentado» deja de importarse en su página.
+4. **Cada medida** (tamaño de letra, margen, altura) se confirma si vale para mobile, desktop o ambos antes de aplicarla, y se anota en la especificación.

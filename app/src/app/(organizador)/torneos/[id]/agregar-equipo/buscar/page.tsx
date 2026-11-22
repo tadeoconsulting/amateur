@@ -12,6 +12,7 @@ import { Toast } from "@/_components/toast";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { btnOutline, btnSolid, btnText } from "@/_components/button-styles";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export default function BuscarEquipoPage() {
   const params = useParams<{ id: string }>();
@@ -187,14 +188,7 @@ export default function BuscarEquipoPage() {
           Buscar equipo
         </Label>
         <div className="relative">
-          <input
-            id="buscar-equipo"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nombre del equipo o del delegado"
-            className="w-full rounded-lg border border-transparent bg-btn-regular px-3 py-3 pr-10 font-body text-base text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20"
-          />
+          <TextField id="buscar-equipo" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nombre del equipo o del delegado" className="pr-10" />
           <svg
             width="18"
             height="18"

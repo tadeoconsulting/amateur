@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TextField } from "@/_components/text-field";
 
 export function MapaModal({
   open,
@@ -55,15 +56,7 @@ export function MapaModal({
 
           <div className="flex items-start gap-3">
             {editing ? (
-              <input
-                type="text"
-                value={editedAddress}
-                onChange={(e) => setEditedAddress(e.target.value)}
-                autoFocus
-                onBlur={() => setEditing(false)}
-                onKeyDown={(e) => { if (e.key === "Enter") setEditing(false); }}
-                className="flex-1 rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-              />
+              <TextField type="text" value={editedAddress} onChange={(e) => setEditedAddress(e.target.value)} autoFocus onBlur={() => setEditing(false)} onKeyDown={(e) => { if (e.key === "Enter") setEditing(false); }} className="flex-1" />
             ) : (
               <p className="flex-1 font-body text-sm text-text-secondary leading-snug">
                 {editedAddress || address}

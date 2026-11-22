@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DireccionModal } from "./direccion-modal";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 export type Sede = {
   nombre: string;
@@ -96,13 +97,7 @@ export function CrearSedeModal({
                     <Label className="block mb-2">
                       Nombre de la sede
                     </Label>
-                    <input
-                      type="text"
-                      placeholder="Ingresar nombre"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                      className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-                    />
+                    <TextField type="text" placeholder="Ingresar nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
                   </div>
 
                   {/* Ubicación */}
@@ -128,13 +123,7 @@ export function CrearSedeModal({
                     <Label className="block mb-2">
                       Referencia
                     </Label>
-                    <input
-                      type="text"
-                      placeholder="Ejemplo: frente al parque principal"
-                      value={referencia}
-                      onChange={(e) => setReferencia(e.target.value)}
-                      className="w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none"
-                    />
+                    <TextField type="text" placeholder="Ejemplo: frente al parque principal" value={referencia} onChange={(e) => setReferencia(e.target.value)} />
                   </div>
                 </div>
 

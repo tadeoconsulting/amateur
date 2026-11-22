@@ -33,6 +33,7 @@ import { ShareViewButton } from "@/_components/share-view-button";
 import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { STAGE_LABEL } from "@/_lib/season";
 import { Label } from "@/_components/label";
+import { Picklist } from "@/_components/picklist";
 
 type Notify = (message: string, tone: "success" | "error") => void;
 const PUB = { pub: true } as const;
@@ -500,18 +501,13 @@ function JoinPanel({
           <Label htmlFor="club-select" className="mb-1 block">
             Solicitar con el equipo
           </Label>
-          <select
-            id="club-select"
-            value={club.id}
-            onChange={(e) => setChosen(e.target.value)}
-            className="min-h-11 w-full rounded-lg border border-border-primary bg-surface-primary px-3 font-body text-base text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/30"
-          >
+          <Picklist id="club-select" value={club.id} onChange={(v) => setChosen(v)}>
             {clubs.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          </select>
+          </Picklist>
         </div>
       )}
 

@@ -1,11 +1,8 @@
 // Estilos de los formularios de temporadas (los mismos del asistente "Crear torneo"). Las etapas y el estado
 // de una temporada están en `@/_components/season-stages`, compartidos con la vista pública.
 
-/** Campo de texto o fecha del Crono DS. */
-export const fieldClass =
-  "w-full rounded border border-transparent bg-btn-regular px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary hover:bg-surface-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none";
-
-export const labelClass = "mb-2 block font-heading text-sm font-semibold text-text-primary";
+/** Espaciado de la etiqueta de un campo (la tipografía sale de `Label`). */
+export const labelClass = "mb-2 block";
 
 /** Opción elegible en forma de botón (los clasificados, como "Equipos que clasifican a las llaves"). */
 export function chipClass(selected: boolean) {

@@ -43,3 +43,14 @@ test("ningún <label> de caption repite la tipografía: todos usan Label", () =>
   recorrer(raiz);
   assert.deepEqual(malos, [], "labels con tipografía propia");
 });
+
+// La fuente de cuerpo de toda la plataforma es DM Sans (2026-11-20): ningún ámbito vuelve a Lato.
+test("DM Sans es la fuente de cuerpo de todos los ámbitos", () => {
+  const layout = readFileSync(join(raiz, "app/layout.tsx"), "utf8");
+  assert.match(layout, /DM_Sans/, "el layout raíz carga DM Sans");
+  assert.doesNotMatch(layout, /Lato/, "ya no se carga Lato");
+  const css = readFileSync(join(raiz, "app/globals.css"), "utf8");
+  assert.match(css, /--f-body: var\(--font-dm-sans\)/, "font-body es DM Sans en el tema claro");
+  assert.match(css, /--font-sans: var\(--f-body\)/, "font-sans sigue a font-body");
+});
+

@@ -11,6 +11,7 @@ import { SwitchAccount } from "@/_components/switch-account";
 import { PasswordInput } from "@/_components/password-input";
 import { PasswordRules } from "@/_components/password-rules";
 import { passwordError } from "@/_lib/password-rules";
+import { TextField } from "@/_components/text-field";
 
 // Quien recibió una invitación a ser delegado de un equipo temporal (especificación 009, entrega 4). Es pública: la
 // abre quien tiene el enlace, sin cuenta todavía. Muestra solo el equipo. Sin sesión, crea su cuenta ahí mismo (nombre,
@@ -19,8 +20,6 @@ import { passwordError } from "@/_lib/password-rules";
 type Preview = { clubName: string; clubColor: string | null; clubLogoUrl: string | null; expiresAt: string; emailHint: string | null };
 type Loaded = { ok: true; data: Preview } | { ok: false; error: string; code?: string };
 
-const field =
-  "min-h-12 w-full rounded-lg border border-transparent bg-btn-regular px-3 font-body text-base text-text-primary placeholder:text-text-primary/60 transition-colors hover:border-border-primary focus:border-text-primary focus:bg-surface-primary focus:outline-none disabled:cursor-not-allowed disabled:text-text-secondary";
 
 export default function InvitacionDelegadoPage() {
   const { token } = useParams<{ token: string }>();
@@ -122,36 +121,28 @@ export default function InvitacionDelegadoPage() {
               <label className="sr-only" htmlFor="del-first">
                 Nombre
               </label>
-              <input id="del-first" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nombre" autoComplete="given-name" maxLength={80} className={field} />
+              <TextField id="del-first" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nombre" autoComplete="given-name" maxLength={80} />
               <label className="sr-only" htmlFor="del-last">
                 Apellidos
               </label>
-              <input id="del-last" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Apellidos" autoComplete="family-name" maxLength={80} className={field} />
+              <TextField id="del-last" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Apellidos" autoComplete="family-name" maxLength={80} />
               <label className="sr-only" htmlFor="del-email">
                 Correo electrónico
               </label>
               {hasFixedEmail ? (
                 <>
-                  <input id="del-email" type="text" value={loaded.data.emailHint ?? ""} readOnly disabled aria-describedby="del-email-help" className={field} />
+                  <TextField id="del-email" type="text" value={loaded.data.emailHint ?? ""} readOnly disabled aria-describedby="del-email-help" />
                   <p id="del-email-help" className="-mt-1 font-body text-xs text-text-secondary">
                     Es el correo al que te llegó la invitación: tu cuenta se crea con él.
                   </p>
                 </>
               ) : (
-                <input id="del-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico" autoComplete="email" maxLength={254} className={field} />
+                <TextField id="del-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico" autoComplete="email" maxLength={254} />
               )}
               <label className="sr-only" htmlFor="del-password">
                 Contraseña
               </label>
-              <PasswordInput
-                id="del-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña"
-                autoComplete="new-password"
-                maxLength={72}
-                className={field}
-              />
+              <PasswordInput id="del-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña" autoComplete="new-password" maxLength={72} />
               <PasswordRules value={password} className="text-text-secondary" />
 
               <p role="alert" className="min-h-5 font-body text-sm text-red-700">

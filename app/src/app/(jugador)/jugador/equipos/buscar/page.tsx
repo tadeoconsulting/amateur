@@ -6,6 +6,7 @@ import { getClubs, type ClubListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { ClubCrest } from "@/_components/club-crest";
+import { TextField } from "@/_components/text-field";
 
 interface MyJoinRequest {
   id: string;
@@ -82,13 +83,7 @@ function BuscarEquiposContent({ myClubIds }: { myClubIds: string[] }) {
 
       <>
           <div className="px-4 pt-4">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-text-primary"
-            />
+            <TextField type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre" />
           </div>
 
           {error && <p className="mt-3 px-4 text-sm text-red-600">{error}</p>}

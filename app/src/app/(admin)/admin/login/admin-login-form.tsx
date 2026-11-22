@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { safeInternalPath } from "@/_lib/safe-next";
 import { PasswordInput } from "@/_components/password-input";
-
-const input =
-  "w-full rounded-lg bg-brand-300 px-4 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-field-green";
+import { TextField } from "@/_components/text-field";
 
 export function AdminLoginForm({ next }: { next: string | null }) {
   const router = useRouter();
@@ -73,26 +71,8 @@ export function AdminLoginForm({ next }: { next: string | null }) {
         <p className="mb-6 font-body text-sm text-text-secondary">Solo para cuentas de administración.</p>
 
         <form onSubmit={submit} className="flex flex-col gap-3">
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            aria-label="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="username"
-            className={input}
-          />
-          <PasswordInput
-            placeholder="Contraseña"
-            aria-label="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            maxLength={72}
-            autoComplete="current-password"
-            className={input}
-          />
+          <TextField type="email" placeholder="Correo electrónico" aria-label="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" />
+          <PasswordInput placeholder="Contraseña" aria-label="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required maxLength={72} autoComplete="current-password" />
           {error && (
             <p role="alert" className="font-body text-sm text-red-600">
               {error}

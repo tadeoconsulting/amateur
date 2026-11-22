@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
+import { Picklist } from "@/_components/picklist";
 
 export default function AgregarSedePage() {
   const router = useRouter();
@@ -60,56 +62,34 @@ export default function AgregarSedePage() {
             <Label className="mb-1.5 block">
               Nombre de la sede
             </Label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ingresar nombre"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
-            />
+            <TextField type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ingresar nombre" />
           </div>
 
           <div>
             <Label className="mb-1.5 block">
               Elige tu ciudad
             </Label>
-            <select
-              value={ciudad}
-              onChange={(e) => setCiudad(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-secondary outline-none focus:border-surface-secondary"
-            >
+            <Picklist value={ciudad} onChange={(v) => setCiudad(v)}>
               <option value="">Selecciona</option>
               <option value="lima">Lima, Perú</option>
               <option value="lambayeque">Lambayeque, Perú</option>
               <option value="tumbes">Tumbes, Perú</option>
               <option value="arequipa">Arequipa, Perú</option>
-            </select>
+            </Picklist>
           </div>
 
           <div>
             <Label className="mb-1.5 block">
               Ingresa la ubicación
             </Label>
-            <input
-              type="text"
-              value={ubicacion}
-              onChange={(e) => setUbicacion(e.target.value)}
-              placeholder="Escribe la dirección"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
-            />
+            <TextField type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Escribe la dirección" />
           </div>
 
           <div>
             <Label className="mb-1.5 block">
               Referencia
             </Label>
-            <input
-              type="text"
-              value={referencia}
-              onChange={(e) => setReferencia(e.target.value)}
-              placeholder="Ejemplo: frente al parque principal"
-              className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-sm text-text-primary placeholder:text-text-secondary outline-none focus:border-surface-secondary"
-            />
+            <TextField type="text" value={referencia} onChange={(e) => setReferencia(e.target.value)} placeholder="Ejemplo: frente al parque principal" />
           </div>
         </div>
 

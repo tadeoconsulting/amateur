@@ -8,6 +8,7 @@ import { getUser } from "@/_lib/api";
 import { AvatarCropper } from "@/_components/avatar-cropper";
 import { uploadAvatarBlob } from "@/_lib/upload-avatar";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 const positions = [
   "Portero",
@@ -189,22 +190,12 @@ export default function JugadorPerfilPage() {
 
           <div>
             <Label>Nombre completo</Label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
+            <TextField type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-1" />
           </div>
 
           <div>
             <Label>Apellidos</Label>
-            <input
-              type="text"
-              value={apellidos}
-              onChange={(e) => setApellidos(e.target.value)}
-              className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
+            <TextField type="text" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="mt-1" />
           </div>
 
           <div>
@@ -225,30 +216,9 @@ export default function JugadorPerfilPage() {
           <div>
             <Label>Fecha de nacimiento</Label>
             <div className="mt-1 flex gap-3">
-              <input
-                type="text"
-                value={dia}
-                onChange={(e) => setDia(e.target.value)}
-                maxLength={2}
-                placeholder="DD"
-                className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={mes}
-                onChange={(e) => setMes(e.target.value)}
-                maxLength={2}
-                placeholder="MM"
-                className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={anio}
-                onChange={(e) => setAnio(e.target.value)}
-                maxLength={4}
-                placeholder="AAAA"
-                className="w-full rounded-lg border border-brand-200 px-3 py-2.5 text-center text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-              />
+              <TextField type="text" value={dia} onChange={(e) => setDia(e.target.value)} maxLength={2} placeholder="DD" className="text-center" />
+              <TextField type="text" value={mes} onChange={(e) => setMes(e.target.value)} maxLength={2} placeholder="MM" className="text-center" />
+              <TextField type="text" value={anio} onChange={(e) => setAnio(e.target.value)} maxLength={4} placeholder="AAAA" className="text-center" />
             </div>
           </div>
 
@@ -273,12 +243,7 @@ export default function JugadorPerfilPage() {
 
           <div>
             <Label>Teléfono</Label>
-            <input
-              type="tel"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              className="mt-1 w-full border-b border-brand-200 py-2 text-sm text-text-primary focus:border-brand-900 focus:outline-none"
-            />
+            <TextField type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} className="mt-1" />
           </div>
 
           <div>

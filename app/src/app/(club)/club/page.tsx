@@ -10,6 +10,7 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
 import { SHORT_NAME_MAX } from "@/_lib/short-name";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 // Colores oscuros: las iniciales blancas del avatar llegan a 4.5:1 sobre todos.
 const COLORS = [
@@ -26,9 +27,6 @@ const COLORS = [
 const NAME_MAX = 80;
 const SHORT_MAX = SHORT_NAME_MAX;
 
-const inputClass =
-  "w-full rounded-lg border bg-btn-regular px-3 py-3 font-body text-base text-text-primary transition-colors " +
-  "hover:bg-surface-primary focus:bg-surface-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-text-primary/20";
 
 /** Sugiere un nombre corto de hasta 3 letras a partir del nombre. */
 function suggestShortName(name: string) {
@@ -104,17 +102,7 @@ function CreateClubForm({ next }: { next: string }) {
           <Label htmlFor="club-name" className="mb-1.5 block">
             Nombre del equipo
           </Label>
-          <input
-            id="club-name"
-            value={name}
-            maxLength={NAME_MAX}
-            autoComplete="off"
-            aria-invalid={touched.name && !!nameError}
-            aria-describedby="club-name-help"
-            onChange={(e) => setName(e.target.value)}
-            onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-            className={`${inputClass} ${touched.name && nameError ? "border-error" : "border-transparent hover:border-border-primary focus:border-text-primary"}`}
-          />
+          <TextField id="club-name" value={name} maxLength={NAME_MAX} autoComplete="off" aria-invalid={touched.name && !!nameError} aria-describedby="club-name-help" onChange={(e) => setName(e.target.value)} onBlur={() => setTouched((t) => ({ ...t, name: true }))} invalid={Boolean(touched.name && nameError)} />
           <p id="club-name-help" className={`mt-1.5 font-body text-xs ${touched.name && nameError ? "text-brand-900" : "text-text-secondary"}`}>
             {touched.name && nameError ? nameError : "Así lo verán los organizadores y los otros equipos."}
           </p>
@@ -124,20 +112,7 @@ function CreateClubForm({ next }: { next: string }) {
           <Label htmlFor="club-short" className="mb-1.5 block">
             Nombre corto
           </Label>
-          <input
-            id="club-short"
-            value={shownShort}
-            maxLength={SHORT_MAX}
-            autoComplete="off"
-            aria-invalid={touched.shortName && !!shortError}
-            aria-describedby="club-short-help"
-            onChange={(e) => {
-              setShortEdited(true);
-              setShortName(e.target.value.toUpperCase());
-            }}
-            onBlur={() => setTouched((t) => ({ ...t, shortName: true }))}
-            className={`${inputClass} uppercase ${touched.shortName && shortError ? "border-error" : "border-transparent hover:border-border-primary focus:border-text-primary"}`}
-          />
+          <TextField id="club-short" value={shownShort} maxLength={SHORT_MAX} autoComplete="off" aria-invalid={touched.shortName && !!shortError} aria-describedby="club-short-help" onChange={(e) => { setShortEdited(true); setShortName(e.target.value.toUpperCase()); }} onBlur={() => setTouched((t) => ({ ...t, shortName: true }))} className="uppercase" invalid={Boolean(touched.shortName && shortError)} />
           <p id="club-short-help" className={`mt-1.5 font-body text-xs ${touched.shortName && shortError ? "text-brand-900" : "text-text-secondary"}`}>
             {touched.shortName && shortError ? shortError : `Hasta ${SHORT_MAX} caracteres. Aparece en marcadores y tablas.`}
           </p>

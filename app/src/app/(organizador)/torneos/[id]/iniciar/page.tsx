@@ -10,6 +10,7 @@ import { formatLabel, OPEN_STATUSES } from "@/_lib/tournament-labels";
 import { btnSolid, btnOutline } from "@/_components/button-styles";
 import { Spinner } from "@/_components/spinner";
 import { Label } from "@/_components/label";
+import { TextField } from "@/_components/text-field";
 
 const BRACKET_FORMATS = ["eliminacion", "relampago"];
 
@@ -331,38 +332,20 @@ export default function IniciarTorneoPage() {
                 <Label htmlFor="rel-date" className="mb-1.5 block">
                   Fecha
                 </Label>
-                <input
-                  id="rel-date"
-                  type="date"
-                  value={day.date}
-                  onChange={(e) => setDay((d) => ({ ...d, date: e.target.value }))}
-                  className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
-                />
+                <TextField id="rel-date" type="date" value={day.date} onChange={(e) => setDay((d) => ({ ...d, date: e.target.value }))} />
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
                   <Label htmlFor="rel-start" className="mb-1.5 block">
                     Desde
                   </Label>
-                  <input
-                    id="rel-start"
-                    type="time"
-                    value={day.startTime}
-                    onChange={(e) => setDay((d) => ({ ...d, startTime: e.target.value }))}
-                    className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
-                  />
+                  <TextField id="rel-start" type="time" value={day.startTime} onChange={(e) => setDay((d) => ({ ...d, startTime: e.target.value }))} />
                 </div>
                 <div className="flex-1">
                   <Label htmlFor="rel-end" className="mb-1.5 block">
                     Hasta
                   </Label>
-                  <input
-                    id="rel-end"
-                    type="time"
-                    value={day.endTime}
-                    onChange={(e) => setDay((d) => ({ ...d, endTime: e.target.value }))}
-                    className="w-full rounded-lg border border-border-primary bg-surface-primary px-3 py-3 font-body text-base text-text-primary focus:border-text-primary focus:outline-none"
-                  />
+                  <TextField id="rel-end" type="time" value={day.endTime} onChange={(e) => setDay((d) => ({ ...d, endTime: e.target.value }))} />
                 </div>
               </div>
             </div>

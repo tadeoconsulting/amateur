@@ -1,6 +1,7 @@
 "use client";
 
-import { ActionsMenu, actionIcons, type ActionItem } from "@/_components/actions-menu";
+import { Picklist, type PicklistItem } from "@/_components/picklist";
+import { actionIcons } from "@/_components/picklist-icons";
 import { useShareView } from "@/_components/share-view-button";
 import type { ShareView } from "@/_lib/share-view";
 
@@ -36,7 +37,7 @@ export function TournamentActions({
 }) {
   const { share, toast } = useShareView({ title, publicPath, view: shareView });
 
-  const candidates: (ActionItem | false)[] = [
+  const candidates: (PicklistItem | false)[] = [
     !isConvocatoria && { key: "compartir", label: "Compartir", icon: actionIcons.share, onSelect: share },
     { key: "editar", label: "Editar torneo", icon: actionIcons.edit, href: `/torneos/${tournamentId}/editar` },
     !isConvocatoria && { key: "mesa", label: "Mesa", icon: actionIcons.desk, href: `/torneos/${tournamentId}/mesa` },
@@ -45,12 +46,12 @@ export function TournamentActions({
     canCreateSeason && { key: "temporada", label: "Crear temporada con este torneo", icon: actionIcons.season, href: `/torneos/temporadas/nueva?apertura=${tournamentId}` },
     !isConvocatoria && canUndoFixture && { key: "deshacer", label: "Deshacer fixture", icon: actionIcons.undo, onSelect: onUndoFixture, tone: "danger", separated: true },
   ];
-  const items = candidates.filter((item): item is ActionItem => item !== false);
+  const items = candidates.filter((item): item is PicklistItem => item !== false);
 
   return (
     <>
       {toast}
-      <ActionsMenu items={items} />
+      <Picklist variant="menu" label="Acciones" items={items} />
     </>
   );
 }
