@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getTournaments, type TournamentListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 import { SeasonsList } from "./temporadas/_components/seasons-list";
 
 type FilterTab = "competencia" | "convocatoria" | "finalizados";
@@ -201,7 +201,7 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
         </div>
       </div>
 
-      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" desktop="underline" className="mb-4" />
+      <Tabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" size="base" className="px-4 pb-4" />
 
       {mainTab === "temporadas" ? (
         <SeasonsList organizerId={organizerId} />

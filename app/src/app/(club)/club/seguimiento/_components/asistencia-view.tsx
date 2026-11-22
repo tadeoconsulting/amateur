@@ -5,7 +5,7 @@ import Link from "next/link";
 import { addDays, countLabel, peruToday, relativeDayLabel, timeRange } from "@/_lib/club-training";
 import { GestionError, gestionRequest, type AttendanceSummary, type SessionItem } from "@/_lib/club-training-client";
 import { PageSpinner } from "@/_components/spinner";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 
 type Tab = "sesiones" | "promedios";
 const TABS: { key: Tab; label: string }[] = [
@@ -17,7 +17,7 @@ export function AsistenciaView({ clubId, onOpenSesiones }: { clubId: string; /**
   const [tab, setTab] = useState<Tab>("sesiones");
   return (
     <div className="w-full pb-8">
-      <SubTabs label="Asistencia" value={tab} onChange={setTab} tabs={TABS} />
+      <Tabs variant="segmented" label="Asistencia" value={tab} onChange={setTab} tabs={TABS} className="mx-4 mt-3" />
       {tab === "sesiones" ? <SessionsToMark clubId={clubId} onOpenSesiones={onOpenSesiones} /> : <Averages clubId={clubId} />}
     </div>
   );

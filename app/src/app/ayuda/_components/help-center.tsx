@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Accordion } from "@/_components/accordion";
-import { CategoryTabs } from "@/_components/category-tabs";
+import { Tabs } from "@/_components/tabs";
 import { categoriesOf, type ContentSection } from "@/_lib/content";
 
 /** Las preguntas del Centro de ayuda, con una pestaña por categoría (las categorías las define el admin). */
@@ -21,7 +21,7 @@ export function HelpCenter({ sections }: { sections: ContentSection[] }) {
     <>
       {categories.length > 1 && (
         <div className="mt-4">
-          <CategoryTabs categories={categories} active={current} onChange={setActive} />
+          <Tabs label="Categorías de ayuda" value={current} onChange={setActive} tabs={categories.map((c) => ({ key: c, label: c }))} className="pb-1" />
         </div>
       )}
       <div className="mt-6">

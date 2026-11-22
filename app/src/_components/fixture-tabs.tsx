@@ -5,7 +5,7 @@ import type { MatchListItem } from "@/_lib/api";
 import { formatMatchDate, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab, tabKeyFromSearch, withTabParam } from "@/_lib/fixture";
 import { MatchRow } from "@/_components/match-row";
-import { PillTabs } from "@/_components/pill-tabs";
+import { Tabs } from "@/_components/tabs";
 
 /**
  * Lista de partidos de un torneo, organizada por fecha — como se armó el fixture — y, dentro de
@@ -83,12 +83,12 @@ export function FixtureTabs({
         // El «+» va fuera de la barra que se desplaza: queda fijo a la derecha, después de la última fecha.
         <div className="flex items-start gap-2 pr-4">
           <div className="min-w-0 flex-1">
-            {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" className="pl-4 pb-3" />}
+            {tabs.length > 1 && <Tabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" className="pl-4 pb-3" />}
           </div>
           {addButton}
         </div>
       ) : (
-        tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" />
+        tabs.length > 1 && <Tabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" />
       )}
 
       <div className="flex flex-col gap-4 px-4">

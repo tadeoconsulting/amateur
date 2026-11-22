@@ -15,7 +15,7 @@ import { PageSpinner, Spinner } from "@/_components/spinner";
 import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { notifyChanged } from "@/_lib/notifications-changed";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 import { ALL_CATEGORIES, categoriesOf, categoryOf, filterByCategory } from "@/_lib/tournament-category";
 import { ClubSettingsLink } from "../../_components/club-settings-link";
 
@@ -126,9 +126,10 @@ function ClubTorneosContent({ clubId }: { clubId: string }) {
 
       {/* Mis torneos content */}
       {mainTab === "mis_torneos" && categories.length > 1 && (
-        <SubTabs
+        <Tabs
+          variant="filters"
+          className="mt-3 px-4 pb-1"
           label="Categoría"
-          mobile="start"
           value={activeCategory}
           onChange={setCategoryTab}
           tabs={[{ key: ALL_CATEGORIES, label: "Todas" }, ...categories.map((c) => ({ key: c, label: c }))]}

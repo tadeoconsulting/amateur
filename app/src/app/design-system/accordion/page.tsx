@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Accordion } from "@/_components/accordion";
-import { CategoryTabs } from "@/_components/category-tabs";
+import { Tabs } from "@/_components/tabs";
 
 const demoItems = [
   {
@@ -19,11 +18,7 @@ const demoItems = [
   },
 ];
 
-const tabCategories = ["General", "Torneos", "Clubes"];
-
 export default function AccordionPage() {
-  const [activeTab, setActiveTab] = useState(tabCategories[0]);
-
   return (
     <>
       <header className="mb-10">
@@ -51,35 +46,13 @@ export default function AccordionPage() {
         <CodeRef component="Accordion" path="@/_components/accordion.tsx" props={["items: { question, answer }[]", "defaultOpen?: number | null"]} />
       </Section>
 
-      {/* Category Tabs */}
-      <Section title="CategoryTabs">
-        <div className="rounded-xl border border-brand-200 bg-white p-6">
-          <p className="mb-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
-            Interactivo — click para cambiar tab activo
-          </p>
-          <CategoryTabs
-            categories={tabCategories}
-            active={activeTab}
-            onChange={setActiveTab}
-          />
-          <p className="mt-4 text-sm text-text-secondary">
-            Tab activo: <span className="font-semibold text-text-primary">{activeTab}</span>
-          </p>
-        </div>
-        <CodeRef component="CategoryTabs" path="@/_components/category-tabs.tsx" props={["categories: string[]", "active: string", "onChange: (cat: string) => void"]} />
-      </Section>
-
       {/* Combined */}
       <Section title="Tabs + Accordion combinados">
         <div className="rounded-xl border border-brand-200 bg-white p-6">
           <p className="mb-3 text-xs font-medium text-text-secondary uppercase tracking-wider">
             Patron usado en /ayuda
           </p>
-          <CategoryTabs
-            categories={["FAQ", "Soporte"]}
-            active="FAQ"
-            onChange={() => {}}
-          />
+          <Tabs label="Categorías de ayuda" value="FAQ" onChange={() => {}} tabs={[{ key: "FAQ", label: "FAQ" }, { key: "Soporte", label: "Soporte" }]} className="pb-1" />
           <div className="mt-4">
             <Accordion items={demoItems.slice(0, 2)} defaultOpen={0} />
           </div>

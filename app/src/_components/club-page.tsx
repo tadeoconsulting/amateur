@@ -12,7 +12,7 @@ import { clubPublicPath } from "@/_lib/slug";
 import { ClubCrest } from "@/_components/club-crest";
 import { MatchRow } from "@/_components/match-row";
 import { FormRow } from "@/_components/match-sheet";
-import { PillTabs } from "@/_components/pill-tabs";
+import { Tabs } from "@/_components/tabs";
 import { ShareViewButton } from "@/_components/share-view-button";
 import { PageSpinner } from "@/_components/spinner";
 
@@ -110,7 +110,7 @@ export function ClubPage({ tournamentId, clubId, tournamentPath, pub = false }: 
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 flex-1">
-              <PillTabs tabs={[...TABS]} value={tab} onChange={pickTab} label={`${club.name}: secciones`} className="pb-1" />
+              <Tabs tabs={[...TABS]} value={tab} onChange={pickTab} label={`${club.name}: secciones`} className="pb-1" />
             </div>
             <ShareViewButton
               title={`${club.name} · ${tournament.name}`}

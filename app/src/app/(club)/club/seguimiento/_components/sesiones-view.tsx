@@ -5,7 +5,7 @@ import Link from "next/link";
 import { WEEKDAYS, addDays, peruToday, relativeDayLabel, timeRange } from "@/_lib/club-training";
 import { GestionError, gestionRequest, type CategoryOption, type PlaceItem, type ScheduleItem, type SessionItem } from "@/_lib/club-training-client";
 import { PageSpinner } from "@/_components/spinner";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 import { Toast } from "@/_components/toast";
 import { btnOutline, btnSolid } from "@/_components/button-styles";
 import { PlaceSheet, ScheduleSheet, SessionSheet } from "./forms";
@@ -96,7 +96,7 @@ export function SesionesView({ clubId }: { clubId: string }) {
 
       {data && (
         <>
-          <SubTabs label="Sesiones" value={tab} onChange={setTab} tabs={TABS} />
+          <Tabs variant="segmented" label="Sesiones" value={tab} onChange={setTab} tabs={TABS} className="mx-4 mt-3" />
 
           {noPlaces && tab !== "lugares" && (
             <div className="mx-4 mt-4 rounded-xl border border-brand-200 p-5 text-center">

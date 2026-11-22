@@ -14,7 +14,7 @@ import { formatWhen } from "@/_lib/match-format";
 import { ShareViewButton } from "@/_components/share-view-button";
 import { clubView } from "@/_lib/share-view";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
-import { PillTabs } from "@/_components/pill-tabs";
+import { Tabs } from "@/_components/tabs";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
@@ -160,7 +160,7 @@ export default function ClubTorneoDetallePage() {
       {detailTab === "torneo" && (
         <>
           {/* Sub-tabs */}
-          <PillTabs
+          <Tabs
             label="Torneo"
             className="mt-4 px-4 pb-1"
             value={torneoSubTab}
@@ -271,7 +271,7 @@ export default function ClubTorneoDetallePage() {
       {detailTab === "resultados" && (
         <>
           {/* Sub-tabs */}
-          <PillTabs
+          <Tabs
             label="Resultados"
             className="mt-4 px-4 pb-1"
             value={resultadosSubTab}

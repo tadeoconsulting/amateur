@@ -35,6 +35,7 @@ import { formatLabel } from "@/_lib/tournament-labels";
 import { STAGE_LABEL } from "@/_lib/season";
 import { SeasonScorersTabs, SeasonTables } from "@/_components/season-results";
 import { clubPublicPath, tournamentPublicPath } from "@/_lib/slug";
+import { Tabs } from "@/_components/tabs";
 
 type Tab = "partidos" | "llaves" | "tabla" | "goleadores" | "equipos";
 type ConvocatoriaTab = "inscritos" | "solicitudes" | "invitados";
@@ -259,6 +260,20 @@ export default function TournamentDetailPage() {
   // Con un solo torneo no hay nada que elegir: la tarjeta no abre el selector ni muestra la flecha.
   const canSwitch = tournaments.length > 1;
 
+  const accionesDelTorneo = (
+    <TournamentActions
+      tournamentId={params.id}
+      title={tournament.name}
+      publicPath={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
+      shareView={competitionView(shownTab)}
+      isConvocatoria={isConvocatoria}
+      canCreateSeason={!tournament.season && tournament.format === "liga"}
+      canEditCruces={matches.some((m) => !m.decisive)}
+      canUndoFixture={matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0)}
+      onUndoFixture={() => setConfirmUndoFixture(true)}
+    />
+  );
+
   return (
     // `@container`: lo de adentro se adapta al ancho de la pantalla (una columna en el celular; el fixture con la tabla al lado en escritorio).
     <div className="@container w-full pb-8">
@@ -336,60 +351,20 @@ export default function TournamentDetailPage() {
         </Link>
       )}
 
-      {/* Tabs. El menú «Acciones» (especificación 021) va fuera de la fila que se desplaza, para que siempre se vea. */}
-      <div className="mt-4 flex items-center gap-1.5 px-4">
-        <div className="no-scrollbar flex min-w-0 gap-2 overflow-x-auto">
-          {isConvocatoria
-            ? convocatoriaTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveConvTab(tab.key)}
-                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${
-                    activeConvTab === tab.key
-                      ? "bg-surface-secondary text-text-invert"
-                      : "border border-border-primary text-text-primary"
-                  }`}
-                >
-                  {tab.label}
-                  {tab.key === "solicitudes" && pendingRequests > 0 && (
-                    <>
-                      <span aria-hidden="true" className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-verification px-1.5 text-[11px] font-bold leading-5 text-ink">
-                        {pendingRequests}
-                      </span>
-                      <span className="sr-only"> ({pendingRequests} pendientes)</span>
-                    </>
-                  )}
-                </button>
-              ))
-            : visibleTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={(e) => {
-                    setActiveTab(tab.key);
-                    // La barra se desplaza (son cinco): la pestaña elegida queda a la vista.
-                    e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
-                  }}
-                  className={`shrink-0 cursor-pointer rounded-lg px-5 py-2.5 font-heading text-sm font-medium cancha:font-body cancha:font-bold transition-colors ${
-                    shownTab === tab.key
-                      ? "bg-surface-secondary text-text-invert"
-                      : "border border-border-primary text-text-primary"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-        </div>
-        <TournamentActions
-          tournamentId={params.id}
-          title={tournament.name}
-          publicPath={tournamentPublicPath({ id: params.id, slug: tournament.slug, organizerSlug: tournament.organizer.organizerSlug })}
-          shareView={competitionView(shownTab)}
-          isConvocatoria={isConvocatoria}
-          canCreateSeason={!tournament.season && tournament.format === "liga"}
-          canEditCruces={matches.some((m) => !m.decisive)}
-          canUndoFixture={matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0)}
-          onUndoFixture={() => setConfirmUndoFixture(true)}
-        />
+      {/* Tabs de sección (especificación 024). El menú «Acciones» (especificación 021) va como `trailing`: fuera de la fila que se desplaza, para que siempre se vea. */}
+      <div className="mt-4">
+        {isConvocatoria ? (
+          <Tabs
+            label="Secciones de la convocatoria"
+            value={activeConvTab}
+            onChange={setActiveConvTab}
+            tabs={convocatoriaTabs.map((t) => (t.key === "solicitudes" ? { ...t, count: pendingRequests } : t))}
+            className="px-4"
+            trailing={accionesDelTorneo}
+          />
+        ) : (
+          <Tabs label="Secciones del torneo" value={shownTab} onChange={setActiveTab} tabs={visibleTabs} className="px-4" trailing={accionesDelTorneo} />
+        )}
       </div>
 
       {/* === Convocatoria: equipos inscritos === */}
