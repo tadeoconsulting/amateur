@@ -174,7 +174,7 @@ function RosterContent({ clubId, sessionId }: { clubId: string; sessionId: strin
           {players.length === 0 && (
             <p className="px-4 py-10 text-center font-body text-sm text-text-secondary">
               No hay jugadores en esta categoría.{" "}
-              <Link href="/club/equipo/jugadores" className="font-semibold text-text-primary underline">
+              <Link href="/club/equipo?tab=jugadores" className="font-semibold text-text-primary underline">
                 Ver jugadores
               </Link>
             </p>
