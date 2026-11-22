@@ -4,10 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { getClubCategories, getClubPlayers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
-import { useMyClub } from "@/_lib/use-my-club";
 import type { PlayerGender } from "@/_lib/types";
 import { SubTabs } from "@/_components/sub-tabs";
-import { ClubSettingsLink } from "../../_components/club-settings-link";
 
 const genderTabs: { key: PlayerGender; label: string }[] = [
   { key: "masculino", label: "Masculino" },
@@ -15,29 +13,7 @@ const genderTabs: { key: PlayerGender; label: string }[] = [
   { key: "mixto", label: "Mixto" },
 ];
 
-export default function ClubJugadoresPage() {
-  const { club, loading: loadingClub } = useMyClub();
-
-  if (loadingClub) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!club) {
-    return (
-      <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">
-        Todavía no tienes un club.
-      </div>
-    );
-  }
-
-  return <ClubJugadoresContent key={club.id} clubId={club.id} />;
-}
-
-function ClubJugadoresContent({ clubId }: { clubId: string }) {
+export function JugadoresView({ clubId }: { clubId: string }) {
   const [gender, setGender] = useState<PlayerGender>("masculino");
   const { data: playerCategories, loading } = useApi(() => getClubCategories(clubId));
   // Jugadores sin categoría (por ejemplo los provisionales, que carga un admin): se ven en su propia entrada.
@@ -55,42 +31,6 @@ function ClubJugadoresContent({ clubId }: { clubId: string }) {
 
   return (
     <div className="w-full pb-4">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
-        <div className="flex items-center gap-2">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-text-primary">
-            <path
-              d="M6 4h12v5a6 6 0 01-12 0V4zM5 5H3a1 1 0 00-1 1v1a3 3 0 003 3h.5M19 5h2a1 1 0 011 1v1a3 3 0 01-3 3h-.5M9 14v2M15 14v2M7 16h10a1 1 0 011 1v1H6v-1a1 1 0 011-1z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <h1 className="font-heading text-xl font-bold text-text-primary">Jugadores</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/club/jugadores/buscar" className="text-text-primary">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M15 15l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </Link>
-          <Link href="/club/torneos?tab=solicitudes" className="text-text-primary">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9zM13.73 21a2 2 0 01-3.46 0"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-          <ClubSettingsLink />
-        </div>
-      </div>
-
       {/* Gender Tabs */}
       <SubTabs label="Género" value={gender} onChange={setGender} tabs={genderTabs} />
 
@@ -99,7 +39,7 @@ function ClubJugadoresContent({ clubId }: { clubId: string }) {
         {filtered.map((cat) => (
           <Link
             key={cat.id}
-            href={`/club/jugadores/${cat.id}`}
+            href={`/club/equipo/jugadores/${cat.id}`}
             className="flex items-center justify-between border-b border-brand-200 py-4 last:border-0"
           >
             <div>
@@ -113,7 +53,7 @@ function ClubJugadoresContent({ clubId }: { clubId: string }) {
         ))}
         {(uncategorized?.length ?? 0) > 0 && (
           <Link
-            href="/club/jugadores/cat-sin"
+            href="/club/equipo/jugadores/cat-sin"
             className="flex items-center justify-between border-b border-brand-200 py-4 last:border-0"
           >
             <div>

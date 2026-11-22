@@ -96,7 +96,7 @@ function RosterContent({ clubId, sessionId }: { clubId: string; sessionId: strin
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={dismissToast} />}
 
       <div className="flex items-center gap-1 px-4 pt-4">
-        <Link href="/club/gestion/asistencia" aria-label="Volver a Asistencia" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-text-primary">
+        <Link href="/club/seguimiento?tab=asistencia" aria-label="Volver a Asistencia" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-text-primary">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180" aria-hidden="true">
             <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -174,7 +174,7 @@ function RosterContent({ clubId, sessionId }: { clubId: string; sessionId: strin
           {players.length === 0 && (
             <p className="px-4 py-10 text-center font-body text-sm text-text-secondary">
               No hay jugadores en esta categoría.{" "}
-              <Link href="/club/jugadores" className="font-semibold text-text-primary underline">
+              <Link href="/club/equipo/jugadores" className="font-semibold text-text-primary underline">
                 Ver jugadores
               </Link>
             </p>

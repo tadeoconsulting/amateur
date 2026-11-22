@@ -2,26 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useMyClub } from "@/_lib/use-my-club";
 import { formatSolesAmount, monthLabel } from "@/_lib/club-fees";
 import { FeesError, feesRequest, type FeeRow, type FeesMonthData } from "@/_lib/club-fees-client";
 import { PageSpinner, Spinner } from "@/_components/spinner";
 import { Toast } from "@/_components/toast";
 import { btnSolid } from "@/_components/button-styles";
-import { FeeDetailSheet } from "./_components/fee-detail-sheet";
-import { FeeSettingsSheet } from "./_components/fee-settings-sheet";
+import { FeeDetailSheet } from "./fee-detail-sheet";
+import { FeeSettingsSheet } from "./fee-settings-sheet";
 import { FeeStatusChip } from "@/_components/fee-status";
 
 type Filter = "todos" | "por_cobrar" | "pagados";
 
-export default function ClubPagosPage() {
-  const { club, loading } = useMyClub();
-  if (loading) return <PageSpinner />;
-  if (!club) return <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">Todavía no tienes un club.</div>;
-  return <PagosContent key={club.id} clubId={club.id} />;
-}
-
-function PagosContent({ clubId }: { clubId: string }) {
+export function PagosView({ clubId }: { clubId: string }) {
   const [month, setMonth] = useState<string | null>(null); // null = el mes en curso
   const [data, setData] = useState<FeesMonthData | null>(null);
   const [error, setError] = useState("");
@@ -93,16 +85,8 @@ function PagosContent({ clubId }: { clubId: string }) {
     <div className="w-full pb-8">
       {toast && <Toast message={toast.message} tone={toast.tone} onDismiss={dismissToast} />}
 
-      <div className="flex items-center justify-between gap-2 px-4 pt-4">
-        <div className="flex min-w-0 items-center gap-1">
-          <Link href="/club/gestion" aria-label="Volver a Gestión" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-text-primary">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180" aria-hidden="true">
-              <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-          <h1 className="font-heading text-xl font-bold text-text-primary">Pagos</h1>
-        </div>
-        <button onClick={() => setSettingsOpen(true)} className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular">
+      <div className="flex items-center justify-end gap-2 px-4 pt-4">
+                <button onClick={() => setSettingsOpen(true)} className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-lg border border-border-primary px-3 font-heading text-sm font-bold text-text-primary hover:bg-btn-regular">
           <span aria-hidden="true">S/</span>
           {data?.settings.defined ? `Cuota ${formatSolesAmount(data.settings.monthlyFee).replace("S/ ", "")}` : "Definir cuota"}
         </button>
@@ -184,7 +168,7 @@ function PagosContent({ clubId }: { clubId: string }) {
                   {data.players.length === 0 ? (
                     <>
                       Todavía no hay jugadores en tu club.{" "}
-                      <Link href="/club/jugadores/buscar" className="font-semibold text-text-primary underline">
+                      <Link href="/club/equipo/jugadores/buscar" className="font-semibold text-text-primary underline">
                         Invitar jugadores
                       </Link>
                     </>

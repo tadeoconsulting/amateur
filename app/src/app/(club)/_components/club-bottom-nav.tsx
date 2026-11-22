@@ -28,8 +28,8 @@ export const clubNavItems: { href: string; label: string; mobile?: boolean; icon
     ),
   },
   {
-    href: "/club/jugadores",
-    label: "Jugadores",
+    href: "/club/equipo",
+    label: "Equipo",
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
@@ -44,12 +44,12 @@ export const clubNavItems: { href: string; label: string; mobile?: boolean; icon
     ),
   },
   {
-    href: "/club/equipo",
-    label: "Equipo",
+    href: "/club/seguimiento",
+    label: "Seguimiento",
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
-          d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2v0a2 2 0 01-2 2h-2a2 2 0 01-2-2zM9 14l2 2 4-4"
           stroke="currentColor"
           strokeWidth="1.5"
           strokeLinecap="round"
@@ -72,7 +72,7 @@ export const clubNavItems: { href: string; label: string; mobile?: boolean; icon
   {
     href: "/club/ajustes",
     label: "Ajustes",
-    // En el celular Ajustes pasó a un ícono en el encabezado (ClubSettingsLink) para dejarle lugar a Gestión.
+    // En el celular Ajustes pasó a un ícono en el encabezado (ClubSettingsLink) para dejarle lugar a las demás secciones.
     mobile: false,
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

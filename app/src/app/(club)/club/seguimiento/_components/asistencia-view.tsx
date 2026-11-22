@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useMyClub } from "@/_lib/use-my-club";
 import { addDays, countLabel, peruToday, relativeDayLabel, timeRange } from "@/_lib/club-training";
 import { GestionError, gestionRequest, type AttendanceSummary, type SessionItem } from "@/_lib/club-training-client";
 import { PageSpinner } from "@/_components/spinner";
@@ -14,33 +13,18 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "promedios", label: "Promedios" },
 ];
 
-export default function ClubAsistenciaPage() {
-  const { club, loading } = useMyClub();
-  if (loading) return <PageSpinner />;
-  if (!club) return <div className="px-4 py-20 text-center font-body text-sm text-text-secondary">Todavía no tienes un club.</div>;
-  return <AsistenciaContent key={club.id} clubId={club.id} />;
-}
-
-function AsistenciaContent({ clubId }: { clubId: string }) {
+export function AsistenciaView({ clubId, onOpenSesiones }: { clubId: string; /** Abre el tab Sesiones de Seguimiento. */ onOpenSesiones: () => void }) {
   const [tab, setTab] = useState<Tab>("sesiones");
   return (
     <div className="w-full pb-8">
-      <div className="flex items-center gap-1 px-4 pt-4">
-        <Link href="/club/gestion" aria-label="Volver a Gestión" className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center text-text-primary">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="rotate-180" aria-hidden="true">
-            <path d="M7.5 4L13.5 10L7.5 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </Link>
-        <h1 className="font-heading text-xl font-bold text-text-primary">Asistencia</h1>
-      </div>
       <SubTabs label="Asistencia" value={tab} onChange={setTab} tabs={TABS} />
-      {tab === "sesiones" ? <SessionsToMark clubId={clubId} /> : <Averages clubId={clubId} />}
+      {tab === "sesiones" ? <SessionsToMark clubId={clubId} onOpenSesiones={onOpenSesiones} /> : <Averages clubId={clubId} />}
     </div>
   );
 }
 
 /** Los entrenamientos de hoy y de los últimos días, para pasar lista. */
-function SessionsToMark({ clubId }: { clubId: string }) {
+function SessionsToMark({ clubId, onOpenSesiones }: { clubId: string; onOpenSesiones: () => void }) {
   const today = peruToday(new Date());
   const [sessions, setSessions] = useState<SessionItem[] | null>(null);
   const [error, setError] = useState("");
@@ -66,9 +50,9 @@ function SessionsToMark({ clubId }: { clubId: string }) {
       <div className="mx-4 mt-4 rounded-xl border border-brand-200 p-5 text-center">
         <p className="font-heading text-base font-bold text-text-primary">No hay entrenamientos para pasar lista</p>
         <p className="mt-1.5 font-body text-sm text-text-secondary">Aparecen aquí desde el día de cada entrenamiento. Define tus horarios en Sesiones.</p>
-        <Link href="/club/gestion/sesiones" className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-surface-secondary px-4 font-heading text-sm md:text-base font-bold text-text-invert">
+        <button type="button" onClick={onOpenSesiones} className="mt-4 inline-flex cursor-pointer min-h-11 items-center rounded-lg bg-surface-secondary px-4 font-heading text-sm md:text-base font-bold text-text-invert">
           Ir a Sesiones
-        </Link>
+        </button>
       </div>
     );
   }
@@ -76,7 +60,7 @@ function SessionsToMark({ clubId }: { clubId: string }) {
     <ul className="mt-2 px-4">
       {sessions.map((s) => (
         <li key={s.id} className="border-b border-brand-200 last:border-0">
-          <Link href={`/club/gestion/asistencia/${s.id}`} className="flex min-h-14 items-center justify-between gap-3 py-3">
+          <Link href={`/club/seguimiento/asistencia/${s.id}`} className="flex min-h-14 items-center justify-between gap-3 py-3">
             <span className="min-w-0">
               <span className="block font-heading text-sm font-bold text-text-primary">{relativeDayLabel(s.date, today)}</span>
               <span className="block truncate font-body text-xs text-text-secondary">
