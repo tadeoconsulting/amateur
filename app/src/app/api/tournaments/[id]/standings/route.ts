@@ -1,6 +1,6 @@
 import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
-import { computeLiveStandings } from "@/_lib/standings";
+import { computeLiveStandings, tableExcludesKnockout } from "@/_lib/standings";
 import { matchClock } from "@/_lib/match-live";
 import { publicCacheHeaders } from "@/_lib/public-cache";
 
@@ -16,8 +16,8 @@ export async function GET(
     include: { club: true },
   });
 
-  // En una liga con llaves, los partidos del cuadro no cuentan para la tabla: la tabla es la de
-  // la fase de liga, la que decidió quién clasificó.
+  // En una liga con llaves y en una copa, los partidos del cuadro no cuentan para la tabla: la tabla es la de la fase de liga o de
+  // grupos, la que decidió quién clasificó (ver `tableExcludesKnockout`).
   const tournament = await prisma.tournament.findUnique({ where: { id }, select: { format: true, minutesPerHalf: true } });
   // Con `live=1` (lo piden las pantallas que se muestran a la gente) la tabla suma además los partidos que se están
   // jugando, con el marcador de este momento, como si terminaran así: es una proyección, no se guarda nada y al
@@ -27,7 +27,7 @@ export async function GET(
     where: {
       tournamentId: id,
       status: live ? { in: ["finalizado", "en_curso"] } : "finalizado",
-      ...(tournament?.format === "liga" ? { decisive: false } : {}),
+      ...(tableExcludesKnockout(tournament?.format) ? { decisive: false } : {}),
       ...(group ? { groupName: group } : {}),
     },
     select: { status: true, homeTeamId: true, awayTeamId: true, homeScore: true, awayScore: true, walkover: true, startedAt: true, period: true, firstHalfEndedAt: true, secondHalfStartedAt: true },
