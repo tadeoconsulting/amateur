@@ -21,11 +21,15 @@ export function navName(kind: NavIdentityKind, user: NavUser, club?: { name: str
   return own;
 }
 
+/** Caracteres del nombre en el botón de cuenta: 12 en el celular y el doble, 24, desde 768 px (escritorio). */
+export const NAV_NAME_MAX_MOBILE = 12;
+export const NAV_NAME_MAX_DESKTOP = 24;
+
 /**
- * El nombre tal como cabe en el botón de cuenta: hasta `max` caracteres (12 por omisión) y, si tiene más, los primeros `max`
+ * El nombre tal como cabe en el botón de cuenta: hasta `max` caracteres (12 por omisión; 24 en escritorio) y, si tiene más, los primeros `max`
  * seguidos de dos puntos («organizador..»). El nombre completo sigue en el encabezado del menú y en `title`/`aria-label`.
  */
-export function shortNavName(name: string, max = 12): string {
+export function shortNavName(name: string, max = NAV_NAME_MAX_MOBILE): string {
   const letters = Array.from(name.trim());
   if (letters.length <= max) return letters.join("");
   return `${letters.slice(0, max).join("").trimEnd()}..`;
