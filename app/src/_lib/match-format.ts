@@ -37,6 +37,22 @@ export function formatTime12(time: string) {
   return `${String(h12).padStart(2, "0")}:${m} ${hour >= 12 ? "pm" : "am"}`;
 }
 
+/**
+ * La hora a la que se jugó un partido, para mostrarla junto a «Final»: la **hora real de inicio** (`startedAt`, en hora de Lima) si
+ * el partido se jugó con el control en vivo; si no, la **hora programada**; y `null` si no hay ninguna (partidos antiguos cargados
+ * sin hora). Formato "06:30 pm".
+ */
+export function playedTimeLabel(match: { startedAt?: string | null; time: string }): string | null {
+  if (match.startedAt) {
+    const date = new Date(match.startedAt);
+    if (!Number.isNaN(date.getTime())) {
+      const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Lima", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
+      return formatTime12(parts);
+    }
+  }
+  return match.time ? formatTime12(match.time) : null;
+}
+
 /** "6:30 pm" o "06:30 am" (lo que devuelve el selector de hora) → "18:30". null si no se entiende. */
 export function to24h(time12: string): string | null {
   const match = time12.trim().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
