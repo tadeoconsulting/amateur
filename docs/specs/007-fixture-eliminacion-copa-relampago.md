@@ -102,6 +102,8 @@ model MatchEvent {
 ## Tabla de posiciones (`computeStandings`, extraída a `_lib/standings.ts`)
 17. La lógica que ya existía (puntos, diferencia de gol, goles a favor) se sacó de la ruta `GET /standings` a una función pura, para poder reusarla al armar el cuadro de Copa. La ruta quedó como envoltorio: junta el resultado con nombre/escudo del club y le pone `position`. El comportamiento externo de `GET /api/tournaments/:id/standings` no cambió.
 
+**Corrección (2026-11-22): el cuadro no suma a la tabla de los grupos.** La API de posiciones (`GET /api/tournaments/:id/standings`) solo excluía los partidos `decisive` en el formato `liga`. En una **copa**, los partidos del cuadro (cuartos, semifinal, final) se crean sin grupo y las pantallas piden la tabla sin `group` para armar las tablas «Grupo A», «Grupo B»…; por eso, al finalizar un partido del cuadro, **sumaba puntos, goles y partidos jugados** a las filas de los grupos. Ahora `tableExcludesKnockout(format)` (en `_lib/standings.ts`) deja fuera el cuadro en la **liga con llaves y en la copa**: la tabla es siempre la de la fase de liga o de grupos, la que decidió quién clasificó. Los partidos del cuadro se siguen viendo en su pestaña de rondas. Prueba de integración en `tests/fixture-copa.test.mjs` (finalizar un partido de la ronda 1 no cambia la tabla, ni con `live=1`) y unitarias en `standings.test.mjs`. Se detectó con datos reales: en una liga con llaves en producción la tabla ya era correcta; el fallo era solo de la copa.
+
 ## Ciclo de un partido que no admite empate (`decisive: true`)
 
 ```

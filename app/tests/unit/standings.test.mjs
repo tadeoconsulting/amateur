@@ -1,7 +1,8 @@
 // Pruebas unitarias de src/_lib/standings.ts (sin servidor ni base de datos).
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { computeStandings, computeLiveStandings, placeChanges } from "../../src/_lib/standings.ts";
+import { readFileSync } from "node:fs";
+import { computeStandings, computeLiveStandings, placeChanges, tableExcludesKnockout } from "../../src/_lib/standings.ts";
 
 const team = (clubId, groupName = null) => ({ clubId, groupName });
 const played = (homeTeamId, awayTeamId, homeScore, awayScore) => ({ homeTeamId, awayTeamId, homeScore, awayScore });
@@ -173,3 +174,19 @@ describe("placeChanges (cuántos lugares cambió cada equipo)", () => {
     assert.equal(placeChanges([{ clubId: "a" }, { clubId: "b" }]).size, 0);
   });
 });
+
+describe("tableExcludesKnockout (los partidos del cuadro no suman a la tabla)", () => {
+  test("la liga con llaves y la copa dejan fuera el cuadro", () => {
+    assert.equal(tableExcludesKnockout("liga"), true);
+    assert.equal(tableExcludesKnockout("copa"), true);
+  });
+  test("los demás formatos no filtran (no tienen tabla de fase de grupos con cuadro aparte)", () => {
+    for (const f of ["eliminacion", "relampago", "grupos", "", null, undefined]) assert.equal(tableExcludesKnockout(f), false, String(f));
+  });
+  test("la API de posiciones usa la regla y no un formato fijo", () => {
+    const ruta = readFileSync(new URL("../../src/app/api/tournaments/[id]/standings/route.ts", import.meta.url), "utf8");
+    assert.match(ruta, /tableExcludesKnockout\(tournament\?\.format\)\s*\?\s*\{ decisive: false \}/);
+    assert.doesNotMatch(ruta, /format === "liga"/, "ya no se filtra solo la liga");
+  });
+});
+

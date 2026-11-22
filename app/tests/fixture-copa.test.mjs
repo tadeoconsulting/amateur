@@ -134,6 +134,30 @@ describe("armar el cuadro (mode: bracket)", () => {
     }
   });
 
+  test("un partido del cuadro finalizado NO suma a la tabla de los grupos (puntos, goles ni partidos jugados)", async () => {
+    const org = await organizer("tablaSinLlaves");
+    const id = await tournamentWithGroups(org, [3, 3]);
+    await org.client.post(`/api/tournaments/${id}/fixture`, { mode: "manual" });
+    await finishGroupStage(org, id);
+    assert.equal((await org.client.post(`/api/tournaments/${id}/fixture`, { mode: "bracket" })).status, 201);
+
+    const resumen = (rows) => rows.map((r) => ({ clubId: r.clubId, played: r.played, won: r.won, points: r.points, goalsFor: r.goalsFor, goalsAgainst: r.goalsAgainst }));
+    const antes = resumen((await org.client.get(`/api/tournaments/${id}/standings`)).data);
+    assert.ok(antes.every((r) => r.played === 2), "cada equipo jugó sus 2 partidos de grupo");
+
+    // Se juega y finaliza un partido de la ronda 1 del cuadro (5-1: en un cruce decisivo no hay empate).
+    const [cruce] = bracketOf(await getMatches(org.client, id)).filter((m) => m.matchday === 1);
+    assert.equal((await org.client.patch(`/api/matches/${cruce.id}`, { status: "en_curso" })).status, 200);
+    const fin = await org.client.patch(`/api/matches/${cruce.id}`, { status: "finalizado", homeScore: 5, awayScore: 1 });
+    assert.equal(fin.status, 200, JSON.stringify(fin.data));
+
+    const despues = resumen((await org.client.get(`/api/tournaments/${id}/standings`)).data);
+    assert.deepEqual(despues, antes, "la tabla de grupos queda igual: el cuadro no cuenta");
+    // Ni con la proyección en vivo que piden las pantallas públicas.
+    const vivo = resumen((await org.client.get(`/api/tournaments/${id}/standings?live=1`)).data);
+    assert.deepEqual(vivo, antes);
+  });
+
   test("groupsAdvancePerGroup configurable: con 3, clasifican 3 por grupo", async () => {
     const org = await organizer("copa3x2");
     const id = await tournamentWithGroups(org, [4, 4], { groupsAdvancePerGroup: 3 });

@@ -25,6 +25,16 @@ export type StandingRow = {
 };
 
 /**
+ * ¿Los partidos del cuadro de eliminación (`decisive`) quedan fuera de la tabla? Sí en la **liga con llaves** y en la **copa**:
+ * la tabla es la de la fase de liga o de grupos, la que decidió quién clasificó, y un resultado de cuartos, semifinal o final no
+ * le suma puntos, goles ni partidos jugados a nadie. (En una copa los cuartos y la final se crean sin grupo; sin este filtro la
+ * API, al pedirse sin `group`, los sumaba a las filas de los grupos.)
+ */
+export function tableExcludesKnockout(format: string | null | undefined): boolean {
+  return format === "liga" || format === "copa";
+}
+
+/**
  * Victoria 3, empate 1, derrota 0. Un W.O. doble (`walkover: "both"`) cuenta como jugado y perdido por los dos, 0 puntos y
  * 0 goles (no como un empate, que daría 1 punto a cada uno). Orden: puntos, diferencia de gol, goles a favor (sin
  * enfrentamiento directo). Solo cuentan los partidos con marcador y los dos equipos ya
