@@ -26,8 +26,14 @@ describe("playedTimeLabel", () => {
 
 describe("la fila del partido", () => {
   const fila = readFileSync(new URL("../../src/_components/match-row.tsx", import.meta.url), "utf8");
-  test("muestra la hora solo en los partidos finalizados, debajo de «Final»", () => {
+  test("muestra la hora solo en los partidos finalizados", () => {
     assert.match(fila, /const playedAt = match\.status === "finalizado" \? playedTimeLabel\(match\) : null;/);
-    assert.match(fila, /Final<\/span>\s*\{\/\*[^*]*\*\/\}\s*\{playedAt && /);
+  });
+  test("el orden de la columna, de arriba abajo, es: estado, grupo (si hay) y hora, en las dos tarjetas", () => {
+    // Tarjeta angosta
+    assert.match(fila, /\{match\.groupName && <p [^>]*>\{match\.groupName\}<\/p>\}\s*\{playedAt && <p /);
+    // Tarjeta ancha
+    assert.match(fila, /\{match\.groupName && <span [^>]*>\{match\.groupName\}<\/span>\}\s*\{playedAt && <span /);
+    assert.doesNotMatch(fila, /Final<\/span>\s*\{\/\*[^*]*\*\/\}\s*\{playedAt/, "la hora ya no va pegada a «Final»");
   });
 });
