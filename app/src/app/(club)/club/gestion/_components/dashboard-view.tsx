@@ -8,6 +8,7 @@ import { FeesError, feesRequest } from "@/_lib/club-fees-client";
 import { PageSpinner } from "@/_components/spinner";
 import { btnSolid } from "@/_components/button-styles";
 import { CollectionChart, PercentBars, SERIES, TrendChart, type CollectionPoint, type TrendPoint } from "./charts";
+import { Tabs } from "@/_components/tabs";
 
 // El dashboard del delegado (especificación 015, entrega 4). Los datos salen de GET /api/clubs/:id/gestion/dashboard.
 type Dashboard = {
@@ -95,13 +96,14 @@ export function DashboardView({ clubId, onOpenPagos }: { clubId: string; /** Abr
             </button>
           </div>
           {data.categories.length > 0 && (
-            <div className="mt-1 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Filtrar por categoría">
-              {[{ id: "", name: "Todo el club" }, ...data.categories].map((c) => (
-                <button key={c.id} onClick={() => change(() => setCategoryId(c.id))} aria-pressed={categoryId === c.id} className={`min-h-11 shrink-0 cursor-pointer rounded-lg px-4 font-heading text-sm font-medium transition-colors ${categoryId === c.id ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}>
-                  {c.name}
-                </button>
-              ))}
-            </div>
+            <Tabs
+              variant="filters"
+              label="Filtrar por categoría"
+              value={categoryId}
+              onChange={(id) => change(() => setCategoryId(id))}
+              tabs={[{ key: "", label: "Todo el club" }, ...data.categories.map((c) => ({ key: c.id, label: c.name }))]}
+              className="mt-1 px-4 pb-1"
+            />
           )}
 
           <Summary data={data} />

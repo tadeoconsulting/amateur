@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { InvitePlayerPanel, type InvitationSummary } from "./invite-player-panel";
 import { Label } from "@/_components/label";
 import { TextField } from "@/_components/text-field";
+import { Tabs } from "@/_components/tabs";
 
 interface AccountResult {
   id: string;
@@ -129,19 +130,17 @@ export function LinkAccountModal({
           {player.clubName ? ` · ${player.clubName}` : ""} · DNI {player.dni ?? "—"}. Sus goles, tarjetas y partidos pasan a la cuenta que elijas: no se pierde nada.
         </p>
 
-        <div role="tablist" aria-label="Cómo asignar la cuenta" className="mb-4 flex gap-1 rounded-lg bg-brand-50 p-1">
-          {([["account", "Cuenta existente"], ["invite", invitation && invitation.status !== "expired" ? "Invitar · activa" : "Invitar por correo o enlace"]] as const).map(([key, label]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={tab === key}
-              onClick={() => setTab(key)}
-              className={`min-h-10 flex-1 cursor-pointer rounded-md px-3 py-2 font-heading text-xs font-semibold transition-colors ${tab === key ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="segmented"
+          label="Cómo asignar la cuenta"
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { key: "account", label: "Cuenta existente" },
+            { key: "invite", label: invitation && invitation.status !== "expired" ? "Invitar · activa" : "Invitar por correo o enlace" },
+          ]}
+          className="mb-4"
+        />
 
         {tab === "invite" ? (
           <>

@@ -113,17 +113,14 @@ function Averages({ clubId }: { clubId: string }) {
       </section>
 
       {data.categories.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Filtrar por categoría">
-          <button onClick={() => setCategoryId("")} aria-pressed={categoryId === ""} className={`min-h-11 cursor-pointer rounded-lg px-4 font-heading text-sm font-medium ${categoryId === "" ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}>
-            Todo el club
-          </button>
-          {data.categories.map((c) => (
-            <button key={c.id} onClick={() => setCategoryId(c.id)} aria-pressed={categoryId === c.id} className={`min-h-11 cursor-pointer rounded-lg px-4 font-heading text-sm font-medium ${categoryId === c.id ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}>
-              {c.name}
-              {c.percent !== null && <span className="ml-1.5 opacity-70">{c.percent}%</span>}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="filters"
+          label="Filtrar por categoría"
+          value={categoryId}
+          onChange={setCategoryId}
+          tabs={[{ key: "", label: "Todo el club" }, ...data.categories.map((c) => ({ key: c.id, label: c.percent !== null ? `${c.name} ${c.percent}%` : c.name }))]}
+          className="mt-4"
+        />
       )}
 
       <h2 className="mt-5 font-heading text-xs font-bold uppercase tracking-wide text-text-secondary">Por jugador · menor asistencia primero</h2>

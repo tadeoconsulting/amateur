@@ -12,6 +12,7 @@ import { ConfirmDelete } from "../_components/confirm-delete";
 import { TorneosEliminados, type DeletedTournament } from "./_components/eliminados";
 import { TorneosEquipos } from "./_components/equipos";
 import { TextField } from "@/_components/text-field";
+import { Tabs } from "@/_components/tabs";
 
 interface TournamentRow {
   id: string;
@@ -132,26 +133,17 @@ function AdminTorneosContent() {
         </button>
       </div>
 
-      <div role="tablist" aria-label="Vista de torneos" className="mb-5 flex gap-1 rounded-xl bg-btn-regular p-1 w-fit">
-        {([
+      <Tabs
+        label="Vista de torneos"
+        value={vista}
+        onChange={setVista}
+        tabs={[
           { key: "activos", label: "Activos" },
           { key: "equipos", label: "Equipos" },
           { key: "eliminados", label: `Eliminados${eliminados && eliminados.length > 0 ? ` (${eliminados.length})` : ""}` },
-        ] as const).map((v) => (
-          <button
-            key={v.key}
-            role="tab"
-            type="button"
-            aria-selected={vista === v.key}
-            onClick={() => setVista(v.key)}
-            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
-              vista === v.key ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
-            }`}
-          >
-            {v.label}
-          </button>
-        ))}
-      </div>
+        ]}
+        className="mb-5"
+      />
 
       {vista === "eliminados" ? (
         <TorneosEliminados rows={eliminados ?? []} onChanged={() => { refetchEliminados(); refetch(); }} />

@@ -9,6 +9,7 @@ import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
 import { formatMatchDate, formatTime12, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { ClubCrest } from "@/_components/club-crest";
+import { Tabs } from "@/_components/tabs";
 
 type Estado = "proximos" | "en_vivo" | "finalizados";
 
@@ -152,11 +153,6 @@ function PartidosContent({ organizerId }: { organizerId: string }) {
     router.replace(`${pathname}?${next.toString()}`, { scroll: false });
   }
 
-  const chip = (activo: boolean) =>
-    `inline-flex min-h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 py-2 font-heading text-xs font-semibold transition-colors ${
-      activo ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary hover:bg-btn-regular"
-    }`;
-
   return (
     <div className="flex min-h-dvh flex-col pb-4">
       <div className="px-4 pb-2 pt-4">
@@ -170,39 +166,32 @@ function PartidosContent({ organizerId }: { organizerId: string }) {
         </p>
       ) : (
         <>
-          {/* 1. Torneo */}
-          <div role="group" aria-label="Torneo" className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3 pt-1">
-            {conPartidos.length > 1 && (
-              <button type="button" onClick={() => ir({ torneo: ALL })} aria-pressed={torneo === ALL} className={chip(torneo === ALL)}>
-                Todos
-              </button>
-            )}
-            {conPartidos.map((t) => (
-              <button key={t.id} type="button" onClick={() => ir({ torneo: t.id })} aria-pressed={torneo === t.id} className={chip(torneo === t.id)}>
-                {enVivoDe(t.id) > 0 && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red" aria-label="Con partidos en vivo" />}
-                <span className="max-w-[180px] truncate">{t.name}</span>
-              </button>
-            ))}
-          </div>
+          {/* 1. Torneo (filtro) */}
+          <Tabs
+            variant="filters"
+            label="Torneo"
+            value={torneo}
+            onChange={(t) => ir({ torneo: t })}
+            tabs={[
+              ...(conPartidos.length > 1 ? [{ key: ALL, label: "Todos" }] : []),
+              ...conPartidos.map((t) => ({
+                key: t.id,
+                label: t.name,
+                leading: enVivoDe(t.id) > 0 ? <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red" aria-label="Con partidos en vivo" /> : undefined,
+              })),
+            ]}
+            className="px-4 pb-3 pt-1"
+          />
 
           {/* 2. Estado */}
-          <div role="tablist" aria-label="Estado de los partidos" className="mx-4 flex gap-1 rounded-xl bg-btn-regular p-1">
-            {ESTADOS.map((e) => (
-              <button
-                key={e.key}
-                role="tab"
-                type="button"
-                aria-selected={estado === e.key}
-                onClick={() => ir({ estado: e.key })}
-                className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold transition-colors ${
-                  estado === e.key ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
-                }`}
-              >
-                {e.label}
-                <span className="font-body tabular-nums text-text-secondary">{cuenta(e.key)}</span>
-              </button>
-            ))}
-          </div>
+          <Tabs
+            variant="segmented"
+            label="Estado de los partidos"
+            value={estado}
+            onChange={(e) => ir({ estado: e })}
+            tabs={ESTADOS.map((e) => ({ key: e.key, label: e.label, count: cuenta(e.key) }))}
+            className="mx-4"
+          />
 
           {/* 3. Partidos: por torneo (si son todos) y por fecha */}
           <div role="tabpanel" className="mt-4 flex flex-col gap-5 px-4">

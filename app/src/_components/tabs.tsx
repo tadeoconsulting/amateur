@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { nextTabIndex, nextTabIndexWrapping } from "@/_lib/tabs";
 
-/** Un tab. `count` es un contador junto al nombre (en `segmented`) o la bolita de pendientes (en `sections`); `leading` es un indicador antes del nombre (variante `filters`). */
+/** Un tab. `count` es un contador junto al nombre (en `segmented`) o la bolita de pendientes (en `sections`); `leading` es un indicador antes del nombre (`filters` y `sections`). */
 export type TabItem<K extends string = string> = { key: K; label: string; count?: number | string; leading?: ReactNode; disabled?: boolean };
 
 type Common<K extends string> = {
@@ -136,6 +136,7 @@ function SectionTabs<K extends string>({ tabs, label, value, onChange, className
             onClick={() => onChange(tab.key)}
             className={`${pill} ${size === "base" ? "text-base" : "text-sm"} ${value === tab.key ? pillOn : pillOff}`}
           >
+            {tab.leading}
             {tab.label}
             {/* Pendientes de la sección (por ejemplo, las solicitudes de un torneo): una bolita y el aviso para el lector de pantalla. */}
             {typeof tab.count === "number" && tab.count > 0 && (

@@ -33,5 +33,5 @@ test("lo documentado lo importa la página del design system", () => {
 
 test("la deuda visible: lo pendiente solo puede bajar, no crecer", () => {
   // Si agregas un componente de interfaz nuevo, documéntalo en el design system al crearlo; no lo agregues a `pendientes`.
-  assert.ok(pendientes.length <= 16, `pendientes creció a ${pendientes.length}: documenta el componente nuevo en el design system`);
+  assert.ok(pendientes.length <= 13, `pendientes creció a ${pendientes.length}: documenta el componente nuevo en el design system`);
 });

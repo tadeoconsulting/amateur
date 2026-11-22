@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CONTENT_KINDS, type ContentKind } from "@/_lib/content";
 import { ContentEditor } from "./_components/content-editor";
+import { Tabs } from "@/_components/tabs";
 
 /**
  * Admin → Contenido (especificación 016): un editor aparte para cada tipo de documento común a la plataforma
@@ -29,22 +30,7 @@ export default function AdminContenidoPage() {
         </p>
       </div>
 
-      <div role="tablist" aria-label="Tipo de contenido" className="mb-5 flex w-fit gap-1 rounded-xl bg-btn-regular p-1">
-        {CONTENT_KINDS.map((k) => (
-          <button
-            key={k.kind}
-            role="tab"
-            type="button"
-            aria-selected={kind === k.kind}
-            onClick={() => choose(k.kind)}
-            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs font-semibold transition-colors ${
-              kind === k.kind ? "bg-surface-primary text-text-primary shadow-sm" : "text-text-secondary hover:text-text-primary"
-            }`}
-          >
-            {k.label}
-          </button>
-        ))}
-      </div>
+      <Tabs label="Tipo de contenido" value={kind} onChange={choose} tabs={CONTENT_KINDS.map((k) => ({ key: k.kind, label: k.label }))} className="mb-5" />
 
       <ContentEditor key={kind} kind={kind} onDirtyChange={setDirty} />
     </div>

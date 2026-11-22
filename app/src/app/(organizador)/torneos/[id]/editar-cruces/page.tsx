@@ -17,6 +17,7 @@ import {
 import { formatMatchDate, formatTime12 } from "@/_lib/match-format";
 import { MoveMatchPanel } from "./_components/move-match-panel";
 import { Picklist } from "@/_components/picklist";
+import { Tabs } from "@/_components/tabs";
 
 type Team = { id: string; name: string; shortName: string };
 type Loaded = { matches: EditableMatch[]; teams: Team[] };
@@ -146,19 +147,13 @@ export default function EditarCrucesPage() {
       </div>
 
       {groups.length > 1 && (
-        <div className="mt-4 flex gap-2 overflow-x-auto px-4 no-scrollbar" role="tablist" aria-label="Grupo">
-          {groups.map((g) => (
-            <button
-              key={g}
-              role="tab"
-              aria-selected={activeGroup === g}
-              onClick={() => { setGroup(g); setMatchday(null); setMoving(null); }}
-              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold ${activeGroup === g ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
-            >
-              {g === "" ? "General" : g}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          label="Grupo"
+          value={activeGroup}
+          onChange={(g) => { setGroup(g); setMatchday(null); setMoving(null); }}
+          tabs={groups.map((g) => ({ key: g, label: g === "" ? "General" : g }))}
+          className="mt-4 px-4"
+        />
       )}
 
       {/* Lo que hay que arreglar antes de guardar */}
@@ -195,23 +190,17 @@ export default function EditarCrucesPage() {
       )}
 
       {/* Fechas */}
-      <div className="mt-4 flex gap-2 overflow-x-auto px-4 pb-3 no-scrollbar" role="tablist" aria-label="Fecha">
-        {matchdays.map((day) => {
-          const hasProblem = twice.some((p) => p.matchday === day && (p.groupName ?? "") === activeGroup);
-          return (
-            <button
-              key={day}
-              role="tab"
-              aria-selected={activeDay === day}
-              onClick={() => { setMatchday(day); setMoving(null); }}
-              className={`shrink-0 cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold ${activeDay === day ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
-            >
-              Fecha {day}
-              {hasProblem && <span aria-label="con problemas" className="ml-1.5 inline-block h-2 w-2 rounded-full bg-red-500 align-middle" />}
-            </button>
-          );
-        })}
-      </div>
+      <Tabs
+        label="Fecha"
+        value={String(activeDay)}
+        onChange={(day) => { setMatchday(Number(day)); setMoving(null); }}
+        tabs={matchdays.map((day) => ({
+          key: String(day),
+          label: `Fecha ${day}`,
+          leading: twice.some((p) => p.matchday === day && (p.groupName ?? "") === activeGroup) ? <span aria-label="con problemas" className="h-2 w-2 rounded-full bg-red-500" /> : undefined,
+        }))}
+        className="mt-4 px-4 pb-3"
+      />
 
       <div className="flex flex-col gap-3 px-4">
         {dayMatches.map((m) => {

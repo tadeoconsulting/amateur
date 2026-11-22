@@ -13,7 +13,7 @@ import { Tabs } from "@/_components/tabs";
  * fan, el jugador, el club y el organizador, para que las cuatro vistas muestren la misma
  * estructura en vez de cada una su propia lista.
  *
- * - Las fechas se eligen con pestañas (`PillTabs`; con muchas, la barra se desplaza y la elegida queda a la vista).
+ * - Las fechas se eligen con pestañas (`Tabs`; con muchas, la barra se desplaza y la elegida queda a la vista).
  * - Los partidos de un cuadro de eliminación van en sus propias rondas (Octavos, Cuartos,
  *   Semifinal, Final), después de las fechas.
  * - Se abre en la fecha "actual": la primera que todavía tiene partidos por jugar.

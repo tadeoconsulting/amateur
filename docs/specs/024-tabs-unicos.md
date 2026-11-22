@@ -32,7 +32,7 @@
 `PillTabs`, `SubTabs` y `CategoryTabs`, y todas las copias a mano. Una prueba falla si aparece un conjunto de tabs hecho a mano (un `role="tab"` fuera de `Tabs`) o un componente de tabs nuevo.
 
 ## Sincronización con el design system
-`Tabs` queda **documentado** en `/design-system/tabs` (página nueva, con las cuatro variantes en vivo) y en el registro; los tres componentes eliminados salen de los pendientes (de 17 a 13... y bajando).
+`Tabs` queda **documentado** en `/design-system/tabs` (página nueva, con las cuatro variantes en vivo) y en el registro; los tres componentes eliminados salen de los pendientes (el tope de pendientes baja de 16 a 13).
 
 ## Pruebas
 - Unitarias: la navegación con teclado (ya existente en `PillTabs`), que no queden `PillTabs`, `SubTabs`, `CategoryTabs` ni tabs hechos a mano, y el registro.
