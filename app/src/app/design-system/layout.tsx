@@ -25,6 +25,7 @@ const navSections = [
     items: [
       { label: "Buttons", href: "/design-system/buttons" },
       { label: "Inputs y selection", href: "/design-system/inputs" },
+      { label: "Tabs", href: "/design-system/tabs" },
       { label: "Accordion", href: "/design-system/accordion" },
       { label: "Navigation", href: "/design-system/navigation" },
       { label: "Tournament", href: "/design-system/tournament" },

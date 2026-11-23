@@ -10,6 +10,7 @@ import { btnSolid } from "@/_components/button-styles";
 import { FeeDetailSheet } from "./fee-detail-sheet";
 import { FeeSettingsSheet } from "./fee-settings-sheet";
 import { FeeStatusChip } from "@/_components/fee-status";
+import { Tabs } from "@/_components/tabs";
 
 type Filter = "todos" | "por_cobrar" | "pagados";
 
@@ -144,18 +145,14 @@ export function PagosView({ clubId }: { clubId: string }) {
                 </p>
               </section>
 
-              <div className="mt-4 flex gap-2 px-4" role="group" aria-label="Filtrar jugadores">
-                {([["todos", "Todos"], ["por_cobrar", "Por cobrar"], ["pagados", "Pagados"]] as const).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => setFilter(key)}
-                    aria-pressed={filter === key}
-                    className={`min-h-11 cursor-pointer rounded-lg px-4 font-heading text-sm font-medium transition-colors ${filter === key ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                variant="filters"
+                label="Filtrar jugadores"
+                value={filter}
+                onChange={setFilter}
+                tabs={[{ key: "todos", label: "Todos" }, { key: "por_cobrar", label: "Por cobrar" }, { key: "pagados", label: "Pagados" }]}
+                className="mt-4 px-4"
+              />
 
               <ul className={`mt-2 px-4 transition-opacity ${reloading ? "opacity-60" : ""}`} aria-busy={reloading}>
                 {players.map((p) => (

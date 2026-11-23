@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getTournaments, type TournamentListItem } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import { useAuth } from "@/lib/auth-context";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 import { SeasonsList } from "./temporadas/_components/seasons-list";
 
 type FilterTab = "competencia" | "convocatoria" | "finalizados";
@@ -201,28 +201,14 @@ function TorneosContent({ organizerId }: { organizerId: string }) {
         </div>
       </div>
 
-      <SubTabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" desktop="underline" className="mb-4" />
+      <Tabs tabs={mainTabs} value={mainTab} onChange={changeMainTab} label="Torneos y temporadas" size="base" className="px-4 pb-4" />
 
       {mainTab === "temporadas" ? (
         <SeasonsList organizerId={organizerId} />
       ) : (
       <>
-      {/* Filter tabs */}
-      <div className="flex gap-2 px-4 mb-4">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`cursor-pointer rounded-lg px-4 py-2 font-heading text-xs cancha:text-sm font-semibold cancha:font-body cancha:font-bold transition-colors ${
-              activeTab === tab.key
-                ? "bg-surface-secondary text-text-invert"
-                : "border border-border-primary text-text-primary"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Filtro de segundo nivel (especificación 024): segmentado */}
+      <Tabs variant="segmented" label="Estado de los torneos" value={activeTab} onChange={setActiveTab} tabs={tabs} className="mx-4 mb-4" />
 
       {/* Tournament list */}
       <div className="flex flex-col gap-3 px-4 pb-6">

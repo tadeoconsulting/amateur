@@ -23,6 +23,7 @@ export const documentados: { archivo: string; pagina: string }[] = [
   { archivo: "_components/date-picker.tsx", pagina: "inputs" },
   { archivo: "_components/time-picker.tsx", pagina: "inputs" },
   { archivo: "_components/button-styles.ts", pagina: "buttons" },
+  { archivo: "_components/tabs.tsx", pagina: "tabs" },
 ];
 
 export const pendientes: string[] = [
@@ -31,14 +32,11 @@ export const pendientes: string[] = [
   "_components/assign-dialog.tsx",
   "_components/back-header.tsx",
   "_components/bottom-nav.tsx",
-  "_components/category-tabs.tsx",
   "_components/mobile-top-bar.tsx",
-  "_components/pill-tabs.tsx",
   "_components/release-dialog.tsx",
   "_components/sheet.tsx",
   "_components/spinner.tsx",
   "_components/status-badge.tsx",
-  "_components/sub-tabs.tsx",
   "_components/toast.tsx",
   "_components/top-nav.tsx",
   "_components/tournament-photo-field.tsx",

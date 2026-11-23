@@ -8,6 +8,7 @@ import { useClubProgress, type ClubProgress } from "@/_lib/club-progress-client"
 import { ClubCrest } from "@/_components/club-crest";
 import { FeeStatusChip } from "@/_components/fee-status";
 import { PageSpinner } from "@/_components/spinner";
+import { Tabs } from "@/_components/tabs";
 
 const ATTENDANCE: Record<AttendanceStatus | "none", { label: string; className: string }> = {
   presente: { label: "Presente", className: "bg-verification/20 text-brand-900" },
@@ -61,13 +62,14 @@ function ClubDetail({ clubs, chosen, onChoose }: { clubs: ClubProgress[]; chosen
   return (
     <>
       {clubs.length > 1 && (
-        <div className="mt-3 flex flex-wrap gap-2 px-4" role="group" aria-label="Elegir club">
-          {clubs.map((c) => (
-            <button key={c.club.id} onClick={() => onChoose(c.club.id)} aria-pressed={c.club.id === progress.club.id} className={`min-h-11 cursor-pointer rounded-lg px-4 font-heading text-sm font-medium ${c.club.id === progress.club.id ? "bg-surface-secondary text-text-invert" : "border border-border-primary text-text-primary"}`}>
-              {c.club.name}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          variant="filters"
+          label="Elegir club"
+          value={progress.club.id}
+          onChange={onChoose}
+          tabs={clubs.map((c) => ({ key: c.club.id, label: c.club.name }))}
+          className="mt-3 px-4"
+        />
       )}
 
       <div className="mt-3 flex items-center gap-3 px-4">

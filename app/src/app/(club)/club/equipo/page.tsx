@@ -9,7 +9,7 @@ import { MyClubCard } from "../../_components/my-club-card";
 import { notifyChanged } from "@/_lib/notifications-changed";
 import type { StaffRole } from "@/_lib/types";
 import { ClubCrest } from "@/_components/club-crest";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 import { DelegatesPanel } from "@/_components/delegates-panel";
 import { ClubSettingsLink } from "../../_components/club-settings-link";
 import { JugadoresView } from "./_components/jugadores-view";
@@ -311,7 +311,7 @@ function ClubEquipoContent({
       <JoinRequests clubId={clubId} onJoined={() => { refetchCategories(); refetchStaff(); }} />
 
       {/* Tabs */}
-      <SubTabs label="Equipo" value={activeTab} onChange={setActiveTab} tabs={[...tabs]} />
+      <Tabs label="Equipo" value={activeTab} onChange={setActiveTab} tabs={[...tabs]} className="mt-4 px-4 pb-1" />
 
       {/* Jugadores Tab */}
       {activeTab === "jugadores" && <JugadoresView clubId={clubId} />}

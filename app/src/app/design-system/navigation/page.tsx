@@ -112,7 +112,7 @@ export default function NavigationPage() {
                 ["MobileShell", "mobile-shell.tsx", "5 pantallas"],
                 ["BackHeader", "back-header.tsx", "5 pantallas"],
                 ["Accordion", "accordion.tsx", "/ayuda"],
-                ["CategoryTabs", "category-tabs.tsx", "/ayuda"],
+                ["Tabs", "tabs.tsx", "toda la plataforma (ver Tabs)"],
               ].map(([comp, file, used]) => (
                 <tr key={comp}>
                   <td className="px-4 py-2.5 font-medium text-text-primary">{comp}</td>

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { MyClub } from "@/_lib/use-my-club";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 import { MyClubCard } from "./my-club-card";
 import { ClubSettingsLink } from "./club-settings-link";
 
@@ -44,7 +44,7 @@ export function ClubSection<K extends string>({
         <MyClubCard club={club} />
       </div>
 
-      <SubTabs label={title} value={tab} onChange={onTab} tabs={[...tabs]} />
+      <Tabs label={title} value={tab} onChange={onTab} tabs={[...tabs]} className="mt-4 px-4 pb-1" />
 
       {children}
     </div>

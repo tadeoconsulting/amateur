@@ -54,22 +54,14 @@ test("el encabezado del día en la lista de fechas va a 14 px solo con el tema d
   assert.match(fechas, /<h3 className="[^"]*font-heading text-xs cancha:text-sm font-bold/);
 });
 
-// Los tabs de las fechas («Fecha 1»…) van a 14 px solo en el organizador (2026-11-16); el club, el jugador y el fan siguen en 12 px.
-test("los tabs de las fechas van a 14 px solo con el tema del organizador", () => {
-  const tabs = readFileSync(new URL("../../src/_components/pill-tabs.tsx", import.meta.url), "utf8");
-  assert.match(tabs, /"cancha:text-base" : "cancha:text-sm"/, "14 px por omisión, 16 px con size=base");
-  const sub = readFileSync(new URL("../../src/_components/sub-tabs.tsx", import.meta.url), "utf8");
-  assert.equal((sub.match(/cancha:text-base/g) ?? []).length, 2, "SubTabs en celular (dos variantes) a 16 px");
-  assert.match(sub, /size="base"/, "y las píldoras de escritorio también");
-});
-
-// Filtros en píldora (Competencia / Convocatoria / Finalizados y equivalentes) a 14 px en el organizador, y la barra de
-// abajo (celular) a 12 px en todos los ámbitos (2026-11-16).
-test("los filtros en píldora van a 14 px en el organizador y la barra de abajo a 12 px", () => {
+// Los tabs (fechas, secciones, filtros) son un solo componente desde la especificación 024: píldoras en DM Sans negrita, 14 px por
+// omisión y 16 px con size="base" (el nivel principal de «Mis torneos»). La barra de abajo (celular) va a 16 px en todos los ámbitos.
+test("los tabs únicos van a 14 px (16 px con size=base) y la barra de abajo a 16 px", () => {
   const leer = (ruta) => readFileSync(new URL(`../../src/${ruta}`, import.meta.url), "utf8");
-  for (const ruta of ["app/(organizador)/partidos/page.tsx", "app/(organizador)/torneos/page.tsx", "app/(organizador)/torneos/[id]/editar-cruces/page.tsx", "_components/convocatoria-view.tsx", "_components/category-tabs.tsx"]) {
-    assert.match(leer(ruta), /cancha:text-sm font-(medium|semibold) cancha:font-body cancha:font-bold/, `píldoras a 14 px: ${ruta}`);
-  }
+  const tabs = leer("_components/tabs.tsx");
+  assert.match(tabs, /size === "base" \? "text-base" : "text-sm"/, "14 px por omisión, 16 px con size=base");
+  assert.match(tabs, /font-body font-bold/, "DM Sans en negrita");
+  assert.match(leer("app/(organizador)/torneos/page.tsx"), /<Tabs[^>]*size="base"/, "el nivel principal de Mis torneos a 16 px");
   for (const ruta of ["_components/bottom-nav.tsx", "app/(organizador)/_components/bottom-nav.tsx", "app/(club)/_components/club-bottom-nav.tsx"]) {
     const fuente = leer(ruta);
     assert.doesNotMatch(fuente, /text-\[10px\]/, `sin 10 px: ${ruta}`);
@@ -138,14 +130,12 @@ test("los botones de volver no pasan de 14 px en el celular", () => {
   assert.deepEqual(malos, [], "botones de volver a 16 px en el celular");
 });
 
-// Las pestañas principales de «Mis torneos» (Torneos / Temporadas) se distinguen de las píldoras de abajo (Competencia /
-// Convocatoria / Finalizados): llevan el subrayado también en escritorio (2026-11-19). El resto de los `SubTabs` no cambia.
-test("las pestañas principales de Mis torneos van con subrayado también en escritorio", () => {
-  const sub = readFileSync(new URL("../../src/_components/sub-tabs.tsx", import.meta.url), "utf8");
-  assert.match(sub, /desktop = "pills"/, "por omisión siguen como píldoras");
-  assert.match(sub, /desktop === "pills" \? "md:hidden" : ""/, "con underline el subrayado no se oculta en escritorio");
+// Mis torneos (especificación 024): el nivel principal (Torneos / Temporadas) son píldoras de 16 px y el secundario (Competencia /
+// Convocatoria / Finalizados) es un segmentado dentro del contenedor.
+test("Mis torneos usa píldoras para lo principal y un segmentado para lo secundario", () => {
   const pagina = readFileSync(new URL("../../src/app/(organizador)/torneos/page.tsx", import.meta.url), "utf8");
-  assert.match(pagina, /<SubTabs[^>]*desktop="underline"/, "Mis torneos usa el subrayado en escritorio");
+  assert.match(pagina, /<Tabs tabs=\{mainTabs\}[^>]*size="base"/, "lo principal en píldoras de 16 px");
+  assert.match(pagina, /<Tabs variant="segmented"/, "lo secundario, segmentado");
 });
 
 // Dos medidas por elemento (2026-11-19): «btnSolid» (p. ej. «Crear temporada») 14 px en el celular y 16 px desde 768 px

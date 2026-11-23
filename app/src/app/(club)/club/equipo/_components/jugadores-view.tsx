@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getClubCategories, getClubPlayers } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
 import type { PlayerGender } from "@/_lib/types";
-import { SubTabs } from "@/_components/sub-tabs";
+import { Tabs } from "@/_components/tabs";
 
 const genderTabs: { key: PlayerGender; label: string }[] = [
   { key: "masculino", label: "Masculino" },
@@ -32,7 +32,7 @@ export function JugadoresView({ clubId }: { clubId: string }) {
   return (
     <div className="w-full pb-4">
       {/* Gender Tabs */}
-      <SubTabs label="Género" value={gender} onChange={setGender} tabs={genderTabs} />
+      <Tabs variant="segmented" label="Género" value={gender} onChange={setGender} tabs={genderTabs} className="mx-4 mt-3" />
 
       {/* Category List */}
       <div className="mt-2 px-4">

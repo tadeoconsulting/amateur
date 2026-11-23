@@ -25,7 +25,7 @@ import { RequestStatusChip } from "@/_components/request-status-chip";
 import { Toast } from "@/_components/toast";
 import { StandingsTable, ScorersList } from "@/_components/tournament-results";
 import { FixtureWithStandings } from "@/_components/fixture-with-standings";
-import { PillTabs } from "@/_components/pill-tabs";
+import { Tabs } from "@/_components/tabs";
 import { TournamentLogo } from "@/_components/tournament-logo";
 import { TeamsList } from "@/_components/teams-list";
 import { parseView, withView } from "@/_lib/share-view";
@@ -312,7 +312,7 @@ export function ConvocatoriaView({ tournamentId, publicPath }: { tournamentId: s
 
         {mainTab === "resultados" && (
           <div className="mt-4">
-            <PillTabs
+            <Tabs
               label="Resultados"
               className="pb-1 @2xl:hidden"
               value={resultadosTab}

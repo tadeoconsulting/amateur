@@ -5,7 +5,7 @@ import type { MatchListItem } from "@/_lib/api";
 import { formatMatchDate, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { buildFixtureTabs, currentTabKey, groupByDay, matchesOfTab, tabKeyFromSearch, withTabParam } from "@/_lib/fixture";
 import { MatchRow } from "@/_components/match-row";
-import { PillTabs } from "@/_components/pill-tabs";
+import { Tabs } from "@/_components/tabs";
 
 /**
  * Lista de partidos de un torneo, organizada por fecha — como se armó el fixture — y, dentro de
@@ -13,7 +13,7 @@ import { PillTabs } from "@/_components/pill-tabs";
  * fan, el jugador, el club y el organizador, para que las cuatro vistas muestren la misma
  * estructura en vez de cada una su propia lista.
  *
- * - Las fechas se eligen con pestañas (`PillTabs`; con muchas, la barra se desplaza y la elegida queda a la vista).
+ * - Las fechas se eligen con pestañas (`Tabs`; con muchas, la barra se desplaza y la elegida queda a la vista).
  * - Los partidos de un cuadro de eliminación van en sus propias rondas (Octavos, Cuartos,
  *   Semifinal, Final), después de las fechas.
  * - Se abre en la fecha "actual": la primera que todavía tiene partidos por jugar.
@@ -83,12 +83,12 @@ export function FixtureTabs({
         // El «+» va fuera de la barra que se desplaza: queda fijo a la derecha, después de la última fecha.
         <div className="flex items-start gap-2 pr-4">
           <div className="min-w-0 flex-1">
-            {tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" className="pl-4 pb-3" />}
+            {tabs.length > 1 && <Tabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" className="pl-4 pb-3" />}
           </div>
           {addButton}
         </div>
       ) : (
-        tabs.length > 1 && <PillTabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" />
+        tabs.length > 1 && <Tabs tabs={tabs} value={active.key} onChange={pick} label="Fechas del torneo" />
       )}
 
       <div className="flex flex-col gap-4 px-4">

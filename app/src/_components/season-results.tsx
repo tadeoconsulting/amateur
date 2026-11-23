@@ -5,7 +5,7 @@ import { getSeason, getSeasonScorers, getSeasonStandings, getStandings, type Sea
 import { useApi } from "@/_lib/use-api";
 import type { SeasonStage } from "@/_lib/season";
 import { parseSeasonView, withSeasonView, type SeasonScorers, type SeasonTable } from "@/_lib/share-view";
-import { PillTabs } from "@/_components/pill-tabs";
+import { Tabs } from "@/_components/tabs";
 import { ScorersList, StandingsTable } from "@/_components/tournament-results";
 import { Spinner } from "@/_components/spinner";
 
@@ -102,7 +102,7 @@ function SeasonTablesInner({
 
   return (
     <div>
-      <PillTabs label="Tablas de la temporada" className={className} value={value} onChange={pick} tabs={keys.map((key) => ({ key, label: TABLE_LABEL[key] }))} />
+      <Tabs label="Tablas de la temporada" className={className} value={value} onChange={pick} tabs={keys.map((key) => ({ key, label: TABLE_LABEL[key] }))} />
       {content}
     </div>
   );
@@ -176,7 +176,7 @@ function SeasonScorersInner({
   };
   return (
     <div>
-      <PillTabs
+      <Tabs
         label="Goleadores de la temporada"
         className={className}
         value={value}
