@@ -19,6 +19,7 @@ import {
   type ScorerRow,
 } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { editableBracketIds } from "@/_lib/fixture-edit";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { copyText } from "@/_lib/share";
 import { TournamentActions } from "./_components/tournament-actions";
@@ -268,7 +269,7 @@ export default function TournamentDetailPage() {
       shareView={competitionView(shownTab)}
       isConvocatoria={isConvocatoria}
       canCreateSeason={!tournament.season && tournament.format === "liga"}
-      canEditCruces={matches.some((m) => !m.decisive)}
+      canEditCruces={matches.some((m) => !m.decisive) || editableBracketIds(matches).size > 0}
       canUndoFixture={matches.length > 0 && matches.every((m) => m.status === "programado" && m._count.events === 0)}
       onUndoFixture={() => setConfirmUndoFixture(true)}
     />

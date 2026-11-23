@@ -1,13 +1,13 @@
 import { MATCH_TONE, matchTone } from "@/_lib/match-tone";
 import Link from "next/link";
 import type { MatchListItem } from "@/_lib/api";
-import { formatTime12, UNSCHEDULED_LABEL } from "@/_lib/match-format";
+import { formatTime12, playedTimeLabel, UNSCHEDULED_LABEL } from "@/_lib/match-format";
 import { isUnscheduled } from "@/_lib/fixture";
 import { ClubCrest } from "@/_components/club-crest";
 
 /**
  * La fila de un partido en las listas de fixture: los dos equipos con su escudo y marcador, y a la
- * derecha su estado — la hora si falta jugarse, "En vivo" si se está jugando, "Final" si terminó,
+ * derecha su estado — la hora si falta jugarse, "En vivo" si se está jugando, "Final" si terminó (y debajo, el grupo si lo hay y la hora a la que se jugó),
  * "Por definir" si todavía no tiene día y hora. El día no se repite acá: lo da el encabezado de la
  * sección en la que está la fila (ver `FixtureTabs`).
  *
@@ -36,6 +36,8 @@ export function MatchRow({
 
   // Estado: lo que se muestra en el centro (marcador u hora) y la etiqueta de abajo.
   const played = match.status === "finalizado" || live;
+  // La hora a la que se jugó (la real de inicio o, si no hay, la programada), al final: estado, grupo (si hay) y hora.
+  const playedAt = match.status === "finalizado" ? playedTimeLabel(match) : null;
   const statusLabel = live ? (
     <span className={`inline-flex items-center gap-1 font-heading text-xs font-bold ${MATCH_TONE[matchTone(match.status, match.period)].text}`}>
       <span className={`h-1.5 w-1.5 animate-pulse rounded-full ${MATCH_TONE[matchTone(match.status, match.period)].dot} motion-reduce:animate-none`} aria-hidden="true" />
@@ -68,6 +70,7 @@ export function MatchRow({
         <div className="w-20 shrink-0 text-right">
           {statusLabel}
           {match.groupName && <p className="mt-0.5 truncate font-body text-[11px] text-text-secondary">{match.groupName}</p>}
+          {playedAt && <p className="mt-0.5 font-body text-xs tabular-nums text-text-secondary">{playedAt}</p>}
         </div>
       </div>
 
@@ -87,6 +90,7 @@ export function MatchRow({
           </span>
           {(played || isUnscheduled(match)) && statusLabel}
           {match.groupName && <span className="font-body text-[11px] text-text-secondary">{match.groupName}</span>}
+          {playedAt && <span className="font-body text-xs tabular-nums text-text-secondary">{playedAt}</span>}
         </div>
         <div className="flex min-w-0 items-center gap-3">
           <ClubCrest club={match.awayTeam} size="h-7 w-7" textSize="text-[9px]" />

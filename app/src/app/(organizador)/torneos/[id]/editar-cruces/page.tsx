@@ -8,6 +8,7 @@ import {
   changeTeam,
   changedMatches,
   findProblems,
+  LLAVES,
   restingTeams,
   swapMatchdays,
   teamsByGroup,
@@ -15,12 +16,13 @@ import {
   type EditResult,
 } from "@/_lib/fixture-edit";
 import { formatMatchDate, formatTime12 } from "@/_lib/match-format";
+import { roundLabel } from "@/_lib/fixture";
 import { MoveMatchPanel } from "./_components/move-match-panel";
 import { Picklist } from "@/_components/picklist";
 import { Tabs } from "@/_components/tabs";
 
 type Team = { id: string; name: string; shortName: string };
-type Loaded = { matches: EditableMatch[]; teams: Team[] };
+type Loaded = { matches: EditableMatch[]; teams: Team[]; rounds: number };
 
 const BTN = "cursor-pointer rounded-lg border border-border-primary px-3 py-2 font-heading text-xs font-semibold text-text-primary transition-colors hover:bg-btn-regular disabled:cursor-not-allowed disabled:opacity-40";
 
@@ -59,13 +61,17 @@ export default function EditarCrucesPage() {
   const groups = [...universe.keys()];
   const activeGroup = groups.includes(group) ? group : (groups[0] ?? "");
   const groupName = activeGroup === "" ? null : activeGroup;
+  const enLlaves = activeGroup === LLAVES;
+  // En las llaves la «fecha» es la ronda (Octavos, Cuartos, Semifinal, Final).
+  const rounds = loaded?.rounds ?? 0;
+  const dayLabel = (day: number, llaves: boolean) => (llaves ? roundLabel(day, rounds) : `Fecha ${day}`);
   const teams = universe.get(activeGroup) ?? new Set<string>();
 
-  const groupDraft = draft.filter((m) => (m.groupName ?? "") === activeGroup);
+  const groupDraft = draft.filter((m) => (m.decisive ? LLAVES : (m.groupName ?? "")) === activeGroup);
   const matchdays = [...new Set(groupDraft.map((m) => m.matchday))].sort((a, b) => a - b);
   const activeDay = matchday !== null && matchdays.includes(matchday) ? matchday : (matchdays[0] ?? null);
   const dayMatches = groupDraft.filter((m) => m.matchday === activeDay);
-  const resting = activeDay === null ? [] : restingTeams(draft, teams, activeDay, groupName);
+  const resting = activeDay === null || enLlaves ? [] : restingTeams(draft, teams, activeDay, groupName);
 
   const problems = findProblems(draft);
   const twice = problems.filter((p) => p.kind === "twice");
@@ -122,7 +128,7 @@ export default function EditarCrucesPage() {
   if (original.length === 0) {
     return (
       <div className="px-4 py-10">
-        <p className="font-body text-sm text-text-secondary">Este torneo no tiene un fixture de liga o grupos para editar.</p>
+        <p className="font-body text-sm text-text-secondary">Este torneo no tiene cruces para editar.</p>
         <button onClick={() => router.push(`/torneos/${id}`)} className={`${BTN} mt-4`}>Volver al torneo</button>
       </div>
     );
@@ -143,6 +149,7 @@ export default function EditarCrucesPage() {
         <h1 className="font-heading text-xl font-bold text-text-primary">Editar cruces</h1>
         <p className="mt-1 font-body text-sm text-text-secondary">
           Cambia un equipo o mueve un partido a otra fecha. Cada equipo juega una sola vez por fecha; los cambios se guardan juntos.
+          {groups.includes(LLAVES) && " En las llaves se cambian los equipos de los cruces que aún no se juegan."}
         </p>
       </div>
 
@@ -151,7 +158,7 @@ export default function EditarCrucesPage() {
           label="Grupo"
           value={activeGroup}
           onChange={(g) => { setGroup(g); setMatchday(null); setMoving(null); }}
-          tabs={groups.map((g) => ({ key: g, label: g === "" ? "General" : g }))}
+          tabs={groups.map((g) => ({ key: g, label: g === LLAVES ? "Llaves" : g === "" ? "General" : g }))}
           className="mt-4 px-4"
         />
       )}
@@ -167,12 +174,12 @@ export default function EditarCrucesPage() {
                   onClick={() => { setGroup(p.groupName ?? ""); setMatchday(p.matchday); setMoving(null); }}
                   className="cursor-pointer text-left font-body text-sm text-red-800 underline"
                 >
-                  Fecha {p.matchday}: {name(p.teamId)} juega dos veces.
+                  {dayLabel(p.matchday, p.groupName === LLAVES)}: {name(p.teamId)} juega dos veces.
                 </button>
               </li>
             ))}
           </ul>
-          <p className="mt-2 font-body text-xs text-red-800">Cambia el equipo de uno de esos partidos por otro que esa fecha descanse o juegue en otro partido.</p>
+          <p className="mt-2 font-body text-xs text-red-800">Cambia el equipo de uno de esos partidos por otro {groups.includes(LLAVES) ? "que esa fecha o ronda no juegue o juegue en otro partido" : "que esa fecha descanse o juegue en otro partido"}.</p>
         </div>
       )}
       {repeated.length > 0 && (
@@ -182,7 +189,7 @@ export default function EditarCrucesPage() {
             {repeated.map((p) => (
               <li key={p.matchIds.join("-")} className="font-body text-sm text-amber-800">
                 {name(p.teamIds[0])} y {name(p.teamIds[1])} se enfrentan {p.matchIds.length} veces
-                {" "}(fechas {p.matchIds.map((mid) => draft.find((m) => m.id === mid)?.matchday).join(" y ")}).
+                {" "}({p.groupName === LLAVES ? "rondas" : "fechas"} {p.matchIds.map((mid) => draft.find((m) => m.id === mid)?.matchday).join(" y ")}).
               </li>
             ))}
           </ul>
@@ -191,12 +198,12 @@ export default function EditarCrucesPage() {
 
       {/* Fechas */}
       <Tabs
-        label="Fecha"
+        label={enLlaves ? "Ronda" : "Fecha"}
         value={String(activeDay)}
         onChange={(day) => { setMatchday(Number(day)); setMoving(null); }}
         tabs={matchdays.map((day) => ({
           key: String(day),
-          label: `Fecha ${day}`,
+          label: dayLabel(day, enLlaves),
           leading: twice.some((p) => p.matchday === day && (p.groupName ?? "") === activeGroup) ? <span aria-label="con problemas" className="h-2 w-2 rounded-full bg-red-500" /> : undefined,
         }))}
         className="mt-4 px-4 pb-3"
@@ -230,7 +237,7 @@ export default function EditarCrucesPage() {
                 <span className="order-2 font-heading text-xs font-bold text-text-secondary">vs</span>
               </div>
 
-              {!m.locked && (
+              {!m.locked && !m.decisive && (
                 <button onClick={() => setMoving(moving === m.id ? null : m.id)} aria-expanded={moving === m.id} className={`${BTN} mt-3`}>
                   Mover a otra fecha
                 </button>
@@ -257,7 +264,9 @@ export default function EditarCrucesPage() {
       </div>
 
       <p className="mt-4 px-4 font-body text-xs text-text-secondary">
-        Al elegir un equipo que ya juega esta fecha, ese partido recibe al que salió. Si el que elijas descansa, pasa a descansar el que salió.
+        {enLlaves
+          ? "Al elegir un equipo que ya juega en esta ronda, ese partido recibe al que salió. Si el que elijas no juega esta ronda, el que salió queda fuera de ella. Las rondas siguientes se llenan solas con los ganadores."
+          : "Al elegir un equipo que ya juega esta fecha, ese partido recibe al que salió. Si el que elijas descansa, pasa a descansar el que salió."}
       </p>
 
       {/* Guardar */}
