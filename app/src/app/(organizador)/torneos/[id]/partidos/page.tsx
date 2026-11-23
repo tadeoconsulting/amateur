@@ -99,7 +99,7 @@ function PartidosFixtureContent() {
         </div>
       </div>
 
-      {/* Cambiar equipos y mover partidos de fecha (especificación 017): hay qué editar en una liga, en grupos o en la primera ronda de las llaves. */}
+      {/* Cambiar equipos y mover partidos de fecha (especificación 017): hay qué editar en una liga, en grupos o en llaves con los dos equipos definidos. */}
       {(allMatches.some((m) => !m.decisive) || editableBracketIds(allMatches).size > 0) && (
         <div className="px-4 pb-3">
           <Link

@@ -2,14 +2,14 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { isRealDate } from "@/_lib/fixture";
-import { changedMatches, editableBracketIds, validateFixtureEdit, type EditableMatch } from "@/_lib/fixture-edit";
+import { changedMatches, validateFixtureEdit, type EditableMatch } from "@/_lib/fixture-edit";
 import { CLUB_REF_SELECT } from "@/_lib/club-public";
 
 /**
  * Editar los cruces de un fixture ya armado (especificación 017): cambiar el equipo de un partido y mover un partido a
  * otra fecha. Lo hace el organizador del torneo (o un admin). En liga y grupos se cambian equipos y se mueven partidos de
- * fecha; en las llaves (`decisive`) solo se cambian equipos, dentro de su ronda y mientras el cruce no dependa del ganador
- * de otro partido (los de la primera ronda).
+ * fecha; en las llaves (`decisive`) solo se cambian equipos, dentro de su ronda, en los cruces por jugar que ya tienen
+ * los dos equipos (también los llenados con ganadores, como unas semifinales).
  */
 
 const TIME_RE = /^(([01]\d|2[0-3]):[0-5]\d)?$/;
@@ -30,32 +30,23 @@ async function loadEditable(tournamentId: string): Promise<EditableMatch[]> {
       location: true,
       status: true,
       decisive: true,
-      nextMatchId: true,
       _count: { select: { events: true } },
     },
     orderBy: [{ matchday: "asc" }, { date: "asc" }, { time: "asc" }, { createdAt: "asc" }],
   });
-  // De las llaves solo cuentan las que no dependen del ganador de otro partido. `nextMatchId` de TODOS los partidos
-  // (también los que aún no tienen los dos equipos) dice cuáles están alimentados.
-  const feeders = await prisma.match.findMany({ where: { tournamentId, decisive: true, nextMatchId: { not: null } }, select: { nextMatchId: true } });
-  const bracket = editableBracketIds([
-    ...rows.map((r) => ({ id: r.id, decisive: r.decisive, homeTeamId: r.homeTeamId, awayTeamId: r.awayTeamId, nextMatchId: null as string | null })),
-    ...feeders.map((f, i) => ({ id: `feeder-${i}`, decisive: true, homeTeamId: null, awayTeamId: null, nextMatchId: f.nextMatchId })),
-  ]);
-  return rows
-    .filter((r) => !r.decisive || bracket.has(r.id))
-    .map((r) => ({
-      id: r.id,
-      matchday: r.matchday,
-      groupName: r.groupName,
-      decisive: r.decisive,
-      homeTeamId: r.homeTeamId as string,
-      awayTeamId: r.awayTeamId as string,
-      date: r.date.toISOString().slice(0, 10),
-      time: r.time,
-      location: r.location,
-      locked: r.status !== "programado" || r._count.events > 0,
-    }));
+  // Las llaves que esperan a un ganador (sin los dos equipos) quedan fuera por el `where`: no hay qué cambiar todavía.
+  return rows.map((r) => ({
+    id: r.id,
+    matchday: r.matchday,
+    groupName: r.groupName,
+    decisive: r.decisive,
+    homeTeamId: r.homeTeamId as string,
+    awayTeamId: r.awayTeamId as string,
+    date: r.date.toISOString().slice(0, 10),
+    time: r.time,
+    location: r.location,
+    locked: r.status !== "programado" || r._count.events > 0,
+  }));
 }
 
 /** Entra solo quien organiza el torneo (o un admin). */
