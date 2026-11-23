@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { getTournament, getMatches } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { editableBracketIds } from "@/_lib/fixture-edit";
 import { useTournamentRealtime } from "@/_lib/use-tournament-realtime";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { ShareViewButton } from "@/_components/share-view-button";
@@ -98,8 +99,8 @@ function PartidosFixtureContent() {
         </div>
       </div>
 
-      {/* Cambiar equipos y mover partidos de fecha (especificación 017): solo hay qué editar en una liga o en grupos. */}
-      {allMatches.some((m) => !m.decisive) && (
+      {/* Cambiar equipos y mover partidos de fecha (especificación 017): hay qué editar en una liga, en grupos o en la primera ronda de las llaves. */}
+      {(allMatches.some((m) => !m.decisive) || editableBracketIds(allMatches).size > 0) && (
         <div className="px-4 pb-3">
           <Link
             href={`/torneos/${params.id}/editar-cruces`}

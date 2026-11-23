@@ -21,7 +21,11 @@ Corregir un cruce sin rehacer el fixture. Con el modo manual (o el automático) 
 
 ## Reglas
 - Un partido **bloqueado** (`locked`: ya empezó o tiene jugadas) cuenta para validar pero **no se mueve ni se le cambian los equipos**, ni se puede intercambiar con otro.
-- Los partidos del cuadro de eliminación (`decisive`) no se editan a mano (igual que `PATCH /api/matches/:id`).
+- **Llaves (cuadro de eliminación), 2026-11-22:** antes de jugarse también se pueden editar, **solo cambiando equipos dentro de su ronda** (la ronda hace de «fecha»: Octavos, Cuartos, Semifinal, Final). Reglas:
+  - Solo los cruces **que no dependen del ganador de otro partido** (los de la primera ronda): los demás se llenan solos con los resultados. Los define `editableBracketIds` (`nextMatchId` de los demás partidos).
+  - Las llaves son un «grupo» más (pestaña **Llaves**) y **admiten a todos los equipos del torneo**. Cambiar un equipo es el mismo intercambio de siempre: si el que entra juega otro cruce de esa ronda, ese cruce recibe al que salió; si no juega esa ronda, el que salió queda fuera de ella.
+  - Un equipo no puede estar dos veces en la misma ronda (impide guardar). **No se mueven de ronda** ni se cambia la cantidad de cruces por ronda; un cruce que ya empezó queda bloqueado.
+  - Día, hora y sede de las llaves se siguen cambiando con el lápiz del partido (`PATCH /api/matches/:id`), que no cambió.
 - En **grupos**, el cambio de equipo solo admite equipos del mismo grupo, y el intercambio de fechas es entre partidos del mismo grupo.
 - **La cantidad de partidos por fecha (y grupo) nunca cambia.** Ambas operaciones son intercambios, así que se conserva.
 - **Se guarda todo junto o nada.** Solo se puede guardar cuando **ningún equipo juega dos veces en una fecha**.
@@ -32,7 +36,7 @@ Corregir un cruce sin rehacer el fixture. Con el modo manual (o el automático) 
 
 | Ruta | Qué hace |
 |---|---|
-| `GET` | `{ matches, teams }`: los partidos editables de liga o grupos (id, fecha, grupo, local, visitante, día `YYYY-MM-DD`, hora, sede y `locked`) y los equipos para mostrar los nombres. |
+| `GET` | `{ matches, teams, rounds }`: los partidos editables de liga, grupos y llaves de primera ronda (`decisive`; `rounds` = rondas del cuadro) (id, fecha, grupo, local, visitante, día `YYYY-MM-DD`, hora, sede y `locked`) y los equipos para mostrar los nombres. |
 | `PUT` | Cuerpo `{ matches: [{ id, matchday, homeTeamId, awayTeamId, date, time, location }] }` con **solo los que cambiaron**. Valida todo junto y guarda en una transacción. Devuelve `{ updated }`. |
 
 Errores del `PUT`: `400` si el cuerpo está mal formado (fecha o hora inválidas, partidos repetidos, ids que no son de este fixture); `409` si no hay fixture que editar o si la edición rompe una regla (un equipo dos veces en una fecha, cambia la cantidad de partidos de una fecha, toca un partido que ya empezó, equipo de otro grupo, choque de horario). Sin cambios no escribe nada (`updated: 0`).
@@ -57,6 +61,6 @@ Un borrador en pantalla que se guarda de una vez.
 ## Fuera de alcance
 - **Reacomodo automático** al mover de fecha (se evaluó una cadena mínima con vista previa; el usuario prefirió el modo manual guiado).
 - **Agregar o quitar partidos**, o cambiar a un equipo de grupo.
-- **Cuadros de eliminación** (se programan uno por uno como siempre).
+- **Mover de ronda** los cruces de un cuadro de eliminación, y editar los que dependen de un ganador (se llenan solos).
 - Deshacer después de guardar (se puede volver a editar).
 - Avisar a los delegados y jugadores de los cambios.

@@ -228,3 +228,82 @@ test("validación de la API: dos partidos que quedan chocando en día y hora se 
   // Pero en la misma sede, sí.
   assert.match(validateFixtureEdit(before, before.map((x) => (x.id === "2" ? { ...x, date: "2026-11-01", location: "X" } : x))), /chocan/);
 });
+
+// ─── Llaves (cuadro de eliminación): se cambian equipos dentro de la ronda, antes de jugarse ───────────────────────
+import { LLAVES, editableBracketIds } from "../../src/_lib/fixture-edit.ts";
+
+// Grupos A y B de 3 equipos y, aparte, cuartos con los 4 que clasifican (A1 A2 B1 B2) + un equipo fuera (A3).
+const conLlaves = () => [
+  m("g1", 1, "A1", "A2", { groupName: "A" }),
+  m("g2", 1, "B1", "B2", { groupName: "B" }),
+  m("g3", 2, "A3", "A1", { groupName: "A" }),
+  m("s1", 1, "A1", "B2", { decisive: true }),
+  m("s2", 1, "B1", "A2", { decisive: true }),
+];
+
+test("llaves: el equipo que entra viene de todo el torneo, no solo de un grupo", () => {
+  const universe = teamsByGroup(conLlaves());
+  assert.deepEqual([...universe.get(LLAVES)].sort(), ["A1", "A2", "A3", "B1", "B2"]);
+  assert.deepEqual([...universe.get("A")].sort(), ["A1", "A2", "A3"]);
+});
+
+test("llaves: elegir a un equipo que juega otro cruce de la ronda lo intercambia", () => {
+  const r = changeTeam(conLlaves(), "s1", "away", "A2");
+  assert.ok(r.ok);
+  const s1 = r.matches.find((x) => x.id === "s1");
+  const s2 = r.matches.find((x) => x.id === "s2");
+  assert.equal(s1.awayTeamId, "A2");
+  assert.equal(s2.awayTeamId, "B2"); // recibe al que salió
+  assert.equal(canSave(r.matches), true);
+});
+
+test("llaves: un equipo que no juega la ronda entra y el que salió queda fuera", () => {
+  const r = changeTeam(conLlaves(), "s1", "home", "A3");
+  assert.ok(r.ok);
+  assert.equal(r.matches.find((x) => x.id === "s1").homeTeamId, "A3");
+  assert.equal(findProblems(r.matches).filter((p) => p.kind === "twice").length, 0);
+  assert.deepEqual(restingTeams(r.matches, teamsByGroup(r.matches).get(LLAVES), 1, LLAVES), ["A1"]);
+});
+
+test("llaves: cambiar un equipo en las llaves no toca los partidos de grupos con el mismo número de fecha", () => {
+  const r = changeTeam(conLlaves(), "s1", "away", "A2");
+  const g1 = r.matches.find((x) => x.id === "g1");
+  assert.equal(g1.homeTeamId, "A1");
+  assert.equal(g1.awayTeamId, "A2");
+});
+
+test("llaves: no se mueven de ronda", () => {
+  const lista = [...conLlaves(), m("f1", 2, "A1", "B1", { decisive: true })];
+  const r = swapMatchdays(lista, "s1", "f1");
+  assert.equal(r.ok, false);
+});
+
+test("llaves: un cruce que ya empezó no se edita", () => {
+  const lista = conLlaves().map((x) => (x.id === "s1" ? { ...x, locked: true } : x));
+  assert.equal(changeTeam(lista, "s1", "home", "A3").ok, false);
+});
+
+test("llaves: la validación rechaza a un equipo dos veces en la misma ronda y acepta el cambio válido", () => {
+  const original = conLlaves();
+  const repetido = original.map((x) => (x.id === "s2" ? { ...x, homeTeamId: "A1" } : x));
+  assert.match(validateFixtureEdit(original, repetido) ?? "", /misma ronda de las llaves/);
+  const valido = changeTeam(original, "s1", "home", "A3").matches;
+  assert.equal(validateFixtureEdit(original, valido), null);
+});
+
+test("llaves: la validación no deja cambiar la ronda de un cruce", () => {
+  const original = conLlaves();
+  const movido = original.map((x) => (x.id === "s1" ? { ...x, matchday: 2 } : x));
+  assert.match(validateFixtureEdit(original, movido) ?? "", /no se mueven de ronda/);
+});
+
+test("editableBracketIds: solo los cruces con los dos equipos y que no los alimenta otro partido", () => {
+  const partidos = [
+    { id: "q1", decisive: true, homeTeamId: "A", awayTeamId: "B", nextMatchId: "sf" },
+    { id: "q2", decisive: true, homeTeamId: "C", awayTeamId: "D", nextMatchId: "sf" },
+    { id: "sf", decisive: true, homeTeamId: "A", awayTeamId: "C", nextMatchId: "fin" }, // ya con los dos equipos, pero alimentado
+    { id: "fin", decisive: true, homeTeamId: null, awayTeamId: null, nextMatchId: null },
+    { id: "g", decisive: false, homeTeamId: "A", awayTeamId: "B", nextMatchId: null },
+  ];
+  assert.deepEqual([...editableBracketIds(partidos)].sort(), ["q1", "q2"]);
+});

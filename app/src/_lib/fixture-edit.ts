@@ -3,6 +3,10 @@
 //
 // La regla de fondo: en cada fecha, cada equipo juega una sola vez (y con equipos impares descansa uno, que es el que
 // no juega). Las dos operaciones son **intercambios**, así que nunca cambian la cantidad de partidos de una fecha.
+//
+// Las llaves (cuadro de eliminación) también se editan antes de jugarse, pero solo en **cambiar un equipo** y dentro de
+// su ronda: son un «grupo» más (`LLAVES`) cuyos equipos son todos los del torneo, y la ronda hace de «fecha». No se mueven
+// de ronda, y solo se editan los cruces que no dependen del ganador de otro partido (ver `editableBracketIds`).
 
 /** Un partido de liga o de grupos tal como lo ve el editor. `date` es `YYYY-MM-DD`; `time` vacío = por definir. */
 export interface EditableMatch {
@@ -14,30 +18,56 @@ export interface EditableMatch {
   date: string;
   time: string;
   location: string;
+  /** Partido de un cuadro de eliminación: `matchday` es la ronda. Se agrupa aparte (`LLAVES`), con todos los equipos del torneo. */
+  decisive?: boolean;
   /** No se puede tocar: ya empezó, o tiene jugadas. Cuenta para validar, pero no se mueve ni se le cambian los equipos. */
   locked: boolean;
 }
 
 export type EditResult = { ok: true; matches: EditableMatch[] } | { ok: false; error: string };
 
-const groupKey = (groupName: string | null) => groupName ?? "";
+/** La «clave de grupo» de las llaves: no choca con el nombre de ningún grupo real. */
+export const LLAVES = "§llaves";
 
-/** Los equipos de cada grupo (en una liga hay un solo grupo, `""`), sacados de los partidos. */
+const groupKey = (groupName: string | null) => groupName ?? "";
+/** El grupo de un partido: su grupo, `""` en una liga, o `LLAVES` si es del cuadro de eliminación. */
+const keyOf = (m: Pick<EditableMatch, "groupName" | "decisive">) => (m.decisive ? LLAVES : groupKey(m.groupName));
+
+/**
+ * Los equipos de cada grupo (en una liga hay un solo grupo, `""`), sacados de los partidos. Las llaves (`LLAVES`) admiten
+ * a todos los equipos del torneo.
+ */
 export function teamsByGroup(matches: readonly EditableMatch[]): Map<string, Set<string>> {
   const out = new Map<string, Set<string>>();
+  const all = new Set<string>();
   for (const m of matches) {
-    const key = groupKey(m.groupName);
+    const key = keyOf(m);
     const set = out.get(key) ?? new Set<string>();
     set.add(m.homeTeamId);
     set.add(m.awayTeamId);
+    all.add(m.homeTeamId);
+    all.add(m.awayTeamId);
     out.set(key, set);
   }
+  if (out.has(LLAVES)) out.set(LLAVES, all);
   return out;
 }
 
-/** Los partidos de una fecha de un grupo. */
+/**
+ * Los partidos de llaves que se pueden editar: los dos equipos ya están y ninguno viene del ganador de otro partido
+ * (los de la primera ronda). Los demás se llenan solos con los resultados. `nextMatchId` es el partido al que pasa quien
+ * gana, así que un partido al que apunta otro está alimentado por él.
+ */
+export function editableBracketIds(
+  matches: readonly { id: string; decisive: boolean; homeTeamId: string | null; awayTeamId: string | null; nextMatchId: string | null }[]
+): Set<string> {
+  const fed = new Set(matches.map((m) => m.nextMatchId).filter((x): x is string => !!x));
+  return new Set(matches.filter((m) => m.decisive && m.homeTeamId && m.awayTeamId && !fed.has(m.id)).map((m) => m.id));
+}
+
+/** Los partidos de una fecha (o ronda) de un grupo. */
 function inFecha(matches: readonly EditableMatch[], matchday: number, groupName: string | null) {
-  return matches.filter((m) => m.matchday === matchday && groupKey(m.groupName) === groupKey(groupName));
+  return matches.filter((m) => m.matchday === matchday && keyOf(m) === (groupName === LLAVES ? LLAVES : groupKey(groupName)));
 }
 
 /** Los equipos del grupo que no juegan en esa fecha: descansan. */
@@ -61,7 +91,7 @@ export function changeTeam(matches: readonly EditableMatch[], matchId: string, s
   const target = matches.find((m) => m.id === matchId);
   if (!target) return { ok: false, error: "El partido no existe." };
   if (target.locked) return { ok: false, error: "Ese partido ya empezó: no se puede editar." };
-  const universe = teamsByGroup(matches).get(groupKey(target.groupName));
+  const universe = teamsByGroup(matches).get(keyOf(target));
   if (!universe?.has(newTeamId)) return { ok: false, error: "Ese equipo no juega en este grupo." };
 
   const key = side === "home" ? "homeTeamId" : "awayTeamId";
@@ -75,7 +105,7 @@ export function changeTeam(matches: readonly EditableMatch[], matchId: string, s
   }
 
   // Juega en otro partido de esta fecha: ese partido recibe al que sale.
-  const other = inFecha(matches, target.matchday, target.groupName).find((m) => m.id !== matchId && (m.homeTeamId === newTeamId || m.awayTeamId === newTeamId));
+  const other = inFecha(matches, target.matchday, target.decisive ? LLAVES : target.groupName).find((m) => m.id !== matchId && (m.homeTeamId === newTeamId || m.awayTeamId === newTeamId));
   if (other?.locked) return { ok: false, error: "El partido de ese equipo en esta fecha ya empezó: no se puede cambiar." };
 
   return {
@@ -100,6 +130,7 @@ export function swapMatchdays(matches: readonly EditableMatch[], idA: string, id
   const b = matches.find((m) => m.id === idB);
   if (!a || !b || a.id === b.id) return { ok: false, error: "Elige dos partidos distintos." };
   if (a.locked || b.locked) return { ok: false, error: "Uno de los partidos ya empezó: no se puede mover." };
+  if (a.decisive || b.decisive) return { ok: false, error: "Las llaves no se mueven de ronda: solo se cambian los equipos." };
   if (a.matchday === b.matchday) return { ok: false, error: "Los dos partidos ya están en la misma fecha." };
   if (groupKey(a.groupName) !== groupKey(b.groupName)) return { ok: false, error: "Solo se pueden intercambiar partidos del mismo grupo." };
 
@@ -111,7 +142,7 @@ export function swapMatchdays(matches: readonly EditableMatch[], idA: string, id
 }
 
 export type Problem =
-  | { kind: "twice"; matchday: number; groupName: string | null; teamId: string; matchIds: string[] }
+  | { kind: "twice"; matchday: number; groupName: string | null; teamId: string; matchIds: string[] } // en llaves, `groupName` es `LLAVES`
   | { kind: "repeated"; groupName: string | null; teamIds: [string, string]; matchIds: string[] };
 
 /**
@@ -125,7 +156,7 @@ export function findProblems(matches: readonly EditableMatch[]): Problem[] {
 
   const perFecha = new Map<string, Map<string, string[]>>();
   for (const m of matches) {
-    const fechaKey = `${groupKey(m.groupName)}|${m.matchday}`;
+    const fechaKey = `${keyOf(m)}|${m.matchday}`;
     const teams = perFecha.get(fechaKey) ?? new Map<string, string[]>();
     for (const t of [m.homeTeamId, m.awayTeamId]) teams.set(t, [...(teams.get(t) ?? []), m.id]);
     perFecha.set(fechaKey, teams);
@@ -139,13 +170,13 @@ export function findProblems(matches: readonly EditableMatch[]): Problem[] {
 
   const pairs = new Map<string, EditableMatch[]>();
   for (const m of matches) {
-    const key = `${groupKey(m.groupName)}|${[m.homeTeamId, m.awayTeamId].sort().join("|")}`;
+    const key = `${keyOf(m)}|${[m.homeTeamId, m.awayTeamId].sort().join("|")}`;
     pairs.set(key, [...(pairs.get(key) ?? []), m]);
   }
   for (const list of pairs.values()) {
     if (list.length > 1) {
       const sorted = [list[0].homeTeamId, list[0].awayTeamId].sort() as [string, string];
-      problems.push({ kind: "repeated", groupName: list[0].groupName, teamIds: sorted, matchIds: list.map((m) => m.id) });
+      problems.push({ kind: "repeated", groupName: list[0].decisive ? LLAVES : list[0].groupName, teamIds: sorted, matchIds: list.map((m) => m.id) });
     }
   }
   return problems;
@@ -193,8 +224,9 @@ export function validateFixtureEdit(original: readonly EditableMatch[], edited: 
   for (const e of edited) {
     const o = before.get(e.id)!;
     if (e.homeTeamId === e.awayTeamId) return "Un partido no puede tener el mismo equipo de local y de visitante.";
-    if (e.groupName !== o.groupName) return "No se puede cambiar el grupo de un partido.";
-    const teams = universe.get(groupKey(e.groupName))!;
+    if (e.groupName !== o.groupName || !!e.decisive !== !!o.decisive) return "No se puede cambiar el grupo de un partido.";
+    if (e.decisive && e.matchday !== o.matchday) return "Las llaves no se mueven de ronda.";
+    const teams = universe.get(keyOf(e))!;
     if (!teams.has(e.homeTeamId) || !teams.has(e.awayTeamId)) return "Hay un equipo que no juega en este grupo.";
     if (o.locked && (e.matchday !== o.matchday || e.homeTeamId !== o.homeTeamId || e.awayTeamId !== o.awayTeamId || e.date !== o.date || e.time !== o.time || e.location !== o.location)) {
       return "Un partido que ya empezó no se puede editar.";
@@ -205,7 +237,7 @@ export function validateFixtureEdit(original: readonly EditableMatch[], edited: 
   const count = (list: readonly EditableMatch[]) => {
     const counts = new Map<string, number>();
     for (const m of list) {
-      const key = `${groupKey(m.groupName)}|${m.matchday}`;
+      const key = `${keyOf(m)}|${m.matchday}`;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
     return counts;
@@ -217,7 +249,7 @@ export function validateFixtureEdit(original: readonly EditableMatch[], edited: 
   }
 
   const twice = findProblems(edited).find((p) => p.kind === "twice");
-  if (twice) return `Un equipo juega dos veces en la fecha ${twice.matchday}.`;
+  if (twice) return twice.groupName === LLAVES ? `Un equipo juega dos veces en la misma ronda de las llaves.` : `Un equipo juega dos veces en la fecha ${twice.matchday}.`;
   if (scheduleClashes(edited).length > 0) return "Dos partidos chocan en día y hora (mismo equipo o misma sede).";
   return null;
 }

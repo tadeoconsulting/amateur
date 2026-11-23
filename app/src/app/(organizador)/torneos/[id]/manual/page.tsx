@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { getTournament, getMatches } from "@/_lib/api";
 import { useApi } from "@/_lib/use-api";
+import { editableBracketIds } from "@/_lib/fixture-edit";
 import { formatMatchDate, formatTime12 } from "@/_lib/match-format";
 import { formatLabel } from "@/_lib/tournament-labels";
 import { isUnscheduled } from "@/_lib/fixture";
@@ -97,7 +98,7 @@ export default function ManualFixturePage() {
       </div>
 
       {/* Cambiar equipos y mover partidos de fecha (especificación 017). */}
-      {(allMatches ?? []).some((m) => !m.decisive) && (
+      {((allMatches ?? []).some((m) => !m.decisive) || editableBracketIds(allMatches ?? []).size > 0) && (
         <div className="px-4 pb-3">
           <Link
             href={`/torneos/${params.id}/editar-cruces`}

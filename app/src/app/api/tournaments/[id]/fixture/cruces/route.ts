@@ -2,13 +2,14 @@ import { prisma } from "@/_lib/prisma";
 import { type NextRequest } from "next/server";
 import { badRequest, forbidden, isAdmin, readJson, requireUser } from "@/_lib/auth";
 import { isRealDate } from "@/_lib/fixture";
-import { changedMatches, validateFixtureEdit, type EditableMatch } from "@/_lib/fixture-edit";
+import { changedMatches, editableBracketIds, validateFixtureEdit, type EditableMatch } from "@/_lib/fixture-edit";
 import { CLUB_REF_SELECT } from "@/_lib/club-public";
 
 /**
  * Editar los cruces de un fixture ya armado (especificación 017): cambiar el equipo de un partido y mover un partido a
- * otra fecha. Lo hace el organizador del torneo (o un admin). Solo liga y grupos: los partidos de un cuadro de
- * eliminación (`decisive`) no se editan a mano.
+ * otra fecha. Lo hace el organizador del torneo (o un admin). En liga y grupos se cambian equipos y se mueven partidos de
+ * fecha; en las llaves (`decisive`) solo se cambian equipos, dentro de su ronda y mientras el cruce no dependa del ganador
+ * de otro partido (los de la primera ronda).
  */
 
 const TIME_RE = /^(([01]\d|2[0-3]):[0-5]\d)?$/;
@@ -17,7 +18,7 @@ const conflict = (error: string) => Response.json({ error }, { status: 409 });
 /** Los partidos editables del torneo, con `locked` en los que ya no se pueden tocar. */
 async function loadEditable(tournamentId: string): Promise<EditableMatch[]> {
   const rows = await prisma.match.findMany({
-    where: { tournamentId, decisive: false, homeTeamId: { not: null }, awayTeamId: { not: null } },
+    where: { tournamentId, homeTeamId: { not: null }, awayTeamId: { not: null } },
     select: {
       id: true,
       matchday: true,
@@ -28,21 +29,33 @@ async function loadEditable(tournamentId: string): Promise<EditableMatch[]> {
       time: true,
       location: true,
       status: true,
+      decisive: true,
+      nextMatchId: true,
       _count: { select: { events: true } },
     },
     orderBy: [{ matchday: "asc" }, { date: "asc" }, { time: "asc" }, { createdAt: "asc" }],
   });
-  return rows.map((r) => ({
-    id: r.id,
-    matchday: r.matchday,
-    groupName: r.groupName,
-    homeTeamId: r.homeTeamId as string,
-    awayTeamId: r.awayTeamId as string,
-    date: r.date.toISOString().slice(0, 10),
-    time: r.time,
-    location: r.location,
-    locked: r.status !== "programado" || r._count.events > 0,
-  }));
+  // De las llaves solo cuentan las que no dependen del ganador de otro partido. `nextMatchId` de TODOS los partidos
+  // (también los que aún no tienen los dos equipos) dice cuáles están alimentados.
+  const feeders = await prisma.match.findMany({ where: { tournamentId, decisive: true, nextMatchId: { not: null } }, select: { nextMatchId: true } });
+  const bracket = editableBracketIds([
+    ...rows.map((r) => ({ id: r.id, decisive: r.decisive, homeTeamId: r.homeTeamId, awayTeamId: r.awayTeamId, nextMatchId: null as string | null })),
+    ...feeders.map((f, i) => ({ id: `feeder-${i}`, decisive: true, homeTeamId: null, awayTeamId: null, nextMatchId: f.nextMatchId })),
+  ]);
+  return rows
+    .filter((r) => !r.decisive || bracket.has(r.id))
+    .map((r) => ({
+      id: r.id,
+      matchday: r.matchday,
+      groupName: r.groupName,
+      decisive: r.decisive,
+      homeTeamId: r.homeTeamId as string,
+      awayTeamId: r.awayTeamId as string,
+      date: r.date.toISOString().slice(0, 10),
+      time: r.time,
+      location: r.location,
+      locked: r.status !== "programado" || r._count.events > 0,
+    }));
 }
 
 /** Entra solo quien organiza el torneo (o un admin). */
@@ -63,8 +76,17 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
   const matches = await loadEditable(id);
   const teamIds = [...new Set(matches.flatMap((m) => [m.homeTeamId, m.awayTeamId]))];
-  const teams = await prisma.club.findMany({ where: { id: { in: teamIds } }, select: CLUB_REF_SELECT });
-  return Response.json({ matches, teams });
+  // Las llaves admiten a todos los equipos del torneo, también los que no juegan una fecha de grupos o de liga.
+  const hasBracket = matches.some((m) => m.decisive);
+  const all = hasBracket
+    ? await prisma.match.findMany({ where: { tournamentId: id }, select: { homeTeamId: true, awayTeamId: true } })
+    : [];
+  const everyone = new Set(teamIds);
+  for (const m of all) for (const t of [m.homeTeamId, m.awayTeamId]) if (t) everyone.add(t);
+  const teams = await prisma.club.findMany({ where: { id: { in: [...everyone] } }, select: CLUB_REF_SELECT });
+  // Cuántas rondas tiene el cuadro (para nombrarlas: Final, Semifinal…).
+  const rounds = hasBracket ? (await prisma.match.aggregate({ where: { tournamentId: id, decisive: true }, _max: { matchday: true } }))._max.matchday ?? 0 : 0;
+  return Response.json({ matches, teams, rounds });
 }
 
 /**
@@ -103,7 +125,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (new Set(patches.map((p) => p.id)).size !== patches.length) return badRequest("Hay partidos repetidos en la lista");
 
   const original = await loadEditable(id);
-  if (original.length === 0) return conflict("Este torneo no tiene un fixture de liga o grupos para editar");
+  if (original.length === 0) return conflict("Este torneo no tiene cruces para editar");
   const known = new Set(original.map((m) => m.id));
   if (patches.some((p) => !known.has(p.id))) return badRequest("Hay partidos que no son de este fixture");
 

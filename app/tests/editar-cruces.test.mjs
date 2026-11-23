@@ -286,3 +286,51 @@ describe("el lápiz del partido (PATCH /api/matches/:id) tampoco deja un equipo 
 function byId(list, id) {
   return list.find((m) => m.id === id);
 }
+
+describe("llaves (cuadro de eliminación): se cambian los equipos de la primera ronda antes de jugar", () => {
+  /** Un torneo de eliminación con 4 equipos y el cuadro armado: 2 semifinales y la final. */
+  async function bracket(org) {
+    const t = await org.client.post("/api/tournaments", { name: "Llaves " + RUN, startDate: "2026-11-01", location: "Estadio Municipal", format: "eliminacion", maxTeams: 8, status: "inscripcion" });
+    assert.equal(t.status, 201, JSON.stringify(t.data));
+    for (let i = 0; i < 4; i++) {
+      const r = await org.client.post(`/api/tournaments/${t.data.id}/teams`, { newClub: { name: `Ll${i + 1} ${RUN}${Math.random().toString(36).slice(2, 6)}`, shortName: `L${i + 1}` } });
+      assert.equal(r.status, 201, JSON.stringify(r.data));
+    }
+    const f = await org.client.post(`/api/tournaments/${t.data.id}/fixture`, { mode: "manual" });
+    assert.equal(f.status, 201, JSON.stringify(f.data));
+    return t.data.id;
+  }
+
+  test("solo aparecen los cruces de la primera ronda (la final depende de los ganadores) y se pueden intercambiar equipos", async () => {
+    const org = await organizer("crllaves");
+    const id = await bracket(org);
+    const data = await load(org.client, id);
+    assert.equal(data.matches.length, 2);
+    assert.ok(data.matches.every((m) => m.decisive === true && m.matchday === 1));
+    assert.equal(data.rounds, 2);
+    assert.equal(data.teams.length, 4);
+
+    const [a, b] = data.matches;
+    // El visitante de a pasa a b y el de b pasa a a: un intercambio dentro de la ronda.
+    const edited = [
+      { ...patchOf(a), awayTeamId: b.awayTeamId },
+      { ...patchOf(b), awayTeamId: a.awayTeamId },
+    ];
+    const r = await org.client.request("PUT", path(id), { matches: edited });
+    assert.equal(r.status, 200, JSON.stringify(r.data));
+    assert.equal(r.data.updated, 2);
+    const after = (await load(org.client, id)).matches;
+    assert.equal(after.find((m) => m.id === a.id).awayTeamId, b.awayTeamId);
+    assert.equal(after.find((m) => m.id === b.id).awayTeamId, a.awayTeamId);
+  });
+
+  test("un equipo dos veces en la ronda o cambiar un cruce de ronda se rechaza con 409", async () => {
+    const org = await organizer("crllaves2");
+    const id = await bracket(org);
+    const [a, b] = (await load(org.client, id)).matches;
+    const dos = await org.client.request("PUT", path(id), { matches: [{ ...patchOf(b), homeTeamId: a.homeTeamId }] });
+    assert.equal(dos.status, 409, JSON.stringify(dos.data));
+    const ronda = await org.client.request("PUT", path(id), { matches: [{ ...patchOf(a), matchday: 2 }] });
+    assert.equal(ronda.status, 409, JSON.stringify(ronda.data));
+  });
+});
