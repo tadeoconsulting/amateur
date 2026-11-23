@@ -297,13 +297,27 @@ test("llaves: la validación no deja cambiar la ronda de un cruce", () => {
   assert.match(validateFixtureEdit(original, movido) ?? "", /no se mueven de ronda/);
 });
 
-test("editableBracketIds: solo los cruces con los dos equipos y que no los alimenta otro partido", () => {
+test("editableBracketIds: los cruces de llaves con los dos equipos, de cualquier ronda; los que esperan a un ganador no", () => {
   const partidos = [
-    { id: "q1", decisive: true, homeTeamId: "A", awayTeamId: "B", nextMatchId: "sf" },
-    { id: "q2", decisive: true, homeTeamId: "C", awayTeamId: "D", nextMatchId: "sf" },
-    { id: "sf", decisive: true, homeTeamId: "A", awayTeamId: "C", nextMatchId: "fin" }, // ya con los dos equipos, pero alimentado
-    { id: "fin", decisive: true, homeTeamId: null, awayTeamId: null, nextMatchId: null },
-    { id: "g", decisive: false, homeTeamId: "A", awayTeamId: "B", nextMatchId: null },
+    { id: "q1", decisive: true, homeTeamId: "A", awayTeamId: "B" },
+    { id: "q2", decisive: true, homeTeamId: "C", awayTeamId: "D" },
+    { id: "sf", decisive: true, homeTeamId: "A", awayTeamId: "C" }, // semifinal por jugar, ya con los dos equipos
+    { id: "fin", decisive: true, homeTeamId: "A", awayTeamId: null }, // espera a un ganador
+    { id: "g", decisive: false, homeTeamId: "A", awayTeamId: "B" },
   ];
-  assert.deepEqual([...editableBracketIds(partidos)].sort(), ["q1", "q2"]);
+  assert.deepEqual([...editableBracketIds(partidos)].sort(), ["q1", "q2", "sf"]);
+});
+
+test("llaves: se puede cambiar un equipo de unas semifinales por jugar", () => {
+  const semis = [
+    m("q1", 1, "A", "B", { decisive: true, locked: true }), // ya jugado
+    m("q2", 1, "C", "D", { decisive: true, locked: true }),
+    m("s1", 2, "A", "C", { decisive: true }),
+    m("s2", 2, "E", "F", { decisive: true }),
+  ];
+  const r = changeTeam(semis, "s1", "away", "E");
+  assert.ok(r.ok);
+  assert.equal(r.matches.find((x) => x.id === "s1").awayTeamId, "E");
+  assert.equal(r.matches.find((x) => x.id === "s2").homeTeamId, "C"); // recibe al que salió
+  assert.equal(validateFixtureEdit(semis, r.matches), null);
 });

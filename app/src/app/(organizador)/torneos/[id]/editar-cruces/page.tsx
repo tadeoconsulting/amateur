@@ -265,7 +265,7 @@ export default function EditarCrucesPage() {
 
       <p className="mt-4 px-4 font-body text-xs text-text-secondary">
         {enLlaves
-          ? "Al elegir un equipo que ya juega en esta ronda, ese partido recibe al que salió. Si el que elijas no juega esta ronda, el que salió queda fuera de ella. Las rondas siguientes se llenan solas con los ganadores."
+          ? "Al elegir un equipo que ya juega en esta ronda, ese partido recibe al que salió. Si el que elijas no juega esta ronda, el que salió queda fuera de ella."
           : "Al elegir un equipo que ya juega esta fecha, ese partido recibe al que salió. Si el que elijas descansa, pasa a descansar el que salió."}
       </p>
 

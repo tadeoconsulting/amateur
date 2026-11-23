@@ -301,7 +301,7 @@ describe("llaves (cuadro de eliminación): se cambian los equipos de la primera 
     return t.data.id;
   }
 
-  test("solo aparecen los cruces de la primera ronda (la final depende de los ganadores) y se pueden intercambiar equipos", async () => {
+  test("aparecen los cruces con los dos equipos (la final espera a los ganadores) y se pueden intercambiar equipos", async () => {
     const org = await organizer("crllaves");
     const id = await bracket(org);
     const data = await load(org.client, id);

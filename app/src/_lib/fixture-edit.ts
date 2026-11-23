@@ -6,7 +6,7 @@
 //
 // Las llaves (cuadro de eliminación) también se editan antes de jugarse, pero solo en **cambiar un equipo** y dentro de
 // su ronda: son un «grupo» más (`LLAVES`) cuyos equipos son todos los del torneo, y la ronda hace de «fecha». No se mueven
-// de ronda, y solo se editan los cruces que no dependen del ganador de otro partido (ver `editableBracketIds`).
+// de ronda, y se editan los cruces por jugar que ya tienen los dos equipos (ver `editableBracketIds`).
 
 /** Un partido de liga o de grupos tal como lo ve el editor. `date` es `YYYY-MM-DD`; `time` vacío = por definir. */
 export interface EditableMatch {
@@ -54,15 +54,12 @@ export function teamsByGroup(matches: readonly EditableMatch[]): Map<string, Set
 }
 
 /**
- * Los partidos de llaves que se pueden editar: los dos equipos ya están y ninguno viene del ganador de otro partido
- * (los de la primera ronda). Los demás se llenan solos con los resultados. `nextMatchId` es el partido al que pasa quien
- * gana, así que un partido al que apunta otro está alimentado por él.
+ * Los partidos de llaves que se pueden editar: los que ya tienen los dos equipos, de cualquier ronda (también los que
+ * se llenaron con ganadores, como unas semifinales por jugar). Los que esperan a un ganador no están: no hay qué cambiar.
+ * Que ya hayan empezado lo marca `locked`.
  */
-export function editableBracketIds(
-  matches: readonly { id: string; decisive: boolean; homeTeamId: string | null; awayTeamId: string | null; nextMatchId: string | null }[]
-): Set<string> {
-  const fed = new Set(matches.map((m) => m.nextMatchId).filter((x): x is string => !!x));
-  return new Set(matches.filter((m) => m.decisive && m.homeTeamId && m.awayTeamId && !fed.has(m.id)).map((m) => m.id));
+export function editableBracketIds(matches: readonly { id: string; decisive: boolean; homeTeamId: string | null; awayTeamId: string | null }[]): Set<string> {
+  return new Set(matches.filter((m) => m.decisive && m.homeTeamId && m.awayTeamId).map((m) => m.id));
 }
 
 /** Los partidos de una fecha (o ronda) de un grupo. */
